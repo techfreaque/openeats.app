@@ -1,13 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import type { ApiEndpoint, Methods } from "next-query-portal";
-import {
-  APP_NAME,
-  ENDPOINT_DOMAINS,
-  envClient,
-  useApiForm,
-} from "next-query-portal";
+import type { ApiEndpoint } from "next-query-portal/client";
+import { envClient, useApiForm } from "next-query-portal/client";
+import type { Methods } from "next-query-portal/shared";
+import { APP_NAME, ENDPOINT_DOMAINS } from "next-query-portal/shared";
 import type { JSX } from "react";
 import { useMemo, useState } from "react";
 

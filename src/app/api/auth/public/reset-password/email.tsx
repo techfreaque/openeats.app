@@ -8,8 +8,8 @@ import { APP_DOMAIN, APP_NAME } from "next-query-portal/shared";
 import { EmailTemplate } from "../../../../../config/email.template";
 import type { EmailFunctionType } from "../../../../../package/server/email/handle-emails";
 import { db } from "../../../db";
-import { generatePasswordResetToken } from "../reset-password-confirm/utils";
 import type { ResetPasswordRequestType } from "./schema";
+import { generatePasswordResetToken } from "./utils";
 
 export const renderResetPasswordMail: EmailFunctionType<
   ResetPasswordRequestType,

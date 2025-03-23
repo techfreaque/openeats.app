@@ -1,5 +1,6 @@
 "use client";
 
+import { ENDPOINT_DOMAINS } from "next-query-portal/shared";
 import type { JSX } from "react";
 
 import {
@@ -9,8 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-import { ENDPOINT_DOMAINS } from "../../../package";
 
 interface DomainSelectorProps {
   selectedDomain: keyof typeof ENDPOINT_DOMAINS;

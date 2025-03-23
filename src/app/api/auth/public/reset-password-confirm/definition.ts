@@ -6,7 +6,7 @@ import {
 } from "next-query-portal/shared";
 
 import { registerEndpoint } from "../register/definition";
-import { resetPasswordConfirmSchema } from "../reset-password/schema";
+import { resetPasswordConfirmSchema } from "./schema";
 
 export const resetPasswordConfirmEndpoint = createEndpoint({
   description: "Confirm a password reset request",

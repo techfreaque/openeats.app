@@ -8,12 +8,12 @@ import { getFullUser } from "../auth/me/route";
 import type {
   TemplatePostRequestType,
   TemplatePostRequestUrlParamsType,
-  TemplatePostResponseType,
+  TemplatePostResponseOutputType,
 } from "./schema";
 
 export const renderMail: EmailFunctionType<
   TemplatePostRequestType,
-  TemplatePostResponseType,
+  TemplatePostResponseOutputType,
   TemplatePostRequestUrlParamsType
 > = async ({ responseData, requestData, urlVariables, user }) => {
   const fullUser = await getFullUser(user.id);

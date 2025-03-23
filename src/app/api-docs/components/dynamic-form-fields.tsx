@@ -1,6 +1,7 @@
 "use client";
 
 import { Info } from "lucide-react";
+import type { ApiEndpoint } from "next-query-portal/client";
 import type { JSX } from "react";
 import { useMemo } from "react";
 import type {
@@ -30,7 +31,6 @@ import {
 } from "@/components/ui/tooltip";
 
 import { Button } from "../../../components/ui";
-import type { ApiEndpoint } from "../../../package";
 
 interface DynamicFormFieldsProps {
   endpoint: ApiEndpoint<unknown, unknown, unknown>;

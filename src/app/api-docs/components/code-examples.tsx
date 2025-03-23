@@ -1,11 +1,10 @@
 "use client";
 
+import type { ApiEndpoint } from "next-query-portal/client";
 import type { JSX } from "react";
 import { useState } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-import type { ApiEndpoint } from "../../../package";
 
 interface CodeExamplesProps {
   activeEndpoint: ApiEndpoint<unknown, unknown, unknown>;
@@ -114,7 +113,7 @@ print_r($response);
   // Get available tabs based on examples
   const availableExamples = Object.keys(activeEndpoint.examples || {});
   const defaultTab =
-    availableExamples.length > 0 ? availableExamples[0] : "default";
+    availableExamples.length > 0 ? availableExamples[0]! : "default";
 
   return (
     <div className="p-4">

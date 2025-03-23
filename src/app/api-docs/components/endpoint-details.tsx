@@ -1,5 +1,6 @@
 "use client";
 
+import type { ApiEndpoint } from "next-query-portal/client";
 import type { JSX } from "react";
 import { useState } from "react";
 import type {
@@ -13,7 +14,6 @@ import type {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { Button } from "../../../components/ui";
-import type { ApiEndpoint } from "../../../package";
 import { CodeExamples } from "./code-examples";
 import { DynamicFormFields } from "./dynamic-form-fields";
 import { SchemaViewer } from "./schema-viewer";
@@ -144,6 +144,7 @@ export function EndpointDetails({
 
               <Button
                 className="w-full"
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 onClick={handleTryIt}
                 disabled={isLoading}
               >
