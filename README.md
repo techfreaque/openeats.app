@@ -1,137 +1,154 @@
-# Next Portal
+# next-query-portal
 
-**Next Portal** is a unified API client library designed for React applications. It provides type-safe API interactions with built-in caching, request deduplication, and seamless form integration.
+A Next.js backend framework for building strongly typed APIs with integrated authentication, data access, and client-side hooks.
 
 ## Features
 
-- **🔒 Type-Safe**: Define your API endpoints with Zod schemas for bulletproof type safety.
-- **🚀 Simple to Use**: Intuitive hooks like `useQuery` and `useMutation` for easy data fetching.
-- **⚡️ Fast by Default**: Built-in caching, request deduplication, and stale-while-revalidate.
-- **🔌 Framework Agnostic**: Works with Next.js, Create React App, React Native, and more.
-- **🧪 Testable**: Mock data providers for easy testing without a database.
+- **Strongly Typed APIs**: Define your endpoints with full TypeScript support and Zod validation
+- **Role-Based Access Control**: Built-in user role management and authorization
+- **Data Providers**: Flexible data access with Prisma integration
+- **Client Hooks**: React hooks for data fetching and mutation
+- **Form Integration**: Form handling with validation and API integration
+- **Cross-Platform**: Works with both browser and React Native environments
 
-## Installation
+## Getting Started
+
+### Installation
 
 ```bash
-npm install @open-eats/next-portal
-# or
-yarn add @open-eats/next-portal
+npm install @open-delivery/next-portal
 ```
 
-## Quick Start
+### Server-Side Setup
 
-### Step 1: Initialize the library
+Initialize the API library in your application:
 
-```tsx
-// src/lib/api.ts
-import { initApiLibrary } from '@open-eats/next-portal';
+```typescript
+import { initApiLibrary, PrismaDataProvider } from '@open-delivery/next-portal';
+import { PrismaClient } from '@prisma/client';
 
-// For production with Prisma:
-initApiLibrary();
+const prisma = new PrismaClient();
 
-// For testing with mock data:
-initApiLibrary({ 
-  useMockProvider: true,
-  mockData: {
-    // Optional mock data
-  }
+initApiLibrary({
+  prismaClient: prisma,
+  apiConfig: {
+    defaultStaleTime: 30000,
+    defaultCacheTime: 300000,
+  },
 });
 ```
 
-### Step 2: Define your endpoints
+### Define an API Endpoint
 
-```tsx
-// src/lib/endpoints.ts
+```typescript
 import { z } from 'zod';
-import { createEndpoint, UserRoleValue } from '@open-eats/next-portal';
+import { createEndpoint, UserRoleValue } from '@open-delivery/next-portal';
 
-// Define your schema
-const userSchema = z.object({
+// Define request and response schemas
+const requestSchema = z.object({
+  name: z.string(),
+  email: z.string().email(),
+});
+
+const responseSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  email: z.string().email()
+  email: z.string().email(),
 });
 
-// Create an endpoint
-export const getUsersEndpoint = createEndpoint({
-  description: "Get all users",
-  method: "GET", 
-  path: ["api", "users"],
-  responseSchema: z.array(userSchema),
-  roles: [UserRoleValue.ADMIN]
+// Create the endpoint
+export const createUserEndpoint = createEndpoint({
+  description: 'Create a new user',
+  method: 'POST',
+  path: ['users'],
+  allowedRoles: [UserRoleValue.ADMIN],
+  requestSchema,
+  responseSchema,
+  requestUrlSchema: z.undefined(),
+  fieldDescriptions: {
+    name: 'The user\'s full name',
+    email: 'The user\'s email address',
+  },
+  errorCodes: {
+    400: 'Invalid request data',
+    401: 'Not authorized',
+    500: 'Server error',
+  },
+  apiQueryOptions: {
+    staleTime: 0, // Never cache mutations
+  },
+  examples: {
+    payloads: {
+      default: { id: 'example-id', name: 'John Doe', email: 'john@example.com' },
+    },
+    urlPathVariables: undefined,
+  },
 });
 ```
 
-### Step 3: Use the hooks in your components
+### Create an API Route Handler
+
+```typescript
+// app/api/users/route.ts
+import { apiHandler } from '@open-delivery/next-portal';
+import { createUserEndpoint } from '@/endpoints/users';
+
+export const POST = apiHandler({
+  endpoint: createUserEndpoint,
+  handler: async ({ data, user }) => {
+    // Implement your logic here
+    const newUser = await db.users.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        createdBy: user.id,
+      }
+    });
+    
+    return {
+      success: true,
+      data: newUser,
+    };
+  },
+});
+```
+
+### Client-Side Usage
 
 ```tsx
-// src/components/UsersList.tsx
-import { useQuery } from '@open-eats/next-portal';
-import { getUsersEndpoint } from '../lib/endpoints';
+import { useApiQuery, useApiMutation } from '@open-delivery/next-portal';
+import { getUsersEndpoint, createUserEndpoint } from '@/api/endpoints/users';
 
 function UsersList() {
-  const { data, isLoading, error } = useQuery(getUsersEndpoint);
+  // Query users
+  const {
+    data: users,
+    isLoading,
+    error
+  } = useApiQuery(getUsersEndpoint);
   
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  // Create user mutation
+  const { mutate: createUser, isSuccess } = useApiMutation(createUserEndpoint);
+  
+  const handleCreateUser = (userData) => {
+    createUser({ data: userData });
+  };
   
   return (
-    <ul>
-      {data?.map(user => (
-        <li key={user.id}>{user.name} ({user.email})</li>
-      ))}
-    </ul>
+    <div>
+      {/* Render your UI */}
+    </div>
   );
 }
 ```
 
-## Complete Example
-
-Here's a complete example showing a data fetching and form submission workflow:
+### Form Integration
 
 ```tsx
-import { z } from 'zod';
-import { createEndpoint, useQuery, useMutation, useApiForm, UserRoleValue } from '@open-eats/next-portal';
+import { useApiForm } from '@open-delivery/next-portal';
+import { createUserEndpoint } from '@/api/endpoints/users';
 
-// 1. Define your schemas
-const userSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  email: z.string().email()
-});
-
-const createUserSchema = userSchema.omit({ id: true });
-type User = z.infer<typeof userSchema>;
-type CreateUser = z.infer<typeof createUserSchema>;
-
-// 2. Define your endpoints
-const getUsersEndpoint = createEndpoint({
-  description: "Get all users",
-  method: "GET",
-  path: ["api", "users"],
-  responseSchema: z.array(userSchema),
-  roles: [UserRoleValue.ADMIN]
-});
-
-const createUserEndpoint = createEndpoint({
-  description: "Create user", 
-  method: "POST",
-  path: ["api", "users"],
-  requestSchema: createUserSchema,
-  responseSchema: userSchema,
-  roles: [UserRoleValue.ADMIN]
-});
-
-// 3. Create your component
-function UsersPanel() {
-  // Fetch users
-  const { 
-    data: users, 
-    isLoading,
-    refetch
-  } = useQuery(getUsersEndpoint);
-
-  // Create a form with validation
+function UserForm() {
   const {
     register,
     handleSubmit,
@@ -139,122 +156,48 @@ function UsersPanel() {
     submitForm,
     isSubmitting,
     formError
-  } = useApiForm<User, CreateUser>(
-    createUserEndpoint,
-    { defaultValues: { name: '', email: '' } },
-    { 
-      onSuccess: () => refetch(),
-      invalidateQueries: ['users']
-    }
-  );
-
-  // Form submission handler
-  const onSubmit = handleSubmit(data => submitForm(data));
-
-  return (
-    <div>
-      <h1>Users</h1>
-      
-      {/* Display users */}
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : (
-        <ul>
-          {users?.map(user => (
-            <li key={user.id}>{user.name} - {user.email}</li>
-          ))}
-        </ul>
-      )}
-
-      {/* Create user form */}
-      <form onSubmit={onSubmit}>
-        <div>
-          <label>
-            Name:
-            <input {...register('name', { required: true })} />
-            {errors.name && <span>Name is required</span>}
-          </label>
-        </div>
-        
-        <div>
-          <label>
-            Email:
-            <input type="email" {...register('email', { required: true })} />
-            {errors.email && <span>Valid email is required</span>}
-          </label>
-        </div>
-        
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating...' : 'Create User'}
-        </button>
-        
-        {formError && <div className="error">{formError.message}</div>}
-      </form>
-    </div>
-  );
-}
-```
-
-## Advanced Usage
-
-### Custom Data Provider
-
-```tsx
-import { initApiLibrary, DataProvider } from '@open-eats/next-portal';
-
-// Create a custom data provider
-class MyCustomDataProvider implements DataProvider {
-  async getUserRoles(userId: string) {
-    // Custom implementation for getting user roles
-    return [];
-  }
+  } = useApiForm(createUserEndpoint);
   
-  // Additional custom methods
-  async getCustomData() {
-    // ...
-  }
+  return (
+    <form onSubmit={handleSubmit(submitForm)}>
+      <input {...register('name')} />
+      <input {...register('email')} />
+      <button type="submit" disabled={isSubmitting}>
+        Create User
+      </button>
+      {formError && <p>{formError.message}</p>}
+    </form>
+  );
 }
-
-// Initialize with your custom provider
-initApiLibrary({
-  dataProvider: new MyCustomDataProvider()
-});
-```
-
-### Global Error Handling
-
-```tsx
-import { initApiLibrary } from '@open-eats/next-portal';
-
-initApiLibrary({
-  errorHandler: (error, context) => {
-    console.error(`Error in ${context}:`, error);
-    // Send to error tracking service, show notification, etc.
-  }
-});
-```
-
-### Optimistic Updates
-
-```tsx
-const { mutate } = useMutation(updateUserEndpoint, {
-  updateQueries: [
-    {
-      queryKey: ['users'],
-      updater: (oldData, newData) => {
-        // Update the cached data optimistically
-        return oldData.map(user => 
-          user.id === newData.id ? newData : user
-        );
-      }
-    }
-  ]
-});
 ```
 
 ## API Reference
 
-Visit our [API documentation](https://example.com/docs) for complete details on all available options and configurations.
+### Server-Side APIs
+
+- `initApiLibrary()`: Initialize the API library
+- `createEndpoint()`: Define a type-safe API endpoint
+- `apiHandler()`: Create an API route handler
+- `getVerifiedUser()`: Get authenticated user with role check
+
+### Client-Side Hooks
+
+- `useApiQuery()`: Fetch data from an API endpoint
+- `useApiMutation()`: Perform mutations (create, update, delete)
+- `useApiForm()`: Integrate forms with API endpoints
+
+### Data Providers
+
+- `PrismaDataProvider`: Use Prisma as a data source
+- `MockDataProvider`: Use mock data (for testing)
+
+## Environment Variables
+
+Required environment variables:
+
+- `JWT_SECRET_KEY`: Secret key for JWT token signing
+- `NEXT_PUBLIC_BACKEND_URL`: Backend API URL
+- `NEXT_PUBLIC_APP_NAME`: Application name
 
 ## License
 

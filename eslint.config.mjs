@@ -29,13 +29,9 @@ export default [
   // 1) Files/Folders to ignore
   {
     ignores: [
-      ".next",
       "dist",
-      "postcss.config.mjs",
-      "next.config.mjs",
       "eslint.config.mjs",
-      "code-server",
-      "postgres_data",
+      ".next"
     ],
   },
 

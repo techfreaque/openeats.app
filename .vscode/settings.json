@@ -1,14 +1,13 @@
 {
   "cSpell.words": [
-    "mjml",
-    "tsconfigPaths",
+    "sovendus",
     "vitest"
   ],
-  "editor.formatOnSave": true, // Format files on save
+  "editor.formatOnSave": true, // Disable direct formatting
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.organizeImports": "never"
+    "source.fixAll.eslint": "explicit" // Let ESLint handle formatting
   },
+  "eslint.format.enable": true,
   "eslint.validate": [
     "javascript",
     "javascriptreact",
@@ -16,22 +15,9 @@
     "typescriptreact"
   ],
   "typescript.suggest.autoImports": true,
-  "prettier.requireConfig": true, // Ensure Prettier uses your configuration file
+  "prettier.requireConfig": true,
+  "prettier.enable": false, // Disable Prettier extension
   "files.eol": "\n",
-  "files.associations": {
-    "schema.prisma.template": "prisma"
-  },
-  "files.exclude": {
-    "postgres_data": true
-  },
-  "javascript.preferences.importModuleSpecifier": "relative",
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "[javascript][\"eslint.rules\"][\"no-restricted-imports\"]": [
-    "error",
-    {
-      "patterns": [
-        "^(?!\\./|\\.\\./)"
-      ]
-    }
-  ]
+  // "javascript.preferences.importModuleSpecifier": "relative",
+  // "typescript.preferences.importModuleSpecifier": "relative"
 }
