@@ -1,6 +1,6 @@
 /* eslint-disable node/no-process-env */
-import { envClientSchema as portalEnvClientSchema } from "next-query-portal/client";
-import { validatedEnv } from "next-query-portal/shared";
+import { envClientSchema as portalEnvClientSchema } from "next-query-portal/client/env-client";
+import { validatedEnv } from "next-query-portal/shared/utils/env-util";
 import type { z } from "zod";
 
 const isServer = typeof window === "undefined";
@@ -28,7 +28,6 @@ export const envClient: EnvFrontend = validatedEnv(
     NEXT_PUBLIC_BACKEND_PROD: process.env["NEXT_PUBLIC_BACKEND_PROD"]!,
     NEXT_PUBLIC_BACKEND_DEV: process.env["NEXT_PUBLIC_BACKEND_DEV"]!,
     NEXT_PUBLIC_BACKEND_TEST: process.env["NEXT_PUBLIC_BACKEND_TEST"]!,
-    NEXT_PUBLIC_GA_ID: process.env["NEXT_PUBLIC_GA_ID"]!,
     platform,
   },
   envClientSchema,

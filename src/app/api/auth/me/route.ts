@@ -3,19 +3,20 @@ import "server-only";
 import type {
   ApiHandlerCallBackProps,
   SafeReturnType,
-} from "next-query-portal/server";
-import { apiHandler } from "next-query-portal/server";
+} from "next-query-portal/server/endpoints/core/api-handler";
+import { apiHandler } from "next-query-portal/server/endpoints/core/api-handler";
 import type { UndefinedType } from "next-query-portal/shared";
 
 import { db } from "../../db";
-import type { LoginResponseType } from "../public/login/login.schema";
 import { createSessionAndGetUser } from "../public/login/route";
-import { meEndpoint } from "./me";
-import type { UserResponseType } from "./me.schema";
+import type { LoginResponseType } from "../public/login/schema";
+import meEndpoint from "./definition";
+import type { UserResponseType } from "./schema";
 
 export const GET = apiHandler({
   endpoint: meEndpoint,
   handler: getUser,
+  email: undefined,
 });
 
 async function getUser({

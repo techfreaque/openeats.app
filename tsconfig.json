@@ -3,11 +3,11 @@
     "baseUrl": ".",
     "paths": {
       "next-query-portal/*": [
-        "src/package/*"
+        "./src/packages/next-query-portal/*"
       ],
       "@/*": [
         "./src/*"
-      ],
+      ]
     },
     "outDir": "./dist",
     "rootDir": ".",
@@ -69,8 +69,7 @@
   "include": [
     "./**/*.ts",
     "./**/*.tsx",
-    ".next/types/**/*.ts",
-    "src/app/api/apis.ts.nope"
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

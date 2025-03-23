@@ -1,7 +1,7 @@
 "use client";
 
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { cn } from "next-query-portal/shared";
+import { cn } from "next-query-portal/shared/utils/utils";
 import * as React from "react";
 
 const Slider = React.forwardRef<

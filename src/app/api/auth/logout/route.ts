@@ -4,19 +4,20 @@ import { cookies } from "next/headers";
 import type {
   ApiHandlerCallBackProps,
   SafeReturnType,
-} from "next-query-portal/server";
-import { apiHandler } from "next-query-portal/server";
+} from "next-query-portal/server/endpoints/core/api-handler";
+import { apiHandler } from "next-query-portal/server/endpoints/core/api-handler";
 import type {
   MessageResponseType,
   UndefinedType,
 } from "next-query-portal/shared";
 
 import { db } from "../../db";
-import { logoutEndpoint } from "./logout";
+import logoutEndpoint from "./definition";
 
 export const GET = apiHandler({
   endpoint: logoutEndpoint,
   handler: logoutUser,
+  email: undefined,
 });
 
 export async function logoutUser({

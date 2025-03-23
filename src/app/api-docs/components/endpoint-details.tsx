@@ -1,6 +1,6 @@
 "use client";
 
-import type { ApiEndpoint } from "next-query-portal/client";
+import type { ApiEndpoint } from "next-query-portal/client/endpoint";
 import type { JSX } from "react";
 import { useState } from "react";
 import type {
@@ -18,6 +18,7 @@ import { CodeExamples } from "./code-examples";
 import { DynamicFormFields } from "./dynamic-form-fields";
 import { SchemaViewer } from "./schema-viewer";
 
+// Replace any types with proper interfaces
 interface EndpointDetailsProps {
   endpoint: ApiEndpoint<unknown, unknown, unknown>;
   requestData: string;
@@ -26,12 +27,12 @@ interface EndpointDetailsProps {
   isLoading: boolean;
   selectedDomain: string;
   handleTryIt: () => Promise<void>;
-  register: UseFormRegister<any>;
-  control: Control<any>;
-  formState: { errors: FieldErrors };
+  register: UseFormRegister<Record<string, unknown>>;
+  control: Control<Record<string, unknown>>;
+  formState: { errors: FieldErrors<Record<string, unknown>> };
   formError: Error | null;
-  setValue: UseFormSetValue<any>;
-  watch: UseFormWatch<any>;
+  setValue: UseFormSetValue<Record<string, unknown>>;
+  watch: UseFormWatch<Record<string, unknown>>;
 }
 
 export function EndpointDetails({
@@ -210,26 +211,23 @@ export function EndpointErrorCodes({
 }: {
   endpoint: ApiEndpoint<unknown, unknown, unknown>;
 }): JSX.Element {
-  return endpoint.errorCodes && Object.keys(endpoint.errorCodes).length > 0 ? (
+  const errorCodes = endpoint.errorCodes;
+
+  return Object.keys(errorCodes).length > 0 ? (
     <div className="mt-6">
       <h4 className="text-sm font-medium mb-2">Error Codes</h4>
-      <div className="bg-gray-50 p-4 rounded-lg border">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr>
-              <th className="text-left font-medium py-2">Status Code</th>
-              <th className="text-left font-medium py-2">Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(endpoint.errorCodes).map(([code, description]) => (
-              <tr key={code} className="border-t border-gray-200">
-                <td className="py-2">{code}</td>
-                <td className="py-2">{description}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {Object.entries(errorCodes).map(([code, description]) => (
+          <div
+            key={code}
+            className="flex items-center border p-2 rounded-md bg-gray-50"
+          >
+            <span className="text-sm font-mono bg-red-100 text-red-700 px-2 py-1 rounded mr-2">
+              {code}
+            </span>
+            <span className="text-sm text-gray-700">{description}</span>
+          </div>
+        ))}
       </div>
     </div>
   ) : (

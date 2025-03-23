@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import type { ApiEndpoint } from "next-query-portal/client";
-import { envClient, useApiForm } from "next-query-portal/client";
-import type { Methods } from "next-query-portal/shared";
-import { APP_NAME, ENDPOINT_DOMAINS } from "next-query-portal/shared";
+import {
+  type ApiEndpoint,
+  getEndpointByPath,
+} from "next-query-portal/client/endpoint";
+import { getEndpoints } from "next-query-portal/client/endpoints";
+import { useApiForm } from "next-query-portal/client/hooks/form";
+import { APP_NAME, ENDPOINT_DOMAINS } from "next-query-portal/shared/constants";
+import type { Methods } from "next-query-portal/shared/types/endpoint";
 import type { JSX } from "react";
 import { useMemo, useState } from "react";
+
+import { envClient } from "@/config/env-client";
 
 import {
   Card,
@@ -15,17 +21,12 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui";
-import type { ApiSection } from "../../../package/shared";
-import { loginEndpoint } from "../../api/auth/public/login/login";
+import loginEndpoint from "../../api/auth/public/login/definition";
 import { DomainSelector } from "./domain-selector";
 import { EndpointDetails } from "./endpoint-details";
 import { EndpointsList } from "./endpoints-list";
 
-export function ApiExplorer({
-  endpoints,
-}: {
-  endpoints: ApiSection;
-}): JSX.Element {
+export function ApiExplorer(): JSX.Element {
   const [responseData, setResponseData] = useState<string>("");
   const [selectedEnv, setSelectedEnv] = useState<keyof typeof ENDPOINT_DOMAINS>(
     envClient.NODE_ENV === "production" ? "prod" : "dev",
@@ -36,6 +37,7 @@ export function ApiExplorer({
     useState<ApiEndpoint<unknown, unknown, unknown>>(loginEndpoint);
 
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
+  const endpoints = getEndpoints();
 
   // Create a form using useApiForm
   const {
@@ -49,21 +51,34 @@ export function ApiExplorer({
     watch,
     setValue,
     control,
+    setFormError,
   } = useApiForm(
     activeEndpoint,
     {},
     {
-      onSuccess: async (data) => {
+      onSuccess: (data) => {
+        // Add analytics tracking
         setResponseStatus(200);
         setResponseData(JSON.stringify(data, null, 2));
       },
-      onError: async (error) => {
-        setResponseStatus(error.statusCode || 500);
+      onError: (error) => {
+        // Use type guards to safely access properties
+        const statusCode =
+          typeof error === "object" && error !== null && "statusCode" in error
+            ? Number(error.statusCode) || 500
+            : 500;
+
+        setResponseStatus(statusCode);
         setResponseData(
           JSON.stringify(
             {
-              error: error.message,
-              details: error.details || error.stack,
+              error: error instanceof Error ? error.message : "Unknown error",
+              details:
+                typeof error === "object" && error !== null
+                  ? "details" in error
+                    ? error.details
+                    : null
+                  : null,
             },
             null,
             2,
@@ -84,7 +99,7 @@ export function ApiExplorer({
     newEndpointPath: string[],
     newMethod: Methods,
   ): void => {
-    const newEndpoint = getExampleForEndpoint(
+    const newEndpoint = getEndpointByPath(
       newEndpointPath,
       newMethod,
       endpoints,
@@ -109,19 +124,28 @@ export function ApiExplorer({
     }
   };
 
+  // Fix the unused variable by implementing URL path variable handling in form submission
   const handleTryIt = async (): Promise<void> => {
-    // Special handling for GET requests that don't have required parameters
+    // Parse URL path variables if present
+    let pathParams: Record<string, string> | undefined;
+    try {
+      if (urlPathVariables.trim()) {
+        pathParams = JSON.parse(urlPathVariables);
+      }
+    } catch {
+      setFormError(new Error("Invalid URL path variables format"));
+      return;
+    }
+
+    // Use path variables in form submission
     if (
       activeEndpoint.method === "GET" &&
       (!activeEndpoint.requestSchema ||
         Object.keys(currentFormValues || {}).length === 0)
     ) {
-      // Directly call submitForm with undefined for parameterless GET requests
-      // This ensures no validation is attempted for the request body
-      await submitForm(undefined);
+      await submitForm(undefined, { pathParams });
     } else {
-      // For all other requests, use the standard form validation flow
-      await handleSubmit(submitForm)();
+      await handleSubmit((data) => submitForm(data, { pathParams }))();
     }
   };
 

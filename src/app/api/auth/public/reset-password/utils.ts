@@ -1,8 +1,8 @@
 import { randomBytes } from "crypto";
 import { jwtVerify, SignJWT } from "jose";
+import { debugLogger } from "next-query-portal/shared/utils/logger";
 
 import { env } from "../../../../../config/env";
-import { debugLogger } from "../../../../../package/shared";
 import { db } from "../../../db";
 
 const SECRET_KEY = new TextEncoder().encode(env.JWT_SECRET_KEY);

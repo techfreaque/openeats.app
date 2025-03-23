@@ -1,9 +1,10 @@
 import { Button, Section, Text } from "@react-email/components";
-import { APP_NAME, debugLogger } from "next-query-portal/shared";
+import type { EmailFunctionType } from "next-query-portal/server/email/handle-emails";
+import { APP_NAME } from "next-query-portal/shared/constants";
+import { debugLogger } from "next-query-portal/shared/utils/logger";
 
 import { EmailTemplate } from "../../../config/email.template";
 import { env } from "../../../config/env";
-import type { EmailFunctionType } from "../../../package/server/email/handle-emails";
 import { getFullUser } from "../auth/me/route";
 import type {
   TemplatePostRequestType,

@@ -2,7 +2,7 @@ import "./globals.css";
 
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { APP_NAME } from "next-query-portal/shared";
+import { APP_NAME } from "next-query-portal/shared/constants";
 import type React from "react";
 import type { JSX } from "react";
 

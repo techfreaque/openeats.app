@@ -1,9 +1,9 @@
 import "server-only";
 
-import { apiHandler } from "next-query-portal/server";
+import { apiHandler } from "next-query-portal/server/endpoints/core/api-handler";
+import { debugLogger } from "next-query-portal/shared/utils/logger";
 
-import { debugLogger } from "../../../package/shared";
-import { templateEndpoint } from "./definition";
+import templateEndpoint from "./definition";
 import { renderMail } from "./email";
 
 export const POST = apiHandler({

@@ -1,25 +1,35 @@
 import type { NextConfig } from "next";
-import { resolve } from "path";
 import type { Configuration } from "webpack";
 
+import nextPortalConfig from "./next.portal.config";
+import { generateEndpoints } from "./src/packages/next-query-portal/scripts/generate-endpoints";
+
 const nextConfig: NextConfig = {
-  webpack: (config: Configuration) => {
-    config.resolve = config.resolve || {};
-    if (!config.resolve.alias || Array.isArray(config.resolve.alias)) {
-      config.resolve.alias = {};
+  webpack: (config: Configuration, { dev }) => {
+    // Set up path aliases for the next-query-portal package
+    if (!nextPortalConfig.useNextQueryPortalPackage) {
+      config.resolve = config.resolve || {};
+      if (!config.resolve.alias || Array.isArray(config.resolve.alias)) {
+        config.resolve.alias = {};
+      }
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        "next-query-portal": "./src/packages/next-query-portal",
+      };
     }
-    config.resolve.alias["next-query-portal/client"] = resolve(
-      __dirname,
-      "src/package/client",
-    );
-    config.resolve.alias["next-query-portal/server"] = resolve(
-      __dirname,
-      "src/package/server",
-    );
-    config.resolve.alias["next-query-portal/shared"] = resolve(
-      __dirname,
-      "src/package/shared",
-    );
+
+    // Add a plugin to generate endpoints during development
+    if (dev) {
+      config.plugins = config.plugins || [];
+      config.plugins.push({
+        apply: (compiler) => {
+          compiler.hooks.done.tap("GenerateApiEndpoints", () => {
+            generateEndpoints(__dirname);
+          });
+        },
+      });
+    }
+
     return config;
   },
   experimental: {

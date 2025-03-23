@@ -1,13 +1,11 @@
 import Link from "next/link";
-import { getEndpoints } from "next-query-portal/server";
 import type { JSX } from "react";
 
-import { Button } from "../components/ui";
+import { Button } from "@/components/ui";
+
 import { ApiExplorer } from "./api-docs/components/api-explorer";
 
 export default function Home(): JSX.Element {
-  const endpoints = getEndpoints();
-
   return (
     <>
       {/* Hero Section */}
@@ -45,7 +43,7 @@ export default function Home(): JSX.Element {
         </div>
       </section>
       <main>
-        <ApiExplorer endpoints={endpoints} />
+        <ApiExplorer />
       </main>
     </>
   );

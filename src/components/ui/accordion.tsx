@@ -2,10 +2,10 @@
 
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { ChevronDownIcon } from "@radix-ui/react-icons";
-import { cn } from "next-query-portal/shared";
+import { cn } from "next-query-portal/shared/utils/utils";
 import * as React from "react";
 
-// import { cn } from "next-query-portal/shared";
+// import { cn } from "next-query-portal/shared/utils/utils";
 
 const Accordion = AccordionPrimitive.Root;
 

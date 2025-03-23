@@ -1,5 +1,5 @@
 import { Slot } from "@radix-ui/react-slot";
-import { cn } from "next-query-portal/shared";
+import { cn } from "next-query-portal/shared/utils/utils";
 import type { ButtonHTMLAttributes, ReactElement } from "react";
 import { forwardRef } from "react";
 

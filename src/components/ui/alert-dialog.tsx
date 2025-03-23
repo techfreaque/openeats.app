@@ -1,7 +1,7 @@
 "use client";
 
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
-import { cn } from "next-query-portal/shared";
+import { cn } from "next-query-portal/shared/utils/utils";
 import * as React from "react";
 
 import { buttonVariants } from "./button";

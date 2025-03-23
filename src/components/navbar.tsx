@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { APP_NAME } from "next-query-portal/shared";
+import { APP_NAME } from "next-query-portal/shared/constants";
 import type { JSX } from "react";
 
+import { useAuth } from "../hooks/useAuth";
 import { Button } from "./ui";
 
 export function Navbar(): JSX.Element {
-  const { isLoggedIn, user, logout, isLoading, isLoadingInitial } = useAuth();
-  const shouldRenderLoginButton = !isLoading && !isLoadingInitial;
+  const { isLoggedIn, isLoading, user, logout } = useAuth();
+
   return (
     <header className="bg-primary text-primary-foreground sticky top-0 z-50 border-b shadow-sm">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -19,11 +20,12 @@ export function Navbar(): JSX.Element {
           </div>
         </Link>
         <nav className="flex items-center space-x-2">
-          {shouldRenderLoginButton &&
+          {!isLoading &&
             (isLoggedIn ? (
               <>
-                <div>{user!.user.email}</div>
+                <div>{user!.email}</div>
                 <Button
+                  // eslint-disable-next-line @typescript-eslint/no-misused-promises
                   onClick={logout}
                   variant="ghost"
                   size="sm"

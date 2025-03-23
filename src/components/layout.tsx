@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { APP_NAME } from "next-query-portal/shared";
+import { APP_NAME } from "next-query-portal/shared/constants";
 import type { JSX, ReactNode } from "react";
 
 import { Navbar } from "./navbar";
@@ -27,7 +27,7 @@ export function Layout({ children }: { children: ReactNode }): JSX.Element {
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link
-                    href="/v1/api-docs"
+                    href="/api-docs"
                     className="text-gray-600 hover:text-primary"
                   >
                     API Documentation

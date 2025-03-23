@@ -1,7 +1,7 @@
 "use client";
 
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
-import { cn } from "next-query-portal/shared";
+import { cn } from "next-query-portal/shared/utils/utils";
 import * as React from "react";
 
 const Avatar = React.forwardRef<

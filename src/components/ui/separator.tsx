@@ -1,7 +1,7 @@
 "use client";
 
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
-import { cn } from "next-query-portal/shared";
+import { cn } from "next-query-portal/shared/utils/utils";
 import * as React from "react";
 
 const Separator = React.forwardRef<

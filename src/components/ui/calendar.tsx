@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
-import { cn } from "next-query-portal/shared";
+import { cn } from "next-query-portal/shared/utils/utils";
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
 

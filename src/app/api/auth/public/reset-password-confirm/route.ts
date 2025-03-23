@@ -1,12 +1,12 @@
 import "server-only";
 
-import { apiHandler } from "next-query-portal/server";
+import { apiHandler } from "next-query-portal/server/endpoints/core/api-handler";
+import { errorLogger } from "next-query-portal/shared/utils/logger";
 
-import { errorLogger } from "../../../../../package/shared";
 import { db } from "../../../db";
 import { hashPassword } from "../register/route";
 import { verifyPasswordResetToken } from "../reset-password/utils";
-import { resetPasswordConfirmEndpoint } from "./definition";
+import resetPasswordConfirmEndpoint from "./definition";
 import { renderResetPasswordConfirmMail } from "./email";
 
 export const POST = apiHandler({

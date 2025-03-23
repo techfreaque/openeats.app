@@ -1,139 +1,158 @@
 "use client";
 
-import type { ApiEndpoint } from "next-query-portal/client";
+import type { ApiEndpoint } from "next-query-portal/client/endpoint";
 import type { JSX } from "react";
-import { z } from "zod";
+import React from "react";
+import type { ZodType } from "zod";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface SchemaViewerProps {
   endpoint: ApiEndpoint<unknown, unknown, unknown>;
+  title?: string;
 }
 
-export function SchemaViewer({ endpoint }: SchemaViewerProps): JSX.Element {
-  // Try to convert schemas to readable format
-  const readableRequestSchema = endpoint.requestSchema
-    ? zodSchemaToReadable(endpoint.requestSchema) || endpoint.requestSchema
-    : null;
-
-  const readableResponseSchema = endpoint.responseSchema
-    ? zodSchemaToReadable(endpoint.responseSchema) || endpoint.responseSchema
-    : null;
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {endpoint.requestSchema && (
-        <div>
-          <h4 className="text-sm font-medium mb-2">Request Schema</h4>
-          <div className="bg-gray-800 rounded-lg p-4">
-            <pre className="text-green-400 font-mono text-sm overflow-auto">
-              {JSON.stringify(readableRequestSchema, null, 2)}
-            </pre>
-          </div>
-        </div>
-      )}
-
-      {endpoint.responseSchema && (
-        <div>
-          <h4 className="text-sm font-medium mb-2">Response Schema</h4>
-          <div className="bg-gray-800 rounded-lg p-4">
-            <pre className="text-green-400 font-mono text-sm overflow-auto">
-              {JSON.stringify(readableResponseSchema, null, 2)}
-            </pre>
-          </div>
-        </div>
-      )}
-
-      {!endpoint.requestSchema && !endpoint.responseSchema && (
-        <div className="text-gray-500 italic text-center py-4">
-          No schema information available for this endpoint.
-        </div>
-      )}
-    </div>
-  );
+// Type to represent schema field info
+interface SchemaFieldInfo {
+  name: string;
+  type: string;
+  required: boolean;
 }
 
-// Helper function to convert Zod schema to human-readable format
-function zodSchemaToReadable(schema: z.ZodType<any>): any {
-  if (!schema) {
-    return null;
-  }
-
-  try {
-    // Get the description of the schema
-    const description = schema.description;
-
-    // For objects, get the shape
-    if (schema instanceof z.ZodObject) {
-      const shape = schema._def.shape();
-      const properties: Record<string, any> = {};
-
-      for (const [key, value] of Object.entries(shape)) {
-        properties[key] = {
-          type: getZodTypeName(value),
-          optional: value.isOptional?.() || false,
-          description: value.description,
-        };
-      }
-
-      return {
-        type: "object",
-        properties,
-        description,
-      };
-    }
-
-    // For arrays
-    if (schema instanceof z.ZodArray) {
-      return {
-        type: "array",
-        items: getZodTypeName(schema._def.type),
-        description,
-      };
-    }
-
-    // For primitives and other types
-    return {
-      type: getZodTypeName(schema),
-      description,
-    };
-  } catch (error) {
-    // Fallback to original schema if parsing fails
-    return {
-      type: "unknown",
-      note: "Schema could not be parsed into readable format",
-    };
-  }
-}
-
-// Helper to get the type name from a Zod schema
-function getZodTypeName(schema: z.ZodType<any>): string {
-  if (!schema) {
+// Get schema field type
+function getSchemaFieldType(field: ZodType): string {
+  if (!field || typeof field !== "object" || !("_def" in field)) {
     return "unknown";
   }
 
-  if (schema instanceof z.ZodString) {
-    return "string";
+  try {
+    if (
+      field._def &&
+      typeof field._def === "object" &&
+      "typeName" in field._def
+    ) {
+      const typeName = field._def.typeName as string;
+      switch (typeName) {
+        case "ZodString":
+          return "string";
+        case "ZodNumber":
+          return "number";
+        case "ZodBoolean":
+          return "boolean";
+        case "ZodArray":
+          return "array";
+        case "ZodObject":
+          return "object";
+        case "ZodEnum":
+          return "enum";
+        case "ZodDate":
+          return "date";
+        case "ZodOptional":
+          // Handle optional wrapper
+          if (field._def.typeName && typeof field._def.typeName === "object") {
+            return getSchemaFieldType(field._def.typeName as ZodType);
+          }
+          return "unknown";
+        default:
+          // Type-safe string operations
+          if (typeof typeName === "string") {
+            return typeName.replace("Zod", "").toLowerCase() || "unknown";
+          }
+          return "unknown";
+      }
+    }
+    return "unknown";
+  } catch {
+    return "unknown";
   }
-  if (schema instanceof z.ZodNumber) {
-    return "number";
-  }
-  if (schema instanceof z.ZodBoolean) {
-    return "boolean";
-  }
-  if (schema instanceof z.ZodObject) {
-    return "object";
-  }
-  if (schema instanceof z.ZodArray) {
-    return "array";
-  }
-  if (schema instanceof z.ZodEnum) {
-    return `enum (${schema._def.values.join(", ")})`;
-  }
-  if (schema instanceof z.ZodNullable) {
-    return `nullable ${getZodTypeName(schema._def.innerType)}`;
-  }
-  if (schema instanceof z.ZodOptional) {
-    return `optional ${getZodTypeName(schema._def.innerType)}`;
+}
+
+// Function to extract schema fields with type safety
+function extractSchemaFields(schema: ZodType | undefined): SchemaFieldInfo[] {
+  if (!schema || typeof schema !== "object" || !("shape" in schema)) {
+    return [];
   }
 
-  return schema._def.typeName || "unknown";
+  try {
+    const fields: SchemaFieldInfo[] = [];
+    const shape = (schema as { shape: Record<string, ZodType> }).shape;
+
+    // Type-safe iteration over shape
+    Object.entries(shape).forEach(([name, field]) => {
+      if (field && typeof field === "object") {
+        const isRequired =
+          !("_def" in field) ||
+          !field._def ||
+          !("isOptional" in field._def) ||
+          !field._def.isOptional;
+
+        fields.push({
+          name,
+          type: getSchemaFieldType(field),
+          required: isRequired,
+        });
+      }
+    });
+
+    return fields;
+  } catch {
+    return [];
+  }
+}
+
+export function SchemaViewer({
+  endpoint,
+  title = "Schema",
+}: SchemaViewerProps): JSX.Element {
+  const schema = endpoint.requestSchema;
+  const fields = extractSchemaFields(schema);
+
+  if (!fields.length) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>No schema available</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>
+          The following fields are available for this API endpoint
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {fields.map((field) => (
+            <div key={field.name}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="font-semibold">{field.name}</span>
+                  {field.required && (
+                    <span className="ml-1 text-xs text-red-500">*</span>
+                  )}
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {field.type}
+                </span>
+              </div>
+              <Separator className="mt-2" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }

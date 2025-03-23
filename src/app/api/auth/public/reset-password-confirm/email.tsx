@@ -1,12 +1,12 @@
 import { Section, Text } from "@react-email/components";
+import type { EmailFunctionType } from "next-query-portal/server/email/handle-emails";
 import type {
   MessageResponseType,
   UndefinedType,
 } from "next-query-portal/shared";
-import { APP_NAME } from "next-query-portal/shared";
+import { APP_NAME } from "next-query-portal/shared/constants";
 
 import { EmailTemplate } from "../../../../../config/email.template";
-import type { EmailFunctionType } from "../../../../../package/server/email/handle-emails";
 import { getFullUser } from "../../me/route";
 import type { ResetPasswordConfirmType } from "./schema";
 

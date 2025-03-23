@@ -1,12 +1,10 @@
 import { Button, Section, Text } from "@react-email/components";
-import type {
-  MessageResponseType,
-  UndefinedType,
-} from "next-query-portal/shared";
-import { APP_DOMAIN, APP_NAME } from "next-query-portal/shared";
+import type { EmailFunctionType } from "next-query-portal/server/email/handle-emails";
+import { APP_DOMAIN, APP_NAME } from "next-query-portal/shared/constants";
+import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
+import type { MessageResponseType } from "next-query-portal/shared/types/response.schema";
 
 import { EmailTemplate } from "../../../../../config/email.template";
-import type { EmailFunctionType } from "../../../../../package/server/email/handle-emails";
 import { db } from "../../../db";
 import type { ResetPasswordRequestType } from "./schema";
 import { generatePasswordResetToken } from "./utils";

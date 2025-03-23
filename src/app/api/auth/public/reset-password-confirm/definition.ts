@@ -1,14 +1,12 @@
-import { createEndpoint } from "next-query-portal/client";
-import {
-  messageResponseSchema,
-  undefinedSchema,
-  UserRoleValue,
-} from "next-query-portal/shared";
+import { createEndpoint } from "next-query-portal/client/endpoint";
+import { undefinedSchema } from "next-query-portal/shared/types/common.schema";
+import { UserRoleValue } from "next-query-portal/shared/types/enums";
+import { messageResponseSchema } from "next-query-portal/shared/types/response.schema";
 
-import { registerEndpoint } from "../register/definition";
+import registerEndpoint from "../register/definition";
 import { resetPasswordConfirmSchema } from "./schema";
 
-export const resetPasswordConfirmEndpoint = createEndpoint({
+const resetPasswordConfirmEndpoint = createEndpoint({
   description: "Confirm a password reset request",
   method: "POST",
   dirname: __dirname,
@@ -49,3 +47,5 @@ export const resetPasswordConfirmEndpoint = createEndpoint({
   allowedRoles: [UserRoleValue.PUBLIC],
   requestUrlSchema: undefinedSchema,
 });
+
+export default resetPasswordConfirmEndpoint;

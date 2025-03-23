@@ -1,12 +1,12 @@
 "use client";
 
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { type ApiEndpoint } from "next-query-portal/client";
-import {
-  type ApiSection,
-  errorLogger,
-  type Methods,
-} from "next-query-portal/shared";
+import type { ApiEndpoint } from "next-query-portal/client/endpoint";
+import type {
+  ApiSection,
+  Methods,
+} from "next-query-portal/shared/types/endpoint";
+import { errorLogger } from "next-query-portal/shared/utils/logger";
 import type { JSX } from "react";
 import { useState } from "react";
 

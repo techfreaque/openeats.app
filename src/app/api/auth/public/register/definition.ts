@@ -1,10 +1,11 @@
-import { createEndpoint } from "next-query-portal/client";
-import { undefinedSchema, UserRoleValue } from "next-query-portal/shared";
+import { createEndpoint } from "next-query-portal/client/endpoint";
+import { undefinedSchema } from "next-query-portal/shared/types/common.schema";
+import { UserRoleValue } from "next-query-portal/shared/types/enums";
 
-import { loginResponseSchema } from "../login/login.schema";
+import { loginResponseSchema } from "../login/schema";
 import { registerSchema } from "./schema";
 
-export const registerEndpoint = createEndpoint({
+const registerEndpoint = createEndpoint({
   description: "Register a new user account",
   requestSchema: registerSchema,
   responseSchema: loginResponseSchema,
@@ -88,3 +89,4 @@ export const registerEndpoint = createEndpoint({
     urlPathVariables: undefined,
   },
 });
+export default registerEndpoint;

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ApiEndpoint } from "next-query-portal/client";
+import type { ApiEndpoint } from "next-query-portal/client/endpoint";
 import type { JSX } from "react";
 import { useState } from "react";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { cn } from "next-query-portal/shared";
+import { cn } from "next-query-portal/shared/utils/utils";
 import * as React from "react";
 
 const Tabs = TabsPrimitive.Root;

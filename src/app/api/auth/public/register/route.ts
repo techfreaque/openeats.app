@@ -4,15 +4,15 @@ import { hash } from "bcrypt";
 import type {
   ApiHandlerCallBackProps,
   SafeReturnType,
-} from "next-query-portal/server";
-import { apiHandler } from "next-query-portal/server";
-import type { UndefinedType } from "next-query-portal/shared";
-import { UserRoleValue } from "next-query-portal/shared";
+} from "next-query-portal/server/endpoints/core/api-handler";
+import { apiHandler } from "next-query-portal/server/endpoints/core/api-handler";
+import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
+import { UserRoleValue } from "next-query-portal/shared/types/enums";
 
 import { db } from "../../../db";
-import type { LoginResponseType } from "../login/login.schema";
 import { loginUser } from "../login/route";
-import { registerEndpoint } from "./definition";
+import type { LoginResponseType } from "../login/schema";
+import registerEndpoint from "./definition";
 import type { RegisterType } from "./schema";
 
 export const POST = apiHandler({

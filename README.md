@@ -1,10 +1,14 @@
-# next-query-portal
+# Next Query Portal Template
 
-A Next.js backend framework for building strongly typed APIs with integrated authentication, data access, and client-side hooks.
+A comprehensive starter template for building Next.js applications with strongly typed API endpoints, leveraging the next-query-portal framework.
+
+## Overview
+
+This template provides a complete development environment for creating Next.js applications with type-safe, validated API endpoints. It includes the next-query-portal package, which delivers strongly typed APIs, role-based access control, data providers, and client-side hooks.
 
 ## Features
 
-- **Strongly Typed APIs**: Define your endpoints with full TypeScript support and Zod validation
+- **Strongly Typed APIs**: Define endpoints with full TypeScript support and Zod validation
 - **Role-Based Access Control**: Built-in user role management and authorization
 - **Data Providers**: Flexible data access with Prisma integration
 - **Client Hooks**: React hooks for data fetching and mutation
@@ -13,192 +17,290 @@ A Next.js backend framework for building strongly typed APIs with integrated aut
 
 ## Getting Started
 
+### Fork This Repository
+
+Start by forking this repository to use as your project foundation. This allows you to:
+- Begin development immediately with all configurations in place
+- Easily merge updates when new versions are released
+- Customize the template to fit your specific project needs
+
 ### Installation
 
 ```bash
-npm install @open-delivery/next-portal
+# Clone your forked repository
+git clone https://github.com/your-username/next-portal.git
+cd next-portal
+
+# Install dependencies
+yarn install
 ```
 
-### Server-Side Setup
+### Environment Setup
 
-Initialize the API library in your application:
+```bash
+# Copy the example environment file
+cp .env.example .env
+```
 
+Edit the .env file to configure your environment variables.
+
+### Development
+
+```bash
+# Start the development server
+yarn run dev
+```
+
+### Building
+
+```bash
+# Build the application
+yarn run build
+```
+
+## Using next-query-portal
+
+This template offers two ways to use the next-query-portal package:
+
+### 1. Local Package (default)
+
+The package is included in the [./src/packages/next-query-portal](./src/packages/next-query-portal) directory. This approach allows you to:
+- Directly modify the package code if needed
+- Debug and step through the package code
+- Make local customizations
+
+Configure in next.portal.config.ts:
 ```typescript
-import { initApiLibrary, PrismaDataProvider } from '@open-delivery/next-portal';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
-initApiLibrary({
-  prismaClient: prisma,
-  apiConfig: {
-    defaultStaleTime: 30000,
-    defaultCacheTime: 300000,
-  },
-});
+export default {
+  useNextQueryPortalPackage: false
+};
 ```
 
-### Define an API Endpoint
+### 2. NPM Package
 
+Alternatively, you can use the published npm package:
+
+```bash
+TODO handle removing the next-query-portal before installing package version
+yarn add next-query-portal
+```
+
+And update next.portal.config.ts:
+```typescript
+export default {
+  useNextQueryPortalPackage: true
+};
+```
+
+## Project Structure
+
+```
+├── src/
+│   ├── app/            # Next.js app directory
+│   ├── components/     # React components
+│   ├── config/         # Application configuration
+│   ├── hooks/          # Custom React hooks
+│   └── packages/       # Local packages including next-query-portal
+├── prisma/
+│   └── schema.prisma   # Prisma database schema
+├── .env.example        # Example environment variables
+├── next.config.ts      # Next.js configuration
+└── next.portal.config.ts # Portal-specific configuration
+```
+
+## Creating API Endpoints
+
+This template includes a ready-to-use API endpoint example in the `src/app/api/template-api` directory. Explore this folder to see a complete implementation with schemas, endpoint definition, and even email integration:
+
+- **definition.ts**: Defines the API endpoint configuration
+- **schema.ts**: Contains Zod schemas for request/response validation
+- **email.tsx**: Example of how to integrate email sending with your API
+
+### Creating Your Own Endpoint
+
+To create a new API endpoint, follow this structure:
+
+1. **Define your schemas** (similar to `schema.ts`):
 ```typescript
 import { z } from 'zod';
-import { createEndpoint, UserRoleValue } from '@open-delivery/next-portal';
 
-// Define request and response schemas
-const requestSchema = z.object({
-  name: z.string(),
-  email: z.string().email(),
+export const userCreateRequestSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Please provide a valid email" }),
 });
 
-const responseSchema = z.object({
+export const userCreateResponseSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   email: z.string().email(),
+  createdAt: z.date(),
 });
 
-// Create the endpoint
-export const createUserEndpoint = createEndpoint({
-  description: 'Create a new user',
-  method: 'POST',
-  path: ['users'],
-  allowedRoles: [UserRoleValue.ADMIN],
-  requestSchema,
-  responseSchema,
-  requestUrlSchema: z.undefined(),
-  fieldDescriptions: {
-    name: 'The user\'s full name',
-    email: 'The user\'s email address',
-  },
-  errorCodes: {
-    400: 'Invalid request data',
-    401: 'Not authorized',
-    500: 'Server error',
-  },
+// Export types derived from schemas
+export type UserCreateRequestType = z.infer<typeof userCreateRequestSchema>;
+export type UserCreateResponseType = z.infer<typeof userCreateResponseSchema>;
+```
+
+2. **Create the endpoint definition** (similar to `definition.ts`):
+```typescript
+import { createEndpoint } from "next-query-portal/client";
+import { UserRoleValue } from "next-query-portal/shared";
+import { userCreateRequestSchema, userCreateResponseSchema } from "./schema";
+
+export default createEndpoint({
+  description: "Create a new user",
+  method: "POST",
+  requestSchema: userCreateRequestSchema,
+  responseSchema: userCreateResponseSchema,
+  requestUrlSchema: z.undefined(), // No URL parameters for this endpoint
   apiQueryOptions: {
-    staleTime: 0, // Never cache mutations
+    queryKey: ["users", "create"],
   },
+  fieldDescriptions: {
+    name: "User's full name",
+    email: "User's email address",
+  },
+  allowedRoles: [UserRoleValue.ADMIN], // Only admins can create users
+  errorCodes: {
+    400: "Invalid request data",
+    409: "Email already in use",
+    500: "Internal server error",
+  },
+  dirname: __dirname,
   examples: {
     payloads: {
-      default: { id: 'example-id', name: 'John Doe', email: 'john@example.com' },
+      default: {
+        name: "John Doe",
+        email: "john@example.com",
+      },
     },
-    urlPathVariables: undefined,
   },
 });
 ```
 
-### Create an API Route Handler
-
+3. **Implement the route handler** (in `route.ts`):
 ```typescript
-// app/api/users/route.ts
-import { apiHandler } from '@open-delivery/next-portal';
-import { createUserEndpoint } from '@/endpoints/users';
+import { apiHandler } from "next-query-portal/server";
+import { db } from "../../db";
+import endpoint from "./definition";
+import type { UserCreateRequestType, UserCreateResponseType } from "./schema";
 
-export const POST = apiHandler({
-  endpoint: createUserEndpoint,
-  handler: async ({ data, user }) => {
-    // Implement your logic here
-    const newUser = await db.users.create({
+export const POST = apiHandler<UserCreateRequestType, UserCreateResponseType>(
+  endpoint,
+  async ({ requestData, user }) => {
+    // Create user in database
+    const newUser = await db.user.create({
       data: {
-        name: data.name,
-        email: data.email,
-        createdBy: user.id,
-      }
+        name: requestData.name,
+        email: requestData.email,
+        createdById: user.id,
+      },
     });
     
+    // Return created user data
     return {
-      success: true,
-      data: newUser,
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      createdAt: newUser.createdAt,
     };
-  },
-});
+  }
+);
 ```
 
-### Client-Side Usage
+The template automatically discovers your endpoints and generates type definitions, making them available throughout your application.
+
+### Using Your Endpoint in Frontend Components
 
 ```tsx
-import { useApiQuery, useApiMutation } from '@open-delivery/next-portal';
-import { getUsersEndpoint, createUserEndpoint } from '@/api/endpoints/users';
+import { useApiForm } from "next-query-portal/client";
+import { endpoints } from "@/app/api/generated/endpoints";
 
-function UsersList() {
-  // Query users
-  const {
-    data: users,
-    isLoading,
-    error
-  } = useApiQuery(getUsersEndpoint);
-  
-  // Create user mutation
-  const { mutate: createUser, isSuccess } = useApiMutation(createUserEndpoint);
-  
-  const handleCreateUser = (userData) => {
-    createUser({ data: userData });
-  };
-  
-  return (
-    <div>
-      {/* Render your UI */}
-    </div>
-  );
-}
-```
-
-### Form Integration
-
-```tsx
-import { useApiForm } from '@open-delivery/next-portal';
-import { createUserEndpoint } from '@/api/endpoints/users';
-
-function UserForm() {
+function CreateUserForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState,
     submitForm,
     isSubmitting,
-    formError
-  } = useApiForm(createUserEndpoint);
+    errorMessage
+  } = useApiForm(endpoints.users.create);
   
   return (
     <form onSubmit={handleSubmit(submitForm)}>
-      <input {...register('name')} />
-      <input {...register('email')} />
+      <div>
+        <label>Name</label>
+        <input {...register('name')} />
+        {formState.errors.name && (
+          <p>{formState.errors.name.message}</p>
+        )}
+      </div>
+      
+      <div>
+        <label>Email</label>
+        <input {...register('email')} />
+        {formState.errors.email && (
+          <p>{formState.errors.email.message}</p>
+        )}
+      </div>
+      
       <button type="submit" disabled={isSubmitting}>
-        Create User
+        {isSubmitting ? "Submitting..." : "Create User"}
       </button>
-      {formError && <p>{formError.message}</p>}
+      
+      {errorMessage && <p>{errorMessage}</p>}
     </form>
   );
 }
 ```
 
-## API Reference
+## Deployment
 
-### Server-Side APIs
+### Deploying to Vercel
 
-- `initApiLibrary()`: Initialize the API library
-- `createEndpoint()`: Define a type-safe API endpoint
-- `apiHandler()`: Create an API route handler
-- `getVerifiedUser()`: Get authenticated user with role check
+This template is optimized for deployment on Vercel:
 
-### Client-Side Hooks
+1. Connect your GitHub repository to Vercel
+2. Configure environment variables in the Vercel dashboard
+3. Deploy with the default settings (Vercel automatically detects Next.js)
 
-- `useApiQuery()`: Fetch data from an API endpoint
-- `useApiMutation()`: Perform mutations (create, update, delete)
-- `useApiForm()`: Integrate forms with API endpoints
+```bash
+# Or deploy via Vercel CLI
+npm install -g vercel
+vercel
+```
 
-### Data Providers
+### Other Deployment Options
 
-- `PrismaDataProvider`: Use Prisma as a data source
-- `MockDataProvider`: Use mock data (for testing)
+- **Docker**: Use the included Dockerfile for containerized deployments
+- **Node.js Server**: Build and run on any Node.js hosting platform
+- **Static Export**: For simple applications, use `next export` for static site generation
 
-## Environment Variables
+## Updating
 
-Required environment variables:
+When new versions of the template or next-query-portal are released:
 
-- `JWT_SECRET_KEY`: Secret key for JWT token signing
-- `NEXT_PUBLIC_BACKEND_URL`: Backend API URL
-- `NEXT_PUBLIC_APP_NAME`: Application name
+1. Add the original repository as a remote:
+```bash
+git remote add upstream https://github.com/techfreaque/next-query-portal.git
+```
+
+2. Fetch the latest changes:
+```bash
+git fetch upstream
+```
+
+3. Merge changes (resolve conflicts as needed):
+```bash
+git merge upstream/main
+```
 
 ## License
 
-MIT
+- Template App: MIT
+- next-query-portal Package: GPL-3.0-only
+
+## Resources
+
+- [GitHub Repository](https://github.com/techfreaque/next-query-portal)
+- [Issue Tracker](https://github.com/techfreaque/next-query-portal/issues)

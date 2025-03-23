@@ -1,11 +1,11 @@
 import { Button, Section, Text } from "@react-email/components";
-import type { EmailTemplateReturnType } from "next-query-portal/server";
-import type { UndefinedType } from "next-query-portal/shared";
-import { APP_NAME } from "next-query-portal/shared";
+import type { EmailTemplateReturnType } from "next-query-portal/server/email/handle-emails";
+import { APP_NAME } from "next-query-portal/shared/constants";
+import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
 
 import { EmailTemplate } from "../../../../../config/email.template";
 import { env } from "../../../../../config/env";
-import type { LoginResponseType } from "../login/login.schema";
+import type { LoginResponseType } from "../login/schema";
 import type { RegisterType } from "./schema";
 
 export function renderRegisterMail({

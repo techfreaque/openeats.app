@@ -1,5 +1,5 @@
-import { createEndpoint } from "next-query-portal/client";
-import { UserRoleValue } from "next-query-portal/shared";
+import { createEndpoint } from "next-query-portal/client/endpoint";
+import { UserRoleValue } from "next-query-portal/shared/types/enums";
 
 import {
   templatePostRequestSchema,
@@ -7,7 +7,7 @@ import {
   templatePostResponseSchema,
 } from "./schema";
 
-export const templateEndpoint = createEndpoint({
+const templateEndpoint = createEndpoint({
   description: "Register a new user account",
   method: "POST",
   requestSchema: templatePostRequestSchema,
@@ -40,3 +40,4 @@ export const templateEndpoint = createEndpoint({
     },
   },
 });
+export default templateEndpoint;

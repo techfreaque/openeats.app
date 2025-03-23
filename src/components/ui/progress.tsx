@@ -1,7 +1,7 @@
 "use client";
 
 import * as ProgressPrimitive from "@radix-ui/react-progress";
-import { cn } from "next-query-portal/shared";
+import { cn } from "next-query-portal/shared/utils/utils";
 import * as React from "react";
 
 const Progress = React.forwardRef<

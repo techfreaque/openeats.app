@@ -1,4 +1,4 @@
-import { cn } from "next-query-portal/shared";
+import { cn } from "next-query-portal/shared/utils/utils";
 import type { ReactElement, Ref } from "react";
 import { forwardRef } from "react";
 import {

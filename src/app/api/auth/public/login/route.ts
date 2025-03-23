@@ -2,23 +2,25 @@ import "server-only";
 
 import { compare } from "bcrypt";
 import { cookies } from "next/headers";
-import type {
-  ApiHandlerCallBackProps,
-  JwtPayloadType,
-  SafeReturnType,
-} from "next-query-portal/server";
-import { apiHandler, signJwt } from "next-query-portal/server";
+import type { JwtPayloadType } from "next-query-portal/server/endpoints/auth/jwt";
+import { signJwt } from "next-query-portal/server/endpoints/auth/jwt";
+import {
+  apiHandler,
+  type ApiHandlerCallBackProps,
+  type SafeReturnType,
+} from "next-query-portal/server/endpoints/core/api-handler";
+import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
 
 import { env } from "../../../../../config/env";
-import type { UndefinedType } from "../../../../../package/shared/types";
 import { db } from "../../../db";
 import { getFullUser } from "../../me/route";
-import { loginEndpoint } from "./login";
-import type { LoginFormType, LoginResponseType } from "./login.schema";
+import loginEndpoint from "./definition";
+import type { LoginFormType, LoginResponseType } from "./schema";
 
 export const POST = apiHandler({
   endpoint: loginEndpoint,
   handler: loginUser,
+  email: undefined,
 });
 
 /**

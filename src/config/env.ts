@@ -1,9 +1,10 @@
-import { envSchema as portalEnvSchema } from "next-query-portal/server";
-import { validatedEnv } from "next-query-portal/shared";
+import { envSchema as portalEnvSchema } from "next-query-portal/server/env";
+import { validatedEnv } from "next-query-portal/shared/utils/env-util";
 import { z } from "zod";
 
 export const envSchema = portalEnvSchema.extend({
   SUPPORT_EMAIL: z.string().email(),
+  DATABASE_URL: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;
