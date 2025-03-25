@@ -7,6 +7,9 @@
       ],
       "@/*": [
         "./src/*"
+      ],
+      "server-only": [
+        "src/packages/next-query-portal/server/utils/server-only.ts"
       ]
     },
     "outDir": "./dist",

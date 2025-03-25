@@ -2,10 +2,10 @@
 
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import { shallow } from "zustand/shallow";
 
 import type { ApiEndpoint } from "../../endpoint";
-import { useApiStore } from "../api-store";
+import type { ApiStore, MutationStoreType } from "../store";
+import { useApiStore } from "../store";
 import type { ApiMutationOptions } from "../types";
 
 /**
@@ -16,24 +16,32 @@ import type { ApiMutationOptions } from "../types";
  */
 export function useApiMutation<TResponse, TRequest, TUrlVariables>(
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
-  options: ApiMutationOptions<TResponse, TRequest> = {},
+  options: ApiMutationOptions<TRequest, TResponse, TUrlVariables> = {},
 ): UseMutationResult<
   TResponse,
   Error,
-  { data: TRequest; urlParams?: TUrlVariables },
+  { requestData: TRequest; urlParams?: TUrlVariables },
   unknown
 > {
   const { executeMutation, getMutationId } = useApiStore();
   const mutationId = getMutationId(endpoint);
-
-  // Use a memoized selector function to prevent re-renders
+  const defaultState: MutationStoreType<TResponse> = {
+    data: undefined,
+    isPending: true,
+    isError: false,
+    error: null,
+    isSuccess: false,
+  };
   const selector = useMemo(
-    () => (state: any) => state.mutations[mutationId],
+    () =>
+      (state: ApiStore): MutationStoreType<TResponse> =>
+        (state.mutations[mutationId] as unknown as
+          | undefined
+          | MutationStoreType<TResponse>) || defaultState,
     [mutationId],
   );
-
   // Get mutation state from store with shallow comparison
-  const mutationState = useApiStore(selector, shallow) || {
+  const mutationState = useApiStore(selector) || {
     isPending: false,
     isError: false,
     error: null,
@@ -43,10 +51,10 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables>(
 
   // Create a type-safe mutate function that accepts both data and urlParams
   const mutate = useCallback(
-    (variables: { data: TRequest; urlParams?: TUrlVariables }) => {
+    (variables: { requestData: TRequest; urlParams?: TUrlVariables }) => {
       void executeMutation(
         endpoint,
-        variables.data,
+        variables.requestData,
         variables.urlParams,
         options,
       );
@@ -56,12 +64,12 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables>(
 
   const mutateAsync = useCallback(
     async (variables: {
-      data: TRequest;
+      requestData: TRequest;
       urlParams?: TUrlVariables;
     }): Promise<TResponse> => {
       return executeMutation(
         endpoint,
-        variables.data,
+        variables.requestData,
         variables.urlParams,
         options,
       );
@@ -88,7 +96,6 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables>(
   return {
     mutate,
     mutateAsync,
-    onSuccess: mutationState.onSuccess,
     isPending: mutationState.isPending,
     isError: mutationState.isError,
     error: mutationState.error,

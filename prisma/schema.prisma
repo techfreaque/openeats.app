@@ -1,8 +1,12 @@
+// do not edit schema.prisma directly, it will be overwritten by the build process
+// instead, edit the schema.prisma.template file and run `yarn build` or ``yarn dev to generate the schema.prisma file
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
+  // this gets replaced by the actual DATABASE_URL at build time
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }

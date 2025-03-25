@@ -1,6 +1,6 @@
 /* eslint-disable node/no-process-env */
 import { envClientSchema as portalEnvClientSchema } from "next-query-portal/client/env-client";
-import { validatedEnv } from "next-query-portal/shared/utils/env-util";
+import { validateEnv } from "next-query-portal/shared/utils/env-util";
 import type { z } from "zod";
 
 const isServer = typeof window === "undefined";
@@ -18,7 +18,7 @@ export const envClientSchema = portalEnvClientSchema.extend({});
 export type EnvFrontend = z.infer<typeof envClientSchema>;
 
 // Export validated environment for use throughout the application
-export const envClient: EnvFrontend = validatedEnv(
+export const envClient: EnvFrontend = validateEnv(
   {
     // explicitly use env variables so next.js can replace them
     NEXT_PUBLIC_APP_NAME: process.env["NEXT_PUBLIC_APP_NAME"]!,

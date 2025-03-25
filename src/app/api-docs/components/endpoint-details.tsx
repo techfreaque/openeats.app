@@ -1,15 +1,11 @@
 "use client";
 
 import type { ApiEndpoint } from "next-query-portal/client/endpoint";
+import type { ApiFormReturn } from "next-query-portal/client/hooks/types";
+import { Methods } from "next-query-portal/shared/types/endpoint";
 import type { JSX } from "react";
 import { useState } from "react";
-import type {
-  Control,
-  FieldErrors,
-  UseFormRegister,
-  UseFormSetValue,
-  UseFormWatch,
-} from "react-hook-form";
+import { type FieldValues } from "react-hook-form";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -24,15 +20,9 @@ interface EndpointDetailsProps {
   requestData: string;
   responseData: string;
   responseStatus: number | null;
-  isLoading: boolean;
+  apiForm: ApiFormReturn<FieldValues, unknown, unknown>;
   selectedDomain: string;
   handleTryIt: () => Promise<void>;
-  register: UseFormRegister<Record<string, unknown>>;
-  control: Control<Record<string, unknown>>;
-  formState: { errors: FieldErrors<Record<string, unknown>> };
-  formError: Error | null;
-  setValue: UseFormSetValue<Record<string, unknown>>;
-  watch: UseFormWatch<Record<string, unknown>>;
 }
 
 export function EndpointDetails({
@@ -40,15 +30,9 @@ export function EndpointDetails({
   requestData,
   responseData,
   responseStatus,
-  isLoading,
+  apiForm,
   selectedDomain,
   handleTryIt,
-  register,
-  control,
-  formState,
-  formError,
-  setValue,
-  watch,
 }: EndpointDetailsProps): JSX.Element {
   const [activeTab, setActiveTab] = useState("try-it");
   const [viewMode, setViewMode] = useState<"form" | "json">("form");
@@ -60,13 +44,13 @@ export function EndpointDetails({
           <div className="flex items-center space-x-2">
             <span
               className={`text-xs px-2 py-1 rounded font-medium ${
-                endpoint.method === "GET"
+                endpoint.method === Methods.GET
                   ? "bg-green-100 text-green-700"
-                  : endpoint.method === "POST"
+                  : endpoint.method === Methods.POST
                     ? "bg-blue-100 text-blue-700"
-                    : endpoint.method === "PUT"
+                    : endpoint.method === Methods.PUT
                       ? "bg-yellow-100 text-yellow-700"
-                      : endpoint.method === "DELETE"
+                      : endpoint.method === Methods.DELETE
                         ? "bg-red-100 text-red-700"
                         : "bg-purple-100 text-purple-700"
               }`}
@@ -117,14 +101,7 @@ export function EndpointDetails({
 
               <div className="bg-white rounded-lg border p-4 mb-4 min-h-[250px]">
                 {viewMode === "form" ? (
-                  <DynamicFormFields
-                    endpoint={endpoint}
-                    register={register}
-                    control={control}
-                    formState={formState}
-                    setValue={setValue}
-                    watch={watch}
-                  />
+                  <DynamicFormFields endpoint={endpoint} apiForm={apiForm} />
                 ) : (
                   <div className="bg-gray-800 rounded-lg p-4 relative min-h-[200px]">
                     <div className="absolute top-2 right-2 text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">
@@ -137,9 +114,9 @@ export function EndpointDetails({
                 )}
               </div>
 
-              {formError && (
+              {apiForm.errorMessage && (
                 <div className="bg-red-50 text-red-700 p-3 rounded-md mb-4 text-sm">
-                  {formError.message}
+                  {apiForm.errorMessage}
                 </div>
               )}
 
@@ -147,9 +124,9 @@ export function EndpointDetails({
                 className="w-full"
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 onClick={handleTryIt}
-                disabled={isLoading}
+                disabled={apiForm.isSubmitting}
               >
-                {isLoading ? "Sending..." : "Try It"}
+                {apiForm.isSubmitting ? "Sending..." : "Try It"}
               </Button>
             </div>
 

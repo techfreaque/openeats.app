@@ -1,4 +1,5 @@
 import type { NextResponse } from "next/server";
+import { Methods } from "next-query-portal/shared/types/endpoint";
 
 import type { ApiEndpoint } from "../../../client/endpoint";
 import type { ResponseType } from "../../../shared/types/response.schema";
@@ -80,7 +81,7 @@ async function validateRequest<TRequest, TResponse, TUrlVariables>(
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
   request: Request,
 ): Promise<SafeReturnType<TRequest>> {
-  if (endpoint.method === "GET") {
+  if (endpoint.method === Methods.GET) {
     return validateGetRequest<TRequest>(request, endpoint.requestSchema);
   }
   return validatePostRequest<TRequest>(request, endpoint.requestSchema);

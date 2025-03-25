@@ -18,6 +18,10 @@
   "prettier.requireConfig": true,
   "prettier.enable": false, // Disable Prettier extension
   "files.eol": "\n",
-  // "javascript.preferences.importModuleSpecifier": "relative",
-  // "typescript.preferences.importModuleSpecifier": "relative"
+  "files.associations": {
+    "schema.prisma.template": "prisma"
+  },
+  "files.exclude": {
+    "postgres_data": true
+  }
 }

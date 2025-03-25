@@ -1,6 +1,7 @@
 "use client";
 
 import type { ApiEndpoint } from "next-query-portal/client/endpoint";
+import { Methods } from "next-query-portal/shared/types/endpoint";
 import type { JSX } from "react";
 import { useState } from "react";
 
@@ -29,7 +30,7 @@ export function CodeExamples({
   const generateExample = (language: string, domain: string): string => {
     const apiUrl = [domain, ...activeEndpoint.path].join("/");
     const method = activeEndpoint.method;
-    const hasBody = method !== "GET" && method !== "DELETE";
+    const hasBody = method !== Methods.GET && method !== Methods.DELETE;
 
     // Choose an example - either use default or the first available
     const example =

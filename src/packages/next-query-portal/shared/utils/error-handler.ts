@@ -50,9 +50,9 @@ export function handleError(
   }
 
   // Extract status code if available
-  if ("code" in parsedError || "statusCode" in parsedError) {
-    if (typeof error === "object" && error !== null) {
-      const errorObj = error as { code?: number; statusCode?: number };
+  if (error && typeof error === "object") {
+    const errorObj = error as { code?: number; statusCode?: number };
+    if ("code" in errorObj || "statusCode" in errorObj) {
       errorResponse.code = errorObj.code || errorObj.statusCode || 500;
     } else {
       errorResponse.code = 500;

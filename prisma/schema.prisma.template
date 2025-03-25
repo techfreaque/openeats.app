@@ -1,0 +1,105 @@
+// do not edit schema.prisma directly, it will be overwritten by the build process
+// instead, edit the schema.prisma.template file and run `yarn build` or ``yarn dev to generate the schema.prisma file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // this gets replaced by the actual DATABASE_URL at build time
+  provider = "__DB_PROVIDER__"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRoleValue {
+  PUBLIC
+  CUSTOMER
+  PARTNER_ADMIN
+  PARTNER_EMPLOYEE
+  COURIER
+  ADMIN
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  firstName     String
+  lastName      String
+  imageUrl      String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  passwordReset PasswordReset?
+  userRoles     UserRole[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  token     String
+  expiresAt DateTime
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+  @@map("password_resets")
+}
+
+model UserRole {
+  id         String        @id @default(uuid())
+  role       UserRoleValue
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  partnerId  String?
+  restaurant Partner?      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role, partnerId])
+  @@map("user_roles")
+}
+
+model Partner {
+  id        String     @id @default(uuid())
+  name      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  countryId String
+  country   Country    @relation(fields: [countryId], references: [code])
+  userRoles UserRole[]
+
+  @@map("partners")
+}
+
+model Country {
+  code       String      @id
+  name       String
+  languages  Languages[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  restaurant Partner[]
+
+  @@map("countries")
+}
+
+model Languages {
+  code      String    @id
+  name      String
+  countries Country[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("languages")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}

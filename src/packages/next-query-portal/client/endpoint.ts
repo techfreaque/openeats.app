@@ -1,10 +1,7 @@
 import type { z } from "zod";
 
-import type {
-  ApiSection,
-  ExamplesList,
-  Methods,
-} from "../shared/types/endpoint";
+import type { ApiSection, ExamplesList } from "../shared/types/endpoint";
+import { Methods } from "../shared/types/endpoint";
 import { UserRoleValue } from "../shared/types/enums";
 import { format } from "../shared/utils/parse-error";
 import { getApiConfig } from "./config";
@@ -16,13 +13,13 @@ import type { ApiQueryOptions } from "./hooks/types";
  */
 export class ApiEndpoint<TRequest, TResponse, TUrlVariables> {
   public description: string;
-  public method: string;
+  public method: Methods;
   public path: string[];
   public apiQueryOptions: ApiQueryOptions;
   public allowedRoles: UserRoleValue[];
   public requestSchema: z.ZodType<TRequest>;
   public requestUrlSchema: z.ZodType<TUrlVariables>;
-  public responseSchema: z.ZodType<TResponse, z.ZodTypeDef, TResponse>;
+  public responseSchema: z.ZodType<TResponse>;
   public fieldDescriptions: TRequest extends undefined
     ? TUrlVariables extends undefined
       ? undefined
@@ -42,7 +39,7 @@ export class ApiEndpoint<TRequest, TResponse, TUrlVariables> {
   constructor({
     description,
     method,
-    dirname,
+    path,
     apiQueryOptions,
     allowedRoles,
     requestSchema,
@@ -53,11 +50,11 @@ export class ApiEndpoint<TRequest, TResponse, TUrlVariables> {
     examples,
   }: Omit<
     ApiEndpoint<TRequest, TResponse, TUrlVariables>,
-    "getRequestData" | "requiresAuthentication" | "path"
-  > & { dirname: string }) {
+    "getRequestData" | "requiresAuthentication"
+  >) {
     this.description = description;
     this.method = method;
-    this.path = getApiPath(dirname);
+    this.path = ["api", ...path];
     this.allowedRoles = allowedRoles;
     this.requestSchema = requestSchema;
     this.requestUrlSchema = requestUrlSchema;
@@ -124,33 +121,43 @@ export class ApiEndpoint<TRequest, TResponse, TUrlVariables> {
       ? format<TUrlVariables>(this.path, pathParams)
       : this.path;
     let endpointUrl = `${envClient.NEXT_PUBLIC_BACKEND_URL}/${path.join("/")}`;
-    if (this.method === "GET" && requestData) {
+    if (this.method === Methods.GET && requestData) {
       endpointUrl += `?${new URLSearchParams(requestData as Record<string, string>).toString()}`;
     }
     return {
       success: true,
-      postBody: this.method === "GET" ? undefined : JSON.stringify(requestData),
+      postBody:
+        this.method === Methods.GET ? undefined : JSON.stringify(requestData),
       endpointUrl,
     };
   }
 }
 
-function getApiPath(dirname: string): string[] {
-  const pathParts = dirname.split("/");
-  const apiIndex = pathParts.indexOf("api");
-  if (apiIndex === -1) {
-    return pathParts;
-  }
-  return pathParts.slice(apiIndex + 1);
-}
+export type CreateEndpointReturn<
+  TRequest,
+  TResponse,
+  TUrlVariables,
+  TMethods extends Methods,
+> = {
+  [method in TMethods]: ApiEndpoint<TRequest, TResponse, TUrlVariables>;
+};
 
-export function createEndpoint<TRequest, TResponse, TUrlVariables>(
+export function createEndpoint<
+  TRequest,
+  TResponse,
+  TUrlVariables,
+  TMethods extends Methods,
+>(
   endpoint: Omit<
     ApiEndpoint<TRequest, TResponse, TUrlVariables>,
-    "getRequestData" | "requiresAuthentication" | "path"
-  > & { dirname: string },
-): ApiEndpoint<TRequest, TResponse, TUrlVariables> {
-  return new ApiEndpoint<TRequest, TResponse, TUrlVariables>(endpoint);
+    "getRequestData" | "requiresAuthentication" | "method"
+  > & { method: TMethods },
+): CreateEndpointReturn<TRequest, TResponse, TUrlVariables, TMethods> {
+  return {
+    [endpoint.method]: new ApiEndpoint<TRequest, TResponse, TUrlVariables>(
+      endpoint,
+    ),
+  } as CreateEndpointReturn<TRequest, TResponse, TUrlVariables, TMethods>;
 }
 
 /**
@@ -163,10 +170,9 @@ export function getEndpointByPath<TRequest, TResponse, TUrlVariables>(
 ): ApiEndpoint<TRequest, TResponse, TUrlVariables> {
   const _method = method.toUpperCase() as Methods;
   const _path = [...path, _method];
-  let endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables> =
-    endpoints as unknown as ApiEndpoint<TRequest, TResponse, TUrlVariables>;
+  let endpoint: ApiSection = endpoints;
   for (const p of _path) {
-    endpoint = endpoint[p];
+    endpoint = endpoint[p] as ApiSection;
   }
-  return endpoint;
+  return endpoint as unknown as ApiEndpoint<TRequest, TResponse, TUrlVariables>;
 }

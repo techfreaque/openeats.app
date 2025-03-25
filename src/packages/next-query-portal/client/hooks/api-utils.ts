@@ -1,3 +1,5 @@
+import { validateData } from "next-query-portal/shared/utils/validation";
+
 import type {
   ErrorResponseType,
   ResponseType,
@@ -88,18 +90,20 @@ export async function callApi<TRequest, TResponse, TUrlVariables>(
 
     // Validate successful response against schema
     if (isSuccessResponse<unknown>(json)) {
-      try {
-        const validatedData = endpoint.responseSchema.parse(json.data);
-        return {
-          success: true,
-          data: validatedData,
-        } as SuccessResponseType<TResponse>;
-      } catch (error) {
+      const validationResponse = validateData(
+        json.data,
+        endpoint.responseSchema,
+      );
+      if (!validationResponse.success) {
         return {
           success: false,
-          message: `Response validation error: ${error instanceof Error ? error.message : "Unknown error"}`,
+          message: `Response validation error: ${validationResponse.message}`,
         };
       }
+      return {
+        success: true,
+        data: validationResponse.data,
+      };
     } else {
       const errorMessage = isErrorResponse<TResponse>(json)
         ? json.message

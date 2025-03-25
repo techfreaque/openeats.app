@@ -49,3 +49,10 @@ export class PrismaDataProvider implements DataProvider {
     return this.prisma;
   }
 }
+
+export enum PrismaDatabaseProvider {
+  SQLITE = "sqlite",
+  POSTGRESQL = "postgresql",
+  MYSQL = "mysql",
+  MONGODB = "mongodb",
+}

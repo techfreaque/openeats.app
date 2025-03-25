@@ -1,4 +1,5 @@
 import { createEndpoint } from "next-query-portal/client/endpoint";
+import { Methods } from "next-query-portal/shared/types/endpoint";
 import { UserRoleValue } from "next-query-portal/shared/types/enums";
 
 import {
@@ -9,7 +10,7 @@ import {
 
 const templateEndpoint = createEndpoint({
   description: "Register a new user account",
-  method: "POST",
+  method: Methods.POST,
   requestSchema: templatePostRequestSchema,
   responseSchema: templatePostResponseSchema,
   requestUrlSchema: templatePostRequestUrlParamsSchema,
@@ -21,12 +22,12 @@ const templateEndpoint = createEndpoint({
     someInputValue: "Some input value",
     someValueFromTheRouteUrl: "Some value from the route URL",
   },
-  allowedRoles: [UserRoleValue.PUBLIC],
+  allowedRoles: [UserRoleValue.PUBLIC, UserRoleValue.ADMIN, UserRoleValue.CUSTOMER, UserRoleValue.COURIER, ],
   errorCodes: {
     400: "Invalid request data",
     500: "Internal server error",
   },
-  dirname: __dirname,
+  path: ["template-api"],
   examples: {
     payloads: {
       default: {
@@ -40,4 +41,5 @@ const templateEndpoint = createEndpoint({
     },
   },
 });
+
 export default templateEndpoint;

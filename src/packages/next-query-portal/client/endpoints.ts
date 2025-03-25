@@ -1,8 +1,7 @@
-import { errorLogger } from "next-query-portal/shared/utils/logger";
-
 import { endpoints } from "@/app/api/generated/endpoints";
 
 import type { ApiSection } from "../shared/types/endpoint";
+import { errorLogger } from "../shared/utils/logger";
 
 /**
  * Get all API endpoints from the statically generated imports

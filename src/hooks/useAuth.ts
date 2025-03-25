@@ -6,25 +6,35 @@ import {
   removeAuthToken,
   setAuthToken,
 } from "next-query-portal/client/storage/auth-client";
+import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
 import { errorLogger } from "next-query-portal/shared/utils/logger";
 import { useEffect } from "react";
 
-import logoutEndpoint from "@/app/api/auth/logout/definition";
-import loginEndpoint from "@/app/api/auth/public/login/definition";
-import registerEndpoint from "@/app/api/auth/public/register/definition";
+import logoutEndpoint from "@/app/api/v1/auth/logout/definition";
+import meEndpoint from "@/app/api/v1/auth/me/definition";
+import loginEndpoint from "@/app/api/v1/auth/public/login/definition";
+import type {
+  LoginFormType,
+  LoginResponseType,
+} from "@/app/api/v1/auth/public/login/schema";
+import registerEndpoint from "@/app/api/v1/auth/public/register/definition";
+import type { RegisterType } from "@/app/api/v1/auth/public/register/schema";
 
-import meEndpoint from "../app/api/auth/me/definition";
-import type { UserResponseType } from "../app/api/auth/me/schema";
+import type { UserResponseType } from "../app/api/v1/auth/me/schema";
 
 export interface AuthState {
-  user: UserResponseType | null;
+  user: UserResponseType | undefined;
   isLoggedIn: boolean;
   isLoading: boolean;
 }
 
 export interface UseAuthReturn extends AuthState {
-  loginForm: ReturnType<typeof useApiForm<typeof loginEndpoint>>;
-  signupForm: ReturnType<typeof useApiForm<typeof registerEndpoint>>;
+  loginForm: ReturnType<
+    typeof useApiForm<LoginFormType, UndefinedType, LoginResponseType>
+  >;
+  signupForm: ReturnType<
+    typeof useApiForm<RegisterType, UndefinedType, LoginResponseType>
+  >;
   logout: () => void;
 }
 
@@ -35,11 +45,9 @@ export function useAuth(): UseAuthReturn {
     isLoading,
     isError,
     refetch,
-  } = useApiQuery(meEndpoint, {
-    // Only enable the query when authenticated
-    enabled: true, // Initially disabled, we'll check auth first
+  } = useApiQuery(meEndpoint.GET, {
+    enabled: false, // Initially disabled, we'll check auth first
   });
-
   // Check authentication status and enable ME query if authenticated
   useEffect(() => {
     const checkAuthState = async (): Promise<void> => {
@@ -57,27 +65,37 @@ export function useAuth(): UseAuthReturn {
     };
 
     void checkAuthState();
+    // eslint-disable-next-line react-compiler/react-compiler
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Set up API forms for login and signup
-  const loginForm = useApiForm(loginEndpoint, {
-    onSuccess: async (response) => {
-      if (response?.token) {
-        await setAuthToken(response.token);
-        await refetch();
-      }
+  const loginForm = useApiForm(
+    loginEndpoint.POST,
+    {},
+    {
+      onSuccess: async ({ responseData }) => {
+        if (responseData?.token) {
+          await setAuthToken(responseData.token);
+          await refetch();
+        }
+      },
     },
-  });
-  const signupForm = useApiForm(registerEndpoint, {
-    onSuccess: async (response) => {
-      if (response?.token) {
-        await setAuthToken(response.token);
-        await refetch();
-      }
+  );
+  const signupForm = useApiForm(
+    registerEndpoint.POST,
+    {},
+    {
+      onSuccess: async ({ responseData }) => {
+        if (responseData?.token) {
+          await setAuthToken(responseData.token);
+          await refetch();
+        }
+      },
     },
-  });
+  );
 
-  const logout = useApiMutation(logoutEndpoint, {
+  const logout = useApiMutation(logoutEndpoint.GET, {
     onSuccess: async () => {
       await removeAuthToken();
       await refetch();
@@ -89,11 +107,12 @@ export function useAuth(): UseAuthReturn {
   });
 
   return {
-    user: user || null,
+    user: user?.user || undefined,
     isLoggedIn: !!user && !isError,
     isLoading,
     loginForm,
     signupForm,
-    logout: () => logout.mutate({ data: undefined, urlParams: undefined }),
+    logout: () =>
+      logout.mutate({ requestData: undefined, urlParams: undefined }),
   };
 }

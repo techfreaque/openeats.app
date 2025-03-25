@@ -4,7 +4,7 @@ import { expect } from "vitest";
 import templateEndpoint from "./definition";
 import { POST } from "./route";
 
-testEndpoint(templateEndpoint, POST, {
+testEndpoint(templateEndpoint.POST, POST, {
   customTests: {
     "should handle custom parameters": async (test) => {
       const response = await test.executeWith({

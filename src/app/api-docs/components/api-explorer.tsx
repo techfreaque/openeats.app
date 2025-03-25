@@ -11,6 +11,7 @@ import { APP_NAME, ENDPOINT_DOMAINS } from "next-query-portal/shared/constants";
 import type { Methods } from "next-query-portal/shared/types/endpoint";
 import type { JSX } from "react";
 import { useMemo, useState } from "react";
+import { type FieldValues } from "react-hook-form";
 
 import { envClient } from "@/config/env-client";
 
@@ -21,7 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui";
-import loginEndpoint from "../../api/auth/public/login/definition";
+import loginEndpoint from "../../api/v1/auth/public/login/definition";
 import { DomainSelector } from "./domain-selector";
 import { EndpointDetails } from "./endpoint-details";
 import { EndpointsList } from "./endpoints-list";
@@ -32,36 +33,24 @@ export function ApiExplorer(): JSX.Element {
     envClient.NODE_ENV === "production" ? "prod" : "dev",
   );
   const selectedDomain = ENDPOINT_DOMAINS[selectedEnv];
-  const [urlPathVariables, setUrlPathVariables] = useState<string>("");
-  const [activeEndpoint, setActiveEndpoint] =
-    useState<ApiEndpoint<unknown, unknown, unknown>>(loginEndpoint);
+  const [activeEndpoint, setActiveEndpoint] = useState<
+    ApiEndpoint<unknown, unknown, unknown>
+  >(loginEndpoint.POST);
 
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
   const endpoints = getEndpoints();
 
   // Create a form using useApiForm
-  const {
-    handleSubmit,
-    reset,
-    formState,
-    register,
-    formError,
-    isSubmitting,
-    submitForm,
-    watch,
-    setValue,
-    control,
-    setFormError,
-  } = useApiForm(
+  const apiForm = useApiForm<FieldValues, unknown, unknown>(
     activeEndpoint,
     {},
     {
-      onSuccess: (data) => {
+      onSuccess: ({ responseData }) => {
         // Add analytics tracking
         setResponseStatus(200);
-        setResponseData(JSON.stringify(data, null, 2));
+        setResponseData(JSON.stringify(responseData, null, 2));
       },
-      onError: (error) => {
+      onError: ({ error }) => {
         // Use type guards to safely access properties
         const statusCode =
           typeof error === "object" && error !== null && "statusCode" in error
@@ -89,7 +78,7 @@ export function ApiExplorer(): JSX.Element {
   );
 
   // Get the current form data as JSON string for display
-  const currentFormValues = watch();
+  const currentFormValues = apiForm.form.watch();
   const formattedFormValues = useMemo(() => {
     return JSON.stringify(currentFormValues, null, 2);
   }, [currentFormValues]);
@@ -110,9 +99,9 @@ export function ApiExplorer(): JSX.Element {
 
     // Reset form with default values from examples if available
     if (newEndpoint.examples.payloads?.default) {
-      reset(newEndpoint.examples.payloads.default);
+      apiForm.form.reset(newEndpoint.examples.payloads.default);
     } else {
-      reset({});
+      apiForm.form.reset({});
     }
 
     if (newEndpoint.examples.urlPathVariables) {
@@ -126,27 +115,7 @@ export function ApiExplorer(): JSX.Element {
 
   // Fix the unused variable by implementing URL path variable handling in form submission
   const handleTryIt = async (): Promise<void> => {
-    // Parse URL path variables if present
-    let pathParams: Record<string, string> | undefined;
-    try {
-      if (urlPathVariables.trim()) {
-        pathParams = JSON.parse(urlPathVariables);
-      }
-    } catch {
-      setFormError(new Error("Invalid URL path variables format"));
-      return;
-    }
-
-    // Use path variables in form submission
-    if (
-      activeEndpoint.method === "GET" &&
-      (!activeEndpoint.requestSchema ||
-        Object.keys(currentFormValues || {}).length === 0)
-    ) {
-      await submitForm(undefined, { pathParams });
-    } else {
-      await handleSubmit((data) => submitForm(data, { pathParams }))();
-    }
+    await apiForm.submitForm();
   };
 
   return (
@@ -368,15 +337,9 @@ export function ApiExplorer(): JSX.Element {
                   requestData={formattedFormValues}
                   responseData={responseData}
                   responseStatus={responseStatus}
-                  isLoading={isSubmitting}
+                  apiForm={apiForm}
                   selectedDomain={selectedDomain}
                   handleTryIt={handleTryIt}
-                  register={register}
-                  control={control}
-                  formState={formState}
-                  formError={formError}
-                  setValue={setValue}
-                  watch={watch}
                 />
               </div>
             </div>

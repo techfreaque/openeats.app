@@ -2,12 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useMemo } from "react";
-import { type FieldValues, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 import { parseError } from "../../../shared/utils/parse-error";
 import type { ApiEndpoint } from "../../endpoint";
-import type { ApiStore } from "../api-store";
-import { useApiStore } from "../api-store";
+import type { ApiStore } from "../store";
+import { useApiStore } from "../store";
 import type {
   ApiFormOptions,
   ApiFormReturn,
@@ -20,14 +20,10 @@ import type {
  *
  * Simplified version that focuses on form functionality and hides implementation details
  */
-export function useApiForm<
-  TResponse,
-  TRequest extends FieldValues = FieldValues,
-  TUrlVariables = unknown,
->(
+export function useApiForm<TRequest, TResponse, TUrlVariables>(
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
   options: ApiFormOptions<TRequest> = {},
-  mutationOptions: ApiMutationOptions<TResponse, TRequest> = {},
+  mutationOptions: ApiMutationOptions<TRequest, TResponse, TUrlVariables> = {},
 ): ApiFormReturn<TRequest, TResponse, TUrlVariables> {
   // Get Zustand store methods
   const { executeMutation, getMutationId, getFormId } = useApiStore();
@@ -91,7 +87,6 @@ export function useApiForm<
 
   // Initialize form with the proper configuration
   const formMethods = useForm<TRequest>(formConfig);
-
   // Error management functions
   const clearFormError = useCallback(
     () => clearFormErrorStore(formId),
@@ -104,9 +99,10 @@ export function useApiForm<
   );
 
   // Create a submit handler that validates and submits the form
-  const submitForm = async (
-    urlParamVariables?: TUrlVariables,
-  ): Promise<TResponse | undefined> => {
+  const submitForm = async () // event?: FormEvent<HTMLFormElement>,
+  : Promise<TResponse | undefined> => {
+    // event?.preventDefault();
+    const urlParamVariables: TUrlVariables = undefined; // TODO
     try {
       // Get form data
       const formData = formMethods.getValues();
@@ -121,7 +117,9 @@ export function useApiForm<
         urlParamVariables,
         mutationOptions,
       );
-
+      if (result === undefined) {
+        return undefined;
+      }
       return result;
     } catch (error) {
       // Handle any errors that occur during submission
@@ -132,14 +130,12 @@ export function useApiForm<
   };
 
   return {
-    ...formMethods,
-    submitForm,
+    form: formMethods,
+    submitForm: formMethods.handleSubmit(submitForm),
     isSubmitting: mutationState.isPending,
     isSubmitSuccessful: mutationState.isSuccess,
-    submitError: mutationState.error || formState.formError,
+    submitError: mutationState.error || formState.formError || undefined,
     errorMessage:
-      mutationState.error?.message || formState.formError?.message || null,
-    clearFormError,
-    
+      mutationState.error?.message || formState.formError?.message || undefined,
   };
 }

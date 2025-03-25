@@ -25,7 +25,6 @@ export function Navbar(): JSX.Element {
               <>
                 <div>{user!.email}</div>
                 <Button
-                  // eslint-disable-next-line @typescript-eslint/no-misused-promises
                   onClick={logout}
                   variant="ghost"
                   size="sm"

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { envClientBaseSchema } from "../client/env-client";
-import { validatedEnv } from "../shared/utils/env-util";
+import { validateEnv } from "../shared/utils/env-util";
 
 export const envSchema = envClientBaseSchema.extend({
   JWT_SECRET_KEY: z.string(),
@@ -30,12 +30,10 @@ export const envSchema = envClientBaseSchema.extend({
 });
 
 export type Env = z.infer<typeof envSchema>;
-type EnvInput = z.input<typeof envSchema>;
 
 // Export validated environment for use throughout the application
-
-export const env: Env = validatedEnv(
+export const env: Env = validateEnv(
   // eslint-disable-next-line node/no-process-env
-  process.env as unknown as EnvInput,
+  process.env,
   envSchema,
 );

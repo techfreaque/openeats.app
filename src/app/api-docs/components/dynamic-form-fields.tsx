@@ -1,20 +1,13 @@
 import type { ApiEndpoint } from "next-query-portal/client/endpoint";
+import type { ApiFormReturn } from "next-query-portal/client/hooks/types";
 import { cn } from "next-query-portal/shared/utils/utils";
 import type { JSX, ReactNode } from "react";
 import React from "react";
-import {
-  type Control,
-  type FieldValues,
-  Form,
-  type UseFormRegister,
-  type UseFormSetValue,
-  type UseFormStateReturn,
-  type UseFormWatch,
-} from "react-hook-form";
+import { type FieldValues } from "react-hook-form";
 import type { ZodObject, ZodType, ZodTypeDef } from "zod";
 
-import { Button } from "@/components/ui/button";
 import {
+  Form,
   FormControl,
   FormDescription,
   FormField,
@@ -40,17 +33,6 @@ interface SchemaField {
   description?: string;
   required: boolean;
   enumOptions?: Array<{ value: string; label: string }>;
-}
-
-interface DynamicFormFieldsProps<
-  TFieldValues extends FieldValues = FieldValues,
-> {
-  endpoint: ApiEndpoint<unknown, unknown, unknown>;
-  register: UseFormRegister<TFieldValues>;
-  formState: UseFormStateReturn<TFieldValues>;
-  watch: UseFormWatch<TFieldValues>;
-  setValue: UseFormSetValue<TFieldValues>;
-  control: Control<TFieldValues>;
 }
 
 // Type guard for ZodObject
@@ -94,19 +76,6 @@ function isEnumField(field: ZodType): boolean {
 function getFieldType(_field: ZodType): string {
   // Implementation here would replace the existing one with proper type safety
   return "string"; // Default fallback
-}
-
-function isLongString(field: ZodType): boolean {
-  // Implementation with proper type checking
-  return Boolean(
-    field &&
-      typeof field === "object" &&
-      "_def" in field &&
-      field._def &&
-      typeof field._def === "object" &&
-      "typeName" in field._def &&
-      field._def.typeName === "ZodString",
-  );
 }
 
 function getEnumOptions(
@@ -160,23 +129,18 @@ function getFormSchema(schema: ZodType | undefined): SchemaField[] {
   }
 }
 
-export function DynamicFormFields<
-  TFieldValues extends FieldValues = FieldValues,
->({
+export function DynamicFormFields({
   endpoint,
-  register,
-  formState,
-  watch,
-  setValue,
-}: DynamicFormFieldsProps<TFieldValues>): JSX.Element {
+  apiForm,
+}: {
+  endpoint: ApiEndpoint<unknown, unknown, unknown>;
+  apiForm: ApiFormReturn<FieldValues, unknown, unknown>;
+}): JSX.Element {
   const schema = endpoint.requestSchema;
   const formFields = getFormSchema(schema);
 
   const renderField = (field: SchemaField): ReactNode => {
-    const fieldErrors =
-      formState.errors[field.name as keyof typeof formState.errors];
-    // Use _ prefix for unused variables
-    const _fieldValue = watch(field.name as any);
+    const fieldErrors = apiForm.form.formState.errors[field.name];
 
     switch (field.type) {
       case "boolean":
@@ -184,6 +148,7 @@ export function DynamicFormFields<
           <FormField
             key={field.name}
             name={field.name}
+            control={apiForm.form.control}
             render={({ field: renderField }) => (
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                 <div className="space-y-0.5">
@@ -205,37 +170,45 @@ export function DynamicFormFields<
 
       case "enum":
         return (
-          <FormItem key={field.name}>
-            <FormLabel
-              className={cn(
-                field.required
-                  ? "after:content-['*'] after:ml-0.5 after:text-red-500"
-                  : "",
-              )}
-            >
-              {field.name}
-            </FormLabel>
-            <Select
-              onValueChange={(value) => setValue(field.name as any, value)}
-              defaultValue={watch(field.name as any)}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder={`Select ${field.name}`} />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {field.enumOptions?.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {fieldErrors && (
-              <FormMessage>{fieldErrors.message as string}</FormMessage>
+          <FormField
+            key={field.name}
+            name={field.name}
+            control={apiForm.form.control}
+            render={({ field: renderField }) => (
+              <FormItem>
+                <FormLabel
+                  className={cn(
+                    field.required
+                      ? "after:content-['*'] after:ml-0.5 after:text-red-500"
+                      : "",
+                  )}
+                >
+                  {field.name}
+                </FormLabel>
+                <FormControl>
+                  <Select
+                    onValueChange={renderField.onChange}
+                    defaultValue={renderField.value}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={`Select ${field.name}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {field.enumOptions?.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                {field.description && (
+                  <FormDescription>{field.description}</FormDescription>
+                )}
+                <FormMessage />
+              </FormItem>
             )}
-          </FormItem>
+          />
         );
 
       case "longtext":
@@ -252,7 +225,7 @@ export function DynamicFormFields<
             </FormLabel>
             <FormControl>
               <Textarea
-                {...register(field.name as any)}
+                {...apiForm.form.register(field.name)}
                 placeholder={`Enter ${field.name}`}
               />
             </FormControl>
@@ -279,7 +252,7 @@ export function DynamicFormFields<
             </FormLabel>
             <FormControl>
               <Input
-                {...register(field.name)}
+                {...apiForm.form.register(field.name)}
                 type={field.type === "number" ? "number" : "text"}
                 placeholder={`Enter ${field.name}`}
               />
@@ -296,14 +269,13 @@ export function DynamicFormFields<
   };
 
   return (
-    <Form {...loginForm.form}>
-      <form onSubmit={loginForm.handleSubmit} className="space-y-6">
-        <div className="space-y-4 py-2">
-          {formFields.map(renderField)}
-          <Button type="submit" disabled={formState.isSubmitting}>
-            {formState.isSubmitting ? "Submitting..." : "Execute"}
-          </Button>
-        </div>
+    <Form {...apiForm.form}>
+      <form
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        onSubmit={apiForm.submitForm}
+        className="space-y-6"
+      >
+        <div className="space-y-4 py-2">{formFields.map(renderField)}</div>
       </form>
     </Form>
   );

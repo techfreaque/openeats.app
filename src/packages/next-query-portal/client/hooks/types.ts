@@ -4,7 +4,7 @@ import type {
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import type { FieldValues, UseFormProps, UseFormReturn } from "react-hook-form";
+import type { UseFormProps, UseFormReturn } from "react-hook-form";
 
 /**
  * Enhanced query result with additional loading state info
@@ -13,11 +13,13 @@ export type EnhancedQueryResult<
   TResponse,
   TError = unknown,
   TData = TResponse,
-> = Omit<UseQueryResult<TData, TError>, "data"> & {
+> = Omit<UseQueryResult<TData, TError>, "data" | "status" | "refetch"> & {
   data: TData;
   isLoadingFresh: boolean;
   isCachedData: boolean;
   statusMessage: string;
+  status: "loading" | "success" | "error" | "idle";
+  refetch: () => Promise<TResponse>;
 };
 
 /**
@@ -47,38 +49,29 @@ export interface ApiQueryOptions<
 /**
  * Type for the API mutation options
  */
-export interface ApiMutationOptions<TData = unknown, TVariables = unknown> {
-  onSuccess?: (data: TData, variables: TVariables) => void | Promise<void>;
-  onError?: (error: Error, variables: TVariables) => void | Promise<void>;
-  invalidateQueries?: QueryKey | QueryKey[];
-  updateQueries?: Array<{
-    queryKey: QueryKey;
-    updater: <TOldData, TNewData extends TData>(
-      oldData: TOldData,
-      newData: TNewData,
-    ) => TOldData;
-  }>;
+export interface ApiMutationOptions<TRequest, TResponse, TUrlVariables> {
+  onSuccess?: (data: {
+    requestData: TRequest;
+    pathParams: TUrlVariables;
+    responseData: TResponse;
+  }) => void | Promise<void>;
+  onError?: (data: {
+    error: Error;
+    requestData: TRequest;
+    pathParams: TUrlVariables;
+  }) => void | Promise<void>;
 }
 
 // Form-specific types
-export type ApiFormOptions<TRequest extends FieldValues> =
-  UseFormProps<TRequest> & {
-    defaultValues?: Partial<TRequest>;
-  };
+export type ApiFormOptions<TRequest> = UseFormProps<TRequest> & {
+  defaultValues?: Partial<TRequest>;
+};
 
-export type ApiFormReturn<
-  TRequest extends FieldValues,
-  TResponse,
-  TUrlVariables,
-> = UseFormReturn<TRequest> & {
+export type ApiFormReturn<TRequest, TResponse, TUrlVariables> = {
+  form: UseFormReturn<TRequest>;
   isSubmitting: boolean;
   isSubmitSuccessful: boolean;
-  submitForm: (
-    urlParamVariables?: TUrlVariables,
-  ) => Promise<TResponse | undefined>;
-  formError: Error | null;
-  submitError: Error | null;
-  clearFormError: () => void;
-  setFormError: (error: Error | null) => void;
-  errorMessage: string | null;
+  submitForm: () => Promise<void>;
+  submitError: Error | undefined;
+  errorMessage: string | undefined;
 };

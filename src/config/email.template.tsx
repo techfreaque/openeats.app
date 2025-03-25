@@ -8,7 +8,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-import { APP_NAME } from "next-query-portal/shared";
+import { APP_NAME } from "next-query-portal/shared/constants";
 import type { JSX, ReactNode } from "react";
 
 import { env } from "./env";

@@ -3,7 +3,7 @@ import type { z, ZodSchema } from "zod";
 import { ZodError } from "zod";
 
 import type { ApiEndpoint } from "../../../client/endpoint";
-import type { UndefinedType } from "../../../shared/types";
+import type { UndefinedType } from "../../../shared/types/common.schema";
 import {
   errorResponseSchema,
   type ErrorResponseType,

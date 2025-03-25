@@ -6,13 +6,29 @@
     "license": "MIT",
     "type": "module",
     "scripts": {
-        "dev": "next dev",
-        "dev:mail": "mailing dev",
-        "build": "yarn generate:endpoints && next build",
+        "dev": "yarn dev:db-setup && next dev",
+        "dev:debug": "DEBUG=next*,turbo* RUST_LOG=debug next dev",
+        "dev:db-setup": "yarn db:dev && yarn build:pre && yarn db:push && yarn db:generate && yarn db:reset && yarn db:migrate-dev && yarn db:seed-dev && yarn db:seed",
+        "build": "yarn build:pre && next build",
         "build:package": "sovendus-builder build",
-        "lint": "eslint --fix",
+        "start": "next start",
+        "start:pre": "yarn db:migrate && yarn db:seed",
         "pub": "sovendus-release-tool",
-        "generate:endpoints": "tsx src/packages/next-query-portal/scripts/generate-endpoints.ts"
+        "build:pre": "yarn build:db-schema && yarn db:generate && yarn build:endpoints",
+        "build:endpoints": "tsx src/packages/next-query-portal/scripts/generate-endpoints.ts",
+        "build:db-schema": "tsx src/app/api/db/scripts/schema-builder.ts",
+        "db:migrate": "prisma migrate deploy",
+        "db:migrate-dev": "prisma migrate dev",
+        "db:dev": "#docker compose -f docker-compose-dev.yml up -d",
+        "db:reset": "prisma migrate reset",
+        "db:generate": "prisma generate",
+        "db:push": "prisma db push",
+        "db:seed": "cross-env tsx src/app/api/db/scripts/seed-prod-db.ts",
+        "db:seed-dev": "cross-env tsx src/app/api/db/scripts/seed-dev-db.ts",
+        "db:studio": "prisma studio",
+        "lint": "eslint --fix",
+        "test": "yarn build:pre && cross-env NODE_ENV=test vitest run --sequence.all",
+        "test:watch": "yarn build:pre && cross-env NODE_ENV=test vitest"
     },
     "repository": {
         "type": "git",
@@ -42,9 +58,7 @@
     "dependencies": {
         "@prisma/client": "^6.5.0"
     },
-    "devDependencies": {
-        "tsx": "^4.19.3"
-    },
+    "devDependencies": {},
     "workspaces": [
         "src/packages/*"
     ]

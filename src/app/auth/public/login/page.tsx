@@ -29,7 +29,7 @@ export default function LoginPage(): JSX.Element {
 
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+      <div className="w-full max-w-lg p-8 space-y-8 bg-white rounded-lg shadow-md">
         <div className="text-center">
           <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
             Login
@@ -39,14 +39,22 @@ export default function LoginPage(): JSX.Element {
           </p>
         </div>
 
-        {loginForm.formError && (
+        {loginForm.errorMessage && (
           <div className="p-3 text-sm text-white bg-red-500 rounded">
-            {loginForm.formError.message}
+            {loginForm.errorMessage.split("\n").map((message, index) => (
+              <div key={index}>{message}</div>
+            ))}
           </div>
         )}
 
         <Form {...loginForm.form}>
-          <form onSubmit={loginForm.handleSubmit} className="space-y-6">
+          <form
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            onSubmit={loginForm.submitForm}
+            className="space-y-6"
+            // Add noValidate to prevent browser validation
+            noValidate
+          >
             <FormField
               control={loginForm.form.control}
               name="email"
@@ -58,6 +66,7 @@ export default function LoginPage(): JSX.Element {
                       type="email"
                       placeholder="Enter your email"
                       {...field}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -76,6 +85,7 @@ export default function LoginPage(): JSX.Element {
                       type="password"
                       placeholder="Enter your password"
                       {...field}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -92,6 +102,36 @@ export default function LoginPage(): JSX.Element {
             </Button>
           </form>
         </Form>
+
+        <div className="mt-6 p-4 border rounded-md bg-gray-50">
+          <h2 className="text-lg font-semibold mb-2">Demo Credentials</h2>
+          <ul className="space-y-1 text-sm">
+            <li>
+              Admin:{" "}
+              <code className="p-1 bg-gray-200 rounded">
+                admin@example.com / password
+              </code>
+            </li>
+            <li>
+              Customer:{" "}
+              <code className="p-1 bg-gray-200 rounded">
+                customer@example.com / password
+              </code>
+            </li>
+            <li>
+              Restaurant:{" "}
+              <code className="p-1 bg-gray-200 rounded">
+                restaurant@example.com / password
+              </code>
+            </li>
+            <li>
+              Driver:{" "}
+              <code className="p-1 bg-gray-200 rounded">
+                driver@example.com / password
+              </code>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
+import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
 import type { JSX } from "react";
 
-import type { UndefinedType } from "../../shared/types";
 import type { JwtPayloadType } from "../endpoints/auth/jwt";
 import type { SafeReturnType } from "../endpoints/core/api-handler";
 import { env } from "../env";
@@ -8,9 +8,9 @@ import { sendEmail, type SendEmailParams } from "./send-mail";
 
 export type EmailFunctionType<TRequest, TResponse, TUrlVariables> = ({
   requestData,
-}: EmailRenderProps<TRequest, TResponse, TUrlVariables>) => Promise<
-  SafeReturnType<EmailTemplateReturnType>
->;
+}: EmailRenderProps<TRequest, TResponse, TUrlVariables>) =>
+  | Promise<SafeReturnType<EmailTemplateReturnType>>
+  | SafeReturnType<EmailTemplateReturnType>;
 
 export type EmailRenderProps<TRequest, TResponse, TUrlVariables> = {
   requestData: TRequest;

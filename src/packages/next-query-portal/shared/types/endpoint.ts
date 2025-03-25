@@ -4,8 +4,13 @@ export interface ApiSection {
   [key: string]: ApiSection | ApiEndpoint<unknown, unknown, unknown>;
 }
 
-export type Methods = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-
+export enum Methods {
+  GET = "GET",
+  POST = "POST",
+  PUT = "PUT",
+  DELETE = "DELETE",
+  PATCH = "PATCH",
+}
 export interface ExamplesList<T> {
   default: T & { id?: string };
   [exampleKey: string]: T & { id?: string };

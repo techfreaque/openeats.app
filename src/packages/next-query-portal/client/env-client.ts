@@ -1,7 +1,7 @@
 /* eslint-disable node/no-process-env */
 import { z } from "zod";
 
-import { validatedEnv } from "../shared/utils/env-util";
+import { validateEnv } from "../shared/utils/env-util";
 
 const isServer = typeof window === "undefined";
 const isReactNative = !isServer && !window.document;
@@ -34,7 +34,7 @@ export const envClientSchema = envClientBaseSchema.extend({
 export type EnvFrontend = z.infer<typeof envClientSchema>;
 
 // Export validated environment for use throughout the application
-export const envClient: EnvFrontend = validatedEnv(
+export const envClient: EnvFrontend = validateEnv(
   {
     // explicitly use env variables so next.js can replace them
     NEXT_PUBLIC_APP_NAME: process.env["NEXT_PUBLIC_APP_NAME"]!,

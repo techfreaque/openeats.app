@@ -7,7 +7,7 @@ import templateEndpoint from "./definition";
 import { renderMail } from "./email";
 
 export const POST = apiHandler({
-  endpoint: templateEndpoint,
+  endpoint: templateEndpoint.POST,
   email: {
     afterHandlerEmails: [
       {

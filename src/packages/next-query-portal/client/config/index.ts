@@ -80,20 +80,15 @@ export function generateCacheKey(queryKey: QueryKey): string {
   if (typeof queryKey === "string") {
     return queryKey;
   }
+  return simpleHash(JSON.stringify(queryKey));
+}
 
-  // Create a more reliable hash for complex keys
-  const keyString = queryKey
-    .map((item) => {
-      if (typeof item === "object" && item !== null) {
-        return JSON.stringify(
-          Object.entries(item)
-            .sort()
-            .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {}),
-        );
-      }
-      return `${JSON.stringify(item)}`;
-    })
-    .join("|");
-
-  return `${envClient.NEXT_PUBLIC_APP_NAME}-${keyString}`;
+// A simple non-cryptographic hash function (djb2 algorithm)
+function simpleHash(str: string): string {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) + hash + str.charCodeAt(i); // hash * 33 + c
+  }
+  // Convert to an unsigned 32-bit integer
+  return String(hash >>> 0);
 }
