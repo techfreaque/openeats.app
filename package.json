@@ -1,9 +1,8 @@
 {
-    "name": "next-query-portal-template-app",
-    "version": "1.0.0",
-    "private": true,
-    "description": "Next Query Portal Template App",
-    "license": "MIT",
+    "name": "open-eats",
+    "version": "0.1.0",
+    "private": false,
+    "license": "GPL-3.0-only",
     "type": "module",
     "scripts": {
         "dev": "yarn dev:db-setup && next dev",

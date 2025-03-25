@@ -1,0 +1,131 @@
+/* eslint-disable no-console */
+
+import "../setup"; // Import test setup
+
+import { PrismaClient } from "@prisma/client";
+import request from "supertest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
+import { TEST_SERVER_URL } from "@/lib/env";
+
+// Use real Prisma client for E2E tests
+const prisma = new PrismaClient();
+
+describe("/api/v1/orders E2E", () => {
+  let restaurantId: string;
+  let menuItemId: string;
+  let createdOrderId: string;
+  let customerAuthToken: string;
+  let restaurantAuthToken: string;
+
+  beforeAll(async () => {
+    // Set up auth tokens by logging in users
+    const customerResponse = await request(TEST_SERVER_URL)
+      .post("/api/v1/auth/login")
+      .send({
+        email: "customer@example.com",
+        password: "password123",
+      });
+    customerAuthToken = customerResponse.body.token;
+
+    const restaurantResponse = await request(TEST_SERVER_URL)
+      .post("/api/v1/auth/login")
+      .send({
+        email: "restaurant@example.com",
+        password: "password123",
+      });
+    restaurantAuthToken = restaurantResponse.body.token;
+
+    // Get test data
+    const restaurant = await prisma.restaurant.findFirst();
+    restaurantId = restaurant?.id || "";
+
+    const menuItem = await prisma.menuItem.findFirst();
+    menuItemId = menuItem?.id || "";
+  });
+
+  afterAll(async () => {
+    // Clean up created order if any
+    if (createdOrderId) {
+      try {
+        await prisma.orderItem.deleteMany({
+          where: { orderId: createdOrderId },
+        });
+        await prisma.order.delete({
+          where: { id: createdOrderId },
+        });
+      } catch (error) {
+        console.error("Error cleaning up test order:", error);
+      }
+    }
+
+    await prisma.$disconnect();
+  });
+
+  describe("POST /api/v1/orders", () => {
+    it("should create a new order", async () => {
+      // Skip if we don't have restaurant or menu items
+      if (!restaurantId || !menuItemId) {
+        console.log("Skipping test due to missing test data");
+        return;
+      }
+
+      const newOrder = {
+        restaurantId,
+        items: [{ menuItemId, quantity: 2 }],
+        total: 25.98,
+        address: "123 Test Address St",
+        paymentMethod: "CASH",
+      };
+
+      const response = await request(TEST_SERVER_URL)
+        .post("/api/v1/orders")
+        .set("Authorization", `Bearer ${customerAuthToken}`)
+        .send(newOrder);
+
+      expect(response.status).toBe(200);
+      expect(response.body.id).toBeDefined();
+      expect(response.body.restaurantId).toBe(restaurantId);
+
+      // Save order ID for cleanup
+      createdOrderId = response.body.id;
+    });
+  });
+
+  describe("GET /api/v1/orders", () => {
+    it("should return customer orders when authenticated as customer", async () => {
+      const response = await request(TEST_SERVER_URL)
+        .get("/api/v1/orders")
+        .set("Authorization", `Bearer ${customerAuthToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    it("should return restaurant orders when authenticated as restaurant admin", async () => {
+      const response = await request(TEST_SERVER_URL)
+        .get("/api/v1/orders")
+        .set("Authorization", `Bearer ${restaurantAuthToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+  });
+
+  describe("GET /api/v1/orders/:id", () => {
+    it("should return an order by ID", async () => {
+      // Skip if we didn't create an order
+      if (!createdOrderId) {
+        console.log("Skipping test because no order was created");
+        return;
+      }
+
+      const response = await request(TEST_SERVER_URL)
+        .get(`/api/v1/orders/${createdOrderId}`)
+        .set("Authorization", `Bearer ${customerAuthToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.id).toBe(createdOrderId);
+    });
+  });
+});

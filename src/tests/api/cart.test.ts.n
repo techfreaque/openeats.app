@@ -1,0 +1,263 @@
+import "../setup"; // Import test setup
+
+import { PrismaClient } from "@prisma/client";
+import request from "supertest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
+// Use real Prisma client for E2E tests
+const prisma = new PrismaClient();
+
+// Constants for testing
+const TEST_MENU_ITEM = {
+  name: "Test Cart Pizza",
+  description: "A delicious test pizza for cart tests",
+  price: 9.99,
+  taxPercent: 7.0,
+  published: true,
+  image: "https://example.com/test-pizza.jpg",
+};
+
+// Store IDs for use in tests
+let restaurantId: string;
+let menuItemId: string;
+let categoryId: string;
+
+describe("/api/v1/cart E2E", () => {
+  beforeAll(async () => {
+    // Wait for test data to be available from setup
+    if (!global.testData) {
+      console.log("Waiting for test data to be available...");
+      await new Promise<void>((resolve) => {
+        const interval = setInterval(() => {
+          if (global.testData) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 100);
+      });
+    }
+
+    // Get restaurant ID from global test data
+    restaurantId = global.testData.restaurant.id;
+
+    // Find a category from the database
+    const category = await prisma.category.findFirst();
+    if (!category) {
+      throw new Error("No categories found in database for testing");
+    }
+    categoryId = category.id;
+
+    // Create a test menu item specifically for cart tests
+    await prisma.menuItem.deleteMany({
+      where: { name: TEST_MENU_ITEM.name },
+    });
+
+    const menuItem = await prisma.menuItem.create({
+      data: {
+        ...TEST_MENU_ITEM,
+        restaurantId,
+        categoryId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+    menuItemId = menuItem.id;
+  });
+
+  afterAll(async () => {
+    // Clean up the test menu item
+    await prisma.cartItem.deleteMany({
+      where: { menuItemId },
+    });
+
+    try {
+      await prisma.menuItem.delete({
+        where: { id: menuItemId },
+      });
+    } catch (error) {
+      console.log(
+        "Could not delete test menu item, may have been deleted already",
+      );
+    }
+
+    await prisma.$disconnect();
+  });
+
+  describe("GET /api/v1/cart", () => {
+    it("should return 401 when not authenticated", async () => {
+      const response = await request(global.testBaseUrl)
+        .get("/api/v1/cart")
+        .expect(401);
+
+      expect(response.body.error).toBeTruthy();
+      expect(response.body.error.message).toContain("Not signed in");
+    });
+
+    it("should return empty cart initially", async () => {
+      // First ensure the cart is empty
+      await prisma.cartItem.deleteMany({
+        where: { userId: global.testData.customer.id },
+      });
+
+      const response = await request(global.testBaseUrl)
+        .get("/api/v1/cart")
+        .set("Authorization", `Bearer ${global.customerAuthToken}`)
+        .expect(200);
+
+      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.data.length).toBe(0);
+    });
+  });
+
+  describe("POST /api/v1/cart", () => {
+    it("should add an item to the cart", async () => {
+      const response = await request(global.testBaseUrl)
+        .post("/api/v1/cart")
+        .set("Authorization", `Bearer ${global.customerAuthToken}`)
+        .send({
+          menuItemId,
+          restaurantId,
+          quantity: 2,
+        })
+        .expect(200);
+
+      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.data.length).toBe(1);
+      expect(response.body.data[0].quantity).toBe(2);
+      expect(response.body.data[0].menuItem.id).toBe(menuItemId);
+      expect(response.body.data[0].restaurant.id).toBe(restaurantId);
+    });
+
+    it("should update the quantity of an existing cart item", async () => {
+      const response = await request(global.testBaseUrl)
+        .post("/api/v1/cart")
+        .set("Authorization", `Bearer ${global.customerAuthToken}`)
+        .send({
+          menuItemId,
+          restaurantId,
+          quantity: 3, // Update from 2 to 3
+        })
+        .expect(200);
+
+      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.data.length).toBe(1);
+      expect(response.body.data[0].quantity).toBe(3);
+    });
+  });
+
+  describe("Cart item details", () => {
+    it("should retrieve cart items with details", async () => {
+      const response = await request(global.testBaseUrl)
+        .get("/api/v1/cart")
+        .set("Authorization", `Bearer ${global.customerAuthToken}`)
+        .expect(200);
+
+      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.data.length).toBe(1);
+
+      // Check menu item details
+      const cartItem = response.body.data[0];
+      expect(cartItem.menuItem.name).toBe(TEST_MENU_ITEM.name);
+      expect(cartItem.menuItem.price).toBe(TEST_MENU_ITEM.price);
+      expect(cartItem.menuItem.taxPercent).toBe(TEST_MENU_ITEM.taxPercent);
+
+      // Check restaurant details are included
+      expect(cartItem.restaurant.id).toBe(restaurantId);
+      expect(cartItem.restaurant.name).toBeTruthy();
+    });
+
+    it("should remove an item from cart when quantity is 0", async () => {
+      const response = await request(global.testBaseUrl)
+        .post("/api/v1/cart")
+        .set("Authorization", `Bearer ${global.customerAuthToken}`)
+        .send({
+          menuItemId,
+          restaurantId,
+          quantity: 0, // Set to 0 to remove
+        })
+        .expect(200);
+
+      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.data.length).toBe(0); // Cart should be empty now
+    });
+  });
+
+  describe("Error handling", () => {
+    it("should handle adding a non-existent menu item", async () => {
+      const nonExistentId = "00000000-0000-0000-0000-000000000000";
+
+      const response = await request(global.testBaseUrl)
+        .post("/api/v1/cart")
+        .set("Authorization", `Bearer ${global.customerAuthToken}`)
+        .send({
+          menuItemId: nonExistentId,
+          restaurantId,
+          quantity: 1,
+        })
+        .expect(404);
+
+      expect(response.body.error).toBeTruthy();
+      expect(response.body.error.message).toContain("Menu item not found");
+    });
+  });
+
+  describe("Multiple cart items", () => {
+    it("should add multiple distinct items to the cart", async () => {
+      // Create a second menu item for testing
+      const secondMenuItem = await prisma.menuItem.create({
+        data: {
+          name: "Test Cart Pasta",
+          description: "A delicious test pasta for cart tests",
+          price: 12.99,
+          taxPercent: 7.0,
+          published: true,
+          image: "https://example.com/test-pasta.jpg",
+          restaurantId,
+          categoryId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+
+      // Add first item
+      await request(global.testBaseUrl)
+        .post("/api/v1/cart")
+        .set("Authorization", `Bearer ${global.customerAuthToken}`)
+        .send({
+          menuItemId,
+          restaurantId,
+          quantity: 1,
+        })
+        .expect(200);
+
+      // Add second item
+      await request(global.testBaseUrl)
+        .post("/api/v1/cart")
+        .set("Authorization", `Bearer ${global.customerAuthToken}`)
+        .send({
+          menuItemId: secondMenuItem.id,
+          restaurantId,
+          quantity: 2,
+        })
+        .expect(200);
+
+      // Retrieve cart
+      const response = await request(global.testBaseUrl)
+        .get("/api/v1/cart")
+        .set("Authorization", `Bearer ${global.customerAuthToken}`)
+        .expect(200);
+
+      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.data.length).toBe(2);
+
+      // Clean up the second menu item after the test
+      await prisma.cartItem.deleteMany({
+        where: { menuItemId: secondMenuItem.id },
+      });
+
+      await prisma.menuItem.delete({
+        where: { id: secondMenuItem.id },
+      });
+    });
+  });
+});

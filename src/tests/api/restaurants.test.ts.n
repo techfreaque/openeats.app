@@ -1,0 +1,353 @@
+/* eslint-disable no-console */
+
+import "../setup"; // Import test setup
+
+import type { MenuItem } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import fetch from "node-fetch";
+import request from "supertest";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
+
+import { TEST_SERVER_URL } from "@/lib/env";
+
+// Use real Prisma client for E2E tests
+const prisma = new PrismaClient();
+
+describe("/api/v1/restaurants E2E", () => {
+  let restaurantId: string;
+
+  beforeEach(() => {
+    // Ensure test data exists
+    if (!global.testData || !global.testData.restaurant) {
+      console.log("Waiting for test data to be available...");
+      return new Promise<void>((resolve) => {
+        const interval = setInterval(() => {
+          if (global.testData && global.testData.restaurant) {
+            restaurantId = global.testData.restaurant.id;
+            clearInterval(interval);
+            resolve();
+          }
+        }, 100);
+      });
+    }
+
+    // Get restaurant ID from global test data
+    restaurantId = global.testData.restaurant.id;
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
+  describe("GET /api/v1/restaurants", () => {
+    it("should return a list of restaurants", async () => {
+      const response = await request(global.testBaseUrl)
+        .get("/api/v1/restaurants")
+        .set("Authorization", `Bearer ${global.customerAuthToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    it("should return restaurants filtered by cuisine", async () => {
+      const response = await request(global.testBaseUrl)
+        .get("/api/v1/restaurants?category=Italian")
+        .set("Authorization", `Bearer ${global.customerAuthToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+  });
+
+  describe("GET /api/v1/restaurants/:id", () => {
+    it("should return a specific restaurant", async () => {
+      const response = await request(global.testBaseUrl)
+        .get(`/api/v1/restaurants/${restaurantId}`)
+        .set("Authorization", `Bearer ${global.customerAuthToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.id).toBe(restaurantId);
+    });
+
+    it("should return 404 for non-existent restaurant", async () => {
+      const response = await request(global.testBaseUrl)
+        .get("/api/v1/restaurants/non-existent-id")
+        .set("Authorization", `Bearer ${global.customerAuthToken}`);
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe("POST /api/v1/restaurants/menu", () => {
+    let newMenuItem: Partial<MenuItem>;
+
+    it("should create a new menu item as restaurant owner", async () => {
+      // Create a new menu item for the restaurant
+      newMenuItem = {
+        name: "E2E Test Item",
+        description: "Created during E2E testing",
+        price: 14.99,
+        category: "Appetizer",
+        image: "/test-image.jpg",
+        restaurantId,
+        isAvailable: true,
+      };
+
+      const response = await request(global.testBaseUrl)
+        .post(`/api/v1/restaurants/menu`)
+        .set("Authorization", `Bearer ${global.restaurantAuthToken}`)
+        .send(newMenuItem);
+
+      expect(response.status).toBe(200);
+      expect(response.body.name).toBe(newMenuItem.name);
+
+      // Save the ID for cleanup
+      newMenuItem.id = response.body.id;
+    });
+
+    // Clean up - remove the created menu item
+    afterAll(async () => {
+      if (newMenuItem?.id) {
+        try {
+          await prisma.menuItem.delete({
+            where: { id: newMenuItem.id },
+          });
+        } catch (error) {
+          console.error("Error cleaning up test menu item:", error);
+        }
+      }
+    });
+  });
+});
+
+describe("Restaurant API endpoints", () => {
+  let authToken: string;
+  let createdRestaurantId: string;
+
+  // Test data for geolocation
+  const testLocations = [
+    {
+      countryCode: "US",
+      zip: "10001",
+      street: "Main Street",
+      streetNumber: "123",
+      latitude: 40.7128,
+      longitude: -74.006, // New York coordinates
+    },
+    {
+      countryCode: "US",
+      zip: "10002",
+      street: "Broadway",
+      streetNumber: "456",
+      latitude: 40.7142,
+      longitude: -74.0059, // Near first location (within radius)
+    },
+    {
+      countryCode: "US",
+      zip: "90001",
+      street: "Hollywood Blvd",
+      streetNumber: "789",
+      latitude: 34.0522,
+      longitude: -118.2437, // Los Angeles coordinates (far away)
+    },
+  ];
+
+  // Test restaurants
+  const testRestaurants = [
+    {
+      name: "NYC Restaurant",
+      description: "A restaurant in New York",
+      street: testLocations[0].street,
+      streetNumber: testLocations[0].streetNumber,
+      zip: testLocations[0].zip,
+      city: "New York",
+      countryCode: testLocations[0].countryCode,
+      phone: "123456789",
+      email: "nyc@example.com",
+      image: "https://example.com/image.jpg",
+    },
+    {
+      name: "Broadway Diner",
+      description: "A diner near Broadway",
+      street: testLocations[1].street,
+      streetNumber: testLocations[1].streetNumber,
+      zip: testLocations[1].zip,
+      city: "New York",
+      countryCode: testLocations[1].countryCode,
+      phone: "987654321",
+      email: "diner@example.com",
+      image: "https://example.com/diner.jpg",
+    },
+    {
+      name: "LA Restaurant",
+      description: "A restaurant in Los Angeles",
+      street: testLocations[2].street,
+      streetNumber: testLocations[2].streetNumber,
+      zip: testLocations[2].zip,
+      city: "Los Angeles",
+      countryCode: testLocations[2].countryCode,
+      phone: "555555555",
+      email: "la@example.com",
+      image: "https://example.com/laimg.jpg",
+    },
+  ];
+
+  beforeAll(async () => {
+    // Login as admin or create test account
+    const loginResponse = await fetch(`${TEST_SERVER_URL}/api/v1/auth/public/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "admin@example.com",
+        password: "password123",
+      }),
+    });
+
+    const loginData = await loginResponse.json();
+    authToken = loginData.data.token;
+
+    // Create test geo locations
+    for (const location of testLocations) {
+      await prisma.geoLocation.upsert({
+        where: {
+          countryCode_zip_street_streetNumber: {
+            countryCode: location.countryCode,
+            zip: location.zip,
+            street: location.street,
+            streetNumber: location.streetNumber,
+          },
+        },
+        update: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+        },
+        create: {
+          countryCode: location.countryCode,
+          zip: location.zip,
+          street: location.street,
+          streetNumber: location.streetNumber,
+          latitude: location.latitude,
+          longitude: location.longitude,
+        },
+      });
+    }
+
+    // Ensure test category exists
+    const category = await prisma.category.upsert({
+      where: { name: "Test Category" },
+      update: {},
+      create: {
+        name: "Test Category",
+        image: "https://example.com/category.jpg",
+      },
+    });
+
+    // Create test restaurants
+    for (const restaurant of testRestaurants) {
+      await prisma.restaurant.create({
+        data: {
+          ...restaurant,
+          mainCategoryId: category.id,
+          isOpen: true,
+          rating: 4.5,
+          orderCount: 0,
+          country: {
+            connect: { code: restaurant.countryCode },
+          },
+          geoLocation: {
+            connect: {
+              countryCode_zip_street_streetNumber: {
+                countryCode: restaurant.countryCode,
+                zip: restaurant.zip,
+                street: restaurant.street,
+                streetNumber: restaurant.streetNumber,
+              },
+            },
+          },
+        },
+      });
+    }
+  });
+
+  afterAll(async () => {
+    // Clean up test data
+    await prisma.restaurant.deleteMany({
+      where: {
+        OR: testRestaurants.map((r) => ({ email: r.email })),
+      },
+    });
+
+    await prisma.geoLocation.deleteMany({
+      where: {
+        OR: testLocations.map((l) => ({
+          countryCode_zip_street_streetNumber: {
+            countryCode: l.countryCode,
+            zip: l.zip,
+            street: l.street,
+            streetNumber: l.streetNumber,
+          },
+        })),
+      },
+    });
+
+    await prisma.$disconnect();
+  });
+
+  test("GET /api/v1/restaurants - should fetch restaurants within radius", async () => {
+    // Test with a 5km radius from NYC location
+    const response = await fetch(
+      `${TEST_SERVER_URL}/api/v1/restaurants?countryCode=US&zip=10001&street=Main%20Street&streetNumber=123&radius=5`,
+      {
+        headers: { Authorization: `Bearer ${authToken}` },
+      },
+    );
+
+    expect(response.status).toBe(200);
+    const data = await response.json();
+
+    expect(data.success).toBe(true);
+    expect(data.data.data.length).toBe(2); // Should find both NYC restaurants, but not LA
+
+    // Verify distance is included and sorted by distance
+    expect(data.data.data[0].distance).toBeDefined();
+    expect(data.data.data[1].distance).toBeDefined();
+    expect(data.data.data[0].distance).toBeLessThan(data.data.data[1].distance);
+
+    // LA restaurant should not be in the results
+    const laRestaurant = data.data.data.find((r) => r.name === "LA Restaurant");
+    expect(laRestaurant).toBeUndefined();
+  });
+
+  test("GET /api/v1/restaurants - should handle small radius", async () => {
+    // Test with a very small radius that should only include the first restaurant
+    const response = await fetch(
+      `${TEST_SERVER_URL}/api/v1/restaurants?countryCode=US&zip=10001&street=Main%20Street&streetNumber=123&radius=0.1`,
+      {
+        headers: { Authorization: `Bearer ${authToken}` },
+      },
+    );
+
+    expect(response.status).toBe(200);
+    const data = await response.json();
+
+    expect(data.success).toBe(true);
+    expect(data.data.data.length).toBe(1); // Should only find the exact location restaurant
+    expect(data.data.data[0].name).toBe("NYC Restaurant");
+  });
+
+  test("GET /api/v1/restaurants - should fail with invalid location", async () => {
+    const response = await fetch(
+      `${TEST_SERVER_URL}/api/v1/restaurants?countryCode=XX&zip=99999&street=Nonexistent&streetNumber=000&radius=10`,
+      {
+        headers: { Authorization: `Bearer ${authToken}` },
+      },
+    );
+
+    expect(response.status).toBe(404);
+    const data = await response.json();
+    expect(data.success).toBe(false);
+    expect(data.message).toContain("Location not found");
+  });
+
+  // Additional tests for POST, PUT, DELETE endpoints...
+});
