@@ -1,4 +1,4 @@
-# next-query-portal
+# next-vibe
 
 A Next.js backend framework for building strongly typed APIs with integrated authentication, data access, and client-side hooks.
 

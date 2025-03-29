@@ -1,6 +1,6 @@
-import type { ApiEndpoint } from "next-query-portal/client/endpoint";
-import type { JwtPayloadType } from "next-query-portal/server/endpoints/auth/jwt";
-import type { ApiHandlerReturnType } from "next-query-portal/server/endpoints/core/api-handler";
+import type { ApiEndpoint } from "@/packages/next-vibe/client/endpoint";
+import type { JwtPayloadType } from "next-vibeibe/server/endpoints/auth/jwt";
+import type { ApiHandlerReturnType } from "next-vibeibe/server/endpoints/core/api-handler";
 import { describe, expect, it } from "vitest";
 
 import { mockExecute } from "./mock-execution";

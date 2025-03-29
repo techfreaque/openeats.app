@@ -1,7 +1,7 @@
-import type { ApiEndpoint } from "next-query-portal/client/endpoint";
-import type { JwtPayloadType } from "next-query-portal/server/endpoints/auth/jwt";
-import type { SafeReturnType } from "next-query-portal/server/endpoints/core/api-handler";
-import type { UserRoleResponseType } from "next-query-portal/shared/types/user-roles.schema";
+import type { ApiEndpoint } from "@/packages/next-vibe/client/endpoint";
+import type { JwtPayloadType } from "@/packages/next-vibe/server/endpoints/auth/jwt";
+import type { SafeReturnType } from "@/packages/next-vibe/server/endpoints/core/api-handler";
+import type { UserRoleResponseType } from "@/packages/next-vibe/shared/types/user-roles.schema";
 
 /**
  * Specific mock data structure for tests

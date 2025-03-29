@@ -1,10 +1,10 @@
-import type { ApiEndpoint } from "next-query-portal/client/endpoint";
-import type { JwtPayloadType } from "next-query-portal/server/endpoints/auth/jwt";
+import type { ApiEndpoint } from "@/packages/next-vibe/client/endpoint";
+import type { JwtPayloadType } from "next-vibeibe/server/endpoints/auth/jwt";
 import type {
   ApiHandlerReturnType,
   SafeReturnType,
-} from "next-query-portal/server/endpoints/core/api-handler";
-import { setDataProvider } from "next-query-portal/server/endpoints/data";
+} from "next-vibeibe/server/endpoints/core/api-handler";
+import { setDataProvider } from "next-vibeibe/server/endpoints/data";
 
 import { debugLogger } from "../shared/utils/logger";
 import { TestDataProvider } from "./test-data-provider";

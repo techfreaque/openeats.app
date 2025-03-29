@@ -1,5 +1,5 @@
-import type { DataProvider } from "next-query-portal/server/endpoints/data";
-import type { UserRoleResponseType } from "next-query-portal/shared";
+import type { DataProvider } from "@/packages/next-vibe/server/endpoints/data";
+import type { UserRoleResponseType } from "next-vibe/shared";
 
 import { UserRoleValue } from "../shared/types/enums";
 import type { MockTestData } from "./types";

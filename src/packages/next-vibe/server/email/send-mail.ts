@@ -1,4 +1,4 @@
-import "server-only";
+import "@/packages/next-vibe/server/utils/server-only";
 
 import { render } from "@react-email/render";
 import { createTransport } from "nodemailer";

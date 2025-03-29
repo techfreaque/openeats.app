@@ -1,5 +1,5 @@
 {
-    "name": "next-query-portal",
+    "name": "next-vibe",
     "version": "1.0.0",
     "private": false,
     "files": [
@@ -32,12 +32,12 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/techfreaque/next-query-portal.git"
+        "url": "git+https://github.com/techfreaque/next-vibe.git"
     },
     "bugs": {
-        "url": "https://github.com/techfreaque/next-query-portal/issues"
+        "url": "https://github.com/techfreaque/next-vibe/issues"
     },
-    "homepage": "https://github.com/techfreaque/next-query-portal#readme",
+    "homepage": "https://github.com/techfreaque/next-vibe#readme",
     "keywords": [
         "next",
         "portal",

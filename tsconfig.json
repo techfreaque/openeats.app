@@ -2,8 +2,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "next-query-portal/*": [
-        "./src/packages/next-query-portal/*"
+      "next-vibe/*": [
+        "src/packages/next-vibe/*"
       ],
       "openeats-client/*": [
         "./src/packages/client/*"
@@ -12,7 +12,7 @@
         "./src/*"
       ],
       "server-only": [
-        "src/packages/next-query-portal/server/utils/server-only.ts"
+        "src/packages/next-vibe/server/utils/server-only.ts"
       ]
     },
     "outDir": "./dist",

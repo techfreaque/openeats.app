@@ -1,5 +1,5 @@
-import { Methods } from "next-query-portal/shared/types/endpoint";
-import { validateData } from "next-query-portal/shared/utils/validation";
+import { Methods } from "@/packages/next-vibe/shared/types/endpoint";
+import { validateData } from "@/packages/next-vibe/shared/utils/validation";
 
 import type {
   ErrorResponseType,
