@@ -5,6 +5,7 @@ import type { JSX, ReactNode } from "react";
 import React from "react";
 import { type FieldValues } from "react-hook-form";
 import type { ZodObject, ZodType, ZodTypeDef } from "zod";
+import { z } from "zod";
 
 import {
   Form,
@@ -32,7 +33,39 @@ interface SchemaField {
   type: string;
   description?: string;
   required: boolean;
-  enumOptions?: Array<{ value: string; label: string }>;
+  enumOptions?: Array<{ value: string; label: string }> | undefined;
+}
+
+// Get field type from Zod schema using Zod's type system
+function getFieldType(field: ZodType): string {
+  // Check for enum
+  if (field instanceof z.ZodEnum || field instanceof z.ZodNativeEnum) {
+    return "enum";
+  }
+
+  // Check for boolean
+  if (field instanceof z.ZodBoolean) {
+    return "boolean";
+  }
+
+  // Check for number
+  if (field instanceof z.ZodNumber) {
+    return "number";
+  }
+
+  // Check for string and possibly identify longtext
+  if (field instanceof z.ZodString) {
+    // Optional: Detect longtext based on some criteria
+    // e.g., if it has a specific description or min length
+    const hasLongTextConstraint = field._def.checks?.some(
+      (check) => check.kind === "min" && check.value > 50,
+    );
+
+    return hasLongTextConstraint ? "longtext" : "string";
+  }
+
+  // Default
+  return "string";
 }
 
 // Type guard for ZodObject
@@ -60,35 +93,35 @@ function isOptionalField(field: ZodType): boolean {
   );
 }
 
-function isEnumField(field: ZodType): boolean {
-  return Boolean(
-    field &&
-      typeof field === "object" &&
-      "_def" in field &&
-      field._def &&
-      typeof field._def === "object" &&
-      "values" in field._def &&
-      Array.isArray(field._def.values),
-  );
-}
-
-// Get field type from Zod schema with proper type safety
-function getFieldType(_field: ZodType): string {
-  // Implementation here would replace the existing one with proper type safety
-  return "string"; // Default fallback
+// Type guard for Zod enum types
+function isZodEnum(
+  field: ZodType,
+): field is z.ZodEnum<any> | z.ZodNativeEnum<any> {
+  return field instanceof z.ZodEnum || field instanceof z.ZodNativeEnum;
 }
 
 function getEnumOptions(
   field: ZodType,
 ): Array<{ value: string; label: string }> | undefined {
-  if (!isEnumField(field)) {
+  if (!isZodEnum(field)) {
     return undefined;
   }
 
   try {
-    // Type assertion to make this type-safe
-    const values = Array.isArray(field._def?.values) ? field._def.values : [];
-    return values.map((value: string) => ({
+    let values: string[] = [];
+
+    if (field instanceof z.ZodEnum) {
+      // For ZodEnum
+      values = field._def.values;
+    } else if (field instanceof z.ZodNativeEnum) {
+      // For ZodNativeEnum (enum from TypeScript)
+      const enumValues = field._def.values;
+      values = Object.keys(enumValues)
+        .filter((key) => isNaN(Number(key))) // Filter out numeric keys
+        .map((key) => key);
+    }
+
+    return values.map((value) => ({
       value,
       label: value.charAt(0).toUpperCase() + value.slice(1),
     }));
@@ -270,11 +303,7 @@ export function DynamicFormFields({
 
   return (
     <Form {...apiForm.form}>
-      <form
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onSubmit={apiForm.submitForm}
-        className="space-y-6"
-      >
+      <form onSubmit={apiForm.submitForm} className="space-y-6">
         <div className="space-y-4 py-2">{formFields.map(renderField)}</div>
       </form>
     </Form>

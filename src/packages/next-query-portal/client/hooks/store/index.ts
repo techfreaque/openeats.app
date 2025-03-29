@@ -26,7 +26,7 @@ const queryClient = new QueryClient({
 });
 
 // Track in-flight requests to prevent duplicates
-const inFlightRequests = new Map<string, Promise<any>>();
+const inFlightRequests = new Map<string, Promise<unknown>>();
 
 // Store types
 export interface ApiStore {
@@ -50,7 +50,9 @@ export interface ApiStore {
     endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
     requestData: TRequest,
     pathParams: TUrlVariables,
-    options?: ApiQueryOptions<TResponse> & { queryKey?: QueryKey },
+    options?: Omit<ApiQueryOptions<TResponse>, "queryKey"> & {
+      queryKey?: QueryKey;
+    },
   ) => Promise<TResponse>;
 
   executeMutation: <TRequest, TResponse, TUrlVariables>(
@@ -127,11 +129,17 @@ export const useApiStore = create<ApiStore>((set, get) => ({
       queries: {
         ...state.queries,
         [queryId]: {
-          ...(state.queries[queryId] || {}),
+          data: undefined,
+          error: null,
+          isError: false,
+          isSuccess: false,
+          isCachedData: false,
+          lastFetchTime: null,
           isLoading: true,
           isFetching: true,
           statusMessage: "Loading data...",
           isLoadingFresh: state.queries[queryId]?.data ? false : true,
+          ...(state.queries[queryId] || {}),
         },
       },
     }));
@@ -142,7 +150,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
       options.deduplicateRequests !== false
     ) {
       try {
-        return inFlightRequests.get(requestKey);
+        return inFlightRequests.get(requestKey) as Promise<TResponse>;
       } catch (error) {
         // If the shared request fails, we'll continue and try again
         errorLogger("Shared request failed, retrying", error);
@@ -158,14 +166,17 @@ export const useApiStore = create<ApiStore>((set, get) => ({
             queries: {
               ...state.queries,
               [queryId]: {
-                ...(state.queries[queryId] || {}),
                 data: cachedData,
+                lastFetchTime: state.queries[queryId]?.lastFetchTime || null,
+                ...(state.queries[queryId] || {}),
+                error: null,
                 isLoading: false,
+                isFetching: false,
+                isError: false,
                 isSuccess: true,
                 isLoadingFresh: false,
                 isCachedData: true,
                 statusMessage: "Showing cached data",
-                lastFetchTime: state.queries[queryId]?.lastFetchTime || null,
               },
             },
           }));
@@ -179,7 +190,8 @@ export const useApiStore = create<ApiStore>((set, get) => ({
               get()
                 .executeQuery(endpoint, requestData, pathParams, {
                   ...options,
-                  disableLocalCache: true, // Don't recursively check cache
+                  queryKey: options.queryKey as QueryKey,
+                  disableLocalCache: true,
                 })
                 .catch((err) => errorLogger("Background refresh failed:", err))
                 .finally(() => resolve());
@@ -263,12 +275,14 @@ export const useApiStore = create<ApiStore>((set, get) => ({
             ...state.queries,
             [queryId]: {
               ...(state.queries[queryId] || {}),
+              data: state.queries[queryId]?.data || undefined,
               error: new Error(errorResponse.message),
               isLoading: false,
               isFetching: false,
               isError: true,
               isSuccess: false,
               isLoadingFresh: false,
+              isCachedData: state.queries[queryId]?.isCachedData || false,
               statusMessage: `Error: ${errorResponse.message}`,
               lastFetchTime: Date.now(),
             },
@@ -368,6 +382,13 @@ export const useApiStore = create<ApiStore>((set, get) => ({
                   data: newData,
                   isSuccess: true,
                   lastFetchTime: Date.now(),
+                  error: null,
+                  isLoading: false,
+                  isFetching: false,
+                  isError: false,
+                  isLoadingFresh: false,
+                  isCachedData: false,
+                  statusMessage: "Ready",
                 },
               },
             }));
@@ -446,7 +467,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
     });
 
     // Also invalidate in React Query if it's being used
-    queryClient.invalidateQueries({ queryKey });
+    await queryClient.invalidateQueries({ queryKey });
   },
 
   refetchQuery: async <TResponse>(
@@ -473,7 +494,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
       forms: {
         ...state.forms,
         [formId]: {
-          ...(state.forms[formId] || {}),
+          ...(state.forms[formId] || { isSubmitting: false }),
           formError: error,
         },
       },
@@ -485,7 +506,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
       forms: {
         ...state.forms,
         [formId]: {
-          ...(state.forms[formId] || {}),
+          ...(state.forms[formId] || { formError: null, isSubmitting: false }),
           formError: null,
         },
       },

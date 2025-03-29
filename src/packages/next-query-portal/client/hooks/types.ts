@@ -4,6 +4,7 @@ import type {
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
+import type { FormEvent } from "react";
 import type { UseFormProps, UseFormReturn } from "react-hook-form";
 
 /**
@@ -60,6 +61,7 @@ export interface ApiMutationOptions<TRequest, TResponse, TUrlVariables> {
     requestData: TRequest;
     pathParams: TUrlVariables;
   }) => void | Promise<void>;
+  invalidateQueries?: string[]; // List of queries to invalidate after mutation
 }
 
 // Form-specific types
@@ -71,7 +73,15 @@ export type ApiFormReturn<TRequest, TResponse, TUrlVariables> = {
   form: UseFormReturn<TRequest>;
   isSubmitting: boolean;
   isSubmitSuccessful: boolean;
-  submitForm: () => Promise<void>;
+  submitForm: SubmitFormFunction<TResponse>;
   submitError: Error | undefined;
   errorMessage: string | undefined;
 };
+
+export type SubmitFormFunction<TResponse> = (
+  event?: FormEvent<HTMLFormElement>,
+  callbacks?: {
+    onSuccess?: (data: TResponse) => void;
+    onError?: (error: Error) => void;
+  },
+) => void;

@@ -6,6 +6,7 @@ export const dateSchema = z
   .string()
   .or(z.date())
   .transform((val) => (val instanceof Date ? val.toISOString() : val));
+export type DateType = z.input<typeof dateRangeSchema>;
 
 export const idSchema = z.object({
   id: z.string().uuid(),

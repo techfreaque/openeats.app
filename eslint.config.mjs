@@ -1,5 +1,3 @@
-// eslint.config.js (ESLint 9+ Flat Config)
-
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -31,7 +29,10 @@ export default [
     ignores: [
       "dist",
       "eslint.config.mjs",
-      ".next"
+      ".next",
+      "src/packages/react-native-reusables",
+      // just until native is stable
+      "**/*.native.tsx"
     ],
   },
 

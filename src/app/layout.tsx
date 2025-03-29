@@ -6,7 +6,9 @@ import { APP_NAME } from "next-query-portal/shared/constants";
 import type React from "react";
 import type { JSX } from "react";
 
-import { Layout } from "../components/layout";
+import { ThemeProvider } from "@/components/theme-provider";
+
+import { TranslationProvider } from "../packages/next-query-portal/i18n";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,7 +25,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Layout>{children}</Layout>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TranslationProvider>{children}</TranslationProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

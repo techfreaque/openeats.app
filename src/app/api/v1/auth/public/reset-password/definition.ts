@@ -1,8 +1,9 @@
-import { createEndpoint } from "next-query-portal/client/endpoint";
 import { undefinedSchema } from "next-query-portal/shared/types/common.schema";
 import { Methods } from "next-query-portal/shared/types/endpoint";
 import { UserRoleValue } from "next-query-portal/shared/types/enums";
 import { messageResponseSchema } from "next-query-portal/shared/types/response.schema";
+
+import { createEndpoint } from "@/packages/next-query-portal/client/endpoint";
 
 import registerEndpoint from "../register/definition";
 import { resetPasswordRequestSchema } from "./schema";
@@ -22,7 +23,7 @@ const resetPasswordEndpoint = createEndpoint({
       },
       example1: {
         id: "9bfb43b8-c361-4f3e-b512-ec2ced9bf688",
-        email: registerEndpoint.POST.examples.payloads["customer"]!["email"],
+        email: registerEndpoint.POST.examples.payloads.customer.email,
       },
     },
     urlPathVariables: undefined,

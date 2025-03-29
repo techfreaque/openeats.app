@@ -5,6 +5,7 @@ import { z } from "zod";
 export const envSchema = portalEnvSchema.extend({
   SUPPORT_EMAIL: z.string().email(),
   DATABASE_URL: z.string(),
+  TEST_SERVER_URL: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;

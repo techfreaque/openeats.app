@@ -4,7 +4,7 @@ import type { ApiConfig } from "../../../client/config";
 import { configureApi } from "../../../client/config";
 import { setGlobalErrorHandler } from "../../../shared/utils/error-handler";
 import type { DataProvider } from "../data/data-provider";
-import { MockDataProvider, setDataProvider } from "../data/data-provider";
+import { setDataProvider } from "../data/data-provider";
 import { PrismaDataProvider } from "../data/prisma-provider";
 
 /**
@@ -20,16 +20,6 @@ export interface ApiLibraryOptions {
    * Prisma client instance (optional)
    */
   prismaClient?: PrismaClient;
-
-  /**
-   * Use mock data provider with optional mock data (for testing/simple apps)
-   */
-  useMockProvider?: boolean;
-
-  /**
-   * Mock data for the mock provider
-   */
-  mockData?: Record<string, any>;
 
   /**
    * API configuration options (optional)
@@ -55,8 +45,6 @@ export function initApiLibrary(options: ApiLibraryOptions = {}): void {
   // Set up data provider based on options
   if (options.dataProvider) {
     setDataProvider(options.dataProvider);
-  } else if (options.useMockProvider) {
-    setDataProvider(new MockDataProvider(options.mockData));
   } else if (options.prismaClient) {
     // Use Prisma implementation with provided client
     setDataProvider(new PrismaDataProvider(options.prismaClient));

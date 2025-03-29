@@ -17,12 +17,24 @@ import type { ApiMutationOptions } from "../types";
 export function useApiMutation<TResponse, TRequest, TUrlVariables>(
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
   options: ApiMutationOptions<TRequest, TResponse, TUrlVariables> = {},
-): UseMutationResult<
-  TResponse,
-  Error,
-  { requestData: TRequest; urlParams?: TUrlVariables },
-  unknown
-> {
+): Omit<
+  UseMutationResult<
+    TResponse,
+    Error,
+    { requestData: TRequest; urlParams?: TUrlVariables },
+    unknown
+  >,
+  "mutate" | "mutateAsync" | "isIdle" | "isPaused" | "submittedAt"
+> & {
+  mutateAsync: (variables: {
+    requestData: TRequest;
+    urlParams: TUrlVariables;
+  }) => Promise<TResponse>;
+  mutate: (variables: {
+    requestData: TRequest;
+    urlParams: TUrlVariables;
+  }) => void;
+} {
   const { executeMutation, getMutationId } = useApiStore();
   const mutationId = getMutationId(endpoint);
   const defaultState: MutationStoreType<TResponse> = {
@@ -38,6 +50,8 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables>(
         (state.mutations[mutationId] as unknown as
           | undefined
           | MutationStoreType<TResponse>) || defaultState,
+    // eslint-disable-next-line react-compiler/react-compiler
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [mutationId],
   );
   // Get mutation state from store with shallow comparison
@@ -51,7 +65,7 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables>(
 
   // Create a type-safe mutate function that accepts both data and urlParams
   const mutate = useCallback(
-    (variables: { requestData: TRequest; urlParams?: TUrlVariables }) => {
+    (variables: { requestData: TRequest; urlParams: TUrlVariables }) => {
       void executeMutation(
         endpoint,
         variables.requestData,
@@ -65,7 +79,7 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables>(
   const mutateAsync = useCallback(
     async (variables: {
       requestData: TRequest;
-      urlParams?: TUrlVariables;
+      urlParams: TUrlVariables;
     }): Promise<TResponse> => {
       return executeMutation(
         endpoint,
@@ -94,8 +108,8 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables>(
 
   // Create a result object that matches React Query's UseMutationResult
   return {
-    mutate,
-    mutateAsync,
+    mutate: mutate,
+    mutateAsync: mutateAsync,
     isPending: mutationState.isPending,
     isError: mutationState.isError,
     error: mutationState.error,

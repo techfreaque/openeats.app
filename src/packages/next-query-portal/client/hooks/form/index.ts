@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { parseError } from "../../../shared/utils/parse-error";
 import type { ApiEndpoint } from "../../endpoint";
@@ -12,6 +13,7 @@ import type {
   ApiFormOptions,
   ApiFormReturn,
   ApiMutationOptions,
+  SubmitFormFunction,
 } from "../types";
 
 /**
@@ -82,7 +84,12 @@ export function useApiForm<TRequest, TResponse, TUrlVariables>(
   // Create base configuration without resolver
   const formConfig: ApiFormOptions<TRequest> = {
     ...options,
-    resolver: zodResolver(endpoint.requestSchema),
+    resolver: zodResolver(
+      z.object({
+        ...endpoint.requestSchema.shape,
+        ...endpoint.requestUrlSchema.shape,
+      }),
+    ),
   };
 
   // Initialize form with the proper configuration
@@ -99,39 +106,43 @@ export function useApiForm<TRequest, TResponse, TUrlVariables>(
   );
 
   // Create a submit handler that validates and submits the form
-  const submitForm = async () // event?: FormEvent<HTMLFormElement>,
-  : Promise<TResponse | undefined> => {
-    // event?.preventDefault();
-    const urlParamVariables: TUrlVariables = undefined; // TODO
-    try {
-      // Get form data
-      const formData = formMethods.getValues();
+  const submitForm: SubmitFormFunction<TResponse> = (
+    event?,
+    callbacks?,
+  ): void => {
+    const _submitForm = async (): Promise<void> => {
+      const urlParamVariables: TUrlVariables = undefined; // TODO
+      try {
+        // Get form data
+        const formData = formMethods.getValues();
 
-      // Clear any previous errors
-      clearFormError();
+        // Clear any previous errors
+        clearFormError();
 
-      // Call the API with the form data
-      const result = await executeMutation(
-        endpoint,
-        formData as unknown as TRequest,
-        urlParamVariables,
-        mutationOptions,
-      );
-      if (result === undefined) {
-        return undefined;
+        // Call the API with the form data
+        const result = await executeMutation(
+          endpoint,
+          formData as unknown as TRequest,
+          urlParamVariables,
+          mutationOptions,
+        );
+        if (result === undefined) {
+          return undefined;
+        }
+        callbacks?.onSuccess?.(result);
+      } catch (error) {
+        // Handle any errors that occur during submission
+        const parsedError = parseError(error);
+        setError(parsedError);
+        callbacks?.onError?.(parsedError);
       }
-      return result;
-    } catch (error) {
-      // Handle any errors that occur during submission
-      const parsedError = parseError(error);
-      setError(parsedError);
-      return undefined;
-    }
+    };
+    void formMethods.handleSubmit(_submitForm)(event);
   };
 
   return {
     form: formMethods,
-    submitForm: formMethods.handleSubmit(submitForm),
+    submitForm,
     isSubmitting: mutationState.isPending,
     isSubmitSuccessful: mutationState.isSuccess,
     submitError: mutationState.error || formState.formError || undefined,

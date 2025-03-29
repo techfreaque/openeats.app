@@ -5,7 +5,7 @@ import type { UndefinedType } from "next-query-portal/shared/types/common.schema
 import type { MessageResponseType } from "next-query-portal/shared/types/response.schema";
 
 import { EmailTemplate } from "../../../../../../config/email.template";
-import { getFullUser } from "../../me/route";
+import { getFullUser } from "../../me/route-handler/get-me";
 import type { ResetPasswordConfirmType } from "./schema";
 
 export const renderResetPasswordConfirmMail: EmailFunctionType<

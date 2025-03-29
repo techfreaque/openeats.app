@@ -13,7 +13,7 @@ import type { UndefinedType } from "next-query-portal/shared/types/common.schema
 
 import { env } from "../../../../../../config/env";
 import { db } from "../../../../db";
-import { getFullUser } from "../../me/route";
+import { getFullUser } from "../../me/route-handler/get-me";
 import loginEndpoint from "./definition";
 import type { LoginFormType, LoginResponseType } from "./schema";
 
@@ -79,7 +79,6 @@ export async function createSessionAndGetUser(
     sameSite: "strict",
     maxAge: 60 * 60 * 24 * 7, // 1 week
   });
-
   return {
     success: true,
     data: {

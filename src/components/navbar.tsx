@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { APP_NAME } from "next-query-portal/shared/constants";
 import type { JSX } from "react";
 
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
+import { APP_NAME } from "@/packages/next-query-portal/shared/constants";
+
 import { Button } from "./ui";
 
 export function Navbar(): JSX.Element {
@@ -23,7 +24,9 @@ export function Navbar(): JSX.Element {
           {!isLoading &&
             (isLoggedIn ? (
               <>
-                <div>{user!.email}</div>
+                <Link href="/auth/private/profile">
+                  <div>{user!.email}</div>
+                </Link>
                 <Button
                   onClick={logout}
                   variant="ghost"

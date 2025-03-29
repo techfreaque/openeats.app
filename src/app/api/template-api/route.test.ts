@@ -1,10 +1,11 @@
-import { testEndpoint } from "next-query-portal/testing/test-endpoint";
 import { expect } from "vitest";
 
-import templateEndpoint from "./definition";
+import { testEndpoint } from "@/packages/next-query-portal/testing/test-endpoint";
+
+import definitions from "./definition";
 import { POST } from "./route";
 
-testEndpoint(templateEndpoint.POST, POST, {
+testEndpoint(definitions.POST, POST, {
   customTests: {
     "should handle custom parameters": async (test) => {
       const response = await test.executeWith({

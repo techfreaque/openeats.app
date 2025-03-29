@@ -33,6 +33,8 @@ const nextConfig: NextConfig = {
     return config;
   },
   experimental: {
+    // disabling turbo as typed routes are not working with it
+    // turbo: {},
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,

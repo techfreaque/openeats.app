@@ -1,4 +1,3 @@
-import { useApiForm } from "next-query-portal/client/hooks/form";
 import { useApiMutation } from "next-query-portal/client/hooks/mutation";
 import { useApiQuery } from "next-query-portal/client/hooks/query";
 import {
@@ -12,6 +11,10 @@ import { useEffect } from "react";
 
 import logoutEndpoint from "@/app/api/v1/auth/logout/definition";
 import meEndpoint from "@/app/api/v1/auth/me/definition";
+import type {
+  UserResponseType,
+  UserUpdateRequestType,
+} from "@/app/api/v1/auth/me/schema";
 import loginEndpoint from "@/app/api/v1/auth/public/login/definition";
 import type {
   LoginFormType,
@@ -19,21 +22,20 @@ import type {
 } from "@/app/api/v1/auth/public/login/schema";
 import registerEndpoint from "@/app/api/v1/auth/public/register/definition";
 import type { RegisterType } from "@/app/api/v1/auth/public/register/schema";
+import { useApiForm } from "@/packages/next-query-portal/client/hooks/form";
 
-import type { UserResponseType } from "../app/api/v1/auth/me/schema";
-
-export interface AuthState {
+export interface UseAuthReturn {
   user: UserResponseType | undefined;
   isLoggedIn: boolean;
   isLoading: boolean;
-}
-
-export interface UseAuthReturn extends AuthState {
   loginForm: ReturnType<
     typeof useApiForm<LoginFormType, UndefinedType, LoginResponseType>
   >;
   signupForm: ReturnType<
     typeof useApiForm<RegisterType, UndefinedType, LoginResponseType>
+  >;
+  userForm: ReturnType<
+    typeof useApiForm<UserUpdateRequestType, UndefinedType, UserResponseType>
   >;
   logout: () => void;
 }
@@ -94,6 +96,15 @@ export function useAuth(): UseAuthReturn {
       },
     },
   );
+  const userForm = useApiForm(
+    meEndpoint.POST,
+    {},
+    {
+      onSuccess: async () => {
+        await refetch();
+      },
+    },
+  );
 
   const logout = useApiMutation(logoutEndpoint.GET, {
     onSuccess: async () => {
@@ -112,6 +123,7 @@ export function useAuth(): UseAuthReturn {
     isLoading,
     loginForm,
     signupForm,
+    userForm,
     logout: () =>
       logout.mutate({ requestData: undefined, urlParams: undefined }),
   };

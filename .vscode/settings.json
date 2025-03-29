@@ -1,11 +1,12 @@
 {
   "cSpell.words": [
+    "openeats",
     "sovendus",
     "vitest"
   ],
-  "editor.formatOnSave": true, // Disable direct formatting
+  "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit" // Let ESLint handle formatting
+    "source.fixAll.eslint": "explicit"
   },
   "eslint.format.enable": true,
   "eslint.validate": [
@@ -14,9 +15,22 @@
     "typescript",
     "typescriptreact"
   ],
+  "prettier.enable": false, // we use eslint for formatting
+  "typescript.validate.enable": true,
   "typescript.suggest.autoImports": true,
   "prettier.requireConfig": true,
-  "prettier.enable": false, // Disable Prettier extension
+  "[typescript]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "editor.formatOnSave": false
+  },
+  "[typescriptreact]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "editor.formatOnSave": false
+  },
   "files.eol": "\n",
   "files.associations": {
     "schema.prisma.template": "prisma"

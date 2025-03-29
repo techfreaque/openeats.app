@@ -1,10 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import {
-  type ApiEndpoint,
-  getEndpointByPath,
-} from "next-query-portal/client/endpoint";
 import { getEndpoints } from "next-query-portal/client/endpoints";
 import { useApiForm } from "next-query-portal/client/hooks/form";
 import { APP_NAME, ENDPOINT_DOMAINS } from "next-query-portal/shared/constants";
@@ -14,6 +10,10 @@ import { useMemo, useState } from "react";
 import { type FieldValues } from "react-hook-form";
 
 import { envClient } from "@/config/env-client";
+import {
+  type ApiEndpoint,
+  getEndpointByPath,
+} from "@/packages/next-query-portal/client/endpoint";
 
 import {
   Card,

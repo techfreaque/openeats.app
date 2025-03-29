@@ -9,11 +9,11 @@ export const loginSchema = z.object({
     .string()
     .min(8, { message: "Password must be at least 8 characters" }),
 });
-export type LoginFormType = z.infer<typeof loginSchema>;
+export type LoginFormType = z.input<typeof loginSchema>;
 
 export const loginResponseSchema = z.object({
   user: userResponseSchema,
   expiresAt: dateSchema,
   token: z.string(),
 });
-export type LoginResponseType = z.infer<typeof loginResponseSchema>;
+export type LoginResponseType = z.input<typeof loginResponseSchema>;

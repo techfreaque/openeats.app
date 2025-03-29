@@ -30,7 +30,6 @@ const loginEndpoint = createEndpoint({
       default: {
         id: "1",
         email: "customer@example.com",
-
         password: "password",
       },
     },

@@ -72,7 +72,7 @@ export async function createUser(
   }
   const hashedPassword = await hashPassword(password);
   await db.user.upsert({
-    where: { id: id || undefined },
+    where: { id: id },
     create: {
       email,
       password: hashedPassword,

@@ -48,12 +48,12 @@ model PasswordReset {
 }
 
 model UserRole {
-  id         String        @id @default(uuid())
-  role       UserRoleValue
-  userId     String
-  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  partnerId  String?
-  restaurant Partner?      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  id        String        @id @default(uuid())
+  role      UserRoleValue
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  partnerId String?
+  partner   Partner?      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
 
   @@unique([userId, role, partnerId])
   @@map("user_roles")

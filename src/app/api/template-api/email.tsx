@@ -5,7 +5,7 @@ import { debugLogger } from "next-query-portal/shared/utils/logger";
 
 import { EmailTemplate } from "../../../config/email.template";
 import { env } from "../../../config/env";
-import { getFullUser } from "../v1/auth/me/route";
+import { getFullUser } from "../v1/auth/me/route-handler/get-me";
 import type {
   TemplatePostRequestType,
   TemplatePostRequestUrlParamsType,
