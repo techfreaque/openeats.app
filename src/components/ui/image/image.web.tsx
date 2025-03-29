@@ -6,7 +6,7 @@ import { imageVariants } from "./image.core";
 import type { BaseImageProps } from "./image.types";
 
 export interface WebImageProps
-  extends ImgHTMLAttributes<HTMLImageElement>,
+  extends Omit<ImgHTMLAttributes<HTMLImageElement>, "alt">,
     BaseImageProps {
   rounded?: "none" | "sm" | "md" | "lg" | "full";
   fit?: "cover" | "contain" | "fill" | "none" | "scaleDown";
@@ -15,7 +15,7 @@ export interface WebImageProps
 export const Image = forwardRef<HTMLImageElement, WebImageProps>(
   (
     {
-      source,
+      src,
       className,
       style,
       alt = "",
@@ -28,9 +28,6 @@ export const Image = forwardRef<HTMLImageElement, WebImageProps>(
     },
     ref,
   ): ReactElement => {
-    // Handle both { uri: string } format and direct require() format
-    const src = typeof source === "number" ? source : source.uri;
-
     // Convert resizeMode to fit if specified
     const mappedFit = resizeMode
       ? resizeMode === "cover"
@@ -43,6 +40,7 @@ export const Image = forwardRef<HTMLImageElement, WebImageProps>(
       : fit;
 
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         ref={ref}
         src={src}

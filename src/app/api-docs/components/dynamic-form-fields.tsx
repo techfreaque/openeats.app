@@ -4,7 +4,7 @@ import { cn } from "next-query-portal/shared/utils/utils";
 import type { JSX, ReactNode } from "react";
 import React from "react";
 import { type FieldValues } from "react-hook-form";
-import type { ZodObject, ZodType, ZodTypeDef } from "zod";
+import type { UnknownKeysParam, ZodObject, ZodType } from "zod";
 import { z } from "zod";
 
 import {
@@ -71,7 +71,7 @@ function getFieldType(field: ZodType): string {
 // Type guard for ZodObject
 function isZodObject(
   schema: ZodType | undefined,
-): schema is ZodObject<ZodTypeDef, unknown> {
+): schema is ZodObject<z.ZodRawShape, UnknownKeysParam> {
   return Boolean(
     schema &&
       typeof schema === "object" &&
@@ -80,7 +80,6 @@ function isZodObject(
       typeof schema.shape === "object",
   );
 }
-
 function isOptionalField(field: ZodType): boolean {
   return Boolean(
     field &&
@@ -93,17 +92,10 @@ function isOptionalField(field: ZodType): boolean {
   );
 }
 
-// Type guard for Zod enum types
-function isZodEnum(
-  field: ZodType,
-): field is z.ZodEnum<any> | z.ZodNativeEnum<any> {
-  return field instanceof z.ZodEnum || field instanceof z.ZodNativeEnum;
-}
-
 function getEnumOptions(
   field: ZodType,
 ): Array<{ value: string; label: string }> | undefined {
-  if (!isZodEnum(field)) {
+  if (!(field instanceof z.ZodEnum || field instanceof z.ZodNativeEnum)) {
     return undefined;
   }
 
@@ -115,7 +107,7 @@ function getEnumOptions(
       values = field._def.values;
     } else if (field instanceof z.ZodNativeEnum) {
       // For ZodNativeEnum (enum from TypeScript)
-      const enumValues = field._def.values;
+      const enumValues: Record<string, string | number> = field._def.values;
       values = Object.keys(enumValues)
         .filter((key) => isNaN(Number(key))) // Filter out numeric keys
         .map((key) => key);
@@ -166,7 +158,7 @@ export function DynamicFormFields({
   endpoint,
   apiForm,
 }: {
-  endpoint: ApiEndpoint<unknown, unknown, unknown>;
+  endpoint: ApiEndpoint<unknown, unknown, unknown, unknown>;
   apiForm: ApiFormReturn<FieldValues, unknown, unknown>;
 }): JSX.Element {
   const schema = endpoint.requestSchema;

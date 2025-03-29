@@ -8,7 +8,7 @@ import type { UndefinedType } from "next-query-portal/shared/types/common.schema
 
 import { db } from "@/app/api/db";
 
-import { createSessionAndGetUser } from "../../public/login/route";
+import { createSessionAndGetUser } from "../../public/login/route-handler";
 import type { LoginResponseType } from "../../public/login/schema";
 import type { UserResponseType } from "../schema";
 

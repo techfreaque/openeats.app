@@ -14,8 +14,8 @@ import type { ApiMutationOptions } from "../types";
  * @param options - Mutation options
  * @returns Mutation result
  */
-export function useApiMutation<TResponse, TRequest, TUrlVariables>(
-  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+export function useApiMutation<TResponse, TRequest, TUrlVariables, TExampleKey>(
+  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   options: ApiMutationOptions<TRequest, TResponse, TUrlVariables> = {},
 ): Omit<
   UseMutationResult<

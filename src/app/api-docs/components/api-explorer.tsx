@@ -5,9 +5,8 @@ import { getEndpoints } from "next-query-portal/client/endpoints";
 import { useApiForm } from "next-query-portal/client/hooks/form";
 import { APP_NAME, ENDPOINT_DOMAINS } from "next-query-portal/shared/constants";
 import type { Methods } from "next-query-portal/shared/types/endpoint";
-import type { JSX } from "react";
+import type { FormEvent, JSX } from "react";
 import { useMemo, useState } from "react";
-import { type FieldValues } from "react-hook-form";
 
 import { envClient } from "@/config/env-client";
 import {
@@ -34,14 +33,14 @@ export function ApiExplorer(): JSX.Element {
   );
   const selectedDomain = ENDPOINT_DOMAINS[selectedEnv];
   const [activeEndpoint, setActiveEndpoint] = useState<
-    ApiEndpoint<unknown, unknown, unknown>
-  >(loginEndpoint.POST);
+    ApiEndpoint<unknown, unknown, unknown, string>
+  >(loginEndpoint.POST as ApiEndpoint<unknown, unknown, unknown, string>);
 
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
   const endpoints = getEndpoints();
 
   // Create a form using useApiForm
-  const apiForm = useApiForm<FieldValues, unknown, unknown>(
+  const apiForm = useApiForm<unknown, unknown, unknown, unknown>(
     activeEndpoint,
     {},
     {
@@ -98,24 +97,16 @@ export function ApiExplorer(): JSX.Element {
     setResponseStatus(null);
 
     // Reset form with default values from examples if available
-    if (newEndpoint.examples.payloads?.default) {
-      apiForm.form.reset(newEndpoint.examples.payloads.default);
+    if (newEndpoint.examples.payloads?.["default"]) {
+      apiForm.form.reset(newEndpoint.examples.payloads["default"]);
     } else {
       apiForm.form.reset({});
-    }
-
-    if (newEndpoint.examples.urlPathVariables) {
-      setUrlPathVariables(
-        JSON.stringify(newEndpoint.examples.urlPathVariables.default),
-      );
-    } else {
-      setUrlPathVariables("");
     }
   };
 
   // Fix the unused variable by implementing URL path variable handling in form submission
-  const handleTryIt = async (): Promise<void> => {
-    await apiForm.submitForm();
+  const handleTryIt = (event?: FormEvent<HTMLFormElement>): void => {
+    apiForm.submitForm(event);
   };
 
   return (
@@ -198,13 +189,12 @@ export function ApiExplorer(): JSX.Element {
           <div className="relative">
             <div className="bg-white p-1 rounded-2xl shadow-lg">
               <img
-                src="/images/app-screenshot.png"
+                src="/placeholder.svg"
                 alt={`${APP_NAME} mobile app`}
                 className="h-64 w-auto rounded-xl"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
-                  e.currentTarget.src =
-                    "https://placehold.co/270x540/EEEEEE/CCCCCC?text=App+Screenshot";
+                  e.currentTarget.src = "/placeholder.svg";
                 }}
               />
             </div>

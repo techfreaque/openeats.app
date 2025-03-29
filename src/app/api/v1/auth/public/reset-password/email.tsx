@@ -57,8 +57,8 @@ export const renderResetPasswordMail: EmailFunctionType<
             }}
           >
             We received a request to reset your password for your {APP_NAME}{" "}
-            account. If you didn't make this request, you can safely ignore this
-            email.
+            account. If you {"didn't"} make this request, you can safely ignore
+            this email.
           </Text>
 
           <Text
@@ -97,7 +97,8 @@ export const renderResetPasswordMail: EmailFunctionType<
             }}
           >
             This link will expire in 24 hours. If you need a new reset link,
-            please return to the login page and select "Forgot Password" again.
+            please return to the login page and select &quot;Forgot
+            Password&quot; again.
           </Text>
         </EmailTemplate>
       ),

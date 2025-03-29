@@ -5,13 +5,14 @@ import { validateData } from "./validation";
 export function validateEnv<TSchema extends z.ZodType>(
   env: z.input<TSchema> | typeof process.env,
   envSchema: TSchema,
-): z.TypeOf<TSchema> {
+): z.infer<TSchema> {
   const { data, success, message } = validateData<TSchema>(
     env as z.input<TSchema>,
     envSchema,
   );
-  if (!success) {
+  if (!success || !data) {
     throw new Error(`Environment validation error: ${message}`);
   }
-  return data;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return data as z.infer<TSchema>;
 }

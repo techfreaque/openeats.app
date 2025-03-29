@@ -12,6 +12,12 @@ import simpleImportSort from "eslint-plugin-simple-import-sort";
 import unusedImports from "eslint-plugin-unused-imports";
 import globals from "globals";
 import nodePlugin from "eslint-plugin-node";
+import { FlatCompat } from '@eslint/eslintrc'
+
+const compat = new FlatCompat({
+  baseDirectory: import.meta.dirname,
+  // recommendedConfig: js.configs.recommended,
+})
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -157,6 +163,9 @@ export default [
       ],
     },
   },
+  ...compat.config({
+    extends: ['next'],
+  }),
 
   // 3) Configuration for plain JavaScript files
   {

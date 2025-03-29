@@ -35,7 +35,7 @@ export function Layout({ children }: { children: ReactNode }): JSX.Element {
                 </li>
                 <li>
                   <Link
-                    href="/docs/guides"
+                    href="/api-docs"
                     className="text-gray-600 hover:text-primary"
                   >
                     Integration Guides
@@ -43,7 +43,7 @@ export function Layout({ children }: { children: ReactNode }): JSX.Element {
                 </li>
                 <li>
                   <Link
-                    href="/docs/examples"
+                    href="/api-docs"
                     className="text-gray-600 hover:text-primary"
                   >
                     Code Examples
@@ -55,26 +55,17 @@ export function Layout({ children }: { children: ReactNode }): JSX.Element {
               <h4 className="font-semibold mb-3">Legal</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <Link
-                    href="/terms"
-                    className="text-gray-600 hover:text-primary"
-                  >
+                  <Link href="/" className="text-gray-600 hover:text-primary">
                     Terms of Service
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/privacy"
-                    className="text-gray-600 hover:text-primary"
-                  >
+                  <Link href="/" className="text-gray-600 hover:text-primary">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/cookies"
-                    className="text-gray-600 hover:text-primary"
-                  >
+                  <Link href="/" className="text-gray-600 hover:text-primary">
                     Cookie Policy
                   </Link>
                 </li>
@@ -92,18 +83,12 @@ export function Layout({ children }: { children: ReactNode }): JSX.Element {
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/discord"
-                    className="text-gray-600 hover:text-primary"
-                  >
+                  <Link href="/" className="text-gray-600 hover:text-primary">
                     Discord Community
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href={"/support"}
-                    className="text-gray-600 hover:text-primary"
-                  >
+                  <Link href={"/"} className="text-gray-600 hover:text-primary">
                     Contact Support
                   </Link>
                 </li>

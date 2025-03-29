@@ -25,6 +25,7 @@ export type UserResponseMinimalType = z.input<typeof userResponseMinimalSchema>;
 export const userUpdateRequestSchema = z.object({
   firstName: z.string(),
   lastName: z.string().min(1, { message: "Last Name is required" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
   imageUrl: z
     .string()
     .url()

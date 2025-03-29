@@ -20,6 +20,7 @@ export async function createSuccessResponse<
   TRequest,
   TResponse,
   TUrlVariables,
+  TExampleKey,
 >({
   endpoint,
   data,
@@ -27,7 +28,7 @@ export async function createSuccessResponse<
   status = 200,
   onSuccess,
 }: {
-  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>;
+  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>;
   data: TResponse;
   schema: z.ZodSchema<TResponse>;
   status?: number;
@@ -35,7 +36,7 @@ export async function createSuccessResponse<
 }): Promise<NextResponse<ResponseType<TResponse>>> {
   const { message, data: validatedData, success } = validateData(data, schema);
   if (!success) {
-    return createErrorResponse<TRequest, TResponse, TUrlVariables>(
+    return createErrorResponse<TRequest, TResponse, TUrlVariables, TExampleKey>(
       endpoint,
       message,
       400,
@@ -43,7 +44,7 @@ export async function createSuccessResponse<
   }
   const result = await onSuccess?.(validatedData);
   if (!result?.success) {
-    return createErrorResponse<TRequest, TResponse, TUrlVariables>(
+    return createErrorResponse<TRequest, TResponse, TUrlVariables, TExampleKey>(
       endpoint,
       result?.message ?? "Unknown error",
       result?.errorCode ?? 500,
@@ -58,8 +59,13 @@ export async function createSuccessResponse<
 /**
  * Creates a standardized error response
  */
-export function createErrorResponse<TRequest, TResponse, TUrlVariables>(
-  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+export function createErrorResponse<
+  TRequest,
+  TResponse,
+  TUrlVariables,
+  TExampleKey,
+>(
+  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   message: string,
   status: number = 400,
 ): NextResponse<ErrorResponseType<TResponse>> {

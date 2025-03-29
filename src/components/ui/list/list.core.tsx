@@ -18,7 +18,7 @@ export const listVariants = cva("my-6 ml-6", {
   },
 });
 
-export const listItemVariants = cva("mt-2", {});
+export const listItemVariants = cva("mt-2");
 
 export type ListVariantProps = VariantProps<typeof listVariants>;
 export type ListItemVariantProps = VariantProps<typeof listItemVariants>;

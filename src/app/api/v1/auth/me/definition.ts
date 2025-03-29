@@ -42,6 +42,7 @@ const meUpdateEndpoint = createEndpoint({
   responseSchema: userResponseSchema,
   requestUrlSchema: undefinedSchema,
   fieldDescriptions: {
+    email: "Email of the user",
     firstName: "First name of the user",
     lastName: "Last name of the user",
     imageUrl: "Image URL of the user",
@@ -64,6 +65,7 @@ const meUpdateEndpoint = createEndpoint({
     urlPathVariables: undefined,
     payloads: {
       default: {
+        email: "customer@example.com",
         firstName: "John",
         lastName: "Doe",
         imageUrl: "/placeholder.svg",
@@ -72,7 +74,9 @@ const meUpdateEndpoint = createEndpoint({
   },
 });
 
-export default {
+const definition = {
   ...meEndpoint,
   ...meUpdateEndpoint,
 };
+
+export default definition;

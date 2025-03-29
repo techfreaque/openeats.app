@@ -13,7 +13,7 @@ export default function NotFoundScreen(): JSX.Element {
 
       <Div className="flex flex-1 items-center justify-center p-5">
         <Div>
-          <H1>This screen doesn't exist.</H1>
+          <H1>{"This screen doesn't exist."}</H1>
           <Link href="/">
             <Text>Go to home screen!</Text>
           </Link>

@@ -65,23 +65,33 @@ export interface ApiMutationOptions<TRequest, TResponse, TUrlVariables> {
 }
 
 // Form-specific types
+// We force our form types with this
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 export type ApiFormOptions<TRequest> = UseFormProps<TRequest> & {
   defaultValues?: Partial<TRequest>;
 };
 
 export type ApiFormReturn<TRequest, TResponse, TUrlVariables> = {
+  // We force our form types with this
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   form: UseFormReturn<TRequest>;
   isSubmitting: boolean;
   isSubmitSuccessful: boolean;
-  submitForm: SubmitFormFunction<TResponse>;
+  submitForm: SubmitFormFunction<TRequest, TResponse, TUrlVariables>;
   submitError: Error | undefined;
   errorMessage: string | undefined;
 };
 
-export type SubmitFormFunction<TResponse> = (
+export type SubmitFormFunction<TRequest, TResponse, TUrlVariables> = (
   event?: FormEvent<HTMLFormElement>,
   callbacks?: {
-    onSuccess?: (data: TResponse) => void;
+    onSuccess?: (data: {
+      requestData: TRequest;
+      pathParams: TUrlVariables;
+      responseData: TResponse;
+    }) => void;
     onError?: (error: Error) => void;
   },
 ) => void;

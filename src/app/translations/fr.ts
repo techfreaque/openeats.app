@@ -207,6 +207,13 @@ const translations: TranslationSchema = {
         "Veuillez vérifier votre boîte de réception pour plus d'instructions",
     },
   },
+  languages: {
+    en: "Anglais",
+    es: "Espagnol",
+    fr: "Français",
+    de: "Allemand",
+    zh: "Chinois",
+  },
 };
 
 export default translations;

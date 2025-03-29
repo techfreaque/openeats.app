@@ -18,7 +18,7 @@ export const GET = apiHandler({
   email: undefined,
 });
 
-export async function logoutUser({
+async function logoutUser({
   user,
 }: ApiHandlerCallBackProps<UndefinedType, UndefinedType>): Promise<
   SafeReturnType<MessageResponseType>

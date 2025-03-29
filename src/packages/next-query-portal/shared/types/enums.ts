@@ -7,7 +7,6 @@ export const UserRoleValue = {
   ADMIN: "ADMIN",
 } as const;
 
-// eslint-disable-next-line no-redeclare
 export type UserRoleValue = (typeof UserRoleValue)[keyof typeof UserRoleValue];
 
 // Export a helper to convert Prisma role types to our internal enum

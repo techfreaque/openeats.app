@@ -15,7 +15,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 interface SchemaViewerProps {
-  endpoint: ApiEndpoint<unknown, unknown, unknown>;
+  endpoint: ApiEndpoint<unknown, unknown, unknown, unknown>;
   title?: string;
 }
 

@@ -6,7 +6,7 @@ import { divVariants } from "./div.core";
 import type { BaseDivProps } from "./div.types";
 
 export interface WebDivProps
-  extends HTMLAttributes<HTMLDivElement>,
+  extends Omit<HTMLAttributes<HTMLDivElement>, "onClick">,
     BaseDivProps {
   variant?: "default" | "card" | "transparent";
   padding?: "none" | "sm" | "md" | "lg";

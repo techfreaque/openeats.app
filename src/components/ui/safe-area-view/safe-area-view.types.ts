@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 export interface SafeAreaViewProps {
   children?: ReactNode;
-  className?: string;
-  style?: Record<string, string | number>;
+  className?: string | undefined;
+  style?: CSSProperties | undefined;
 }

@@ -39,8 +39,8 @@ function isErrorResponse<TResponse>(
  * Core function to call an API endpoint
  * Handles request validation, authentication, and response parsing
  */
-export async function callApi<TRequest, TResponse, TUrlVariables>(
-  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+export async function callApi<TRequest, TResponse, TUrlVariables, TExampleKey>(
+  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   endpointUrl: string,
   postBody: string | undefined,
 ): Promise<ResponseType<TResponse>> {

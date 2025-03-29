@@ -13,7 +13,12 @@ import type { MockTestData } from "./types";
 /**
  * Execute an API handler directly with mock data
  */
-export async function mockExecute<TRequest, TResponse, TUrlVariables>({
+export async function mockExecute<
+  TRequest,
+  TResponse,
+  TUrlVariables,
+  TExampleKey,
+>({
   endpoint,
   handler,
   data,
@@ -21,7 +26,7 @@ export async function mockExecute<TRequest, TResponse, TUrlVariables>({
   user = { id: "admin" },
   mockData = {},
 }: {
-  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>;
+  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>;
   handler: ApiHandlerReturnType<TResponse, TUrlVariables>;
   data?: TRequest;
   urlParams?: TUrlVariables;

@@ -32,10 +32,15 @@ type ExampleEntry<T> = [string, T];
  *   }
  * });
  */
-export function testEndpoint<TRequest, TResponse, TUrlVariables>(
-  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+export function testEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>(
+  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   handler: ApiHandlerReturnType<TResponse, TUrlVariables>,
-  options: TestEndpointOptions<TRequest, TResponse, TUrlVariables> = {},
+  options: TestEndpointOptions<
+    TRequest,
+    TResponse,
+    TUrlVariables,
+    TExampleKey
+  > = {},
 ): void {
   const {
     mockUser = { id: "admin" },
@@ -46,10 +51,15 @@ export function testEndpoint<TRequest, TResponse, TUrlVariables>(
 
   describe(`API: ${endpoint.method} ${endpoint.path.join("/")}`, () => {
     // Create a test runner that can be reused
-    const testRunner: TestRunner<TRequest, TResponse, TUrlVariables> = {
+    const testRunner: TestRunner<
+      TRequest,
+      TResponse,
+      TUrlVariables,
+      TExampleKey
+    > = {
       endpoint,
       executeWith: async ({ data, urlParams, user = mockUser }) => {
-        return mockExecute<TRequest, TResponse, TUrlVariables>({
+        return mockExecute<TRequest, TResponse, TUrlVariables, TExampleKey>({
           endpoint,
           handler,
           data,
@@ -64,7 +74,9 @@ export function testEndpoint<TRequest, TResponse, TUrlVariables>(
     const customTestEntries = Object.entries(customTests) as Array<
       [
         string,
-        (test: TestRunner<TRequest, TResponse, TUrlVariables>) => Promise<void>,
+        (
+          test: TestRunner<TRequest, TResponse, TUrlVariables, TExampleKey>,
+        ) => Promise<void>,
       ]
     >;
 

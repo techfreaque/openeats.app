@@ -11,7 +11,7 @@ import type { ApiQueryOptions } from "./hooks/types";
 /**
  * API endpoint configuration
  */
-export class ApiEndpoint<TRequest, TResponse, TUrlVariables> {
+export class ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey> {
   public description: string;
   public method: Methods;
   public path: string[];
@@ -32,8 +32,10 @@ export class ApiEndpoint<TRequest, TResponse, TUrlVariables> {
   public examples: {
     urlPathVariables: TUrlVariables extends undefined
       ? undefined
-      : ExamplesList<TUrlVariables>;
-    payloads: TRequest extends undefined ? undefined : ExamplesList<TRequest>;
+      : ExamplesList<TUrlVariables, TExampleKey>;
+    payloads: TRequest extends undefined
+      ? undefined
+      : ExamplesList<TRequest, TExampleKey>;
   };
 
   constructor({
@@ -49,7 +51,7 @@ export class ApiEndpoint<TRequest, TResponse, TUrlVariables> {
     errorCodes,
     examples,
   }: Omit<
-    ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+    ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
     "getRequestData" | "requiresAuthentication"
   >) {
     this.description = description;
@@ -138,8 +140,14 @@ export type CreateEndpointReturn<
   TResponse,
   TUrlVariables,
   TMethods extends Methods,
+  TExampleKey,
 > = {
-  [method in TMethods]: ApiEndpoint<TRequest, TResponse, TUrlVariables>;
+  [method in TMethods]: ApiEndpoint<
+    TRequest,
+    TResponse,
+    TUrlVariables,
+    TExampleKey
+  >;
 };
 
 export function createEndpoint<
@@ -147,32 +155,58 @@ export function createEndpoint<
   TResponse,
   TUrlVariables,
   TMethods extends Methods,
+  TExampleKey,
 >(
   endpoint: Omit<
-    ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+    ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
     "getRequestData" | "requiresAuthentication" | "method"
   > & { method: TMethods },
-): CreateEndpointReturn<TRequest, TResponse, TUrlVariables, TMethods> {
+): CreateEndpointReturn<
+  TRequest,
+  TResponse,
+  TUrlVariables,
+  TMethods,
+  TExampleKey
+> {
   return {
-    [endpoint.method]: new ApiEndpoint<TRequest, TResponse, TUrlVariables>(
-      endpoint,
-    ),
-  } as CreateEndpointReturn<TRequest, TResponse, TUrlVariables, TMethods>;
+    [endpoint.method]: new ApiEndpoint<
+      TRequest,
+      TResponse,
+      TUrlVariables,
+      TExampleKey
+    >(endpoint),
+  } as CreateEndpointReturn<
+    TRequest,
+    TResponse,
+    TUrlVariables,
+    TMethods,
+    TExampleKey
+  >;
 }
 
 /**
  * Get example endpoint for a specific path
  */
-export function getEndpointByPath<TRequest, TResponse, TUrlVariables>(
+export function getEndpointByPath<
+  TRequest,
+  TResponse,
+  TUrlVariables,
+  TExampleKey extends string,
+>(
   path: string[],
   method: Methods,
   endpoints: ApiSection,
-): ApiEndpoint<TRequest, TResponse, TUrlVariables> {
+): ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey> {
   const _method = method.toUpperCase() as Methods;
   const _path = [...path, _method];
   let endpoint: ApiSection = endpoints;
   for (const p of _path) {
     endpoint = endpoint[p] as ApiSection;
   }
-  return endpoint as unknown as ApiEndpoint<TRequest, TResponse, TUrlVariables>;
+  return endpoint as unknown as ApiEndpoint<
+    TRequest,
+    TResponse,
+    TUrlVariables,
+    TExampleKey
+  >;
 }

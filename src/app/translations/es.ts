@@ -205,6 +205,13 @@ const translations: TranslationSchema = {
         "Por favor revisa tu bandeja de entrada para más instrucciones",
     },
   },
+  languages: {
+    en: "Inglés",
+    es: "Español",
+    fr: "Francés",
+    de: "Alemán",
+    zh: "Chino",
+  },
 };
 
 export default translations;

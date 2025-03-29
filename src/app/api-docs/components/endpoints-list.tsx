@@ -12,7 +12,7 @@ import { useState } from "react";
 
 interface EndpointsListProps {
   endpoints: ApiSection;
-  activeEndpoint: ApiEndpoint<unknown, unknown, unknown>;
+  activeEndpoint: ApiEndpoint<unknown, unknown, unknown, unknown>;
   onEndpointChange: (path: string[], method: Methods) => void;
   compact?: boolean;
 }
@@ -48,13 +48,17 @@ export function EndpointsList({
   const getCurrentSection = (
     data: ApiSection,
     path: string[],
-  ): ApiSection | ApiEndpoint<unknown, unknown, unknown> | null => {
-    let current: ApiSection | ApiEndpoint<unknown, unknown, unknown> = data;
+  ): ApiSection | ApiEndpoint<unknown, unknown, unknown, unknown> | null => {
+    let current: ApiSection | ApiEndpoint<unknown, unknown, unknown, unknown> =
+      data;
     for (const segment of path) {
-      if (!current[segment]) {
+      const currentSegment = (current as ApiSection)[segment] as
+        | ApiSection
+        | ApiEndpoint<unknown, unknown, unknown, unknown>;
+      if (!currentSegment) {
         return null;
       }
-      current = current[segment];
+      current = currentSegment;
     }
     return current;
   };
@@ -90,7 +94,8 @@ export function EndpointsList({
         typeof sectionData === "object" &&
         method in sectionData
       ) {
-        const methodData = sectionData[method] as ApiEndpoint<
+        const methodData = (sectionData as ApiSection)[method] as ApiEndpoint<
+          unknown,
           unknown,
           unknown,
           unknown

@@ -17,14 +17,16 @@ import {
   validatePostRequest,
 } from "./api-response";
 
-export function apiHandler<TRequest, TResponse, TUrlVariables>({
+export function apiHandler<TRequest, TResponse, TUrlVariables, TExampleKey>({
   handler,
   endpoint,
   email,
-}: ApiHandlerProps<TRequest, TResponse, TUrlVariables>): ApiHandlerReturnType<
+}: ApiHandlerProps<
+  TRequest,
   TResponse,
-  TUrlVariables
-> {
+  TUrlVariables,
+  TExampleKey
+>): ApiHandlerReturnType<TResponse, TUrlVariables> {
   return async (
     request: Request,
     { params }: { params: Promise<TUrlVariables> },
@@ -45,7 +47,7 @@ export function apiHandler<TRequest, TResponse, TUrlVariables>({
       data: requestData,
       success: requestDataSuccess,
       message: requestDataMessage,
-    } = await validateRequest<TRequest, TResponse, TUrlVariables>(
+    } = await validateRequest<TRequest, TResponse, TUrlVariables, TExampleKey>(
       endpoint,
       request,
     );
@@ -61,7 +63,12 @@ export function apiHandler<TRequest, TResponse, TUrlVariables>({
     if (!response.success) {
       return createErrorResponse(endpoint, response.message, 500);
     }
-    return createSuccessResponse<TRequest, TResponse, TUrlVariables>({
+    return createSuccessResponse<
+      TRequest,
+      TResponse,
+      TUrlVariables,
+      TExampleKey
+    >({
       endpoint,
       data: response.data,
       schema: endpoint.responseSchema,
@@ -77,8 +84,8 @@ export function apiHandler<TRequest, TResponse, TUrlVariables>({
   };
 }
 
-async function validateRequest<TRequest, TResponse, TUrlVariables>(
-  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+async function validateRequest<TRequest, TResponse, TUrlVariables, TExampleKey>(
+  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   request: Request,
 ): Promise<SafeReturnType<TRequest>> {
   if (endpoint.method === Methods.GET) {
@@ -124,7 +131,12 @@ export type SafeReturnType<TResponse> =
   | { data: TResponse; success: true; message?: never; errorCode?: never }
   | { success: false; message: string; errorCode: number; data?: TResponse };
 
-export interface ApiHandlerProps<TRequest, TResponse, TUrlVariables> {
+export interface ApiHandlerProps<
+  TRequest,
+  TResponse,
+  TUrlVariables,
+  TExampleKey,
+> {
   handler: ApiHandlerCallBackFunctionType<TRequest, TResponse, TUrlVariables>;
   email:
     | {
@@ -134,7 +146,7 @@ export interface ApiHandlerProps<TRequest, TResponse, TUrlVariables> {
         }[];
       }
     | undefined;
-  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>;
+  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>;
 }
 
 export type ApiHandlerReturnType<TResponse, TUrlVariables> = (

@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type { CSSProperties, ReactElement } from "react";
 
 export interface FlatListProps<T> {
   data: T[];
@@ -6,8 +6,8 @@ export interface FlatListProps<T> {
   keyExtractor?: (item: T, index: number) => string;
   horizontal?: boolean;
   numColumns?: number;
-  className?: string;
-  style?: Record<string, string | number>;
+  className?: string | undefined;
+  style?: CSSProperties | undefined;
   showsHorizontalScrollIndicator?: boolean;
   showsVerticalScrollIndicator?: boolean;
   contentContainerStyle?: Record<string, string | number>;

@@ -199,7 +199,10 @@ function useToast(): {
     ...state,
     toast,
     dismiss: (toastId?: string) =>
-      dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
+      dispatch({
+        type: actionTypes.DISMISS_TOAST,
+        ...(toastId !== undefined && { toastId }),
+      }),
   };
 }
 

@@ -10,7 +10,7 @@ declare global {
 }
 
 // Setup global test database
-beforeAll(async () => {
+beforeAll(() => {
   // TODO this should use the data defined in the register definition
   try {
     // Set all tokens in one object for convenience
@@ -26,4 +26,6 @@ afterAll(async () => {
   await db.$disconnect();
 });
 
-interface TestAuthTokens {}
+type TestAuthTokens = {
+  [exampleKey: string]: string;
+};

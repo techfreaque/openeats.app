@@ -1,7 +1,7 @@
 import type { ApiEndpoint } from "next-query-portal/client/endpoint";
 
 export interface ApiSection {
-  [key: string]: ApiSection | ApiEndpoint<unknown, unknown, unknown>;
+  [key: string]: ApiSection | ApiEndpoint<unknown, unknown, unknown, unknown>;
 }
 
 export enum Methods {
@@ -11,7 +11,8 @@ export enum Methods {
   DELETE = "DELETE",
   PATCH = "PATCH",
 }
-export interface ExamplesList<T> {
-  default: T & { id?: string };
-  [exampleKey: string]: T & { id?: string };
-}
+export type ExamplesList<T, TExampleKey> = {
+  [exampleKey in TExampleKey]: T & { id?: string };
+  // default: T & { id?: string };
+  // [exampleKey in TExampleKey]: T & { id?: string };
+};

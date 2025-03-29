@@ -50,13 +50,6 @@ export {
   CarouselNext,
   CarouselPrevious,
 } from "./carousel";
-export {
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "./chart";
 export { Checkbox } from "./checkbox";
 export {
   Collapsible,

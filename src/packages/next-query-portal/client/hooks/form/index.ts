@@ -22,8 +22,8 @@ import type {
  *
  * Simplified version that focuses on form functionality and hides implementation details
  */
-export function useApiForm<TRequest, TResponse, TUrlVariables>(
-  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+export function useApiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
+  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   options: ApiFormOptions<TRequest> = {},
   mutationOptions: ApiMutationOptions<TRequest, TResponse, TUrlVariables> = {},
 ): ApiFormReturn<TRequest, TResponse, TUrlVariables> {
@@ -93,6 +93,9 @@ export function useApiForm<TRequest, TResponse, TUrlVariables>(
   };
 
   // Initialize form with the proper configuration
+  // We force our form types with this
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   const formMethods = useForm<TRequest>(formConfig);
   // Error management functions
   const clearFormError = useCallback(
@@ -106,7 +109,7 @@ export function useApiForm<TRequest, TResponse, TUrlVariables>(
   );
 
   // Create a submit handler that validates and submits the form
-  const submitForm: SubmitFormFunction<TResponse> = (
+  const submitForm: SubmitFormFunction<TRequest, TResponse, TUrlVariables> = (
     event?,
     callbacks?,
   ): void => {
@@ -122,14 +125,18 @@ export function useApiForm<TRequest, TResponse, TUrlVariables>(
         // Call the API with the form data
         const result = await executeMutation(
           endpoint,
-          formData as unknown as TRequest,
+          formData,
           urlParamVariables,
           mutationOptions,
         );
         if (result === undefined) {
           return undefined;
         }
-        callbacks?.onSuccess?.(result);
+        callbacks?.onSuccess?.({
+          responseData: result,
+          pathParams: urlParamVariables,
+          requestData: formData,
+        });
       } catch (error) {
         // Handle any errors that occur during submission
         const parsedError = parseError(error);

@@ -3,9 +3,9 @@
 import type { ApiEndpoint } from "next-query-portal/client/endpoint";
 import type { ApiFormReturn } from "next-query-portal/client/hooks/types";
 import { Methods } from "next-query-portal/shared/types/endpoint";
-import type { JSX } from "react";
+import type { FieldValues } from "node_modules/react-hook-form/dist/types";
+import type { FormEvent, JSX } from "react";
 import { useState } from "react";
-import { type FieldValues } from "react-hook-form";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -16,13 +16,13 @@ import { SchemaViewer } from "./schema-viewer";
 
 // Replace any types with proper interfaces
 interface EndpointDetailsProps {
-  endpoint: ApiEndpoint<unknown, unknown, unknown>;
+  endpoint: ApiEndpoint<unknown, unknown, unknown, unknown>;
   requestData: string;
   responseData: string;
   responseStatus: number | null;
-  apiForm: ApiFormReturn<FieldValues, unknown, unknown>;
+  apiForm: ApiFormReturn<unknown, unknown, unknown>;
   selectedDomain: string;
-  handleTryIt: () => Promise<void>;
+  handleTryIt: (event?: FormEvent<HTMLFormElement>) => void;
 }
 
 export function EndpointDetails({
@@ -101,7 +101,12 @@ export function EndpointDetails({
 
               <div className="bg-white rounded-lg border p-4 mb-4 min-h-[250px]">
                 {viewMode === "form" ? (
-                  <DynamicFormFields endpoint={endpoint} apiForm={apiForm} />
+                  <DynamicFormFields
+                    endpoint={endpoint}
+                    apiForm={
+                      apiForm as ApiFormReturn<FieldValues, unknown, unknown>
+                    }
+                  />
                 ) : (
                   <div className="bg-gray-800 rounded-lg p-4 relative min-h-[200px]">
                     <div className="absolute top-2 right-2 text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">
@@ -122,8 +127,7 @@ export function EndpointDetails({
 
               <Button
                 className="w-full"
-                // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                onClick={handleTryIt}
+                onClick={() => handleTryIt}
                 disabled={apiForm.isSubmitting}
               >
                 {apiForm.isSubmitting ? "Sending..." : "Try It"}
@@ -186,7 +190,7 @@ export function EndpointDetails({
 export function EndpointErrorCodes({
   endpoint,
 }: {
-  endpoint: ApiEndpoint<unknown, unknown, unknown>;
+  endpoint: ApiEndpoint<unknown, unknown, unknown, unknown>;
 }): JSX.Element {
   const errorCodes = endpoint.errorCodes;
 

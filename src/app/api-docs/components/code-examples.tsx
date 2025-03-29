@@ -8,7 +8,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CodeExamplesProps {
-  activeEndpoint: ApiEndpoint<unknown, unknown, unknown>;
+  activeEndpoint: ApiEndpoint<unknown, unknown, unknown, string>;
   selectedDomain: string;
 }
 
@@ -34,7 +34,7 @@ export function CodeExamples({
 
     // Choose an example - either use default or the first available
     const example =
-      activeEndpoint.examples.payloads?.default ||
+      activeEndpoint.examples.payloads?.["default"] ||
       (activeEndpoint.examples.payloads &&
         Object.values(activeEndpoint.examples.payloads)[0]);
 

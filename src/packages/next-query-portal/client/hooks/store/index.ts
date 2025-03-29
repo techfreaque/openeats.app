@@ -7,7 +7,6 @@ import { errorLogger } from "../../../shared/utils/logger";
 import { generateCacheKey } from "../../config";
 import type { ApiEndpoint } from "../../endpoint";
 import {
-  generateStorageKey,
   getStorageItem,
   removeStorageItem,
   setStorageItem,
@@ -46,8 +45,8 @@ export interface ApiStore {
   >;
 
   // Methods
-  executeQuery: <TRequest, TResponse, TUrlVariables>(
-    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+  executeQuery: <TRequest, TResponse, TUrlVariables, TExampleKey>(
+    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
     requestData: TRequest,
     pathParams: TUrlVariables,
     options?: Omit<ApiQueryOptions<TResponse>, "queryKey"> & {
@@ -55,8 +54,8 @@ export interface ApiStore {
     },
   ) => Promise<TResponse>;
 
-  executeMutation: <TRequest, TResponse, TUrlVariables>(
-    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+  executeMutation: <TRequest, TResponse, TUrlVariables, TExampleKey>(
+    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
     requestData: TRequest,
     pathParams: TUrlVariables,
     options?: ApiMutationOptions<TRequest, TResponse, TUrlVariables>,
@@ -72,8 +71,12 @@ export interface ApiStore {
 
   // Helper to generate unique IDs
   getQueryId: (queryKey: QueryKey) => string;
-  getMutationId: (endpoint: ApiEndpoint<unknown, unknown, unknown>) => string;
-  getFormId: (endpoint: ApiEndpoint<unknown, unknown, unknown>) => string;
+  getMutationId: <TRequest, TResponse, TUrlVariables, TExampleKey>(
+    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
+  ) => string;
+  getFormId: <TRequest, TResponse, TUrlVariables, TExampleKey>(
+    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
+  ) => string;
 }
 
 export type QueryStoreType<TResponse> = {
@@ -104,14 +107,16 @@ export const useApiStore = create<ApiStore>((set, get) => ({
 
   getQueryId: (queryKey: QueryKey): string => generateCacheKey(queryKey),
 
-  getMutationId: (endpoint: ApiEndpoint<unknown, unknown, unknown>): string =>
-    `mutation-${endpoint.path.join("-")}-${endpoint.method}`,
+  getMutationId: <TRequest, TResponse, TUrlVariables, TExampleKey>(
+    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
+  ): string => `mutation-${endpoint.path.join("-")}-${endpoint.method}`,
 
-  getFormId: (endpoint: ApiEndpoint<unknown, unknown, unknown>): string =>
-    `form-${endpoint.path.join("-")}-${endpoint.method}`,
+  getFormId: <TRequest, TResponse, TUrlVariables, TExampleKey>(
+    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
+  ): string => `form-${endpoint.path.join("-")}-${endpoint.method}`,
 
-  executeQuery: async <TRequest, TResponse, TUrlVariables>(
-    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+  executeQuery: async <TRequest, TResponse, TUrlVariables, TExampleKey>(
+    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
     requestData: TRequest,
     pathParams: TUrlVariables,
     options: Omit<ApiQueryOptions<TResponse>, "queryKey"> & {
@@ -223,11 +228,12 @@ export const useApiStore = create<ApiStore>((set, get) => ({
           throw new Error(message);
         }
 
-        const response = await callApi<TRequest, TResponse, TUrlVariables>(
-          endpoint,
-          endpointUrl,
-          postBody,
-        );
+        const response = await callApi<
+          TRequest,
+          TResponse,
+          TUrlVariables,
+          TExampleKey
+        >(endpoint, endpointUrl, postBody);
 
         if (!response.success) {
           await removeStorageItem(storageKey);
@@ -294,7 +300,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
           options.onError(new Error(errorResponse.message));
         }
 
-        // throw new Error(errorResponse.message);
+        throw new Error(errorResponse.message);
       } finally {
         // Remove the in-flight request
         inFlightRequests.delete(requestKey);
@@ -307,8 +313,8 @@ export const useApiStore = create<ApiStore>((set, get) => ({
     return fetchPromise;
   },
 
-  executeMutation: async <TRequest, TResponse, TUrlVariables>(
-    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+  executeMutation: async <TRequest, TResponse, TUrlVariables, TExampleKey>(
+    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
     requestData: TRequest,
     pathParams: TUrlVariables,
     options: ApiMutationOptions<TRequest, TResponse, TUrlVariables> = {},
@@ -340,11 +346,12 @@ export const useApiStore = create<ApiStore>((set, get) => ({
         throw new Error(message);
       }
 
-      const response = await callApi<TRequest, TResponse, TUrlVariables>(
-        endpoint,
-        endpointUrl,
-        postBody,
-      );
+      const response = await callApi<
+        TRequest,
+        TResponse,
+        TUrlVariables,
+        TExampleKey
+      >(endpoint, endpointUrl, postBody);
 
       if (!response.success) {
         throw new Error(response.message);
@@ -363,42 +370,6 @@ export const useApiStore = create<ApiStore>((set, get) => ({
           },
         },
       }));
-
-      // Handle optimistic updates
-      if (options.updateQueries) {
-        options.updateQueries.forEach(({ queryKey, updater }) => {
-          const queryId = get().getQueryId(queryKey);
-          const currentData = get().queries[queryId]?.data;
-
-          if (currentData) {
-            const newData = updater(currentData, response.data);
-
-            // Update in-memory state
-            set((state) => ({
-              queries: {
-                ...state.queries,
-                [queryId]: {
-                  ...(state.queries[queryId] || {}),
-                  data: newData,
-                  isSuccess: true,
-                  lastFetchTime: Date.now(),
-                  error: null,
-                  isLoading: false,
-                  isFetching: false,
-                  isError: false,
-                  isLoadingFresh: false,
-                  isCachedData: false,
-                  statusMessage: "Ready",
-                },
-              },
-            }));
-
-            // Update storage
-            const storageKey = generateStorageKey(queryKey);
-            void setStorageItem(storageKey, newData);
-          }
-        });
-      }
 
       // Invalidate queries (trigger refetch)
       if (options.invalidateQueries) {
@@ -525,8 +496,8 @@ export const apiClient = {
   /**
    * Fetch data from an API endpoint without using React hooks
    */
-  fetch: async <TRequest, TResponse, TUrlVariables>(
-    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+  fetch: async <TRequest, TResponse, TUrlVariables, TExampleKey>(
+    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
     requestData: TRequest,
     pathParams: TUrlVariables,
     options: Omit<ApiQueryOptions<TResponse>, "queryKey"> & {
@@ -541,8 +512,8 @@ export const apiClient = {
   /**
    * Mutate data through an API endpoint without using React hooks
    */
-  mutate: async <TRequest, TResponse, TUrlVariables>(
-    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+  mutate: async <TRequest, TResponse, TUrlVariables, TExampleKey>(
+    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
     data: TRequest,
     pathParams: TUrlVariables,
     options: ApiMutationOptions<TRequest, TResponse, TUrlVariables> = {},
@@ -599,8 +570,8 @@ export const apiClient = {
   /**
    * Get current mutation state without using React hooks
    */
-  getMutationState: <TResponse>(
-    endpoint: ApiEndpoint<unknown, TResponse, unknown>,
+  getMutationState: <TRequest, TResponse, TUrlVariables, TExampleKey>(
+    endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   ):
     | {
         isPending: boolean;

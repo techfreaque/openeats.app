@@ -1,9 +1,9 @@
 "use client";
 
-import { Camera, Edit2, Mail, MapPin, Phone, User } from "lucide-react";
+import { Camera, Edit2, Mail, User } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { JSX } from "react";
+import type { FormEvent, JSX } from "react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -36,15 +36,10 @@ export default function ProfilePage(): JSX.Element | null {
     router.push("/");
   };
 
-  const handleSaveProfile = async (): Promise<void> => {
-    const result = await userForm.submitForm();
-    if (result.success) {
-      userForm.setError(result.error);
-      return;
-    }
-    if (!userForm.isSubmitting) {
-      setIsEditing(false);
-    }
+  const handleSaveProfile = (event: FormEvent<HTMLFormElement>): void => {
+    userForm.submitForm(event, {
+      onSuccess: () => setIsEditing(false),
+    });
   };
 
   return (
@@ -185,43 +180,7 @@ export default function ProfilePage(): JSX.Element | null {
                                 </FormItem>
                               )}
                             />
-                            <FormField
-                              control={userForm.form.control}
-                              name="phone"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="phone">Phone</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      id="phone"
-                                      type="tel"
-                                      {...field}
-                                      value={field.value || ""}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={userForm.form.control}
-                              name="address"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="address">
-                                    Address
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      id="address"
-                                      {...field}
-                                      value={field.value || ""}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+
                             <Button
                               type="submit"
                               disabled={userForm.isSubmitting}
@@ -249,24 +208,6 @@ export default function ProfilePage(): JSX.Element | null {
                               <p className="font-medium">Email</p>
                               <p className="text-sm text-muted-foreground">
                                 {user.email}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-5 w-5 text-muted-foreground" />
-                            <div>
-                              <p className="font-medium">Phone</p>
-                              <p className="text-sm text-muted-foreground">
-                                {user.phone || "Not provided"}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-5 w-5 text-muted-foreground" />
-                            <div>
-                              <p className="font-medium">Address</p>
-                              <p className="text-sm text-muted-foreground">
-                                {user.address || "Not provided"}
                               </p>
                             </div>
                           </div>
@@ -455,7 +396,7 @@ export default function ProfilePage(): JSX.Element | null {
                             <div>
                               <p className="font-medium">Restaurant Updates</p>
                               <p className="text-sm text-muted-foreground">
-                                Updates from restaurants you've ordered from
+                                {"Updates from restaurants you've ordered from"}
                               </p>
                             </div>
                             <input

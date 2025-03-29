@@ -1,5 +1,5 @@
 import { cn } from "next-query-portal/shared/utils/utils";
-import type { HTMLAttributes, ReactElement } from "react";
+import type { HTMLAttributes, ReactElement, Ref } from "react";
 import { forwardRef } from "react";
 
 import type { ListItemProps, ListProps } from "./list.types";
@@ -18,7 +18,7 @@ export const List = forwardRef<
   const Tag = ordered ? "ol" : "ul";
   return (
     <Tag
-      ref={ref}
+      ref={ref as Ref<HTMLOListElement>}
       className={cn(
         "my-6 ml-6",
         { "list-disc": !ordered, "list-decimal": ordered },

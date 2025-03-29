@@ -29,13 +29,23 @@ export interface UseAuthReturn {
   isLoggedIn: boolean;
   isLoading: boolean;
   loginForm: ReturnType<
-    typeof useApiForm<LoginFormType, UndefinedType, LoginResponseType>
+    typeof useApiForm<
+      LoginFormType,
+      UndefinedType,
+      LoginResponseType,
+      "default"
+    >
   >;
   signupForm: ReturnType<
-    typeof useApiForm<RegisterType, UndefinedType, LoginResponseType>
+    typeof useApiForm<RegisterType, UndefinedType, LoginResponseType, "default">
   >;
   userForm: ReturnType<
-    typeof useApiForm<UserUpdateRequestType, UndefinedType, UserResponseType>
+    typeof useApiForm<
+      UserUpdateRequestType,
+      UndefinedType,
+      UserResponseType,
+      "default"
+    >
   >;
   logout: () => void;
 }

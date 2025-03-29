@@ -1,8 +1,7 @@
 import type { ApiEndpoint } from "next-query-portal/client/endpoint";
 import type { JwtPayloadType } from "next-query-portal/server/endpoints/auth/jwt";
 import type { SafeReturnType } from "next-query-portal/server/endpoints/core/api-handler";
-
-import type { UserRoleResponseType } from "../shared";
+import type { UserRoleResponseType } from "next-query-portal/shared/types/user-roles.schema";
 
 /**
  * Specific mock data structure for tests
@@ -21,7 +20,12 @@ export interface MockTestData {
 /**
  * Options for testing an API endpoint
  */
-export interface TestEndpointOptions<TRequest, TResponse, TUrlVariables> {
+export interface TestEndpointOptions<
+  TRequest,
+  TResponse,
+  TUrlVariables,
+  TExampleKey,
+> {
   /**
    * Mock user for authenticated endpoints
    */
@@ -37,7 +41,7 @@ export interface TestEndpointOptions<TRequest, TResponse, TUrlVariables> {
    */
   customTests?: {
     [testName: string]: (
-      test: TestRunner<TRequest, TResponse, TUrlVariables>,
+      test: TestRunner<TRequest, TResponse, TUrlVariables, TExampleKey>,
     ) => Promise<void> | void;
   };
 
@@ -51,7 +55,7 @@ export interface TestEndpointOptions<TRequest, TResponse, TUrlVariables> {
 /**
  * Test runner for executing API endpoint tests
  */
-export interface TestRunner<TRequest, TResponse, TUrlVariables> {
+export interface TestRunner<TRequest, TResponse, TUrlVariables, TExampleKey> {
   /**
    * Execute the endpoint with the given data and URL params
    */
@@ -64,5 +68,5 @@ export interface TestRunner<TRequest, TResponse, TUrlVariables> {
   /**
    * The endpoint being tested
    */
-  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>;
+  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>;
 }

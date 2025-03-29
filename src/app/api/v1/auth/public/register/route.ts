@@ -10,7 +10,7 @@ import type { UndefinedType } from "next-query-portal/shared/types/common.schema
 import { UserRoleValue } from "next-query-portal/shared/types/enums";
 
 import { db } from "../../../../db";
-import { loginUser } from "../login/route";
+import { loginUser } from "../login/route-handler";
 import type { LoginResponseType } from "../login/schema";
 import registerEndpoint from "./definition";
 import { renderRegisterMail } from "./email";
@@ -71,29 +71,47 @@ export async function createUser(
     };
   }
   const hashedPassword = await hashPassword(password);
-  await db.user.upsert({
-    where: { id: id },
-    create: {
-      email,
-      password: hashedPassword,
-      firstName,
-      lastName,
-      imageUrl,
-      userRoles: {
-        create: { role },
+  if (id) {
+    await db.user.upsert({
+      where: { id },
+      create: {
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        imageUrl: imageUrl || null,
+        userRoles: {
+          create: {
+            role: role,
+          },
+        },
       },
-    },
-    update: {
-      email,
-      password: hashedPassword,
-      firstName,
-      lastName,
-      userRoles: {
-        create: { role },
+      update: {
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        imageUrl: imageUrl || null,
+        userRoles: {
+          create: { role },
+        },
       },
-    },
-    select: { id: true },
-  });
+      select: { id: true },
+    });
+  } else {
+    await db.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        imageUrl: imageUrl || null,
+        userRoles: {
+          create: { role },
+        },
+      },
+    });
+  }
   return { success: true, data: undefined };
 }
 

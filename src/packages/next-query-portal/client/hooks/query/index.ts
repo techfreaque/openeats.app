@@ -15,8 +15,8 @@ import type { EnhancedQueryResult } from "../types";
  * @param options - Query options including data and URL params
  * @returns Enhanced query result with extra loading state information
  */
-export function useApiQuery<TRequest, TResponse, TUrlVariables>(
-  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+export function useApiQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
+  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   options: {
     data?: TRequest;
     urlParams?: TUrlVariables;
@@ -108,10 +108,10 @@ export function useApiQuery<TRequest, TResponse, TUrlVariables>(
   }, [queryId, options.enabled]);
 
   const refetch = async (): Promise<TResponse> => {
-    return executeQuery<TRequest, TResponse, TUrlVariables>(
+    return executeQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
       endpoint,
-      requestData,
-      pathParams,
+      requestData!,
+      pathParams!,
       {
         ...queryOptions,
         queryKey,

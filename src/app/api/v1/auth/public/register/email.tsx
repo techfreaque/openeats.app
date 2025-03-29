@@ -34,8 +34,8 @@ export const renderRegisterMail: EmailFunctionType<
               marginBottom: "16px",
             }}
           >
-            We're excited to have you on board. You can now start using your
-            account to access all the features of {APP_NAME}.
+            {`We're excited to have you on board. You can now start using your
+            account to access all the features of ${APP_NAME}.`}
           </Text>
 
           <Text

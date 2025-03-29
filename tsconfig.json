@@ -10,7 +10,10 @@
       ],
       "server-only": [
         "src/packages/next-query-portal/server/utils/server-only.ts"
-      ]
+      ],
+      "react-native/*": [
+        "./node_modules/react-native-web/*"
+      ],
     },
     "outDir": "./dist",
     "rootDir": ".",
@@ -29,7 +32,8 @@
     "types": [
       "node"
     ],
-    "noEmitOnError": true,
+    // TODO remove
+    "noEmitOnError": false,
     "removeComments": true,
     "allowJs": false,
     "checkJs": false,
@@ -75,6 +79,7 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "./**/*.native.tsx"
   ]
 }

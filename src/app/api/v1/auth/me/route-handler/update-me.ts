@@ -11,7 +11,10 @@ export const updateUser: ApiHandlerCallBackFunctionType<
   UserUpdateRequestType,
   UserResponseType,
   UndefinedType
-> = async ({ user: { id }, data: { firstName, lastName, imageUrl } }) => {
+> = async ({
+  user: { id },
+  data: { firstName, lastName, imageUrl, email },
+}) => {
   const existingUser = await db.user.findUnique({ where: { id } });
   if (!existingUser) {
     return {
@@ -23,6 +26,7 @@ export const updateUser: ApiHandlerCallBackFunctionType<
   await db.user.update({
     where: { id },
     data: {
+      email,
       firstName,
       lastName,
       imageUrl: imageUrl ?? null,

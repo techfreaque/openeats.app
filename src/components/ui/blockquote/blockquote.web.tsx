@@ -7,7 +7,7 @@ import type { BaseBlockquoteProps } from "./blockquote.types";
 
 export interface WebBlockquoteProps
   extends BlockquoteHTMLAttributes<HTMLQuoteElement>,
-    BaseBlockquoteProps {
+    Omit<BaseBlockquoteProps, "style" | "className"> {
   variant?: "default" | "primary" | "secondary" | "accent";
 }
 

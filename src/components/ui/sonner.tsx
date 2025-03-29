@@ -6,11 +6,11 @@ import type { ToasterProps } from "sonner";
 import { Toaster as Sonner } from "sonner";
 
 const Toaster = ({ ...props }: ToasterProps): JSX.Element => {
-  const { theme = "system" } = useTheme();
-
+  const { theme: rawTheme = "system" } = useTheme();
+  const theme = rawTheme as "system" | "light" | "dark";
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={theme}
       className="toaster group"
       style={
         {
