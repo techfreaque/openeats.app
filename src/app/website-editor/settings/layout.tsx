@@ -1,10 +1,10 @@
 "use client";
 import { redirect } from "next/navigation";
+import { useAuth } from "openeats-client/hooks/useAuth";
 import React, { useEffect } from "react";
 
-import { useAuth } from "@/client-package/hooks/use-auth";
-import Header from "@/components/website-editor/header";
-import SettingsSidebar from "@/components/website-editor/settings-sidebar";
+import Header from "../components/header";
+import SettingsSidebar from "../components/settings-sidebar";
 
 export default function SettingsLayout({
   children,
@@ -15,7 +15,7 @@ export default function SettingsLayout({
 
   useEffect(() => {
     if (!user) {
-      redirect("/v1/website-editor/");
+      redirect("/website-editor/");
     }
   }, [user]);
 

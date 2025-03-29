@@ -2,9 +2,10 @@ import { LogOut, Settings, SquareLibrary } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "openeats-client/hooks/useAuth";
 import type { JSX } from "react";
 
-import { useAuth } from "@/client-package/hooks/use-auth";
+import { Button } from "@/components/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,8 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { Button } from "../ui";
-
 export default function UserButton(): JSX.Element {
   const router = useRouter();
   const { logout, user } = useAuth();
@@ -25,7 +24,7 @@ export default function UserButton(): JSX.Element {
   }
   const handleSignOut = (): void => {
     void logout();
-    router.push("/v1/website-editor/");
+    router.push("/website-editor");
   };
 
   return (
@@ -47,7 +46,7 @@ export default function UserButton(): JSX.Element {
         <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href={`/v1/website-editor/generations/${user.id}`} passHref>
+          <Link href={`/website-editor/generations/${user.id}`} passHref>
             <DropdownMenuItem className="cursor-pointer">
               <SquareLibrary className="mr-2 h-4 w-4" />
               <span>Generations</span>
@@ -56,7 +55,7 @@ export default function UserButton(): JSX.Element {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href="/v1/website-editor/settings" passHref>
+          <Link href="/website-editor/settings" passHref>
             <DropdownMenuItem className="cursor-pointer">
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>

@@ -1,13 +1,14 @@
 "use server";
 
-import type { FullUI } from "@/client-package/types/website-editor";
-import { prisma } from "@/next-portal/db";
+import type { FullUI } from "openeats-client/types/website-editor";
+
+import { db } from "@/app/api/db";
 
 export const updateUI = async (
   UIId: string,
   payload: object,
 ): Promise<FullUI> => {
-  const data = await prisma.uI.update({
+  const data = await db.uI.update({
     where: {
       id: UIId,
     },

@@ -1,6 +1,8 @@
 import { NextUIProvider } from "@nextui-org/system";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useRouter } from "next/navigation";
+import useTheme from "openeats-client/hooks/website-editor/useTheme";
+import { UiType } from "openeats-client/types/website-editor";
 import type {
   ComponentType,
   ErrorInfo,
@@ -11,11 +13,9 @@ import React, { useEffect, useRef, useState } from "react";
 import JsxParser from "react-jsx-parser";
 import { toast } from "sonner";
 
-import useTheme from "@/client-package/hooks/website-editor/useTheme";
-import { UiType } from "@/client-package/types/website-editor";
 import * as UI from "@/components/ui";
 import * as NextComponents from "@/lib/website-editor/nextui-components";
-import { errorLogger } from "@/next-portal/utils/logger";
+import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 import ReactLiveContent from "./react-live";
 
@@ -39,7 +39,7 @@ class ErrorBoundary extends React.Component<
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     errorLogger("Caught an error:", error, errorInfo);
     toast.error(
       "Error occurred while parsing content. Try using different model",
@@ -49,14 +49,13 @@ class ErrorBoundary extends React.Component<
       {
         action: {
           label: "Change llm",
-          onClick: () =>
-            this.props.router.push("/v1/website-editor/settings/llm"),
+          onClick: () => this.props.router.push("/website-editor/settings/llm"),
         },
       },
     );
   }
 
-  render(): ReactNode {
+  override render(): ReactNode {
     if (this.state.hasError) {
       return (
         <div className="bg-black text-white p-4">

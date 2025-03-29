@@ -21,8 +21,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-
-
 // Mock data for delivery history
 const deliveryHistory = [
   {

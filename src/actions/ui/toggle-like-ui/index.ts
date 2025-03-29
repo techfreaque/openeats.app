@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/next-portal/db";
+import { db } from "@/app/api/db";
 
 export const toggleLike = async (
   userId: string,
@@ -8,17 +8,17 @@ export const toggleLike = async (
 ): Promise<{
   liked: boolean;
 }> => {
-  const existingLike = await prisma.like.findFirst({
+  const existingLike = await db.like.findFirst({
     where: { userId, UIId },
   });
 
   if (existingLike) {
-    await prisma.like.delete({
+    await db.like.delete({
       where: {
         id: existingLike.id,
       },
     });
-    await prisma.uI.update({
+    await db.uI.update({
       where: {
         id: UIId,
       },
@@ -30,13 +30,13 @@ export const toggleLike = async (
     });
     return { liked: false };
   } else {
-    await prisma.like.create({
+    await db.like.create({
       data: {
         userId,
         UIId,
       },
     });
-    await prisma.uI.update({
+    await db.uI.update({
       where: {
         id: UIId,
       },

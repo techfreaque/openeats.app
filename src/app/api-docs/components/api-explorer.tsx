@@ -4,16 +4,15 @@ import Link from "next/link";
 import {
   type ApiEndpoint,
   getEndpointByPath,
-} from "next-query-portal/client/endpoint";
-import { getEndpoints } from "next-query-portal/client/endpoints";
-import { useApiForm } from "next-query-portal/client/hooks/form";
-import { APP_NAME, ENDPOINT_DOMAINS } from "next-query-portal/shared/constants";
-import type { Methods } from "next-query-portal/shared/types/endpoint";
+} from "@/packages/next-vibe/client/endpoint";
+import { getEndpoints } from "next-vibeibe/client/endpoints";
+import { useApiForm } from "next-vibeibe/client/hooks/form";
+import { APP_NAME, ENDPOINT_DOMAINS } from "next-vibeibe/shared/constants";
+import type { Methods } from "next-vibeibe/shared/types/endpoint";
+import { envClient } from "openeats-client/env-client";
 import type { JSX } from "react";
 import { useMemo, useState } from "react";
 import { type FieldValues } from "react-hook-form";
-
-import { envClient } from "@/config/env-client";
 
 import {
   Card,

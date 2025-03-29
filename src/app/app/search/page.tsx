@@ -1,350 +1,512 @@
 "use client";
 
-import { Clock, Search, Star, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Filter, Search } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import type React from "react";
 import { useEffect, useState } from "react";
 
-import { useCart } from "@/client-package/hooks/use-cart";
-import { useLocalSearchParams } from "@/client-package/hooks/use-local-search-params";
-import { SearchProvider, useSearch } from "@/client-package/hooks/use-search";
-import { useWindowDimensions } from "@/client-package/hooks/use-window-dimensions";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useDebounce } from "@/next-portal/client/hooks/use-debounce";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import AddressSelector from "../components/AddressSelector";
-import DesktopHeader from "../components/DesktopHeader";
+import { useRestaurants } from "../components/hooks/use-restaurants";
+import type { FilterOptions, RestaurantType } from "../components/lib/types";
+import {
+  RestaurantCard,
+  RestaurantCardSkeleton,
+} from "../components/restaurant-card";
 
-// Filter categories mock data - replace with your actual categories
-const filterCategories = [
-  { id: "1", name: "All" },
-  { id: "2", name: "Fast Food" },
-  { id: "3", name: "Healthy" },
-  { id: "4", name: "Vegetarian" },
-  { id: "5", name: "Dessert" },
-];
+export default function SearchPage(): React.JSX.Element {
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get("q") || "";
 
-// Define interface for our restaurant items
-interface Restaurant {
-  id: string;
-  name: string;
-  category: string;
-  rating: string;
-  deliveryTime: string;
-  image: string;
-}
+  const { restaurants, isLoading, searchRestaurants } = useRestaurants();
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [deliveryType, setDeliveryType] = useState("delivery");
+  const [priceFilter, setPriceFilter] = useState<string[]>([]);
+  const [dietaryFilter, setDietaryFilter] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState<
+    "relevance" | "rating" | "delivery-time" | "price-low" | "price-high"
+  >("relevance");
+  const [filteredResults, setFilteredResults] = useState<RestaurantType[]>([]);
 
-// Main search wrapper component
-export default function SearchScreen() {
-  return (
-    <SearchProvider>
-      <SearchScreenContent />
-    </SearchProvider>
-  );
-}
+  // Search results
+  const [results, setResults] = useState<typeof restaurants>([]);
 
-// Inner component that uses the search context
-function SearchScreenContent() {
-  const [selectedFilter, setSelectedFilter] = useState("1"); // Default to 'All'
-  const [recentSearches, setRecentSearches] = useState<string[]>([
-    "Pizza",
-    "Burger",
-    "Sushi",
+  useEffect(() => {
+    if (initialQuery) {
+      const searchResults = searchRestaurants(initialQuery);
+      setResults(searchResults);
+    }
+  }, [initialQuery, searchRestaurants]);
+
+  useEffect(() => {
+    // First get search results
+    const searchResults = initialQuery ? searchRestaurants(initialQuery) : [];
+
+    // Then apply additional filters
+    const filterOptions: FilterOptions = {
+      priceRange: priceFilter.length > 0 ? priceFilter : undefined,
+      dietary: dietaryFilter.length > 0 ? dietaryFilter : undefined,
+      sortBy: sortOption === "relevance" ? undefined : sortOption,
+      deliveryType: deliveryType as "delivery" | "pickup" | "all",
+    };
+
+    // Start with search results and apply additional filters
+    let filtered = [...searchResults];
+
+    // Apply delivery type filter
+    if (deliveryType === "pickup") {
+      filtered = filtered.filter((r) => r.pickup);
+    }
+
+    // Apply price filter
+    if (priceFilter.length > 0) {
+      // This is a mock implementation since we don't have price range data
+      const cheapRestaurants = restaurants.filter((_, i) => i % 3 === 0);
+      const mediumRestaurants = restaurants.filter((_, i) => i % 3 === 1);
+      const expensiveRestaurants = restaurants.filter((_, i) => i % 3 === 2);
+
+      let priceFilteredRestaurants: RestaurantType[] = [];
+
+      if (priceFilter.includes("$")) {
+        priceFilteredRestaurants = [
+          ...priceFilteredRestaurants,
+          ...cheapRestaurants,
+        ];
+      }
+      if (priceFilter.includes("$$")) {
+        priceFilteredRestaurants = [
+          ...priceFilteredRestaurants,
+          ...mediumRestaurants,
+        ];
+      }
+      if (priceFilter.includes("$$$")) {
+        priceFilteredRestaurants = [
+          ...priceFilteredRestaurants,
+          ...expensiveRestaurants,
+        ];
+      }
+
+      filtered = filtered.filter((r) =>
+        priceFilteredRestaurants.some((pr) => pr.id === r.id),
+      );
+    }
+
+    // Apply dietary filter
+    if (dietaryFilter.length > 0) {
+      // This is a mock implementation since we don't have dietary data
+      const vegetarianRestaurants = restaurants.filter((_, i) => i % 2 === 0);
+      const veganRestaurants = restaurants.filter((_, i) => i % 3 === 0);
+      const glutenFreeRestaurants = restaurants.filter((_, i) => i % 4 === 0);
+
+      let dietaryFilteredRestaurants: RestaurantType[] = [];
+
+      if (dietaryFilter.includes("vegetarian")) {
+        dietaryFilteredRestaurants = [
+          ...dietaryFilteredRestaurants,
+          ...vegetarianRestaurants,
+        ];
+      }
+      if (dietaryFilter.includes("vegan")) {
+        dietaryFilteredRestaurants = [
+          ...dietaryFilteredRestaurants,
+          ...veganRestaurants,
+        ];
+      }
+      if (dietaryFilter.includes("gluten-free")) {
+        dietaryFilteredRestaurants = [
+          ...dietaryFilteredRestaurants,
+          ...glutenFreeRestaurants,
+        ];
+      }
+
+      filtered = filtered.filter((r) =>
+        dietaryFilteredRestaurants.some((dr) => dr.id === r.id),
+      );
+    }
+
+    // Apply sorting
+    if (sortOption !== "relevance") {
+      if (sortOption === "rating") {
+        filtered = [...filtered].sort((a, b) => b.rating - a.rating);
+      } else if (sortOption === "delivery-time") {
+        filtered = [...filtered].sort(
+          (a, b) => a.deliveryTime - b.deliveryTime,
+        );
+      } else if (sortOption === "price-low") {
+        filtered = [...filtered].sort((a, b) => a.deliveryFee - b.deliveryFee);
+      } else if (sortOption === "price-high") {
+        filtered = [...filtered].sort((a, b) => b.deliveryFee - a.deliveryFee);
+      }
+    }
+
+    setFilteredResults(filtered);
+  }, [
+    initialQuery,
+    searchRestaurants,
+    restaurants,
+    deliveryType,
+    priceFilter,
+    dietaryFilter,
+    sortOption,
   ]);
-  const [address, setAddress] = useState("123 Main St, Anytown");
-  const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>(
-    [],
-  );
 
-  const router = useRouter();
-  const params = useLocalSearchParams();
-  const dimensions = useWindowDimensions();
-  const isLargeScreen = dimensions.width >= 768;
-  const { cartItems } = useCart();
+  // Filter by delivery type
+  // let filteredResults = deliveryType === "pickup" ? results.filter((r) => r.pickup) : results
 
-  const {
-    searchTerm,
-    setSearchTerm,
-    performSearch,
-    clearSearch: clearSearchContext,
-    results,
-    isLoading,
-  } = useSearch();
+  // Filter by price (mock implementation)
+  // if (priceFilter.length > 0) {
+  //   // This is a mock implementation since we don't have price range data
+  //   const cheapRestaurants = restaurants.filter((_, i) => i % 3 === 0)
+  //   const mediumRestaurants = restaurants.filter((_, i) => i % 3 === 1)
+  //   const expensiveRestaurants = restaurants.filter((_, i) => i % 3 === 2)
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  //   let priceFilteredRestaurants: typeof restaurants = []
 
-  // This effect runs when URL parameters change
-  useEffect(() => {
-    // Handle category or section from params
-    if (params.category) {
-      setSearchTerm(params.category.toString());
-    } else if (params.section) {
-      // Handle section filtering if needed
-    } else if (params.query) {
-      setSearchTerm(params.query.toString());
-    }
-  }, [params, setSearchTerm]);
+  //   if (priceFilter.includes("$")) {
+  //     priceFilteredRestaurants = [...priceFilteredRestaurants, ...cheapRestaurants]
+  //   }
+  //   if (priceFilter.includes("$$")) {
+  //     priceFilteredRestaurants = [...priceFilteredRestaurants, ...mediumRestaurants]
+  //   }
+  //   if (priceFilter.includes("$$$")) {
+  //     priceFilteredRestaurants = [...priceFilteredRestaurants, ...expensiveRestaurants]
+  //   }
 
-  // Effect for when the debounced search term changes
-  useEffect(() => {
-    if (debouncedSearchTerm) {
-      performSearch(debouncedSearchTerm);
-    }
-  }, [debouncedSearchTerm, performSearch]);
+  //   filteredResults = filteredResults.filter((r) => priceFilteredRestaurants.some((pr) => pr.id === r.id))
+  // }
 
-  // Effect to update filtered restaurants when search results or filter changes
-  useEffect(() => {
-    // This is where you'd transform API results into your restaurant format
-    // For now, we'll just mock this transformation
-    if (results.length > 0) {
-      const transformedResults = results.map((item) => ({
-        id: item.id,
-        name: item.title,
-        category: item.description.split(" ")[0], // Just for demo
-        rating: "4.5", // Mocked rating
-        deliveryTime: "30-45 min", // Mocked delivery time
-        image: item.imageUrl || "https://via.placeholder.com/300x200", // Default image if none provided
-      }));
+  // Filter by dietary preferences (mock implementation)
+  // if (dietaryFilter.length > 0) {
+  //   // This is a mock implementation since we don't have dietary data
+  //   const vegetarianRestaurants = restaurants.filter((_, i) => i % 2 === 0)
+  //   const veganRestaurants = restaurants.filter((_, i) => i % 3 === 0)
+  //   const glutenFreeRestaurants = restaurants.filter((_, i) => i % 4 === 0)
 
-      setFilteredRestaurants(transformedResults);
-    } else {
-      // Mock data when no results
-      setFilteredRestaurants([]);
-    }
-  }, [results, selectedFilter]);
+  //   let dietaryFilteredRestaurants: typeof restaurants = []
 
-  const handleSearch = (query: string) => {
-    setSearchTerm(query);
-    if (query && !recentSearches.includes(query)) {
-      setRecentSearches([query, ...recentSearches.slice(0, 4)]);
-    }
+  //   if (dietaryFilter.includes("vegetarian")) {
+  //     dietaryFilteredRestaurants = [...dietaryFilteredRestaurants, ...vegetarianRestaurants]
+  //   }
+  //   if (dietaryFilter.includes("vegan")) {
+  //     dietaryFilteredRestaurants = [...dietaryFilteredRestaurants, ...veganRestaurants]
+  //   }
+  //   if (dietaryFilter.includes("gluten-free")) {
+  //     dietaryFilteredRestaurants = [...dietaryFilteredRestaurants, ...glutenFreeRestaurants]
+  //   }
+
+  //   filteredResults = filteredResults.filter((r) => dietaryFilteredRestaurants.some((dr) => dr.id === r.id))
+  // }
+
+  // Sort results
+  // if (sortOption === "rating") {
+  //   filteredResults = [...filteredResults].sort((a, b) => b.rating - a.rating)
+  // } else if (sortOption === "delivery-time") {
+  //   filteredResults = [...filteredResults].sort((a, b) => a.deliveryTime - b.deliveryTime)
+  // } else if (sortOption === "price-low") {
+  //   filteredResults = [...filteredResults].sort((a, b) => a.deliveryFee - b.deliveryFee)
+  // } else if (sortOption === "price-high") {
+  //   filteredResults = [...filteredResults].sort((a, b) => b.deliveryFee - a.deliveryFee)
+  // }
+
+  const handlePriceFilterChange = (value: string): void => {
+    setPriceFilter((prev) => {
+      if (prev.includes(value)) {
+        return prev.filter((v) => v !== value);
+      } else {
+        return [...prev, value];
+      }
+    });
   };
 
-  const clearSearch = () => {
-    clearSearchContext();
+  const handleDietaryFilterChange = (value: string): void => {
+    setDietaryFilter((prev) => {
+      if (prev.includes(value)) {
+        return prev.filter((v) => v !== value);
+      } else {
+        return [...prev, value];
+      }
+    });
   };
 
-  const removeRecentSearch = (search: string) => {
-    setRecentSearches(recentSearches.filter((item) => item !== search));
+  const handleSearch = (e: React.FormEvent): void => {
+    e.preventDefault();
+    const searchResults = searchRestaurants(searchQuery);
+    setResults(searchResults);
   };
 
-  const handleRestaurantPress = (id: string) => {
-    router.push(`/restaurant/${id}`);
+  const clearFilters = (): void => {
+    setSearchQuery(initialQuery);
+    setPriceFilter([]);
+    setDietaryFilter([]);
+    setSortOption("relevance");
   };
 
-  const handleAddressChange = (newAddress: string) => {
-    setAddress(newAddress);
-  };
-
-  const handleFilterClick = (filterId: string) => {
-    setSelectedFilter(filterId);
-    // In a real app, you might want to filter results based on this
-  };
+  const displayedRestaurants = filteredResults;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Desktop Header for large screens */}
-      {isLargeScreen && (
-        <DesktopHeader
-          currentAddress={address}
-          onAddressChange={handleAddressChange}
-          cartItemCount={cartItems?.length || 0}
-        />
-      )}
-
-      {/* Location Header - Only show on mobile */}
-      {!isLargeScreen && (
-        <AddressSelector
-          onSelectAddress={handleAddressChange}
-          currentAddress={address}
-          compact={true}
-        />
-      )}
-
-      <div
-        className={`p-4 ${isLargeScreen ? "max-w-7xl mx-auto w-full px-6 pt-6" : ""}`}
-      >
-        {/* Search Bar */}
-        <div className="relative mb-4">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
-          <Input
-            type="search"
-            placeholder="Search for restaurants or cuisines"
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="pl-10 pr-10 py-2"
-          />
-          {searchTerm && (
-            <button
-              onClick={clearSearch}
-              className="absolute inset-y-0 right-3 flex items-center"
+    <div className="flex-1">
+      <section className="w-full py-6 md:py-8 lg:py-10 bg-muted">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Search Results
+              </h1>
+              <p className="text-muted-foreground">
+                {displayedRestaurants.length} results for "{initialQuery}"
+              </p>
+            </div>
+            <form
+              onSubmit={handleSearch}
+              className="flex w-full max-w-sm items-center gap-2"
             >
-              <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-            </button>
-          )}
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search restaurants..."
+                  className="pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" type="button">
+                    <Filter className="h-4 w-4" />
+                    <span className="sr-only">Filter</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent>
+                  <SheetHeader>
+                    <SheetTitle>Filters</SheetTitle>
+                    <SheetDescription>
+                      Refine your search results
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="grid gap-6 py-6">
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Sort By</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          variant={
+                            sortOption === "relevance" ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setSortOption("relevance")}
+                        >
+                          Relevance
+                        </Button>
+                        <Button
+                          variant={
+                            sortOption === "rating" ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setSortOption("rating")}
+                        >
+                          Rating
+                        </Button>
+                        <Button
+                          variant={
+                            sortOption === "delivery-time"
+                              ? "default"
+                              : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setSortOption("delivery-time")}
+                        >
+                          Delivery Time
+                        </Button>
+                        <Button
+                          variant={
+                            sortOption === "price-low" ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setSortOption("price-low")}
+                        >
+                          Price (Low to High)
+                        </Button>
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Price Range</h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="price-1"
+                            checked={priceFilter.includes("$")}
+                            onCheckedChange={() => handlePriceFilterChange("$")}
+                          />
+                          <Label htmlFor="price-1">$ (Inexpensive)</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="price-2"
+                            checked={priceFilter.includes("$$")}
+                            onCheckedChange={() =>
+                              handlePriceFilterChange("$$")
+                            }
+                          />
+                          <Label htmlFor="price-2">$$ (Moderate)</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="price-3"
+                            checked={priceFilter.includes("$$$")}
+                            onCheckedChange={() =>
+                              handlePriceFilterChange("$$$")
+                            }
+                          />
+                          <Label htmlFor="price-3">$$$ (Expensive)</Label>
+                        </div>
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Dietary</h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="vegetarian"
+                            checked={dietaryFilter.includes("vegetarian")}
+                            onCheckedChange={() =>
+                              handleDietaryFilterChange("vegetarian")
+                            }
+                          />
+                          <Label htmlFor="vegetarian">Vegetarian</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="vegan"
+                            checked={dietaryFilter.includes("vegan")}
+                            onCheckedChange={() =>
+                              handleDietaryFilterChange("vegan")
+                            }
+                          />
+                          <Label htmlFor="vegan">Vegan</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="gluten-free"
+                            checked={dietaryFilter.includes("gluten-free")}
+                            onCheckedChange={() =>
+                              handleDietaryFilterChange("gluten-free")
+                            }
+                          />
+                          <Label htmlFor="gluten-free">Gluten-Free</Label>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <Button variant="outline" onClick={clearFilters}>
+                        Clear All
+                      </Button>
+                      <Button>Apply Filters</Button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </form>
+          </div>
         </div>
+      </section>
 
-        {/* Filter Categories */}
-        <div className="mb-4 overflow-x-auto">
+      <section className="w-full py-6">
+        <div className="container px-4 md:px-6">
           <Tabs
-            value={selectedFilter}
-            onValueChange={handleFilterClick}
+            defaultValue="delivery"
             className="w-full"
+            onValueChange={(value) => setDeliveryType(value)}
           >
-            <TabsList className="inline-flex w-auto">
-              {filterCategories.map((category) => (
-                <TabsTrigger
-                  key={category.id}
-                  value={category.id}
-                  className="px-4 py-2"
-                >
-                  {category.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold tracking-tight">
+                {displayedRestaurants.length}{" "}
+                {displayedRestaurants.length === 1
+                  ? "Restaurant"
+                  : "Restaurants"}{" "}
+                Found
+              </h2>
+              <TabsList>
+                <TabsTrigger value="delivery">Delivery</TabsTrigger>
+                <TabsTrigger value="pickup">Pickup</TabsTrigger>
+              </TabsList>
+            </div>
+            <TabsContent value="delivery" className="mt-6">
+              {isLoading ? (
+                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {Array(8)
+                    .fill(0)
+                    .map((_, i) => (
+                      <RestaurantCardSkeleton key={i} />
+                    ))}
+                </div>
+              ) : displayedRestaurants.length > 0 ? (
+                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {displayedRestaurants.map((restaurant) => (
+                    <RestaurantCard
+                      key={restaurant.id}
+                      restaurant={restaurant}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <p className="text-center text-muted-foreground">
+                    No restaurants found matching your search criteria
+                  </p>
+                  <Button className="mt-4" onClick={clearFilters}>
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="pickup" className="mt-6">
+              {isLoading ? (
+                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {Array(4)
+                    .fill(0)
+                    .map((_, i) => (
+                      <RestaurantCardSkeleton key={i} />
+                    ))}
+                </div>
+              ) : displayedRestaurants.length > 0 ? (
+                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {displayedRestaurants.map((restaurant) => (
+                    <RestaurantCard
+                      key={restaurant.id}
+                      restaurant={restaurant}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <p className="text-center text-muted-foreground">
+                    No pickup restaurants available matching your search
+                    criteria
+                  </p>
+                  <Button className="mt-4" onClick={clearFilters}>
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
           </Tabs>
         </div>
-
-        {/* Recent Searches */}
-        {!searchTerm && recentSearches.length > 0 && (
-          <div className="mb-4 space-y-1">
-            <h3 className="text-base font-semibold text-gray-800 mb-2">
-              Recent Searches
-            </h3>
-            {recentSearches.map((search, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between py-3 border-b border-gray-200"
-              >
-                <button
-                  className="flex items-center"
-                  onClick={() => setSearchTerm(search)}
-                >
-                  <Clock className="h-4 w-4 mr-2 text-gray-500" />
-                  <span className="text-sm text-gray-600">{search}</span>
-                </button>
-                <button onClick={() => removeRecentSearch(search)}>
-                  <X className="h-4 w-4 text-gray-500 hover:text-gray-700" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Search Results */}
-        {searchTerm ? (
-          <div className="space-y-4">
-            {isLoading ? (
-              // Loading state
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Card key={i} className="overflow-hidden">
-                    <Skeleton className="h-40 w-full" />
-                    <CardContent className="p-4">
-                      <Skeleton className="h-6 w-3/4 mb-2" />
-                      <Skeleton className="h-4 w-1/2 mb-4" />
-                      <div className="flex items-center space-x-4">
-                        <Skeleton className="h-4 w-16" />
-                        <Skeleton className="h-4 w-24" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : filteredRestaurants.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredRestaurants.map((restaurant) => (
-                  <Card
-                    key={restaurant.id}
-                    className="overflow-hidden cursor-pointer transition-shadow hover:shadow-lg"
-                    onClick={() => handleRestaurantPress(restaurant.id)}
-                  >
-                    <div className="aspect-video relative">
-                      <img
-                        src={restaurant.image}
-                        alt={restaurant.name}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <CardContent className="p-4">
-                      <div className="mb-1">
-                        <h3 className="font-bold text-lg text-gray-800">
-                          {restaurant.name}
-                        </h3>
-                        <p className="text-gray-500 text-sm">
-                          {restaurant.category}
-                        </p>
-                      </div>
-                      <div className="flex items-center mt-2">
-                        <div className="flex items-center mr-4">
-                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                          <span className="ml-1 text-sm font-medium">
-                            {restaurant.rating}
-                          </span>
-                        </div>
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 text-gray-500" />
-                          <span className="ml-1 text-sm text-gray-500">
-                            {restaurant.deliveryTime}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Card className="text-center p-8">
-                <div className="flex flex-col items-center justify-center p-6">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    No restaurants found
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Try a different search term
-                  </p>
-                </div>
-              </Card>
-            )}
-          </div>
-        ) : (
-          // Popular cuisines section
-          <div>
-            <h2
-              className={`font-semibold text-gray-800 mb-4 ${isLargeScreen ? "text-2xl" : "text-lg"}`}
-            >
-              Popular Cuisines
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {[
-                "Pizza",
-                "Burgers",
-                "Sushi",
-                "Mexican",
-                "Chinese",
-                "Indian",
-              ].map((cuisine, index) => (
-                <Card
-                  key={index}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => setSearchTerm(cuisine)}
-                >
-                  <CardContent className="flex items-center justify-center p-6">
-                    <span
-                      className={`font-medium text-gray-800 ${isLargeScreen ? "text-lg" : "text-base"}`}
-                    >
-                      {cuisine}
-                    </span>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      </section>
     </div>
   );
 }

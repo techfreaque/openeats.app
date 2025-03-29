@@ -1,7 +1,8 @@
 "use server";
 
-import { prisma } from "@/next-portal/db";
-import { errorLogger } from "@/next-portal/utils/logger";
+import { errorLogger } from "next-vibe/shared/utils/logger";
+
+import { db } from "@/app/api/db";
 
 export const updateSubPrompt = async (
   UIId: string,
@@ -24,7 +25,7 @@ export const updateSubPrompt = async (
   };
 } | null> => {
   try {
-    const existingSubPrompt = await prisma.subPrompt.findFirst({
+    const existingSubPrompt = await db.subPrompt.findFirst({
       where: {
         UIId: UIId,
         SUBId: subid,
@@ -35,13 +36,13 @@ export const updateSubPrompt = async (
       return null;
     }
 
-    const codeData = await prisma.code.create({
+    const codeData = await db.code.create({
       data: {
         code: code,
       },
     });
 
-    const data = await prisma.subPrompt.update({
+    const data = await db.subPrompt.update({
       where: {
         id: existingSubPrompt.id,
       },

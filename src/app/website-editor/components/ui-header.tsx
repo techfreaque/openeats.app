@@ -1,14 +1,12 @@
 import { GitFork, LockOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
 import type { JSX } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { forkUI } from "@/actions/ui/fork-ui";
-import { useAuth } from "@/client-package/hooks/use-auth";
-import { useAuthModal } from "@/client-package/hooks/website-editor/useAuthModal";
-import { errorLogger } from "@/next-portal/utils/logger";
-
 import {
   Badge,
   Button,
@@ -16,7 +14,9 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "../ui";
+} from "@/components/ui";
+import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
+
 import PromptBadge from "./prompt-badge";
 import UserButton from "./user-button";
 
@@ -49,7 +49,7 @@ const UIHeader = ({
     try {
       const forkedUI = await forkUI(uiId, userId);
       toast.success("UI forked successfully");
-      router.push(`/ui/${forkedUI.id}`);
+      router.push(`/website-editor/ui/${forkedUI.id}`);
     } catch (error) {
       errorLogger("Error forking UI:", error);
       toast.error(`${error}`);
@@ -62,7 +62,7 @@ const UIHeader = ({
     <div className="w-full bg-white flex justify-between items-center p-4">
       <div className="flex space-x-2 h-8 items-center">
         <Button
-          onClick={() => router.push("/v1/website-editor/")}
+          onClick={() => router.push("/website-editor")}
           variant={"ghost"}
           className="text-xl font-bold p-0"
         >
@@ -87,7 +87,7 @@ const UIHeader = ({
         </Badge>
         {forkedFrom && (
           <Badge
-            onClick={() => router.push(`/ui/${forkedFrom}`)}
+            onClick={() => router.push(`/website-editor/ui/${forkedFrom}`)}
             variant={"outline"}
             className="rounded-xl space-x-1 cursor-pointer"
           >
@@ -99,7 +99,6 @@ const UIHeader = ({
       <div className="flex space-x-2 h-8 items-center">
         {user && (
           <Button
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onClick={handleFork}
             variant="outline"
             className="rounded-3xl"
@@ -109,7 +108,7 @@ const UIHeader = ({
           </Button>
         )}
         <Button
-          onClick={() => router.push("/v1/website-editor/")}
+          onClick={() => router.push("/website-editor")}
           variant="default"
           className="rounded-3xl"
         >

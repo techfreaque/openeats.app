@@ -1,344 +1,326 @@
-import { Clock, Star } from "lucide-react";
-import { useState } from "react";
+"use client";
 
-import { Div } from "@/next-portal/components/ui/div";
-import { FlatList } from "@/next-portal/components/ui/flat-list";
-import { Image } from "@/next-portal/components/ui/image";
-import { SafeAreaView } from "@/next-portal/components/ui/safe-area-view";
-import { ScrollView } from "@/next-portal/components/ui/scroll-view";
-import { Text } from "@/next-portal/components/ui/text";
-import { TouchableOpacity } from "@/next-portal/components/ui/touchable-opacity";
+import Image from "next/image";
+import Link from "next/link";
+import { errorLogger } from "next-vibe/shared/utils/logger";
+import type { JSX } from "react";
+import { useEffect, useState } from "react";
 
-import AddressSelector from "./components/AddressSelector";
-import DesktopHeader from "./components/DesktopHeader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
 
-export default function HomeScreen(): JSX.Element {
-  const [address, setAddress] = useState("123 Main St, Anytown");
-  const router = useRouter();
-  const dimensions = useWindowDimensions();
-  const isLargeScreen = dimensions.width >= 768;
-  const isExtraLargeScreen = dimensions.width >= 1200;
-  const { cartItems } = useCart();
+import { CategoryPill } from "./components/category-pill";
+import { useRestaurants } from "./components/hooks/use-restaurants";
+import { useTranslation } from "./components/lib/i18n";
+import {
+  RestaurantCard,
+  RestaurantCardSkeleton,
+} from "./components/restaurant-card";
 
-  const handleRestaurantPress = (id) => {
-    router.push(`/restaurant/${id}`);
+export default function Home(): JSX.Element {
+  const {
+    restaurants,
+    featuredRestaurants,
+    popularRestaurants,
+    isLoading,
+    filterRestaurantsByCategory,
+  } = useRestaurants();
+
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [deliveryType, setDeliveryType] = useState("delivery");
+  const [location, setLocation] = useState<string>("");
+  const { toast } = useToast();
+  const { t } = useTranslation();
+
+  // Add proper return type to the handleLocationChange function
+  const handleLocationChange = (newLocation: string): void => {
+    setLocation(newLocation);
+    localStorage.setItem("openeats-location", newLocation);
   };
 
-  const handleCategoryPress = (category) => {
-    router.push({
-      pathname: "/search",
-      params: { category },
-    });
-  };
-
-  const handleSeeAllPress = (section) => {
-    router.push({
-      pathname: "/search",
-      params: { section },
-    });
-  };
-
-  const handleAddressChange = (newAddress) => {
-    setAddress(newAddress);
-  };
-
-  const getCardWidth = () => {
-    if (isExtraLargeScreen) {
-      return 320;
+  // Update the useEffect with proper type for the geolocation error
+  useEffect(() => {
+    // Check if we have a saved location
+    const savedLocation = localStorage.getItem("openeats-location");
+    if (savedLocation) {
+      setLocation(savedLocation);
+      return;
     }
-    if (isLargeScreen) {
-      return 280;
-    }
-    return 240;
-  };
 
-  const getGridColumns = () => {
-    if (isExtraLargeScreen) {
-      return 3;
+    // Set a default location
+    setLocation("New York, NY");
+    localStorage.setItem("openeats-location", "New York, NY");
+
+    // Try to detect location automatically
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // In a real app, we would use reverse geocoding to get the address
+          // For now, we'll just use the coordinates
+          const { latitude, longitude } = position.coords;
+          const locationString = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          setLocation(locationString);
+          localStorage.setItem("openeats-location", locationString);
+        },
+        (error: GeolocationPositionError) => {
+          errorLogger("Error getting location:", error);
+          // Keep the default location
+          if (error.code === error.PERMISSION_DENIED) {
+            toast({
+              title: t("location.locationAccessDenied"),
+              description: t("location.locationAccessDeniedDescription"),
+              variant: "destructive",
+            });
+          }
+        },
+        { timeout: 10000, enableHighAccuracy: false },
+      );
     }
-    if (isLargeScreen) {
-      return 2;
+  }, [toast, t]);
+
+  // Save location when it changes
+  useEffect(() => {
+    if (location) {
+      localStorage.setItem("openeats-location", location);
     }
-    return 1;
-  };
+  }, [location]);
+
+  const filteredRestaurants =
+    activeCategory === "all"
+      ? restaurants
+      : filterRestaurantsByCategory(activeCategory);
+
+  const displayedRestaurants =
+    deliveryType === "pickup"
+      ? filteredRestaurants.filter((r) => r.pickup)
+      : filteredRestaurants;
+
+  const categories = [
+    { name: "All", icon: "🍽️", value: "all" },
+    { name: "Fast Food", icon: "🍔", value: "fast food" },
+    { name: "Pizza", icon: "🍕", value: "pizza" },
+    { name: "Sushi", icon: "🍣", value: "sushi" },
+    { name: "Chinese", icon: "🥡", value: "chinese" },
+    { name: "Mexican", icon: "🌮", value: "mexican" },
+    { name: "Italian", icon: "🍝", value: "italian" },
+    { name: "Dessert", icon: "🍰", value: "dessert" },
+    { name: "Breakfast", icon: "🥞", value: "breakfast" },
+    { name: "Healthy", icon: "🥗", value: "healthy" },
+  ];
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Desktop Header for large screens */}
-      {isLargeScreen && (
-        <DesktopHeader
-          currentAddress={address}
-          onAddressChange={handleAddressChange}
-          cartItemCount={cartItems?.length || 0}
-        />
-      )}
+    <>
+      <section className="w-full py-6 md:py-12 lg:py-16 bg-muted">
+        <div className="container">
+          <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12">
+            <div className="flex flex-col justify-center space-y-4">
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                  {t("home.hero.title")}
+                </h1>
+                <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                  {t("home.hero.subtitle")}
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                <div className="flex-1">
+                  <Input
+                    placeholder={t("home.hero.deliveryAddressPlaceholder")}
+                    className="w-full"
+                    value={location}
+                    onChange={(e) => handleLocationChange(e.target.value)}
+                  />
+                </div>
+                <Button size="lg" asChild>
+                  <Link href="/app/restaurants">
+                    {t("home.hero.findFoodButton")}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+            <div className="hidden lg:block">
+              <Image
+                src="/placeholder.svg?height=400&width=400"
+                alt="Hero Image"
+                width={400}
+                height={400}
+                className="rounded-lg object-cover"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Location Header - Only show on mobile */}
-        {!isLargeScreen && (
-          <AddressSelector
-            onSelectAddress={handleAddressChange}
-            currentAddress={address}
-          />
-        )}
-
-        <Div
-          className={`p-4 ${
-            isLargeScreen ? "max-w-7xl mx-auto w-full px-6 pt-6" : ""
-          }`}
-        >
-          {/* Featured Restaurants */}
-          <Div className="mb-6">
-            <Div className="flex flex-row justify-between items-center mb-4">
-              <Text
-                className={`font-bold text-gray-800 ${
-                  isLargeScreen ? "text-2xl" : "text-lg"
-                }`}
-              >
-                Featured Restaurants
-              </Text>
-              <TouchableOpacity
-                onPress={() => handleSeeAllPress("Featured Restaurants")}
-              >
-                <Text className="text-sm text-red-500 font-semibold">
-                  See All
-                </Text>
-              </TouchableOpacity>
-            </Div>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              className="-ml-2"
+      <section className="w-full py-12">
+        <div className="container">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold tracking-tight">
+              {t("home.categories.title")}
+            </h2>
+            <Link
+              href="/app/restaurants"
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
             >
-              {featuredRestaurants.map((restaurant) => (
-                <TouchableOpacity
-                  key={restaurant.id}
-                  className={`bg-white rounded-xl mr-4 shadow overflow-hidden`}
-                  style={{ width: getCardWidth() }}
-                  onPress={() => handleRestaurantPress(restaurant.id)}
-                >
-                  <Image
-                    source={{ uri: restaurant.image }}
-                    className="w-full h-36 object-cover"
-                  />
-                  <Div className="p-3">
-                    <Text
-                      className={`font-bold text-gray-800 mb-1 ${
-                        isLargeScreen ? "text-lg" : "text-base"
-                      }`}
-                    >
-                      {restaurant.name}
-                    </Text>
-                    <Text
-                      className={`text-gray-500 mb-2 ${
-                        isLargeScreen ? "text-[15px]" : "text-sm"
-                      }`}
-                    >
-                      {restaurant.category}
-                    </Text>
-                    <Div className="flex flex-row items-center">
-                      <Div className="flex flex-row items-center mr-3">
-                        <Star
-                          size={isLargeScreen ? 16 : 14}
-                          color="#FFD700"
-                          fill="#FFD700"
-                        />
-                        <Text
-                          className={`ml-1 text-gray-800 ${
-                            isLargeScreen ? "text-[15px]" : "text-sm"
-                          }`}
-                        >
-                          {restaurant.rating}
-                        </Text>
-                      </Div>
-                      <Div className="flex flex-row items-center">
-                        <Clock size={isLargeScreen ? 16 : 14} color="#6B7280" />
-                        <Text
-                          className={`ml-1 text-gray-500 ${
-                            isLargeScreen ? "text-[15px]" : "text-sm"
-                          }`}
-                        >
-                          {restaurant.deliveryTime}
-                        </Text>
-                      </Div>
-                    </Div>
-                  </Div>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </Div>
+              {t("home.categories.viewAll")}
+            </Link>
+          </div>
+          <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-2">
+            {categories.map((category) => (
+              <CategoryPill
+                key={category.value}
+                name={category.name}
+                icon={category.icon}
+                active={activeCategory === category.value}
+                onClick={() => setActiveCategory(category.value)}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
 
-          {/* Categories */}
-          <Div className="mb-6">
-            <Div className="flex flex-row justify-between items-center mb-4">
-              <Text
-                className={`font-bold text-gray-800 ${
-                  isLargeScreen ? "text-2xl" : "text-lg"
-                }`}
-              >
-                Categories
-              </Text>
-            </Div>
-            <FlatList
-              data={categories}
-              horizontal={!isLargeScreen}
-              numColumns={isLargeScreen ? 5 : 1}
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  className={`items-center ${
-                    isLargeScreen ? "w-1/5 mr-0 px-3 mb-4" : "mr-6 w-[70px]"
-                  }`}
-                  onPress={() => handleCategoryPress(item.name)}
-                >
-                  <Image
-                    source={{ uri: item.icon }}
-                    className={`${
-                      isLargeScreen
-                        ? "w-20 h-20 rounded-full"
-                        : "w-[60px] h-[60px] rounded-full mb-2"
-                    }`}
-                  />
-                  <Text
-                    className={`text-gray-800 text-center ${
-                      isLargeScreen ? "text-base mt-2" : "text-sm"
-                    }`}
-                  >
-                    {item.name}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              contentContainerStyle={
-                isLargeScreen
-                  ? {
-                      flexDirection: "row",
-                      flexWrap: "wrap",
-                      justifyContent: "flex-start",
-                    }
-                  : undefined
-              }
-            />
-          </Div>
-
-          {/* Popular Restaurants */}
-          <Div className="mb-6">
-            <Div className="flex flex-row justify-between items-center mb-4">
-              <Text
-                className={`font-bold text-gray-800 ${
-                  isLargeScreen ? "text-2xl" : "text-lg"
-                }`}
-              >
-                Popular Near You
-              </Text>
-              <TouchableOpacity
-                onPress={() => handleSeeAllPress("Popular Restaurants")}
-              >
-                <Text className="text-sm text-red-500 font-semibold">
-                  See All
-                </Text>
-              </TouchableOpacity>
-            </Div>
-
-            {isLargeScreen ? (
-              <Div className="flex flex-row flex-wrap justify-between">
-                {popularRestaurants.map((restaurant) => (
-                  <TouchableOpacity
-                    key={restaurant.id}
-                    className="flex flex-col w-[48%] mb-4 bg-white rounded-xl shadow overflow-hidden"
-                    onPress={() => handleRestaurantPress(restaurant.id)}
-                  >
-                    <Image
-                      source={{ uri: restaurant.image }}
-                      className="w-full h-40 object-cover"
+      <section className="w-full py-12">
+        <div className="container">
+          <Tabs
+            defaultValue="delivery"
+            className="w-full"
+            onValueChange={(value) => setDeliveryType(value)}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold tracking-tight">
+                {t("home.restaurantsNearYou.title")}
+              </h2>
+              <TabsList>
+                <TabsTrigger value="delivery">
+                  {t("home.restaurantsNearYou.delivery")}
+                </TabsTrigger>
+                <TabsTrigger value="pickup">
+                  {t("home.restaurantsNearYou.pickup")}
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            <TabsContent value="delivery" className="mt-6">
+              {isLoading ? (
+                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {Array(8)
+                    .fill(0)
+                    .map((_, i) => (
+                      <RestaurantCardSkeleton key={i} />
+                    ))}
+                </div>
+              ) : displayedRestaurants.length > 0 ? (
+                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {displayedRestaurants.map((restaurant) => (
+                    <RestaurantCard
+                      key={restaurant.id}
+                      restaurant={restaurant}
                     />
-                    <Div className="flex-1 p-3 justify-center">
-                      <Text
-                        className={`font-bold text-gray-800 mb-1 ${
-                          isLargeScreen ? "text-lg" : "text-base"
-                        }`}
-                      >
-                        {restaurant.name}
-                      </Text>
-                      <Text
-                        className={`text-gray-500 mb-2 ${
-                          isLargeScreen ? "text-[15px]" : "text-sm"
-                        }`}
-                      >
-                        {restaurant.category}
-                      </Text>
-                      <Div className="flex flex-row items-center">
-                        <Div className="flex flex-row items-center mr-3">
-                          <Star
-                            size={isLargeScreen ? 16 : 14}
-                            color="#FFD700"
-                            fill="#FFD700"
-                          />
-                          <Text
-                            className={`ml-1 text-gray-800 ${
-                              isLargeScreen ? "text-[15px]" : "text-sm"
-                            }`}
-                          >
-                            {restaurant.rating}
-                          </Text>
-                        </Div>
-                        <Div className="flex flex-row items-center">
-                          <Clock
-                            size={isLargeScreen ? 16 : 14}
-                            color="#6B7280"
-                          />
-                          <Text
-                            className={`ml-1 text-gray-500 ${
-                              isLargeScreen ? "text-[15px]" : "text-sm"
-                            }`}
-                          >
-                            {restaurant.deliveryTime}
-                          </Text>
-                        </Div>
-                      </Div>
-                    </Div>
-                  </TouchableOpacity>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <p className="text-center text-muted-foreground">
+                    {t("home.restaurantsNearYou.noRestaurants")}
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="pickup" className="mt-6">
+              {isLoading ? (
+                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {Array(4)
+                    .fill(0)
+                    .map((_, i) => (
+                      <RestaurantCardSkeleton key={i} />
+                    ))}
+                </div>
+              ) : displayedRestaurants.length > 0 ? (
+                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {displayedRestaurants.map((restaurant) => (
+                    <RestaurantCard
+                      key={restaurant.id}
+                      restaurant={restaurant}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <p className="text-center text-muted-foreground">
+                    {t("home.restaurantsNearYou.noPickup")}
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </section>
+
+      <section className="w-full py-12 bg-muted">
+        <div className="container">
+          <h2 className="text-2xl font-bold tracking-tight mb-6">
+            {t("home.popularRestaurants.title")}
+          </h2>
+          {isLoading ? (
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {Array(4)
+                .fill(0)
+                .map((_, i) => (
+                  <RestaurantCardSkeleton key={i} />
                 ))}
-              </Div>
-            ) : (
-              popularRestaurants.map((restaurant) => (
-                <TouchableOpacity
-                  key={restaurant.id}
-                  className="flex flex-row bg-white rounded-xl mb-4 shadow overflow-hidden"
-                  onPress={() => handleRestaurantPress(restaurant.id)}
-                >
-                  <Image
-                    source={{ uri: restaurant.image }}
-                    className="w-[100px] h-[100px] object-cover"
-                  />
-                  <Div className="flex-1 p-3 justify-center">
-                    <Text className="text-base font-bold text-gray-800 mb-1">
-                      {restaurant.name}
-                    </Text>
-                    <Text className="text-sm text-gray-500 mb-2">
-                      {restaurant.category}
-                    </Text>
-                    <Div className="flex flex-row items-center">
-                      <Div className="flex flex-row items-center mr-3">
-                        <Star size={14} color="#FFD700" fill="#FFD700" />
-                        <Text className="text-sm text-gray-800 ml-1">
-                          {restaurant.rating}
-                        </Text>
-                      </Div>
-                      <Div className="flex flex-row items-center">
-                        <Clock size={14} color="#6B7280" />
-                        <Text className="text-sm text-gray-500 ml-1">
-                          {restaurant.deliveryTime}
-                        </Text>
-                      </Div>
-                    </Div>
-                  </Div>
-                </TouchableOpacity>
-              ))
-            )}
-          </Div>
-        </Div>
-      </ScrollView>
-    </SafeAreaView>
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {popularRestaurants.map((restaurant) => (
+                <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="w-full py-12">
+        <div className="container px-4 md:px-6">
+          <h2 className="text-2xl font-bold tracking-tight mb-6">
+            {t("home.featuredRestaurants.title")}
+          </h2>
+          {isLoading ? (
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {Array(4)
+                .fill(0)
+                .map((_, i) => (
+                  <RestaurantCardSkeleton key={i} />
+                ))}
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {featuredRestaurants.map((restaurant) => (
+                <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="w-full py-12 bg-muted">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold">
+                {t("home.ownRestaurant.title")}
+              </h2>
+              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
+                {t("home.ownRestaurant.subtitle")}
+              </p>
+            </div>
+            <Button size="lg" asChild>
+              <Link href="/app/create-restaurant">
+                {t("home.ownRestaurant.getStarted")}
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

@@ -1,9 +1,9 @@
 "use server";
 
-import { prisma } from "@/next-portal/db";
+import { db } from "@/app/api/db";
 
 export const deleteUI = async (uiid: string, userId: string): Promise<void> => {
-  const ui = await prisma.uI.findUnique({
+  const ui = await db.uI.findUnique({
     where: {
       id: uiid,
     },
@@ -20,7 +20,7 @@ export const deleteUI = async (uiid: string, userId: string): Promise<void> => {
     throw new Error("Unauthorized");
   }
 
-  await prisma.uI.delete({
+  await db.uI.delete({
     where: {
       id: uiid,
     },

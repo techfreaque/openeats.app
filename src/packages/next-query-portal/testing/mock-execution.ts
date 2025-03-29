@@ -18,14 +18,14 @@ export async function mockExecute<TRequest, TResponse, TUrlVariables>({
   handler,
   data,
   urlParams,
-  user = { id: "admin" },
+  user,
   mockData = {},
 }: {
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables>;
   handler: ApiHandlerReturnType<TResponse, TUrlVariables>;
   data?: TRequest;
   urlParams?: TUrlVariables;
-  user?: JwtPayloadType;
+  user?: JwtPayloadType | undefined;
   mockData?: MockTestData;
 }): Promise<SafeReturnType<TResponse> & { status?: number }> {
   // Set up test data provider

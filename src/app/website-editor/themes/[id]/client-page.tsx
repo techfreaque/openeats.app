@@ -75,7 +75,7 @@ export function ClientThemeCustomizer({
     );
 
     if (!themeExists) {
-      router.push("/v1/website-editor/themes");
+      router.push("/website-editor/themes");
     }
   }, [id, router]);
 
@@ -135,14 +135,14 @@ export function ClientThemeCustomizer({
     <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
       <div className="flex justify-start items-center mb-6">
         <Button
-          onClick={() => router.push("/v1/website-editor/")}
+          onClick={() => router.push("/website-editor")}
           variant="outline"
           className="text-xl font-bold p-1"
         >
           WindAI
         </Button>
         <Button
-          onClick={() => router.push("/v1/website-editor/themes")}
+          onClick={() => router.push("/website-editor/themes")}
           variant="secondary"
           className="ml-2 text-xl font-bold p-1"
         >

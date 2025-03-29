@@ -1,11 +1,11 @@
 "use client";
 import { Eye, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
+import type { FullUI } from "openeats-client/types/website-editor";
 import type { JSX } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import { getUIs } from "@/actions/ui/get-uis";
-import type { FullUI } from "@/client-package/types/website-editor";
 import {
   Avatar,
   AvatarFallback,
@@ -26,9 +26,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui";
-import Header from "@/components/website-editor/header";
-import PromptBadge from "@/components/website-editor/prompt-badge";
 import { timeAgo } from "@/lib/website-editor/time";
+
+import Header from "../components/header";
+import PromptBadge from "../components/prompt-badge";
 
 const Page = (): JSX.Element => {
   const [mode, setMode] = useState<string>("latest");
@@ -156,7 +157,7 @@ const Page = (): JSX.Element => {
                     className="bg-white rounded-xl shadow-md overflow-hidden"
                   >
                     <div
-                      onClick={() => router.push(`ui/${ui.id}`)}
+                      onClick={() => router.push(`/website-editor/ui/${ui.id}`)}
                       className="relative cursor-pointer"
                     >
                       <img
@@ -172,7 +173,7 @@ const Page = (): JSX.Element => {
                             <Avatar
                               onClick={() =>
                                 router.push(
-                                  `/generations/${ui?.user?.firstName}`,
+                                  `/website-editor/generations/${ui?.user?.firstName}`,
                                 )
                               }
                               className="border-2 border-primary h-5 w-5"

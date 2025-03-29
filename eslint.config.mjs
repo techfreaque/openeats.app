@@ -1,5 +1,3 @@
-// eslint.config.js (ESLint 9+ Flat Config)
-
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -32,7 +30,8 @@ export default [
       "dist",
       "eslint.config.mjs",
       ".next"
-    ],
+      // TODO remove
+      , "old"    ],
   },
 
   // 2) Base configuration for TypeScript files

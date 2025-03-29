@@ -59,7 +59,7 @@ export default function NavLinks({ userType, handleNavigate }: NavLinksProps) {
         >
           <Text style={styles.navLinkText}>Dashboard</Text>
         </TouchableOpacity> */}
-{/* 
+        {/* 
         <TouchableOpacity
           style={styles.navLink}
           onPress={() => handleNavigate("/driver-deliveries")}

@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { APP_NAME } from "next-query-portal/shared/constants";
+import { APP_NAME } from "@/packages/next-vibe/shared/constants";
+import { useAuth } from "openeats-client/hooks/useAuth";
 import type { JSX } from "react";
 
-import { useAuth } from "../hooks/useAuth";
 import { Button } from "./ui";
 
 export function Navbar(): JSX.Element {

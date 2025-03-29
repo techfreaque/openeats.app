@@ -6,13 +6,14 @@ import type { JSX } from "react";
 import { useEffect } from "react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Header from "@/components/website-editor/header";
 import type {
   Change,
   ChangeType,
   Version,
 } from "@/lib/website-editor/changelogs";
 import { commitChanges } from "@/lib/website-editor/changelogs";
+
+import Header from "../components/header";
 
 const ChangelogCards = ({
   commitChanges,

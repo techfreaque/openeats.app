@@ -1,7 +1,8 @@
 "use server";
-import type { FullUI } from "@/client-package/types/website-editor";
-import { prisma } from "@/next-portal/db";
-import { errorLogger } from "@/next-portal/utils/logger";
+import { errorLogger } from "next-vibe/shared/utils/logger";
+import type { FullUI } from "openeats-client/types/website-editor";
+
+import { db } from "@/app/api/db";
 
 export async function forkUI(uiId: string, userId: string): Promise<FullUI> {
   try {
@@ -9,7 +10,7 @@ export async function forkUI(uiId: string, userId: string): Promise<FullUI> {
       throw new Error("Unauthorized");
     }
 
-    const originalUI = await prisma.uI.findUnique({
+    const originalUI = await db.uI.findUnique({
       where: {
         id: uiId,
       },
@@ -26,7 +27,7 @@ export async function forkUI(uiId: string, userId: string): Promise<FullUI> {
       throw new Error("Cannot fork your own UI");
     }
 
-    const forkedUI = await prisma.uI.create({
+    const forkedUI = await db.uI.create({
       data: {
         userId: userId,
         prompt: originalUI.prompt,

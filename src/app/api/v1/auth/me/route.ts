@@ -3,15 +3,15 @@ import "server-only";
 import type {
   ApiHandlerCallBackProps,
   SafeReturnType,
-} from "next-query-portal/server/endpoints/core/api-handler";
-import { apiHandler } from "next-query-portal/server/endpoints/core/api-handler";
-import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
+} from "next-vibe/server/endpoints/core/api-handler";
+import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
+import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 
 import { db } from "../../../db";
 import { createSessionAndGetUser } from "../public/login/route";
 import type { LoginResponseType } from "../public/login/schema";
 import meEndpoint from "./definition";
-import type { UserResponseType } from "./schema";
+import type { UserResponseType } from "./schema/user.schema";
 
 export const GET = apiHandler({
   endpoint: meEndpoint.GET,

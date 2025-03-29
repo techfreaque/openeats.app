@@ -38,6 +38,8 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables>(
         (state.mutations[mutationId] as unknown as
           | undefined
           | MutationStoreType<TResponse>) || defaultState,
+    // eslint-disable-next-line react-compiler/react-compiler
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [mutationId],
   );
   // Get mutation state from store with shallow comparison
@@ -51,7 +53,7 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables>(
 
   // Create a type-safe mutate function that accepts both data and urlParams
   const mutate = useCallback(
-    (variables: { requestData: TRequest; urlParams?: TUrlVariables }) => {
+    (variables: { requestData: TRequest; urlParams: TUrlVariables }) => {
       void executeMutation(
         endpoint,
         variables.requestData,
@@ -65,7 +67,7 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables>(
   const mutateAsync = useCallback(
     async (variables: {
       requestData: TRequest;
-      urlParams?: TUrlVariables;
+      urlParams: TUrlVariables;
     }): Promise<TResponse> => {
       return executeMutation(
         endpoint,

@@ -1,12 +1,13 @@
 /* eslint-disable no-console */
-import { PrismaClient, UserRoleValue } from "@prisma/client";
+import { UserRoleValue } from "@prisma/client";
+import { signJwt } from "@/packages/next-vibe/server/endpoints/auth/jwt";
 import { afterAll, beforeAll } from "vitest";
 
-import { env } from "@/lib/env/env";
-import { signJwt } from "@/next-portal/api/auth/jwt";
+import { db } from "@/app/api/db";
+import { env } from "@/config/env";
 
 // Add at the beginning:
-const DEBUG = env.DEBUG_TESTS === "true";
+const DEBUG = true;
 
 function debugLog(...args: unknown[]): void {
   if (DEBUG) {
@@ -25,17 +26,15 @@ declare global {
   var testBaseUrl: string;
 }
 
-const prisma = new PrismaClient();
-
 // Setup global test database
 beforeAll(async () => {
   try {
     // Get database entries needed for tests
-    const users = await prisma.user.findMany();
+    const users = await db.user.findMany();
     const customer = users.find(
       (user) => user.email === "customer@example.com",
     );
-    const restaurant = await prisma.restaurant.findFirst();
+    const restaurant = await db.partner.findFirst();
     const restaurantOwner = users.find(
       (user) => user.email === "restaurant@example.com",
     );
@@ -118,7 +117,7 @@ beforeAll(async () => {
 
 // Cleanup after tests
 afterAll(async () => {
-  await prisma.$disconnect();
+  await db.$disconnect();
 });
 
 interface TestAuthTokens {

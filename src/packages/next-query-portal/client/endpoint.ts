@@ -11,7 +11,12 @@ import type { ApiQueryOptions } from "./hooks/types";
 /**
  * API endpoint configuration
  */
-export class ApiEndpoint<TRequest, TResponse, TUrlVariables> {
+export class ApiEndpoint<
+  TRequest,
+  TResponse,
+  TUrlVariables,
+  TExamplesKeys extends string = string,
+> {
   public description: string;
   public method: Methods;
   public path: string[];
@@ -32,8 +37,10 @@ export class ApiEndpoint<TRequest, TResponse, TUrlVariables> {
   public examples: {
     urlPathVariables: TUrlVariables extends undefined
       ? undefined
-      : ExamplesList<TUrlVariables>;
-    payloads: TRequest extends undefined ? undefined : ExamplesList<TRequest>;
+      : ExamplesList<TUrlVariables, TExamplesKeys>;
+    payloads: TRequest extends undefined
+      ? undefined
+      : ExamplesList<TRequest, TExamplesKeys>;
   };
 
   constructor({
@@ -49,7 +56,7 @@ export class ApiEndpoint<TRequest, TResponse, TUrlVariables> {
     errorCodes,
     examples,
   }: Omit<
-    ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+    ApiEndpoint<TRequest, TResponse, TUrlVariables, TExamplesKeys>,
     "getRequestData" | "requiresAuthentication"
   >) {
     this.description = description;
@@ -138,26 +145,45 @@ export type CreateEndpointReturn<
   TResponse,
   TUrlVariables,
   TMethods extends Methods,
+  TExamplesKeys extends string,
 > = {
-  [method in TMethods]: ApiEndpoint<TRequest, TResponse, TUrlVariables>;
+  [method in TMethods]: ApiEndpoint<
+    TRequest,
+    TResponse,
+    TUrlVariables,
+    TExamplesKeys
+  >;
 };
 
 export function createEndpoint<
+  TExamplesKeys extends string,
   TRequest,
   TResponse,
   TUrlVariables,
   TMethods extends Methods,
 >(
   endpoint: Omit<
-    ApiEndpoint<TRequest, TResponse, TUrlVariables>,
+    ApiEndpoint<TRequest, TResponse, TUrlVariables, TExamplesKeys>,
     "getRequestData" | "requiresAuthentication" | "method"
   > & { method: TMethods },
-): CreateEndpointReturn<TRequest, TResponse, TUrlVariables, TMethods> {
+): CreateEndpointReturn<
+  TRequest,
+  TResponse,
+  TUrlVariables,
+  TMethods,
+  TExamplesKeys
+> {
   return {
     [endpoint.method]: new ApiEndpoint<TRequest, TResponse, TUrlVariables>(
       endpoint,
     ),
-  } as CreateEndpointReturn<TRequest, TResponse, TUrlVariables, TMethods>;
+  } as CreateEndpointReturn<
+    TRequest,
+    TResponse,
+    TUrlVariables,
+    TMethods,
+    TExamplesKeys
+  >;
 }
 
 /**

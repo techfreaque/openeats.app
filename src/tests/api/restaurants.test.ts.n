@@ -36,7 +36,7 @@ describe("/api/v1/restaurants E2E", () => {
   });
 
   afterAll(async () => {
-    await prisma.$disconnect();
+    await db.$disconnect();
   });
 
   describe("GET /api/v1/restaurants", () => {
@@ -109,7 +109,7 @@ describe("/api/v1/restaurants E2E", () => {
     afterAll(async () => {
       if (newMenuItem?.id) {
         try {
-          await prisma.menuItem.delete({
+          await db.menuItem.delete({
             where: { id: newMenuItem.id },
           });
         } catch (error) {
@@ -208,7 +208,7 @@ describe("Restaurant API endpoints", () => {
 
     // Create test geo locations
     for (const location of testLocations) {
-      await prisma.geoLocation.upsert({
+      await db.geoLocation.upsert({
         where: {
           countryCode_zip_street_streetNumber: {
             countryCode: location.countryCode,
@@ -233,7 +233,7 @@ describe("Restaurant API endpoints", () => {
     }
 
     // Ensure test category exists
-    const category = await prisma.category.upsert({
+    const category = await db.category.upsert({
       where: { name: "Test Category" },
       update: {},
       create: {
@@ -244,7 +244,7 @@ describe("Restaurant API endpoints", () => {
 
     // Create test restaurants
     for (const restaurant of testRestaurants) {
-      await prisma.restaurant.create({
+      await db.restaurant.create({
         data: {
           ...restaurant,
           mainCategoryId: category.id,
@@ -271,13 +271,13 @@ describe("Restaurant API endpoints", () => {
 
   afterAll(async () => {
     // Clean up test data
-    await prisma.restaurant.deleteMany({
+    await db.restaurant.deleteMany({
       where: {
         OR: testRestaurants.map((r) => ({ email: r.email })),
       },
     });
 
-    await prisma.geoLocation.deleteMany({
+    await db.geoLocation.deleteMany({
       where: {
         OR: testLocations.map((l) => ({
           countryCode_zip_street_streetNumber: {
@@ -290,7 +290,7 @@ describe("Restaurant API endpoints", () => {
       },
     });
 
-    await prisma.$disconnect();
+    await db.$disconnect();
   });
 
   test("GET /api/v1/restaurants - should fetch restaurants within radius", async () => {

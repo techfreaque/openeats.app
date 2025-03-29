@@ -41,6 +41,7 @@ enum DeliveryStatus {
 }
 
 enum PaymentMethod {
+  ONLINE
   CARD
   CASH
 }
@@ -330,21 +331,22 @@ model CartItem {
 }
 
 model Order {
-  id            String      @id @default(uuid())
+  id            String        @id @default(uuid())
   message       String?
-  status        OrderStatus @default(NEW)
+  status        OrderStatus   @default(NEW)
+  paymentMethod PaymentMethod
   tax           Float
   total         Float
   deliveryFee   Float
   driverTip     Float?
   restaurantTip Float?
   projectTip    Float?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   restaurantId  String
-  restaurant    Partner     @relation(fields: [restaurantId], references: [id])
+  restaurant    Partner       @relation(fields: [restaurantId], references: [id])
   customerId    String
-  customer      User        @relation(fields: [customerId], references: [id])
+  customer      User          @relation(fields: [customerId], references: [id])
   delivery      Delivery?
   orderItems    OrderItem[]
   messages      Messages[]

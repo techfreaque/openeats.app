@@ -1,7 +1,7 @@
 import React from "react";
 import { toast } from "sonner";
 
-import { Badge } from "../ui";
+import { Badge } from "@/components/ui";
 
 const PromptBadge = ({
   className,

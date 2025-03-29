@@ -41,18 +41,18 @@ describe("/api/v1/cart E2E", () => {
     restaurantId = global.testData.restaurant.id;
 
     // Find a category from the database
-    const category = await prisma.category.findFirst();
+    const category = await db.category.findFirst();
     if (!category) {
       throw new Error("No categories found in database for testing");
     }
     categoryId = category.id;
 
     // Create a test menu item specifically for cart tests
-    await prisma.menuItem.deleteMany({
+    await db.menuItem.deleteMany({
       where: { name: TEST_MENU_ITEM.name },
     });
 
-    const menuItem = await prisma.menuItem.create({
+    const menuItem = await db.menuItem.create({
       data: {
         ...TEST_MENU_ITEM,
         restaurantId,
@@ -66,12 +66,12 @@ describe("/api/v1/cart E2E", () => {
 
   afterAll(async () => {
     // Clean up the test menu item
-    await prisma.cartItem.deleteMany({
+    await db.cartItem.deleteMany({
       where: { menuItemId },
     });
 
     try {
-      await prisma.menuItem.delete({
+      await db.menuItem.delete({
         where: { id: menuItemId },
       });
     } catch (error) {
@@ -80,7 +80,7 @@ describe("/api/v1/cart E2E", () => {
       );
     }
 
-    await prisma.$disconnect();
+    await db.$disconnect();
   });
 
   describe("GET /api/v1/cart", () => {
@@ -95,7 +95,7 @@ describe("/api/v1/cart E2E", () => {
 
     it("should return empty cart initially", async () => {
       // First ensure the cart is empty
-      await prisma.cartItem.deleteMany({
+      await db.cartItem.deleteMany({
         where: { userId: global.testData.customer.id },
       });
 
@@ -204,7 +204,7 @@ describe("/api/v1/cart E2E", () => {
   describe("Multiple cart items", () => {
     it("should add multiple distinct items to the cart", async () => {
       // Create a second menu item for testing
-      const secondMenuItem = await prisma.menuItem.create({
+      const secondMenuItem = await db.menuItem.create({
         data: {
           name: "Test Cart Pasta",
           description: "A delicious test pasta for cart tests",
@@ -251,11 +251,11 @@ describe("/api/v1/cart E2E", () => {
       expect(response.body.data.length).toBe(2);
 
       // Clean up the second menu item after the test
-      await prisma.cartItem.deleteMany({
+      await db.cartItem.deleteMany({
         where: { menuItemId: secondMenuItem.id },
       });
 
-      await prisma.menuItem.delete({
+      await db.menuItem.delete({
         where: { id: secondMenuItem.id },
       });
     });

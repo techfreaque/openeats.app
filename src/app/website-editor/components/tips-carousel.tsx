@@ -1,5 +1,6 @@
 import React from "react";
 
+import { Badge } from "@/components/ui";
 import {
   Carousel,
   CarouselContent,
@@ -7,8 +8,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-
-import { Badge } from "../ui";
 
 const tips = [
   "Try different models by changing it in the 'Settings' area.",

@@ -37,25 +37,19 @@ export function testEndpoint<TRequest, TResponse, TUrlVariables>(
   handler: ApiHandlerReturnType<TResponse, TUrlVariables>,
   options: TestEndpointOptions<TRequest, TResponse, TUrlVariables> = {},
 ): void {
-  const {
-    mockUser = { id: "admin" },
-    mockData = {},
-    customTests = {},
-    skipExampleTests = false,
-  } = options;
+  const { customTests = {}, skipExampleTests = false } = options;
 
   describe(`API: ${endpoint.method} ${endpoint.path.join("/")}`, () => {
     // Create a test runner that can be reused
     const testRunner: TestRunner<TRequest, TResponse, TUrlVariables> = {
       endpoint,
-      executeWith: async ({ data, urlParams, user = mockUser }) => {
+      executeWith: async ({ data, urlParams, user }) => {
         return mockExecute<TRequest, TResponse, TUrlVariables>({
           endpoint,
           handler,
           data,
           urlParams,
           user,
-          mockData,
         });
       },
     };

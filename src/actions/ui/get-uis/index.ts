@@ -1,9 +1,9 @@
 "use server";
 
 import type { Prisma } from "@prisma/client";
+import type { FullUI } from "openeats-client/types/website-editor";
 
-import type { FullUI } from "@/client-package/types/website-editor";
-import { prisma } from "@/next-portal/db";
+import { db } from "@/app/api/db";
 
 export const getUIs = async (
   mode: string,
@@ -58,7 +58,7 @@ export const getUIs = async (
     }
   }
 
-  const uis = await prisma.uI.findMany({
+  const uis = await db.uI.findMany({
     take: limit,
     skip: start,
     where,
@@ -104,7 +104,7 @@ export const getUIs = async (
 };
 
 export const getUI = async (UIId: string): Promise<FullUI | null> => {
-  const ui = await prisma.uI.findUnique({
+  const ui = await db.uI.findUnique({
     where: {
       id: UIId,
     },
@@ -148,7 +148,7 @@ export const getUI = async (UIId: string): Promise<FullUI | null> => {
 };
 
 export const getUIHome = async (): Promise<FullUI[]> => {
-  const uis = await prisma.uI.findMany({
+  const uis = await db.uI.findMany({
     take: 11,
     orderBy: { updatedAt: "desc" },
     select: {
@@ -201,7 +201,7 @@ export const getUIProfile = async (
   }
 
   if (mode === "ownUI") {
-    const uis = await prisma.uI.findMany({
+    const uis = await db.uI.findMany({
       take: limit,
       skip: start,
       where: {
@@ -246,7 +246,7 @@ export const getUIProfile = async (
     });
     return uis;
   } else if (mode === "likedUI") {
-    const likedUIs = await prisma.like.findMany({
+    const likedUIs = await db.like.findMany({
       where: {
         userId,
       },
@@ -257,7 +257,7 @@ export const getUIProfile = async (
 
     const uiIds = likedUIs.map((like) => like.UIId);
 
-    const uis = await prisma.uI.findMany({
+    const uis = await db.uI.findMany({
       where: {
         id: {
           in: uiIds,

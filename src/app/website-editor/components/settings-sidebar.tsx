@@ -3,16 +3,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { JSX } from "react";
 
-import { cn } from "@/next-portal/utils/utils";
+import { cn } from "@/packages/next-vibe/shared/utils/utils";
 
 const sidebarItems = [
-  { name: "General", href: "/v1/website-editor/settings/general" },
-  { name: "Account", href: "/v1/website-editor/settings/account" },
-  { name: "Themes", href: "/v1/website-editor/themes" },
-  { name: "UI", href: "/v1/website-editor/settings/ui" },
-  { name: "LLM", href: "/v1/website-editor/settings/llm" },
-  { name: "API keys", href: "/v1/website-editor/settings/api-key" },
-  { name: "About", href: "/v1/website-editor/settings/about" },
+  { name: "General", href: "/website-editor/settings/general" },
+  { name: "Account", href: "/website-editor/settings/account" },
+  { name: "Themes", href: "/website-editor/themes" },
+  { name: "UI", href: "/website-editor/settings/ui" },
+  { name: "LLM", href: "/website-editor/settings/llm" },
+  { name: "API keys", href: "/website-editor/settings/api-key" },
+  { name: "About", href: "/website-editor/settings/about" },
 ];
 
 export default function SettingsSidebar(): JSX.Element {

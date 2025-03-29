@@ -1,20 +1,18 @@
 /* eslint-disable no-console */
 import "../setup"; // Import test setup
 
-import { PrismaClient } from "@prisma/client";
-import request from "supertest";
-import { beforeAll, describe, expect, it } from "vitest";
-
-import { env } from "@/lib/env/env";
 import type {
   ErrorResponseType,
   MessageResponseType,
   SuccessResponseType,
-} from "@/next-portal/types/response.schema";
+} from "@/packages/next-vibe/shared/types/response.schema";
+import request from "supertest";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { db } from "@/app/api/db";
+import { env } from "@/config/env";
 
 // Create a prisma client for direct DB operations in tests
-const prisma = new PrismaClient();
-
 describe("Auth Password Reset API", () => {
   const baseUrl = env.TEST_SERVER_URL;
   const testEmail = "customer@example.com";
@@ -24,13 +22,13 @@ describe("Auth Password Reset API", () => {
   // Clean up any existing password reset tokens before tests
   beforeAll(async () => {
     // Find the user first
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { email: testEmail },
     });
 
     if (user) {
       // Delete password reset tokens for this user
-      await prisma.passwordReset.deleteMany({
+      await db.passwordReset.deleteMany({
         where: { userId: user.id },
       });
     }
@@ -62,7 +60,7 @@ describe("Auth Password Reset API", () => {
       }
 
       // Get the actual token from the database
-      const resetRecord = await prisma.passwordReset.findFirst({
+      const resetRecord = await db.passwordReset.findFirst({
         where: {
           user: {
             email: testEmail,
@@ -88,7 +86,8 @@ describe("Auth Password Reset API", () => {
         });
 
       expect(response.status).toBe(400);
-      const responseData = response.body as ErrorResponseType;
+      const responseData =
+        response.body as ErrorResponseType<MessageResponseType>;
       expect(responseData).toHaveProperty("success", false);
       expect(responseData).toHaveProperty("message");
       expect(responseData.message).toContain("enter a valid email");
@@ -108,7 +107,8 @@ describe("Auth Password Reset API", () => {
           password: "newPassword123",
         });
       expect([400]).toContain(response.status);
-      const responseData = response.body as ErrorResponseType;
+      const responseData =
+        response.body as ErrorResponseType<MessageResponseType>;
       expect(responseData).toHaveProperty("success", false);
       expect(responseData.message).toContain(
         "email: Required, confirmPassword: Required",
@@ -126,7 +126,8 @@ describe("Auth Password Reset API", () => {
         });
 
       expect(response.status).toBe(400);
-      const responseData = response.body as ErrorResponseType;
+      const responseData =
+        response.body as ErrorResponseType<MessageResponseType>;
       expect(responseData).toHaveProperty("success", false);
       expect(responseData.message).toContain("Invalid or expired token");
     });

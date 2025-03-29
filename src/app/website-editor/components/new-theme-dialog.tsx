@@ -3,7 +3,7 @@ import { PlusCircle } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/next-portal/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,

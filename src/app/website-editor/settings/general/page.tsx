@@ -3,7 +3,7 @@ import { ChevronDownIcon, ChevronUpIcon, InfoIcon } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
 
-import { Button } from "@/next-portal/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,

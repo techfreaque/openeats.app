@@ -1,7 +1,6 @@
 "use server";
 
-import { prisma } from "@/next-portal/db";
-import { errorLogger } from "@/next-portal/utils/logger";
+import { errorLogger } from "next-vibe/shared/utils/logger";
 
 export interface CreateSubPromptReturn {
   data: {
@@ -31,13 +30,13 @@ export const createSubPrompt = async (
     subPrompt.startsWith("balanced-") ||
     subPrompt.startsWith("creative-")
   ) {
-    const codeData = await prisma.code.create({
+    const codeData = await db.code.create({
       data: {
         code: code,
       },
     });
     try {
-      const data = await prisma.subPrompt.create({
+      const data = await db.subPrompt.create({
         data: {
           UIId: UIId,
           subPrompt: subPrompt,
@@ -60,7 +59,7 @@ export const createSubPrompt = async (
   const currentNumber = parseInt(parentSUBId.split("-").pop()!, 10);
   const nextSubIdBase = `${baseSubId}-${currentNumber + 1}`;
 
-  const existingNextSub = await prisma.subPrompt.findFirst({
+  const existingNextSub = await db.subPrompt.findFirst({
     where: {
       UIId: UIId,
       SUBId: nextSubIdBase,
@@ -71,7 +70,7 @@ export const createSubPrompt = async (
   if (!existingNextSub) {
     newSUBId = nextSubIdBase;
   } else {
-    const existingSubPrompts = await prisma.subPrompt.findMany({
+    const existingSubPrompts = await db.subPrompt.findMany({
       where: {
         UIId: UIId,
         SUBId: {
@@ -95,13 +94,13 @@ export const createSubPrompt = async (
     }
   }
 
-  const codeData = await prisma.code.create({
+  const codeData = await db.code.create({
     data: {
       code: code,
     },
   });
 
-  const data = await prisma.subPrompt.create({
+  const data = await db.subPrompt.create({
     data: {
       UIId: UIId,
       subPrompt: subPrompt,

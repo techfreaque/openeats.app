@@ -8,16 +8,16 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
+import { useModel } from "openeats-client/hooks/website-editor/useModel";
+import { useUIState } from "openeats-client/hooks/website-editor/useUIState";
+import { UiType } from "openeats-client/types/website-editor";
 import type { ChangeEvent, JSX } from "react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { createUI } from "@/actions/ui/create-ui";
-import { useAuth } from "@/client-package/hooks/use-auth";
-import { useAuthModal } from "@/client-package/hooks/website-editor/useAuthModal";
-import { useModel } from "@/client-package/hooks/website-editor/useModel";
-import { useUIState } from "@/client-package/hooks/website-editor/useUIState";
-import { UiType } from "@/client-package/types/website-editor";
 import {
   Badge,
   Button,
@@ -29,10 +29,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
-import Header from "@/components/website-editor/header";
-import HomeUICards from "@/components/website-editor/home-uis";
-import Suggestions from "@/components/website-editor/suggestions";
-import { errorLogger } from "@/next-portal/utils/logger";
+import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
+
+import Header from "./components/header";
+import HomeUICards from "./components/home-uis";
+import Suggestions from "./components/suggestions";
 
 export default function Home(): JSX.Element {
   const router = useRouter();
@@ -90,7 +91,7 @@ export default function Home(): JSX.Element {
       if (user) {
         setLoading(true);
         const ui = await createUI(input, user.id, uiType);
-        router.push(`/ui/${ui.id}`);
+        router.push(`/website-editor/ui/${ui.id}`);
         setLoading(false);
       } else {
         toggle();
@@ -209,7 +210,7 @@ export default function Home(): JSX.Element {
               </Select>
               <Button
                 variant={"default"}
-                onClick={() => router.push("/v1/website-editor/settings/llm")}
+                onClick={() => router.push("/website-editor/settings/llm")}
                 className="w-min focus:ring-0 h-8"
               >
                 LLM
@@ -225,7 +226,7 @@ export default function Home(): JSX.Element {
               </p>
             </div>
           )}
-          {uiType === UiType && (
+          {uiType === UiType.NEXTUI_REACT && (
             <div className="bg-yellow-50 p-2 rounded-md flex items-start space-x-2 text-yellow-800">
               <InfoIcon className="w-5 h-5 mt-0.5 flex-shrink-0" />
               <p className="text-sm">
@@ -249,7 +250,7 @@ export default function Home(): JSX.Element {
             </div>
             <div className="flex justify-center mt-3">
               <Badge
-                onClick={() => router.push("/v1/website-editor/settings/llm")}
+                onClick={() => router.push("/website-editor/settings/llm")}
                 variant="default"
                 className="text-sm border-spacing-1 cursor-pointer"
               >

@@ -1,12 +1,12 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
+import { useBugReportModal } from "openeats-client/hooks/website-editor/useBugReportModal";
 import type { JSX } from "react";
 
-import { useAuth } from "@/client-package/hooks/use-auth";
-import { useAuthModal } from "@/client-package/hooks/website-editor/useAuthModal";
-import { useBugReportModal } from "@/client-package/hooks/website-editor/useBugReportModal";
+import { Button } from "@/components/ui";
 
-import { Button } from "../ui";
 import { BugReportModal } from "./bug-report-modal";
 import UserButton from "./user-button";
 
@@ -21,21 +21,21 @@ const Header: () => JSX.Element = () => {
       <div className="w-full bg-white flex justify-between items-center p-4">
         <div className="flex space-x-2">
           <Button
-            onClick={() => router.push("/v1/website-editor/")}
+            onClick={() => router.push("/website-editor")}
             variant={"outline"}
             className="text-xl font-semibold"
           >
             Home
           </Button>
           <Button
-            onClick={() => router.push("/v1/website-editor/explore")}
+            onClick={() => router.push("/website-editor/explore")}
             variant={"outline"}
             className="text-xl font-semibold"
           >
             Explore
           </Button>
           <Button
-            onClick={() => router.push("/v1/website-editor/changelog")}
+            onClick={() => router.push("/website-editor/changelog")}
             variant={"outline"}
             className="text-xl font-semibold"
           >

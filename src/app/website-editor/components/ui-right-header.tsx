@@ -13,6 +13,9 @@ import {
   Tablet,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
+import type { UiType } from "openeats-client/types/website-editor";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -20,12 +23,10 @@ import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { toast } from "sonner";
 
 import { toggleLike } from "@/actions/ui/toggle-like-ui";
-import { Button } from "@/next-portal/components/ui/button";
-import { useAuth } from "@/client-package/hooks/use-auth";
-import { useAuthModal } from "@/client-package/hooks/website-editor/useAuthModal";
-import type { UiType } from "@/client-package/types/website-editor";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -56,9 +57,8 @@ import { getCss } from "@/lib/website-editor/globalCss";
 import type { Theme } from "@/lib/website-editor/themes";
 import { themes as defaultThemes } from "@/lib/website-editor/themes";
 import { themes } from "@/lib/website-editor/themes";
-import { errorLogger } from "@/next-portal/utils/logger";
+import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui";
 import LikeButton from "./like-button";
 import PromptBadge from "./prompt-badge";
 
@@ -209,7 +209,6 @@ const UIRigthHeader = ({
             variant={"ghost"}
             className="rounded-xl bg-gray-50 w-7 h-7"
             size={"icon"}
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onClick={handleRegenerateCode}
             disabled={!isLastSubprompt}
             title={
@@ -294,7 +293,7 @@ const UIRigthHeader = ({
         >
           <ToggleGroupItem value="precise" aria-label="Toggle bold">
             Precise
-            {uiState.precise.loading ? (
+            {uiState.precise?.loading ? (
               <LoaderCircle className="h-4 w-4 ml-1 animate-spin" />
             ) : (
               <PackageSearch className="h-4 w-4 ml-1" />
@@ -303,7 +302,7 @@ const UIRigthHeader = ({
           {subid.endsWith("0") && modesFound?.balanced && (
             <ToggleGroupItem value="balanced" aria-label="Toggle italic">
               Balanced
-              {uiState.balanced.loading ? (
+              {uiState.balanced?.loading ? (
                 <LoaderCircle className="h-4 w-4 ml-1 animate-spin" />
               ) : (
                 <Scale className="h-4 w-4 ml-1" />

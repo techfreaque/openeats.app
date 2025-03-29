@@ -1,7 +1,7 @@
 import { GitFork } from "lucide-react";
 import React, { useState } from "react";
 
-import { Button } from "@/next-portal/components/ui/button";
+import { Button } from "@/components/ui";
 import {
   Dialog,
   DialogContent,

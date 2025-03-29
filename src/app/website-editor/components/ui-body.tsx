@@ -1,4 +1,5 @@
 "use client";
+import type { UiType } from "openeats-client/types/website-editor";
 import type { LegacyRef } from "react";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import type {
@@ -6,9 +7,12 @@ import type {
   ImperativePanelHandle,
 } from "react-resizable-panels";
 
-import type { UiType } from "@/client-package/types/website-editor";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui";
 
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../ui";
 import PreviewScreen from "./preview-screen";
 const UIBody = forwardRef(
   (

@@ -3,9 +3,10 @@
  * Global setup for all tests
  * This runs once before all test files
  */
-import { prisma } from "@/next-portal/db";
 
-import seedTestDatabase from "../scripts/seed-test-db";
+import { db } from "@/app/api/db";
+import seedTestDatabase from "@/app/api/db/scripts/seed-dev-db";
+
 import { startServer } from "./test-server";
 
 export default async function setup() {
@@ -23,7 +24,7 @@ export default async function setup() {
   } catch (error) {
     console.error("Error during test setup:", error);
     // Make sure to disconnect Prisma on error
-    await prisma.$disconnect().catch(console.error);
+    await db.$disconnect().catch(console.error);
     throw error;
   }
 }

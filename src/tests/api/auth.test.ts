@@ -2,16 +2,15 @@
 
 import "../setup"; // Import test setup
 
-import request from "supertest";
-import { describe, expect, it } from "vitest";
-
-import type { LoginResponseType } from "@/client-package/schema/api/v1/auth/public/login.schema";
-import type { UserResponseType } from "@/client-package/types/types";
-import { env } from "@/lib/env/env";
 import type {
   ErrorResponseType,
   ResponseType,
-} from "@/next-portal/types/response.schema";
+} from "@/packages/next-vibe/shared/types/response.schema";
+import request from "supertest";
+import { describe, expect, it } from "vitest";
+
+import type { LoginResponseType } from "@/app/api/v1/auth/public/login/schema";
+import { env } from "@/config/env";
 
 describe("Auth API", () => {
   // Storage for test-generated auth tokens
@@ -63,7 +62,8 @@ describe("Auth API", () => {
 
       // API should return 401 for invalid credentials
       expect(response.status).toBe(401);
-      const responseData = response.body as ErrorResponseType;
+      const responseData =
+        response.body as ErrorResponseType<LoginResponseType>;
       expect(responseData).toHaveProperty("success", false);
       expect(responseData.message).toContain("Invalid email or password");
     });
@@ -90,7 +90,7 @@ describe("Auth API", () => {
 
       // Make test more permissive for now
       expect([200]).toContain(response.status);
-      const responseData = response.body as ResponseType<UserResponseType>;
+      const responseData = response.body as ResponseType<LoginResponseType>;
       if (responseData.success === false) {
         throw new Error(responseData.message);
       }

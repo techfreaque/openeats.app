@@ -1,10 +1,10 @@
 "use client";
 import { Eye, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
+import type { FullUI } from "openeats-client/types/website-editor";
 import React, { useEffect, useState } from "react";
 
 import { getUIHome } from "@/actions/ui/get-uis";
-import type { FullUI } from "@/client-package/types/website-editor";
 import {
   Avatar,
   AvatarFallback,

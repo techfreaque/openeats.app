@@ -1,7 +1,8 @@
 "use server";
 
-import { prisma } from "@/next-portal/db";
-import { errorLogger } from "@/next-portal/utils/logger";
+import { errorLogger } from "next-vibe/shared/utils/logger";
+
+import { db } from "@/app/api/db";
 
 export type WebsiteEditorUser = {
   uiCount: number;
@@ -20,7 +21,7 @@ export const getUser = async (
   }
 
   try {
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: {
         id,
       },
@@ -36,13 +37,13 @@ export const getUser = async (
       return null;
     }
 
-    const uiCount = await prisma.uI.count({
+    const uiCount = await db.uI.count({
       where: {
         userId: user.id,
       },
     });
 
-    const subPromptCount = await prisma.subPrompt.count({
+    const subPromptCount = await db.subPrompt.count({
       where: {
         UI: {
           userId: user.id,

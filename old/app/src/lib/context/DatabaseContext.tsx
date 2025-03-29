@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 // Define the context type
 type DatabaseContextType = {
@@ -7,19 +7,25 @@ type DatabaseContextType = {
 };
 
 // Create the context with a default value
-const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined);
+const DatabaseContext = createContext<DatabaseContextType | undefined>(
+  undefined,
+);
 
 // Hook for consuming the context
 export function useDatabase(): DatabaseContextType {
   const context = useContext(DatabaseContext);
   if (context === undefined) {
-    throw new Error('useDatabase must be used within a DatabaseProvider');
+    throw new Error("useDatabase must be used within a DatabaseProvider");
   }
   return context;
 }
 
 // Provider component
-export function DatabaseProvider({ children }: { children: React.ReactNode }): React.ReactElement {
+export function DatabaseProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.ReactElement {
   const [isLoading, setIsLoading] = useState(true);
   const [isDbReady, setIsDbReady] = useState(false);
 
@@ -28,19 +34,19 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }): R
     const initDatabase = async () => {
       try {
         // Check if DB was initialized before
-        const dbInitialized = await AsyncStorage.getItem('db_initialized');
+        const dbInitialized = await AsyncStorage.getItem("db_initialized");
         if (!dbInitialized) {
           // Here you would implement any database initialization logic
           // For example, creating tables, etc.
-          
+
           // Mark as initialized
-          await AsyncStorage.setItem('db_initialized', 'true');
+          await AsyncStorage.setItem("db_initialized", "true");
         }
-        
+
         // Set database as ready
         setIsDbReady(true);
       } catch (error) {
-        console.error('Failed to initialize database:', error);
+        console.error("Failed to initialize database:", error);
         // Even on error, we'll consider the DB as "ready" to not block the app
         setIsDbReady(true);
       } finally {

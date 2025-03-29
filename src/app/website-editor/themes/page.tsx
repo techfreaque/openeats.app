@@ -5,8 +5,8 @@ import type { JSX, MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/next-portal/components/ui/button";
 import { Badge } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -14,10 +14,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ForkThemeDialog } from "@/components/website-editor/fork-theme-dialog";
-import { NewThemeDialog } from "@/components/website-editor/new-theme-dialog";
 import type { Theme } from "@/lib/website-editor/themes";
 import { themes } from "@/lib/website-editor/themes";
+
+import { ForkThemeDialog } from "../components/fork-theme-dialog";
+import { NewThemeDialog } from "../components/new-theme-dialog";
 
 export default function ThemeSelector(): JSX.Element {
   const router = useRouter();
@@ -65,7 +66,7 @@ export default function ThemeSelector(): JSX.Element {
     const updatedThemes = [...customThemes, newTheme];
     setCustomThemes(updatedThemes);
     localStorage.setItem("customThemes", JSON.stringify(updatedThemes));
-    router.push(`/v1/website-editor/themes/${themeId}`);
+    router.push(`/website-editor/themes/${themeId}`);
   };
 
   const handleThemeDelete = (
@@ -95,14 +96,14 @@ export default function ThemeSelector(): JSX.Element {
     setCustomThemes(updatedThemes);
     localStorage.setItem("customThemes", JSON.stringify(updatedThemes));
     toast.success("Theme forked successfully");
-    router.push(`/v1/website-editor/themes/${newId}`);
+    router.push(`/website-editor/themes/${newId}`);
   };
 
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <Button
-          onClick={() => router.push("/v1/website-editor/")}
+          onClick={() => router.push("/website-editor")}
           variant={"outline"}
           className="text-xl font-bold p-1"
         >
@@ -170,7 +171,9 @@ export default function ThemeSelector(): JSX.Element {
             {customThemes.map((theme) => (
               <Card
                 key={theme.id}
-                onClick={() => router.push(`themes/${theme.id}`)}
+                onClick={() =>
+                  router.push(`/website-editor/themes/${theme.id}`)
+                }
                 className="overflow-hidden cursor-pointer"
               >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

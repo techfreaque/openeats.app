@@ -1,7 +1,7 @@
 import { Heart } from "lucide-react";
 import type { JSX } from "react";
 
-import { Button } from "../ui";
+import { Button } from "@/components/ui";
 
 const LikeButton = ({
   liked,

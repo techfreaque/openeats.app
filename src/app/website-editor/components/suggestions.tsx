@@ -1,17 +1,15 @@
 import { MoveUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
+import { useUIState } from "openeats-client/hooks/website-editor/useUIState";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { createUI } from "@/actions/ui/create-ui";
-import { useAuth } from "@/client-package/hooks/use-auth";
-import { useAuthModal } from "@/client-package/hooks/website-editor/useAuthModal";
-import { useUIState } from "@/client-package/hooks/website-editor/useUIState";
-import { errorLogger } from "@/next-portal/utils/logger";
-
-import { Badge } from "../ui";
-
+import { Badge } from "@/components/ui";
+import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 const Suggestions = (): JSX.Element => {
   const router = useRouter();
   const { setLoading, setInput, uiType } = useUIState();
@@ -30,7 +28,7 @@ const Suggestions = (): JSX.Element => {
     const fetchSuggestions = async (): Promise<void> => {
       try {
         const res = await fetch(
-          `/api/v1/website-editor/suggestions?modelId=${encodeURIComponent("openai:gpt-4o-mini")}`,
+          `/api/website-editor/suggestions?modelId=${encodeURIComponent("openai:gpt-4o-mini")}`,
           {
             method: "GET",
             headers: {
@@ -64,7 +62,7 @@ const Suggestions = (): JSX.Element => {
         setLoading(true);
         const ui = await createUI(suggestion, userId, uiType);
         setLoading(false);
-        router.push(`/v1/website-editor/ui/${ui.id}`);
+        router.push(`/website-editor/ui/${ui.id}`);
       } else {
         toggle();
       }

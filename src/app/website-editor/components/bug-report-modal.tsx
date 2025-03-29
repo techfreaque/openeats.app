@@ -1,14 +1,15 @@
 import { GitFork } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
+import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
+import { useBugReportModal } from "openeats-client/hooks/website-editor/useBugReportModal";
 import type { FormEvent, JSX } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { submitBugReport } from "@/actions/ui/submit-bug-report";
-import { Button } from "@/next-portal/components/ui/button";
-import { useAuth } from "@/client-package/hooks/use-auth";
-import { useAuthModal } from "@/client-package/hooks/website-editor/useAuthModal";
-import { useBugReportModal } from "@/client-package/hooks/website-editor/useBugReportModal";
+import { Badge, Button, RadioGroup, RadioGroupItem } from "@/components/ui";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
@@ -27,9 +28,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { errorLogger } from "@/next-portal/utils/logger";
-
-import { Badge, RadioGroup, RadioGroupItem } from "../ui";
 
 export const BugReportModal = (): JSX.Element => {
   const bugReportModal = useBugReportModal();

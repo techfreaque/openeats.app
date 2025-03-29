@@ -1,878 +1,486 @@
-import { useRouter } from "expo-router";
-import {
-  Bell,
-  ChevronRight,
-  CircleHelp as HelpCircle,
-  CreditCard,
-  Gift,
-  Heart,
-  LogOut,
-  MapPin,
-} from "lucide-react-native";
+"use client";
+
+import { Camera, Edit2, Mail, MapPin, Phone, User } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuth } from "openeats-client/hooks/useAuth";
+import type { JSX } from "react";
 import { useState } from "react";
-import {
-  Alert,
-  Image,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function ProfileScreen() {
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+
+export default function ProfilePage(): JSX.Element | null {
   const router = useRouter();
-  const [user, setUser] = useState({
-    name: "Alex Johnson",
-    email: "alex.johnson@example.com",
-    phone: "(555) 123-4567",
-    image:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-  });
+  const { user, logout } = useAuth();
+  const { toast } = useToast();
 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [locationEnabled, setLocationEnabled] = useState(true);
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editedUser, setEditedUser] = useState({ ...user });
-  const [addresses, setAddresses] = useState([
-    { id: "1", address: "123 Main St, Anytown", default: true },
-    { id: "2", address: "456 Oak St, Anytown", default: false },
-  ]);
-  const [addressModalVisible, setAddressModalVisible] = useState(false);
-  const [newAddress, setNewAddress] = useState("");
-  const [paymentMethods, setPaymentMethods] = useState([
-    { id: "1", type: "Visa", last4: "4242", default: true },
-    { id: "2", type: "Mastercard", last4: "5555", default: false },
-  ]);
-  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
-  const [newCardNumber, setNewCardNumber] = useState("");
-  const [newCardExpiry, setNewCardExpiry] = useState("");
-  const [newCardCVV, setNewCardCVV] = useState("");
-  const [favoriteRestaurants, setFavoriteRestaurants] = useState([
-    { id: "1", name: "Burger Palace" },
-    { id: "2", name: "Pizza Heaven" },
-    { id: "3", name: "Sushi Express" },
-  ]);
-  const [favoritesModalVisible, setFavoritesModalVisible] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(user?.firstName || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [phone, setPhone] = useState("(555) 123-4567");
+  const [address, setAddress] = useState("123 Main St, Anytown, USA");
 
-  const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Logout",
-        onPress: () => {
-          // In a real app, this would handle logout logic
-          Alert.alert("Logged Out", "You have been logged out successfully");
-        },
-      },
-    ]);
+  if (!user) {
+    router.push("/auth/public/login?redirect=/app/profile");
+    return null;
+  }
+
+  const handleSaveProfile = (): void => {
+    // In a real app, this would update the user profile in the database
+    toast({
+      title: "Profile updated",
+      description: "Your profile has been updated successfully",
+    });
+    setIsEditing(false);
   };
 
-  const handleSaveProfile = () => {
-    setUser(editedUser);
-    setEditModalVisible(false);
-    Alert.alert("Success", "Profile updated successfully");
+  const handleSignOut = (): void => {
+    logout();
+    router.push("/");
   };
-
-  const handleAddAddress = () => {
-    if (newAddress.trim() === "") {
-      Alert.alert("Error", "Please enter a valid address");
-      return;
-    }
-
-    const newId = (addresses.length + 1).toString();
-    setAddresses([
-      ...addresses,
-      { id: newId, address: newAddress, default: false },
-    ]);
-    setNewAddress("");
-    Alert.alert("Success", "Address added successfully");
-  };
-
-  const handleSetDefaultAddress = (id) => {
-    setAddresses(
-      addresses.map((addr) => ({
-        ...addr,
-        default: addr.id === id,
-      })),
-    );
-  };
-
-  const handleDeleteAddress = (id) => {
-    if (addresses.find((addr) => addr.id === id)?.default) {
-      Alert.alert("Error", "Cannot delete default address");
-      return;
-    }
-    setAddresses(addresses.filter((addr) => addr.id !== id));
-  };
-
-  const handleAddPaymentMethod = () => {
-    if (
-      newCardNumber.length < 16 ||
-      newCardExpiry.trim() === "" ||
-      newCardCVV.length < 3
-    ) {
-      Alert.alert("Error", "Please enter valid card details");
-      return;
-    }
-
-    const last4 = newCardNumber.slice(-4);
-    const newId = (paymentMethods.length + 1).toString();
-    setPaymentMethods([
-      ...paymentMethods,
-      { id: newId, type: "Card", last4, default: false },
-    ]);
-    setNewCardNumber("");
-    setNewCardExpiry("");
-    setNewCardCVV("");
-    Alert.alert("Success", "Payment method added successfully");
-  };
-
-  const handleSetDefaultPayment = (id) => {
-    setPaymentMethods(
-      paymentMethods.map((method) => ({
-        ...method,
-        default: method.id === id,
-      })),
-    );
-  };
-
-  const handleDeletePayment = (id) => {
-    if (paymentMethods.find((method) => method.id === id)?.default) {
-      Alert.alert("Error", "Cannot delete default payment method");
-      return;
-    }
-    setPaymentMethods(paymentMethods.filter((method) => method.id !== id));
-  };
-
-  const handleViewFavoriteRestaurant = (id) => {
-    setFavoritesModalVisible(false);
-    router.push(`/restaurant/${id}`);
-  };
-
-  const menuSections = [
-    {
-      title: "Account",
-      items: [
-        {
-          icon: <CreditCard size={24} color="#FF5A5F" />,
-          title: "Payment Methods",
-          onPress: () => setPaymentModalVisible(true),
-        },
-        {
-          icon: <MapPin size={24} color="#FF5A5F" />,
-          title: "Saved Addresses",
-          onPress: () => setAddressModalVisible(true),
-        },
-        {
-          icon: <Heart size={24} color="#FF5A5F" />,
-          title: "Favorite Restaurants",
-          onPress: () => setFavoritesModalVisible(true),
-        },
-      ],
-    },
-    {
-      title: "Preferences",
-      items: [
-        {
-          icon: <Bell size={24} color="#FF5A5F" />,
-          title: "Notifications",
-          toggle: true,
-          value: notificationsEnabled,
-          onToggle: setNotificationsEnabled,
-        },
-        {
-          icon: <MapPin size={24} color="#FF5A5F" />,
-          title: "Location Services",
-          toggle: true,
-          value: locationEnabled,
-          onToggle: setLocationEnabled,
-        },
-      ],
-    },
-    {
-      title: "Support",
-      items: [
-        {
-          icon: <HelpCircle size={24} color="#FF5A5F" />,
-          title: "Help Center",
-          onPress: () =>
-            Alert.alert("Help Center", "Our support team is available 24/7"),
-        },
-        {
-          icon: <Gift size={24} color="#FF5A5F" />,
-          title: "About OpenEats",
-          onPress: () =>
-            Alert.alert(
-              "About OpenEats",
-              "OpenEats is a free, open-source food delivery platform",
-            ),
-        },
-      ],
-    },
-  ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView>
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <Image source={{ uri: user.image }} style={styles.profileImage} />
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{user.name}</Text>
-            <Text style={styles.profileEmail}>{user.email}</Text>
-            <Text style={styles.profilePhone}>{user.phone}</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => {
-              setEditedUser({ ...user });
-              setEditModalVisible(true);
-            }}
-          >
-            <Text style={styles.editButtonText}>Edit</Text>
-          </TouchableOpacity>
-        </View>
+    <div className="flex min-h-screen flex-col">
+      <main className="flex-1 py-8">
+        <div className="container px-4 md:px-6">
+          <div className="mx-auto max-w-4xl">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold">My Profile</h1>
+              <Button variant="outline" onClick={() => router.push("/")}>
+                Back to Home
+              </Button>
+            </div>
 
-        {/* Menu Sections */}
-        {menuSections.map((section, sectionIndex) => (
-          <View key={sectionIndex} style={styles.menuSection}>
-            <Text style={styles.menuSectionTitle}>{section.title}</Text>
-            {section.items.map((item, itemIndex) => (
-              <TouchableOpacity
-                key={itemIndex}
-                style={styles.menuItem}
-                onPress={item.onPress}
-                disabled={item.toggle}
-              >
-                <View style={styles.menuItemLeft}>
-                  {item.icon}
-                  <Text style={styles.menuItemTitle}>{item.title}</Text>
-                </View>
-                {item.toggle ? (
-                  <Switch
-                    value={item.value}
-                    onValueChange={item.onToggle}
-                    trackColor={{ false: "#D1D5DB", true: "#FF5A5F" }}
-                    thumbColor={"#FFFFFF"}
-                  />
-                ) : (
-                  <ChevronRight size={20} color="#9CA3AF" />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        ))}
-
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <LogOut size={20} color="#EF4444" />
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
-
-        {/* App Version */}
-        <Text style={styles.versionText}>Version 1.0.0</Text>
-      </ScrollView>
-
-      {/* Edit Profile Modal */}
-      <Modal
-        visible={editModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setEditModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Profile</Text>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Name</Text>
-              <TextInput
-                style={styles.input}
-                value={editedUser.name}
-                onChangeText={(text) =>
-                  setEditedUser({ ...editedUser, name: text })
-                }
-                placeholder="Enter your name"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Email</Text>
-              <TextInput
-                style={styles.input}
-                value={editedUser.email}
-                onChangeText={(text) =>
-                  setEditedUser({ ...editedUser, email: text })
-                }
-                placeholder="Enter your email"
-                keyboardType="email-address"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Phone</Text>
-              <TextInput
-                style={styles.input}
-                value={editedUser.phone}
-                onChangeText={(text) =>
-                  setEditedUser({ ...editedUser, phone: text })
-                }
-                placeholder="Enter your phone number"
-                keyboardType="phone-pad"
-              />
-            </View>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setEditModalVisible(false)}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.saveButton]}
-                onPress={handleSaveProfile}
-              >
-                <Text style={styles.saveButtonText}>Save</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Addresses Modal */}
-      <Modal
-        visible={addressModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setAddressModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Saved Addresses</Text>
-
-            {addresses.map((address) => (
-              <View key={address.id} style={styles.addressItem}>
-                <View style={styles.addressInfo}>
-                  <Text style={styles.addressText}>{address.address}</Text>
-                  {address.default && (
-                    <View style={styles.defaultBadge}>
-                      <Text style={styles.defaultBadgeText}>Default</Text>
-                    </View>
-                  )}
-                </View>
-                <View style={styles.addressActions}>
-                  {!address.default && (
-                    <TouchableOpacity
-                      style={styles.addressActionButton}
-                      onPress={() => handleSetDefaultAddress(address.id)}
+            <div className="mt-8 grid gap-8 md:grid-cols-[1fr_3fr]">
+              <div className="space-y-6">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="relative">
+                    <div className="relative h-32 w-32 overflow-hidden rounded-full">
+                      <Image
+                        src={
+                          user.imageUrl ||
+                          "/placeholder.svg?height=128&width=128"
+                        }
+                        alt={user.firstName}
+                        width={128}
+                        height={128}
+                        className="object-cover"
+                      />
+                    </div>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="absolute bottom-0 right-0 h-8 w-8 rounded-full"
                     >
-                      <Text style={styles.addressActionButtonText}>
-                        Set Default
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                  {!address.default && (
-                    <TouchableOpacity
-                      style={[styles.addressActionButton, styles.deleteButton]}
-                      onPress={() => handleDeleteAddress(address.id)}
-                    >
-                      <Text style={styles.deleteButtonText}>Delete</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
-            ))}
+                      <Camera className="h-4 w-4" />
+                      <span className="sr-only">Change profile picture</span>
+                    </Button>
+                  </div>
+                  <div className="text-center">
+                    <h2 className="text-xl font-semibold">{user.firstName}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <a href="/app/orders">
+                      <User className="mr-2 h-4 w-4" />
+                      Order History
+                    </a>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <a href="/app/favorites">
+                      <User className="mr-2 h-4 w-4" />
+                      Saved Restaurants
+                    </a>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <a href="/app/payment-methods">
+                      <User className="mr-2 h-4 w-4" />
+                      Payment Methods
+                    </a>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <a href="/app/addresses">
+                      <User className="mr-2 h-4 w-4" />
+                      Saved Addresses
+                    </a>
+                  </Button>
+                </div>
+                <Separator />
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  onClick={handleSignOut}
+                >
+                  Sign Out
+                </Button>
+              </div>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Add New Address</Text>
-              <TextInput
-                style={styles.input}
-                value={newAddress}
-                onChangeText={setNewAddress}
-                placeholder="Enter address"
-              />
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={handleAddAddress}
-              >
-                <Text style={styles.addButtonText}>Add Address</Text>
-              </TouchableOpacity>
-            </View>
+              <div>
+                <Tabs defaultValue="profile">
+                  <TabsList className="w-full">
+                    <TabsTrigger value="profile" className="flex-1">
+                      Profile
+                    </TabsTrigger>
+                    <TabsTrigger value="preferences" className="flex-1">
+                      Preferences
+                    </TabsTrigger>
+                    <TabsTrigger value="notifications" className="flex-1">
+                      Notifications
+                    </TabsTrigger>
+                  </TabsList>
 
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setAddressModalVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+                  <TabsContent value="profile" className="mt-6 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">
+                        Personal Information
+                      </h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsEditing(!isEditing)}
+                      >
+                        <Edit2 className="mr-2 h-4 w-4" />
+                        {isEditing ? "Cancel" : "Edit"}
+                      </Button>
+                    </div>
 
-      {/* Payment Methods Modal */}
-      <Modal
-        visible={paymentModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setPaymentModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Payment Methods</Text>
+                    {isEditing ? (
+                      <div className="space-y-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="name">Full Name</Label>
+                          <Input
+                            id="name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="phone">Phone</Label>
+                          <Input
+                            id="phone"
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="address">Address</Label>
+                          <Input
+                            id="address"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                          />
+                        </div>
+                        <Button onClick={handleSaveProfile}>
+                          Save Changes
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <User className="h-5 w-5 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">Full Name</p>
+                            <p className="text-sm text-muted-foreground">
+                              {name}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-5 w-5 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">Email</p>
+                            <p className="text-sm text-muted-foreground">
+                              {email}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-5 w-5 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">Phone</p>
+                            <p className="text-sm text-muted-foreground">
+                              {phone}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-5 w-5 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">Address</p>
+                            <p className="text-sm text-muted-foreground">
+                              {address}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
-            {paymentMethods.map((method) => (
-              <View key={method.id} style={styles.paymentItem}>
-                <View style={styles.paymentInfo}>
-                  <CreditCard size={24} color="#1F2937" />
-                  <View style={styles.paymentDetails}>
-                    <Text style={styles.paymentType}>{method.type}</Text>
-                    <Text style={styles.paymentNumber}>
-                      **** **** **** {method.last4}
-                    </Text>
-                  </View>
-                  {method.default && (
-                    <View style={styles.defaultBadge}>
-                      <Text style={styles.defaultBadgeText}>Default</Text>
-                    </View>
-                  )}
-                </View>
-                <View style={styles.paymentActions}>
-                  {!method.default && (
-                    <TouchableOpacity
-                      style={styles.paymentActionButton}
-                      onPress={() => handleSetDefaultPayment(method.id)}
-                    >
-                      <Text style={styles.paymentActionButtonText}>
-                        Set Default
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                  {!method.default && (
-                    <TouchableOpacity
-                      style={[styles.paymentActionButton, styles.deleteButton]}
-                      onPress={() => handleDeletePayment(method.id)}
-                    >
-                      <Text style={styles.deleteButtonText}>Delete</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
-            ))}
+                    <Separator />
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Add New Card</Text>
-              <TextInput
-                style={styles.input}
-                value={newCardNumber}
-                onChangeText={setNewCardNumber}
-                placeholder="Card Number"
-                keyboardType="number-pad"
-                maxLength={16}
-              />
-              <View style={styles.cardDetailsRow}>
-                <TextInput
-                  style={[styles.input, styles.cardDetailInput]}
-                  value={newCardExpiry}
-                  onChangeText={setNewCardExpiry}
-                  placeholder="MM/YY"
-                  maxLength={5}
-                />
-                <TextInput
-                  style={[styles.input, styles.cardDetailInput]}
-                  value={newCardCVV}
-                  onChangeText={setNewCardCVV}
-                  placeholder="CVV"
-                  keyboardType="number-pad"
-                  maxLength={3}
-                />
-              </View>
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={handleAddPaymentMethod}
-              >
-                <Text style={styles.addButtonText}>Add Card</Text>
-              </TouchableOpacity>
-            </View>
+                    <div>
+                      <h3 className="text-lg font-medium">Account Security</h3>
+                      <div className="mt-4 space-y-4">
+                        <Button variant="outline">Change Password</Button>
+                        <Button variant="outline">
+                          Enable Two-Factor Authentication
+                        </Button>
+                      </div>
+                    </div>
+                  </TabsContent>
 
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setPaymentModalVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+                  <TabsContent value="preferences" className="mt-6 space-y-6">
+                    <div>
+                      <h3 className="text-lg font-medium">
+                        Dietary Preferences
+                      </h3>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="vegetarian"
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <Label htmlFor="vegetarian">Vegetarian</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="vegan"
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <Label htmlFor="vegan">Vegan</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="gluten-free"
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <Label htmlFor="gluten-free">Gluten-Free</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="dairy-free"
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <Label htmlFor="dairy-free">Dairy-Free</Label>
+                        </div>
+                      </div>
+                    </div>
 
-      {/* Favorites Modal */}
-      <Modal
-        visible={favoritesModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setFavoritesModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Favorite Restaurants</Text>
+                    <Separator />
 
-            {favoriteRestaurants.map((restaurant) => (
-              <TouchableOpacity
-                key={restaurant.id}
-                style={styles.favoriteItem}
-                onPress={() => handleViewFavoriteRestaurant(restaurant.id)}
-              >
-                <View style={styles.favoriteInfo}>
-                  <Heart size={20} color="#FF5A5F" fill="#FF5A5F" />
-                  <Text style={styles.favoriteName}>{restaurant.name}</Text>
-                </View>
-                <ChevronRight size={20} color="#9CA3AF" />
-              </TouchableOpacity>
-            ))}
+                    <div>
+                      <h3 className="text-lg font-medium">
+                        Cuisine Preferences
+                      </h3>
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="italian"
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <Label htmlFor="italian">Italian</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="mexican"
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <Label htmlFor="mexican">Mexican</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="chinese"
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <Label htmlFor="chinese">Chinese</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="japanese"
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <Label htmlFor="japanese">Japanese</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="indian"
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <Label htmlFor="indian">Indian</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="thai"
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <Label htmlFor="thai">Thai</Label>
+                        </div>
+                      </div>
+                    </div>
 
-            {favoriteRestaurants.length === 0 && (
-              <Text style={styles.emptyText}>
-                You don't have any favorite restaurants yet
-              </Text>
-            )}
+                    <Separator />
 
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setFavoritesModalVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+                    <div>
+                      <h3 className="text-lg font-medium">
+                        Delivery Preferences
+                      </h3>
+                      <div className="mt-4 space-y-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="default-delivery">
+                            Default Delivery Address
+                          </Label>
+                          <Input
+                            id="default-delivery"
+                            defaultValue="123 Main St, Anytown, USA"
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="delivery-instructions">
+                            Default Delivery Instructions
+                          </Label>
+                          <Input
+                            id="delivery-instructions"
+                            placeholder="E.g., Leave at door, call upon arrival, etc."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="notifications" className="mt-6 space-y-6">
+                    <div>
+                      <h3 className="text-lg font-medium">
+                        Email Notifications
+                      </h3>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">Order Updates</p>
+                            <p className="text-sm text-muted-foreground">
+                              Receive updates about your orders
+                            </p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            defaultChecked
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">Promotions</p>
+                            <p className="text-sm text-muted-foreground">
+                              Receive promotions and discounts
+                            </p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            defaultChecked
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">Restaurant Updates</p>
+                            <p className="text-sm text-muted-foreground">
+                              Updates from restaurants you've ordered from
+                            </p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div>
+                      <h3 className="text-lg font-medium">
+                        Push Notifications
+                      </h3>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">Order Status</p>
+                            <p className="text-sm text-muted-foreground">
+                              Receive real-time updates about your orders
+                            </p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            defaultChecked
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">Special Offers</p>
+                            <p className="text-sm text-muted-foreground">
+                              Get notified about special offers and deals
+                            </p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            defaultChecked
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
-  profileHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    padding: 16,
-    marginBottom: 16,
-  },
-  profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-  },
-  profileInfo: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 4,
-  },
-  profileEmail: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 2,
-  },
-  profilePhone: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  editButton: {
-    backgroundColor: "#F3F4F6",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  editButtonText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#4B5563",
-  },
-  menuSection: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  menuSectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginBottom: 16,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  menuItemLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  menuItemTitle: {
-    fontSize: 16,
-    color: "#1F2937",
-    marginLeft: 12,
-  },
-  logoutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FEE2E2",
-    marginHorizontal: 16,
-    marginBottom: 24,
-    padding: 16,
-    borderRadius: 12,
-  },
-  logoutText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#EF4444",
-    marginLeft: 8,
-  },
-  versionText: {
-    fontSize: 14,
-    color: "#9CA3AF",
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: "80%",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#4B5563",
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: "#1F2937",
-    marginBottom: 8,
-  },
-  modalButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 16,
-  },
-  modalButton: {
-    flex: 1,
-    borderRadius: 8,
-    padding: 12,
-    alignItems: "center",
-  },
-  cancelButton: {
-    backgroundColor: "#F3F4F6",
-    marginRight: 8,
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#4B5563",
-  },
-  saveButton: {
-    backgroundColor: "#FF5A5F",
-    marginLeft: 8,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  addressItem: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-  },
-  addressInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  addressText: {
-    fontSize: 16,
-    color: "#1F2937",
-    flex: 1,
-  },
-  defaultBadge: {
-    backgroundColor: "#10B981",
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 8,
-  },
-  defaultBadgeText: {
-    fontSize: 12,
-    color: "#FFFFFF",
-    fontWeight: "500",
-  },
-  addressActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  addressActionButton: {
-    backgroundColor: "#E5E7EB",
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginLeft: 8,
-  },
-  addressActionButtonText: {
-    fontSize: 12,
-    color: "#4B5563",
-    fontWeight: "500",
-  },
-  deleteButton: {
-    backgroundColor: "#FEE2E2",
-  },
-  deleteButtonText: {
-    fontSize: 12,
-    color: "#EF4444",
-    fontWeight: "500",
-  },
-  addButton: {
-    backgroundColor: "#FF5A5F",
-    borderRadius: 8,
-    padding: 12,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  addButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  closeButton: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 8,
-    padding: 12,
-    alignItems: "center",
-    marginTop: 16,
-  },
-  closeButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#4B5563",
-  },
-  paymentItem: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-  },
-  paymentInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  paymentDetails: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  paymentType: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#1F2937",
-  },
-  paymentNumber: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  paymentActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  paymentActionButton: {
-    backgroundColor: "#E5E7EB",
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginLeft: 8,
-  },
-  paymentActionButtonText: {
-    fontSize: 12,
-    color: "#4B5563",
-    fontWeight: "500",
-  },
-  cardDetailsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  cardDetailInput: {
-    flex: 1,
-    marginRight: 8,
-  },
-  favoriteItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-  },
-  favoriteInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  favoriteName: {
-    fontSize: 16,
-    color: "#1F2937",
-    marginLeft: 12,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "#6B7280",
-    textAlign: "center",
-    marginVertical: 24,
-  },
-});

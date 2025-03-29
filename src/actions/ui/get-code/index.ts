@@ -1,11 +1,11 @@
 "use server";
 
-import { prisma } from "@/next-portal/db";
+import { db } from "@/app/api/db";
 
 export const getCodeFromId = async (
   codeId: string,
 ): Promise<string | undefined> => {
-  const code = await prisma.code.findUnique({
+  const code = await db.code.findUnique({
     where: {
       id: codeId,
     },

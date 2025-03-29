@@ -1,8 +1,8 @@
-import { createEndpoint } from "next-query-portal/client/endpoint";
-import { undefinedSchema } from "next-query-portal/shared/types/common.schema";
-import { Methods } from "next-query-portal/shared/types/endpoint";
-import { UserRoleValue } from "next-query-portal/shared/types/enums";
-import { messageResponseSchema } from "next-query-portal/shared/types/response.schema";
+import { createEndpoint } from "@/packages/next-vibe/client/endpoint";
+import { undefinedSchema } from "next-vibeibe/shared/types/common.schema";
+import { Methods } from "next-vibeibe/shared/types/endpoint";
+import { UserRoleValue } from "next-vibeibe/shared/types/enums";
+import { messageResponseSchema } from "next-vibeibe/shared/types/response.schema";
 
 import registerEndpoint from "../register/definition";
 import { resetPasswordConfirmSchema } from "./schema";
@@ -27,7 +27,7 @@ const resetPasswordConfirmEndpoint = createEndpoint({
       },
       example1: {
         id: "9bfb43b8-c361-4f3e-b512-ec2ced9bf011",
-        email: registerEndpoint.POST.examples.payloads["customer"]!["email"],
+        email: registerEndpoint.POST.examples.payloads["customer"]["email"],
         token: "COPY_FROM_EMAIL",
         password: "newpassword",
         confirmPassword: "newpassword",

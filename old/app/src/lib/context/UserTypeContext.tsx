@@ -11,7 +11,11 @@ type AppModeContextType = {
 
 const AppModeContext = createContext<AppModeContextType | undefined>(undefined);
 
-export function AppModeProvider({ children }: { children: ReactNode }): JSX.Element {
+export function AppModeProvider({
+  children,
+}: {
+  children: ReactNode;
+}): JSX.Element {
   const [appMode, setAppModeSt] = useState<AppMode>("customer");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -20,7 +24,12 @@ export function AppModeProvider({ children }: { children: ReactNode }): JSX.Elem
     const loadAppMode = async () => {
       try {
         const storedMode = await AsyncStorage.getItem("appMode");
-        if (storedMode && (storedMode === "customer" || storedMode === "restaurant" || storedMode === "driver")) {
+        if (
+          storedMode &&
+          (storedMode === "customer" ||
+            storedMode === "restaurant" ||
+            storedMode === "driver")
+        ) {
           setAppModeSt(storedMode as AppMode);
         }
       } catch (error) {

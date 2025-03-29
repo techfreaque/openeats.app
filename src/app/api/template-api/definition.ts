@@ -1,6 +1,6 @@
-import { createEndpoint } from "next-query-portal/client/endpoint";
-import { Methods } from "next-query-portal/shared/types/endpoint";
-import { UserRoleValue } from "next-query-portal/shared/types/enums";
+import { createEndpoint } from "@/packages/next-vibe/client/endpoint";
+import { Methods } from "next-vibeibe/shared/types/endpoint";
+import { UserRoleValue } from "next-vibeibe/shared/types/enums";
 
 import {
   templatePostRequestSchema,
@@ -22,7 +22,12 @@ const templateEndpoint = createEndpoint({
     someInputValue: "Some input value",
     someValueFromTheRouteUrl: "Some value from the route URL",
   },
-  allowedRoles: [UserRoleValue.PUBLIC, UserRoleValue.ADMIN, UserRoleValue.CUSTOMER, UserRoleValue.COURIER, ],
+  allowedRoles: [
+    UserRoleValue.PUBLIC,
+    UserRoleValue.ADMIN,
+    UserRoleValue.CUSTOMER,
+    UserRoleValue.COURIER,
+  ],
   errorCodes: {
     400: "Invalid request data",
     500: "Internal server error",

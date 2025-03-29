@@ -2,10 +2,9 @@
 import { ArrowLeft, LoaderCircle } from "lucide-react";
 import React, { useState } from "react";
 
-import { useSidebar } from "@/client-package/hooks/website-editor/useSidebar";
-import { cn } from "@/next-portal/utils/utils";
-
-import { Button } from "../ui";
+import { Button } from "@/components/ui";
+import { useSidebar } from "@/components/ui/sidebar";
+import { cn } from "@/packages/next-vibe/shared/utils/utils";
 
 // Function to generate a color based on the SUBId
 const generateColor = (subId: string, isParentNode: boolean): string => {
@@ -77,12 +76,12 @@ export default function Sidebar({
   setVersion: (subid: string) => Promise<void>;
   subid: string;
 }): React.JSX.Element {
-  const { isOpen, toggle } = useSidebar();
+  const { open, toggleSidebar } = useSidebar();
   const [status, setStatus] = useState(false);
 
   const handleToggle = (): void => {
     setStatus(true);
-    toggle();
+    toggleSidebar();
     setTimeout(() => setStatus(false), 500);
   };
 
@@ -95,14 +94,14 @@ export default function Sidebar({
       className={cn(
         `relative hidden h-screen border-r pt-10 md:block`,
         status && "duration-200",
-        isOpen ? "w-44" : "w-[50px]",
+        open ? "w-44" : "w-[50px]",
       )}
     >
       <ArrowLeft
         size={22}
         className={cn(
           "absolute -right-3 top-0 cursor-pointer rounded-full border bg-background text-3xl text-foreground transition-transform duration-500",
-          !isOpen && "rotate-180",
+          !open && "rotate-180",
         )}
         onClick={handleToggle}
       />
@@ -128,12 +127,12 @@ export default function Sidebar({
                 }
                 className={cn(
                   "text-xs font-bold  relative overflow-hidden transition-all duration-200",
-                  isOpen ? "w-40" : "w-[44px]",
+                  open ? "w-40" : "w-[44px]",
                   subid === subPrompt[0].SUBId ? "ring-2 ring-white" : "",
                 )}
                 title={`Subid: ${subPrompt[0].id}`}
               >
-                {isOpen && (
+                {open && (
                   <div className="absolute inset-0 z-0">
                     <div
                       className="h-full w-1/2 float-left"

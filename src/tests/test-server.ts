@@ -6,7 +6,7 @@ import next from "next";
 import { cwd } from "process";
 import { parse } from "url";
 
-import { env } from "@/lib/env/env";
+import { env } from "@/config/env";
 
 // Server state (singleton)
 let app: ReturnType<typeof next> | null = null;

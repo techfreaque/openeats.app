@@ -1,8 +1,8 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { useAuth } from "openeats-client/hooks/useAuth";
 import type { JSX } from "react";
 
-import { useAuth } from "@/client-package/hooks/use-auth";
 import { Badge, Button } from "@/components/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -21,7 +21,7 @@ export default function AccountPage(): JSX.Element {
 
   const handleSignOut = (): void => {
     void logout();
-    router.push("/v1/website-editor/");
+    router.push("/website-editor");
   };
 
   if (!user) {

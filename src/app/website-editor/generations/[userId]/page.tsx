@@ -2,6 +2,7 @@
 import { Eye, Heart } from "lucide-react";
 import { CalendarDays } from "lucide-react";
 import { useRouter } from "next/navigation";
+import type { FullUI } from "openeats-client/types/website-editor";
 import type { JSX } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -9,7 +10,6 @@ import { toast } from "sonner";
 import { getUIProfile } from "@/actions/ui/get-uis";
 import type { WebsiteEditorUser } from "@/actions/user";
 import { getUser } from "@/actions/user";
-import type { FullUI } from "@/client-package/types/website-editor";
 import {
   Avatar,
   AvatarFallback,
@@ -25,9 +25,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui";
-import Header from "@/components/website-editor/header";
-import PromptBadge from "@/components/website-editor/prompt-badge";
 import { timeAgo } from "@/lib/website-editor/time";
+
+import Header from "../../components/header";
+import PromptBadge from "../../components/prompt-badge";
 
 // interface User {
 //   id: string;
@@ -127,7 +128,9 @@ export default function MinimalistProfilePage({
             <div className="flex flex-col space-y-8">
               <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-6 sm:space-y-0 sm:space-x-8">
                 <Avatar
-                  onClick={() => router.push(`/generations/${user?.id}`)}
+                  onClick={() =>
+                    router.push(`/website-editor/generations/${user?.id}`)
+                  }
                   className="h-32 w-32 border-2 border-gray-200"
                 >
                   <AvatarImage src={user?.imageUrl || ""} alt={"A"} />
@@ -211,7 +214,7 @@ export default function MinimalistProfilePage({
                     className="bg-white rounded-xl shadow-md overflow-hidden"
                   >
                     <div
-                      onClick={() => router.push(`/ui/${ui.id}`)}
+                      onClick={() => router.push(`/website-editor/ui/${ui.id}`)}
                       className="relative cursor-pointer"
                     >
                       <img
@@ -226,7 +229,9 @@ export default function MinimalistProfilePage({
                           <TooltipTrigger>
                             <Avatar
                               onClick={() =>
-                                router.push(`/generations/${ui?.user?.id}`)
+                                router.push(
+                                  `/website-editor/generations/${ui?.user?.id}`,
+                                )
                               }
                               className="border-2 border-primary h-5 w-5"
                             >

@@ -1,10 +1,10 @@
 "use client";
 
 import { InfoIcon } from "lucide-react";
+import { useModel } from "openeats-client/hooks/website-editor/useModel";
 import React, { useEffect, useState } from "react";
 
-import { Button } from "@/next-portal/components/ui/button";
-import { useModel } from "@/client-package/hooks/website-editor/useModel";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,

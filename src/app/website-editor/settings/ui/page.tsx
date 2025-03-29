@@ -1,11 +1,11 @@
 "use client";
 
 import { InfoIcon } from "lucide-react";
+import useLangauge from "openeats-client/hooks/website-editor/useLanguage";
+import type { ModeStore } from "openeats-client/hooks/website-editor/useMode";
+import { useClientMode } from "openeats-client/hooks/website-editor/useMode";
 import React from "react";
 
-import useLangauge from "@/client-package/hooks/website-editor/useLanguage";
-import type { ModeStore } from "@/client-package/hooks/website-editor/useMode";
-import { useClientMode } from "@/client-package/hooks/website-editor/useMode";
 import {
   Label,
   Select,

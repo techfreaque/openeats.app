@@ -1,635 +1,190 @@
-import { ChevronLeft, Clock, Minus, Plus, Star } from "lucide-react-native";
+"use client";
+
+import { Heart, Star } from "lucide-react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { cn } from "next-vibe/shared/utils/utils";
+import { useAuth } from "openeats-client/hooks/useAuth";
+import type { JSX } from "react";
 import { useState } from "react";
 
-import { Div } from "@/next-portal/components/ui/div";
-import { Image } from "@/next-portal/components/ui/image";
-import { SafeAreaView } from "@/next-portal/components/ui/safe-area-view";
-import { ScrollView } from "@/next-portal/components/ui/scroll-view";
-import { Text } from "@/next-portal/components/ui/text";
-import { TouchableOpacity } from "@/next-portal/components/ui/touchable-opacity";
+import { Button } from "@/components/ui";
 
-import AddressSelector from "../../components/AddressSelector";
-import DesktopHeader from "../../components/DesktopHeader";
+import { FeaturedCollection } from "../../components/featured-collection";
+import { useFavorites } from "../../components/hooks/use-favorites";
+import { useRestaurants } from "../../components/hooks/use-restaurants";
+import {
+  type OrderType,
+  OrderTypeSelector,
+} from "../../components/order-type-selector";
+import { useRestaurantConfig } from "../../components/restaurant-config-provider";
+import { RestaurantHero } from "../../components/restaurant-hero";
+import { RestaurantStory } from "../../components/restaurant-story";
+import { SpecialOffers } from "../../components/special-offers";
 
-export default function RestaurantScreen() {
-  const { id } = useLocalSearchParams();
-  const router = useRouter();
-  const [selectedItems, setSelectedItems] = useState<Record<string, number>>(
-    {},
-  );
-  const [deliveryAddress, setDeliveryAddress] = useState("");
+export default function RestaurantHomePage(): JSX.Element | null {
+  const params = useParams<{ id: string }>();
+  const id = params.id;
 
-  const { restaurant, menuItems, isLoading, error } = useRestaurant(
-    id as string,
-  );
-  const { addItem, cartItems } = useCart();
-  const dimensions = useWindowDimensions();
-  const isLargeScreen = dimensions.width >= 768;
-  const isExtraLargeScreen = dimensions.width >= 1200;
+  const { getRestaurantById } = useRestaurants();
+  const { user } = useAuth();
+  const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+  const config = useRestaurantConfig();
 
-  const handleAddItem = (item: any) => {
-    setSelectedItems((prev) => {
-      const currentQuantity = prev[item.id] || 0;
-      return {
-        ...prev,
-        [item.id]: currentQuantity + 1,
-      };
-    });
-  };
+  const restaurant = getRestaurantById(id);
+  const favorite = restaurant ? isFavorite(restaurant.id) : false;
 
-  const handleRemoveItem = (item: any) => {
-    setSelectedItems((prev) => {
-      const currentQuantity = prev[item.id] || 0;
-      if (currentQuantity <= 1) {
-        const newItems = { ...prev };
-        delete newItems[item.id];
-        return newItems;
-      }
-      return {
-        ...prev,
-        [item.id]: currentQuantity - 1,
-      };
-    });
-  };
+  const [orderType, setOrderType] = useState<OrderType>("delivery");
 
-  const getTotalItems = () => {
-    return Object.values(selectedItems).reduce(
-      (sum, quantity) => sum + quantity,
-      0,
-    );
-  };
+  // Mock gallery images
+  const galleryImages = Array(8)
+    .fill(0)
+    .map((_, i) => ({
+      src: `/placeholder.svg?height=400&width=600&text=Restaurant+Photo+${i + 1}`,
+      alt: `Restaurant photo ${i + 1}`,
+    }));
 
-  const getTotalPrice = () => {
-    if (!menuItems) {
-      return 0;
-    }
-
-    return menuItems.reduce((sum, item) => {
-      const quantity = selectedItems[item.id] || 0;
-      return sum + item.price * quantity;
-    }, 0);
-  };
-
-  const handleAddToCart = async () => {
-    if (getTotalItems() === 0) {
+  const handleFavoriteClick = (): void => {
+    if (!restaurant) {
       return;
     }
 
-    const cartItems = menuItems
-      .filter((item) => selectedItems[item.id])
-      .map((item) => ({
-        id: item.id,
-        restaurant_id: restaurant.id,
-        restaurant_name: restaurant.name,
-        menu_item_id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: selectedItems[item.id],
-        image: item.image,
-      }));
-
-    let allSuccess = true;
-
-    for (const item of cartItems) {
-      const success = await addItem(item);
-      if (!success) {
-        allSuccess = false;
-      }
-    }
-
-    if (allSuccess) {
-      Alert.alert(
-        "Success",
-        `Added ${getTotalItems()} items to cart for ${formatCurrency(getTotalPrice())}`,
-        [
-          {
-            text: "Div Cart",
-            onPress: () => router.push("/cart"),
-          },
-          {
-            text: "Continue Shopping",
-            style: "cancel",
-          },
-        ],
-      );
-
-      // Reset selected items
-      setSelectedItems({});
+    if (favorite) {
+      removeFavorite(restaurant.id);
     } else {
-      Alert.alert(
-        "Error",
-        "There was a problem adding items to your cart. Please try again.",
-      );
+      addFavorite(restaurant.id);
     }
   };
 
-  const handleAddressChange = (address: string) => {
-    setDeliveryAddress(address);
-  };
-
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        {isLargeScreen && (
-          <DesktopHeader
-            currentAddress={deliveryAddress}
-            onAddressChange={handleAddressChange}
-            cartItemCount={cartItems?.length || 0}
-          />
-        )}
-        <Div style={styles.loadingContainer}>
-          <Text>Loading restaurant details...</Text>
-        </Div>
-      </SafeAreaView>
-    );
-  }
-
-  if (error || !restaurant) {
-    return (
-      <SafeAreaView style={styles.container}>
-        {isLargeScreen && (
-          <DesktopHeader
-            currentAddress={deliveryAddress}
-            onAddressChange={handleAddressChange}
-            cartItemCount={cartItems?.length || 0}
-          />
-        )}
-        <Div style={styles.errorContainer}>
-          <Text style={styles.errorText}>
-            {error || "Restaurant not found"}
-          </Text>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backButtonText}>Go Back</Text>
-          </TouchableOpacity>
-        </Div>
-      </SafeAreaView>
-    );
+  if (!restaurant) {
+    return null;
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {isLargeScreen && (
-        <DesktopHeader
-          currentAddress={deliveryAddress}
-          onAddressChange={handleAddressChange}
-          cartItemCount={cartItems?.length || 0}
+    <>
+      {/* Hero Section */}
+      {config.hero.showHero && (
+        <RestaurantHero
+          restaurantName={restaurant.name}
+          restaurantImage={restaurant.image}
+          additionalImages={galleryImages.slice(0, 3).map((img) => img.src)}
         />
       )}
-      <ScrollView>
-        {/* Header Image */}
-        <Div style={styles.headerContainer}>
-          <Image
-            source={{ uri: restaurant.image }}
-            style={styles.headerImage}
-          />
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <ChevronLeft size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-        </Div>
 
-        <Div
-          style={[
-            styles.contentContainer,
-            isLargeScreen && styles.largeScreenContentContainer,
-          ]}
-        >
-          {/* Restaurant Info */}
-          <Div style={styles.infoContainer}>
-            <Text
-              style={[
-                styles.restaurantName,
-                isLargeScreen && styles.largeScreenTitle,
-              ]}
-            >
-              {restaurant.name}
-            </Text>
-            <Text
-              style={[
-                styles.restaurantCategory,
-                isLargeScreen && styles.largeScreenSubtitle,
-              ]}
-            >
-              {restaurant.category}
-            </Text>
-
-            <Div style={styles.restaurantMeta}>
-              <Div style={styles.ratingContainer}>
-                <Star
-                  size={isLargeScreen ? 18 : 16}
-                  color="#FFD700"
-                  fill="#FFD700"
-                />
-                <Text
-                  style={[
-                    styles.ratingText,
-                    isLargeScreen && styles.largeScreenText,
-                  ]}
-                >
-                  {restaurant.rating}
-                </Text>
-              </Div>
-              <Div style={styles.timeContainer}>
-                <Clock size={isLargeScreen ? 18 : 16} color="#6B7280" />
-                <Text
-                  style={[
-                    styles.timeText,
-                    isLargeScreen && styles.largeScreenText,
-                  ]}
-                >
-                  {restaurant.deliveryTime}
-                </Text>
-              </Div>
-            </Div>
-
-            <Text
-              style={[
-                styles.restaurantAddress,
-                isLargeScreen && styles.largeScreenText,
-              ]}
-            >
-              {restaurant.address}
-            </Text>
-            <Text
-              style={[
-                styles.restaurantDescription,
-                isLargeScreen && styles.largeScreenText,
-              ]}
-            >
-              {restaurant.description}
-            </Text>
-          </Div>
-
-          {/* Delivery Address */}
-          <Div style={styles.deliveryAddressContainer}>
-            <AddressSelector
-              onSelectAddress={handleAddressChange}
-              currentAddress={deliveryAddress}
-              showLabel={true}
-              compact={true}
-            />
-          </Div>
-
-          {/* Menu */}
-          <Div style={styles.menuContainer}>
-            <Text
-              style={[
-                styles.menuTitle,
-                isLargeScreen && styles.largeScreenSectionTitle,
-              ]}
-            >
-              Menu
-            </Text>
-
-            <Div style={isLargeScreen && styles.menuGrid}>
-              {menuItems.map((item) => (
-                <Div
-                  key={item.id}
-                  style={[
-                    styles.menuItem,
-                    isLargeScreen && styles.gridMenuItem,
-                  ]}
-                >
-                  <Div style={styles.menuItemInfo}>
-                    <Text
-                      style={[
-                        styles.menuItemName,
-                        isLargeScreen && styles.largeScreenText,
-                      ]}
-                    >
-                      {item.name}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.menuItemDescription,
-                        isLargeScreen && styles.largeScreenSubText,
-                      ]}
-                    >
-                      {item.description}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.menuItemPrice,
-                        isLargeScreen && styles.largeScreenText,
-                      ]}
-                    >
-                      {formatCurrency(item.price)}
-                    </Text>
-                  </Div>
-
-                  <Div style={styles.menuItemRight}>
-                    <Image
-                      source={{ uri: item.image }}
-                      style={styles.menuItemImage}
+      <div className="container px-4 md:px-6 -mt-10 relative">
+        <div className="bg-background rounded-lg border p-6 shadow-sm">
+          <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold">{restaurant.name}</h1>
+                {user && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "rounded-full",
+                      favorite
+                        ? "text-red-500 hover:text-red-600"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                    onClick={handleFavoriteClick}
+                  >
+                    <Heart
+                      className={cn("h-5 w-5", favorite && "fill-current")}
                     />
+                    <span className="sr-only">
+                      {favorite ? "Remove from favorites" : "Add to favorites"}
+                    </span>
+                  </Button>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <span>
+                    {restaurant.rating} ({restaurant.reviews} reviews)
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">Categories:</span>
+                  <span>{restaurant.categories.join(", ")}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">Delivery:</span>
+                  <span>{restaurant.deliveryTime} min</span>
+                </div>
+              </div>
+              <p className="text-muted-foreground">{restaurant.description}</p>
+            </div>
+            <div className="flex flex-col gap-4">
+              <div className="rounded-lg border bg-muted p-4">
+                <h3 className="font-medium">Hours</h3>
+                <div className="mt-2 grid gap-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Monday - Friday</span>
+                    <span>11:00 AM - 10:00 PM</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Saturday - Sunday</span>
+                    <span>10:00 AM - 11:00 PM</span>
+                  </div>
+                </div>
+              </div>
+              <OrderTypeSelector
+                value={orderType}
+                onChange={setOrderType}
+                options={config.orderOptions}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
-                    <Div style={styles.quantityControls}>
-                      {selectedItems[item.id] ? (
-                        <>
-                          <TouchableOpacity
-                            style={styles.quantityButton}
-                            onPress={() => handleRemoveItem(item)}
-                          >
-                            <Minus size={16} color="#FF5A5F" />
-                          </TouchableOpacity>
-                          <Text style={styles.quantityText}>
-                            {selectedItems[item.id]}
-                          </Text>
-                        </>
-                      ) : null}
-
-                      <TouchableOpacity
-                        style={styles.quantityButton}
-                        onPress={() => handleAddItem(item)}
-                      >
-                        <Plus size={16} color="#FF5A5F" />
-                      </TouchableOpacity>
-                    </Div>
-                  </Div>
-                </Div>
-              ))}
-            </Div>
-          </Div>
-        </Div>
-      </ScrollView>
-
-      {/* Cart Button */}
-      {getTotalItems() > 0 && (
-        <Div
-          style={[
-            styles.cartButtonContainer,
-            isLargeScreen && styles.largeScreenCartButtonContainer,
-          ]}
-        >
-          <TouchableOpacity style={styles.cartButton} onPress={handleAddToCart}>
-            <Div style={styles.cartButtonLeft}>
-              <Div style={styles.cartItemCount}>
-                <Text style={styles.cartItemCountText}>{getTotalItems()}</Text>
-              </Div>
-              <Text style={styles.cartButtonText}>Add to Cart</Text>
-            </Div>
-            <Text style={styles.cartButtonPrice}>
-              {formatCurrency(getTotalPrice())}
-            </Text>
-          </TouchableOpacity>
-        </Div>
+      {/* Special Offers Section */}
+      {config.specialOffers && config.specialOffers.length > 0 && (
+        <SpecialOffers restaurantId={restaurant.id} />
       )}
-    </SafeAreaView>
+
+      {/* Restaurant Story Section */}
+      {config.showStory && config.story && (
+        <RestaurantStory restaurantName={restaurant.name} />
+      )}
+
+      {/* Featured Collections */}
+      {config.featuredCollections && config.featuredCollections.length > 0 && (
+        <div className="py-12">
+          <div className="container px-4 md:px-6">
+            <div className="space-y-12">
+              {config.featuredCollections.map((collection) => (
+                <FeaturedCollection
+                  key={collection.id}
+                  title={collection.title}
+                  description={collection.description}
+                  itemIds={collection.itemIds}
+                  restaurantId={restaurant.id}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CTA Section */}
+      <div className="py-12 bg-muted">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center text-center">
+            <h2 className="text-3xl font-bold mb-4">Ready to Order?</h2>
+            <p className="text-muted-foreground max-w-2xl mb-6">
+              Explore our full menu and place your order for delivery or pickup.
+            </p>
+            <Button size="lg" asChild>
+              <Link href={`/app/restaurant/${restaurant.id}/menu`}>
+                View Full Menu
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 16,
-    color: "#EF4444",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  headerContainer: {
-    position: "relative",
-  },
-  headerImage: {
-    width: "100%",
-    height: 200,
-  },
-  backButton: {
-    position: "absolute",
-    top: 16,
-    left: 16,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    borderRadius: 20,
-    padding: 8,
-  },
-  backButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-  },
-  contentContainer: {
-    padding: 16,
-  },
-  largeScreenContentContainer: {
-    maxWidth: 1200,
-    alignSelf: "center",
-    width: "100%",
-    paddingHorizontal: 24,
-  },
-  infoContainer: {
-    backgroundColor: "#FFFFFF",
-    padding: 16,
-    marginTop: -20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  restaurantName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 4,
-  },
-  largeScreenTitle: {
-    fontSize: 32,
-  },
-  restaurantCategory: {
-    fontSize: 16,
-    color: "#6B7280",
-    marginBottom: 8,
-  },
-  largeScreenSubtitle: {
-    fontSize: 18,
-  },
-  restaurantMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 16,
-  },
-  ratingText: {
-    fontSize: 14,
-    color: "#1F2937",
-    marginLeft: 4,
-  },
-  timeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  timeText: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginLeft: 4,
-  },
-  restaurantAddress: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 12,
-  },
-  restaurantDescription: {
-    fontSize: 14,
-    color: "#4B5563",
-    lineHeight: 20,
-  },
-  deliveryAddressContainer: {
-    backgroundColor: "#FFFFFF",
-    marginTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  menuContainer: {
-    backgroundColor: "#FFFFFF",
-    padding: 16,
-    marginTop: 8,
-  },
-  menuTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 16,
-  },
-  largeScreenSectionTitle: {
-    fontSize: 24,
-  },
-  menuGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  menuItem: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    paddingVertical: 16,
-  },
-  gridMenuItem: {
-    width: "48%",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    paddingVertical: 16,
-    marginBottom: 16,
-  },
-  menuItemInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  menuItemName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginBottom: 4,
-  },
-  menuItemDescription: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  menuItemPrice: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-  },
-  menuItemRight: {
-    alignItems: "center",
-  },
-  menuItemImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  quantityControls: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  quantityButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#F3F4F6",
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 4,
-  },
-  quantityText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-  },
-  cartButtonContainer: {
-    backgroundColor: "#FFFFFF",
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-  },
-  largeScreenCartButtonContainer: {
-    maxWidth: 1200,
-    alignSelf: "center",
-    width: "100%",
-  },
-  cartButton: {
-    backgroundColor: "#FF5A5F",
-    borderRadius: 8,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  cartButtonLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  cartItemCount: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 8,
-  },
-  cartItemCountText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#FF5A5F",
-  },
-  cartButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  cartButtonPrice: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  largeScreenText: {
-    fontSize: 16,
-  },
-  largeScreenSubText: {
-    fontSize: 15,
-  },
-});

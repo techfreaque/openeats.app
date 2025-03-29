@@ -1,3 +1,4 @@
+import { Methods } from "next-query-portal/shared/types/endpoint";
 import { validateData } from "next-query-portal/shared/utils/validation";
 
 import type {
@@ -69,7 +70,7 @@ export async function callApi<TRequest, TResponse, TUrlVariables>(
     };
 
     // Add request body for non-GET requests
-    if (endpoint.method !== "GET" && postBody) {
+    if (endpoint.method !== Methods.GET && postBody) {
       options.body = postBody;
     }
 

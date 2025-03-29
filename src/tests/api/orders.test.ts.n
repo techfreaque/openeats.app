@@ -37,10 +37,10 @@ describe("/api/v1/orders E2E", () => {
     restaurantAuthToken = restaurantResponse.body.token;
 
     // Get test data
-    const restaurant = await prisma.restaurant.findFirst();
+    const restaurant = await db.restaurant.findFirst();
     restaurantId = restaurant?.id || "";
 
-    const menuItem = await prisma.menuItem.findFirst();
+    const menuItem = await db.menuItem.findFirst();
     menuItemId = menuItem?.id || "";
   });
 
@@ -48,10 +48,10 @@ describe("/api/v1/orders E2E", () => {
     // Clean up created order if any
     if (createdOrderId) {
       try {
-        await prisma.orderItem.deleteMany({
+        await db.orderItem.deleteMany({
           where: { orderId: createdOrderId },
         });
-        await prisma.order.delete({
+        await db.order.delete({
           where: { id: createdOrderId },
         });
       } catch (error) {
@@ -59,7 +59,7 @@ describe("/api/v1/orders E2E", () => {
       }
     }
 
-    await prisma.$disconnect();
+    await db.$disconnect();
   });
 
   describe("POST /api/v1/orders", () => {

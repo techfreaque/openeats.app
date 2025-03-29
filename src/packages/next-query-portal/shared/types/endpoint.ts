@@ -11,7 +11,8 @@ export enum Methods {
   DELETE = "DELETE",
   PATCH = "PATCH",
 }
-export interface ExamplesList<T> {
-  default: T & { id?: string };
-  [exampleKey: string]: T & { id?: string };
-}
+export type ExamplesList<TRequest, TKey extends string = string> = {
+  [exampleKey in TKey]: TRequest & { id?: string | undefined };
+} & {
+  default: TRequest & { id?: string | undefined };
+};

@@ -2,6 +2,11 @@
 import html2canvas from "html2canvas";
 import { LoaderCircle, SendHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "openeats-client/hooks/useAuth";
+import { useClientMode } from "openeats-client/hooks/website-editor/useMode";
+import { useModel } from "openeats-client/hooks/website-editor/useModel";
+import { useUIState } from "openeats-client/hooks/website-editor/useUIState";
+import { type FullUI, UiType } from "openeats-client/types/website-editor";
 import type { JSX } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ImperativePanelGroupHandle } from "react-resizable-panels";
@@ -13,19 +18,15 @@ import { getCodeFromId } from "@/actions/ui/get-code";
 import { getUI } from "@/actions/ui/get-uis";
 import { updateSubPrompt } from "@/actions/ui/update-subprompt";
 import { updateUI } from "@/actions/ui/update-ui";
-import { useAuth } from "@/client-package/hooks/use-auth";
-import { useClientMode } from "@/client-package/hooks/website-editor/useMode";
-import { useModel } from "@/client-package/hooks/website-editor/useModel";
-import { useUIState } from "@/client-package/hooks/website-editor/useUIState";
-import type { FullUI } from "@/client-package/types/website-editor";
 import { Button, Card, Input } from "@/components/ui";
-import Sidebar from "@/components/website-editor/sidebar";
-import UIBody from "@/components/website-editor/ui-body";
-import UIHeader from "@/components/website-editor/ui-header";
-import UIRigthHeader from "@/components/website-editor/ui-right-header";
 import { isParent } from "@/lib/website-editor/helper";
 import { isModelSupported } from "@/lib/website-editor/supportedllm";
-import { errorLogger } from "@/next-portal/utils/logger";
+import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
+
+import Sidebar from "../../components/sidebar";
+import UIBody from "../../components/ui-body";
+import UIHeader from "../../components/ui-header";
+import UIRigthHeader from "../../components/ui-right-header";
 
 export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
   const ref = useRef<ImperativePanelGroupHandle>(null);
@@ -293,7 +294,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
         },
       }));
 
-      const res = await fetch("/api/v1/website-editor/generate-code", {
+      const res = await fetch("/api/website-editor/generate-code", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -370,20 +371,17 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
         },
       }));
 
-      const description = await fetch(
-        "/api/v1/website-editor/page_description",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            codeCommand: prompt,
-            type: "creative",
-            modelId: descriptiveModel,
-          }),
+      const description = await fetch("/api/website-editor/page_description", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          codeCommand: prompt,
+          type: "creative",
+          modelId: descriptiveModel,
+        }),
+      });
 
       if (!description.ok) {
         throw new Error("Failed to generate page description");
@@ -396,7 +394,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
 			 ${pageDescription}
 			`;
 
-      const res = await fetch("/api/v1/website-editor/generate-code", {
+      const res = await fetch("/api/website-editor/generate-code", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -473,20 +471,17 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
         },
       }));
 
-      const description = await fetch(
-        "/api/v1/website-editor/page_description",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            codeCommand: prompt,
-            type: "balanced",
-            modelId: descriptiveModel,
-          }),
+      const description = await fetch("/api/website-editor/page_description", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          codeCommand: prompt,
+          type: "balanced",
+          modelId: descriptiveModel,
+        }),
+      });
 
       if (!description.ok) {
         throw new Error("Failed to generate page description");
@@ -499,7 +494,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
 			 ${pageDescription}
 			`;
 
-      const res = await fetch("/api/v1/website-editor/generate-code", {
+      const res = await fetch("/api/website-editor/generate-code", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -579,7 +574,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
         },
       }));
 
-      const res = await fetch("/api/v1/website-editor/modifier", {
+      const res = await fetch("/api/website-editor/modifier", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -607,7 +602,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
           },
         }));
         toast.error("Error modifying code");
-        router.push("/v1/website-editor/");
+        router.push("/website-editor");
         return;
       }
 
@@ -691,7 +686,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
         },
       }));
 
-      const res = await fetch("/api/v1/website-editor/modifier", {
+      const res = await fetch("/api/website-editor/modifier", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -719,7 +714,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
           },
         }));
         toast.error("Error modifying code");
-        router.push("/v1/website-editor/");
+        router.push("/website-editor");
         return;
       }
 
@@ -797,7 +792,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
       );
 
       const propertiesResponse = await fetch(
-        "/api/v1/website-editor/element-property",
+        "/api/website-editor/element-property",
         {
           method: "POST",
           headers: {
@@ -820,7 +815,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
       const properties = await propertiesResponse.json();
 
       const res = await fetch(
-        "/api/v1/website-editor/generate-code-from-screenshot",
+        "/api/website-editor/generate-code-from-screenshot",
         {
           method: "POST",
           headers: {
@@ -910,7 +905,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
 
     if (!isModelSupported(imageModel)) {
       toast.error("ImageModel not supported! Choose another model");
-      router.push("/v1/website-editor/settings/llm");
+      router.push("/website-editor/settings/llm");
       return;
     }
 
@@ -1048,12 +1043,12 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
     if (ui?.subPrompts.length === 0) {
       if (!isModelSupported(initialModel)) {
         toast.error("InitialModel not supported! Choose another model");
-        router.push("/v1/website-editor/settings/llm");
+        router.push("/website-editor/settings/llm");
         return;
       }
       if (!isModelSupported(descriptiveModel)) {
         toast.error("DescriptiveModel not supported! Choose another model");
-        router.push("/v1/website-editor/settings/llm");
+        router.push("/website-editor/settings/llm");
         return;
       }
 
@@ -1080,7 +1075,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
     } else {
       if (!isModelSupported(modifierModel)) {
         toast.error("ModifierModel not supported! Choose another model");
-        router.push("/v1/website-editor/settings/llm");
+        router.push("/website-editor/settings/llm");
         return;
       }
       setSelectedVersion({
@@ -1121,7 +1116,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
           if (userId) {
             await deleteUI(uiid, userId);
           }
-          router.push("/v1/website-editor/");
+          router.push("/website-editor");
         }
         throw new Error("All code generation attempts failed");
       }
@@ -1227,7 +1222,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
     }
     if (!isModelSupported(modifierModel)) {
       toast.error("ModifierModel not supported! Choose another model");
-      router.push("/v1/website-editor/settings/llm");
+      router.push("/website-editor/settings/llm");
       return;
     }
     setLoading(true);
@@ -1293,7 +1288,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
         if (!fetchedUI) {
           errorLogger("Fetched UI is null or undefined.", undefined);
           toast.error("Failed to fetch UI. Redirecting to home page.");
-          router.push("/v1/website-editor/");
+          router.push("/website-editor");
           return;
         }
 
@@ -1428,7 +1423,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
 
   useEffect(() => {
     const incView = async (): Promise<void> => {
-      await fetch("/api/v1/website-editor/view-increment", {
+      await fetch("/api/website-editor/view-increment", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1549,7 +1544,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
                 modelId={selectedVersion.modelId}
                 createdAt={selectedVersion.createdAt}
                 UIId={uiid}
-                uiType={ui?.uiType || "shadcn-react"}
+                uiType={ui?.uiType || UiType.SHADCN_REACT}
                 views={ui?.viewCount}
                 subid={selectedVersion.subid}
                 userimg={ui?.user?.imageUrl}

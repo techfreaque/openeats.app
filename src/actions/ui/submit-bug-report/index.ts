@@ -1,9 +1,9 @@
 "use server";
 
+import { errorLogger } from "next-vibe/shared/utils/logger";
 import { z } from "zod";
 
-import { prisma } from "@/next-portal/db";
-import { errorLogger } from "@/next-portal/utils/logger";
+import { db } from "@/app/api/db";
 
 const bugReportSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),
@@ -53,7 +53,7 @@ export async function submitBugReport(
 
     const validatedInput = bugReportSchema.parse(input);
 
-    const bugReport = await prisma.bugReport.create({
+    const bugReport = await db.bugReport.create({
       data: {
         title: validatedInput.title,
         description: validatedInput.description,

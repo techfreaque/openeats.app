@@ -1,9 +1,9 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
 import type { JSX } from "react";
 import { useState } from "react";
 
-import { useAuthModal } from "@/client-package/hooks/website-editor/useAuthModal";
 import {
   Button,
   Dialog,
@@ -19,7 +19,7 @@ const AuthModal = (): JSX.Element => {
   const router = useRouter();
   const handleSignIn = (): void => {
     setLoading(true);
-    router.push("/v1/auth/public/login");
+    router.push("/auth/public/login");
   };
 
   return (

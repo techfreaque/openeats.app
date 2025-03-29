@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { LiveError, LivePreview, LiveProvider } from "react-live";
 
-import { errorLogger } from "@/next-portal/utils/logger";
+import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 const ReactLiveContent = ({
   react_code,

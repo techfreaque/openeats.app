@@ -21,7 +21,6 @@ import {
 
 import { useAppModeType } from "../lib/context/UserTypeContext";
 import AddressSelector from "./AddressSelector";
-import AppModeSelector from "./AppModeSelector";
 import UserTypeSwitcher from "./UserTypeSwitcher";
 
 interface DesktopHeaderProps {

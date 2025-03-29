@@ -1,19 +1,17 @@
 "use server";
 
 import type { UiType } from "@prisma/client";
-
 import type {
   FullUI,
   UiType as _UiType,
-} from "@/client-package/types/website-editor";
-import { prisma } from "@/next-portal/db";
+} from "openeats-client/types/website-editor";
 
 export const createUI = async (
   prompt: string,
   userId: string,
   uiType: _UiType,
 ): Promise<FullUI> => {
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUnique({
     where: {
       id: userId,
     },
@@ -22,7 +20,7 @@ export const createUI = async (
     throw new Error("User not found");
   }
 
-  const data = await prisma.uI.create({
+  const data = await db.uI.create({
     data: {
       userId: userId,
       prompt: prompt,

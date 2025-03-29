@@ -106,13 +106,14 @@ async function safeExecute<TRequest, TResponse, TUrlVariables>(
 }
 
 export type ApiHandlerCallBackFunctionType<TRequest, TResponse, TUrlVariables> =
-  ({
-    data,
-    urlVariables,
-    user,
-  }: ApiHandlerCallBackProps<TRequest, TUrlVariables>) =>
-    | Promise<SafeReturnType<TResponse>>
-    | SafeReturnType<TResponse>;
+  (
+    {
+      data,
+      urlVariables,
+      user,
+    }: ApiHandlerCallBackProps<TRequest, TUrlVariables>,
+    id?: string,
+  ) => Promise<SafeReturnType<TResponse>> | SafeReturnType<TResponse>;
 
 export type ApiHandlerCallBackProps<TRequest, TUrlVariables> = {
   data: TRequest;

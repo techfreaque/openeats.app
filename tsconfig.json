@@ -5,6 +5,9 @@
       "next-query-portal/*": [
         "./src/packages/next-query-portal/*"
       ],
+      "openeats-client/*": [
+        "./src/packages/client/*"
+      ],
       "@/*": [
         "./src/*"
       ],
@@ -75,6 +78,7 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "old"
   ]
 }
