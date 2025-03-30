@@ -6,6 +6,10 @@ A comprehensive starter template for building Next.js applications with strongly
 
 This template provides a complete development environment for creating Next.js applications with type-safe, validated API endpoints. It includes the next-vibe package, which delivers strongly typed APIs, role-based access control, data providers, and client-side hooks.
 
+## Demo Page
+[next-vibe-preview.vercel.app](next-vibe-preview.vercel.app)
+
+
 ## Features
 
 - **Strongly Typed APIs**: Define endpoints with full TypeScript support and Zod validation
