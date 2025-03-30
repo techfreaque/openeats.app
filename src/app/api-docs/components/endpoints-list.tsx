@@ -2,10 +2,7 @@
 
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { ApiEndpoint } from "next-vibe/client/endpoint";
-import type {
-  ApiSection,
-  Methods,
-} from "next-vibe/shared/types/endpoint";
+import type { ApiSection, Methods } from "next-vibe/shared/types/endpoint";
 import { errorLogger } from "next-vibe/shared/utils/logger";
 import type { JSX } from "react";
 import { useState } from "react";

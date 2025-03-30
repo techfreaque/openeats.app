@@ -24,8 +24,7 @@ const nextConfig: NextConfig = withExpo({
     config.resolve.alias["react-native"] = "react-native-web";
 
     if (!useNextQueryPortalPackage) {
-      config.resolve.alias["next-vibe"] =
-        "./src/packages/next-vibe";
+      config.resolve.alias["next-vibe"] = "./src/packages/next-vibe";
     }
 
     // Add a plugin to generate endpoints during development

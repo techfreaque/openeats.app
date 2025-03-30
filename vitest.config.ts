@@ -19,8 +19,7 @@ export default defineConfig({
     environment: "node",
     globals: true,
     // setupFiles: ["./src/tests/setup.ts"],
-    globalSetup:
-      "./src/packages/next-vibe/testing/test-server/global-setup.ts",
+    globalSetup: "./src/packages/next-vibe/testing/test-server/global-setup.ts",
     include: ["./**/*.test.ts"],
     isolate: false, // Important - keep test files in the same process
     sequence: {

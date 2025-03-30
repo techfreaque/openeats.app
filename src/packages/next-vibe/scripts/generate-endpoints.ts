@@ -34,10 +34,7 @@ export function generateEndpoints(rootDir: string): void {
     }
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error(
-      "❌ [next-vibe] Failed to generate endpoints:",
-      error,
-    );
+    console.error("❌ [next-vibe] Failed to generate endpoints:", error);
   }
 }
 

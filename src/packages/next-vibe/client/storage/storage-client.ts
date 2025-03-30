@@ -24,6 +24,7 @@ export async function initializeStorage(): Promise<void> {
       const { default: _AsyncStorage } = await import(
         "@react-native-async-storage/async-storage"
       );
+      // eslint-disable-next-line require-atomic-updates
       AsyncStorage = _AsyncStorage;
     } catch (err) {
       errorLogger("Failed to import AsyncStorage:", err);
