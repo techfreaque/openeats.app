@@ -20,18 +20,71 @@ enum UserRoleValue {
   ADMIN
 }
 
+enum OrderStatus {
+  NEW
+  PREPARING
+  READY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum DeliveryType {
+  PICKUP
+  DELIVERY
+}
+
+enum DeliveryStatus {
+  ASSIGNED
+  PICKED_UP
+  DELIVERED
+}
+
+enum PaymentMethod {
+  ONLINE
+  CARD
+  CASH
+}
+
+enum UiType {
+  SHADCN_REACT
+  NEXTUI_REACT
+}
+
+enum MessageType {
+  CUSTOMER
+  RESTAURANT
+  DRIVER
+  RESTAURANT_RATING
+  DRIVER_RATING
+  MENU_ITEM
+  ORDER
+  DELIVERY
+  EARNING
+}
+
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  password      String
-  firstName     String
-  lastName      String
-  imageUrl      String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  passwordReset PasswordReset?
-  userRoles     UserRole[]
-  sessions      Session[]
+  id                 String             @id @default(uuid())
+  email              String             @unique
+  password           String
+  firstName          String
+  lastName           String
+  imageUrl           String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  passwordReset      PasswordReset?
+  userRoles          UserRole[]
+  sessions           Session[]
+  driver             Driver?
+  orders             Order[]
+  addresses          Address[]
+  cartItems          CartItem[]
+  ratingsGiven       RestaurantRating[]
+  ratingsGivenDriver DriverRating[]
+  earnings           Earning[]
+  messages           Messages[]
+  uI                 UI[]
+  bugReport          BugReport[]
 
   @@map("users")
 }
@@ -60,24 +113,47 @@ model UserRole {
 }
 
 model Partner {
-  id        String     @id @default(uuid())
-  name      String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  countryId String
-  country   Country    @relation(fields: [countryId], references: [code])
-  userRoles UserRole[]
+  id                    String                  @id @default(uuid())
+  name                  String
+  published             Boolean
+  description           String
+  street                String
+  streetNumber          String
+  zip                   String
+  city                  String
+  phone                 String
+  email                 String
+  image                 String
+  latitude              Float
+  longitude             Float
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  countryId             String
+  country               Country                 @relation(fields: [countryId], references: [code])
+  mainCategoryId        String
+  mainCategory          Category                @relation(fields: [mainCategoryId], references: [id])
+  openingTimes          OpeningTimes[]
+  menuItems             MenuItem[]
+  orders                Order[]
+  cartItems             CartItem[]
+  userRoles             UserRole[]
+  ratings               RestaurantRating[]
+  messages              Messages[]
+  RestaurantSiteContent RestaurantSiteContent[]
 
   @@map("partners")
 }
 
 model Country {
-  code       String      @id
-  name       String
-  languages  Languages[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  restaurant Partner[]
+  code      String      @id
+  name      String
+  languages Languages[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  partners  Partner[]
+  drivers   Driver[]
+  addresses Address[]
+  Delivery  Delivery[]
 
   @@map("countries")
 }
@@ -102,4 +178,321 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
+}
+
+model Driver {
+  id           String         @id @default(uuid())
+  isActive     Boolean        @default(true)
+  vehicle      String
+  licensePlate String
+  radius       Float // in kilometers
+  latitude     Float
+  longitude    Float
+  street       String
+  streetNumber String
+  zip          String
+  city         String
+  countryId    String
+  country      Country        @relation(fields: [countryId], references: [code])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  userId       String
+  user         User           @relation(fields: [userId], references: [id])
+  ratings      DriverRating[]
+  messages     Messages[]
+  delivery     Delivery[]
+
+  @@unique([userId])
+  @@map("drivers")
+}
+
+model Address {
+  id           String  @id @default(uuid())
+  label        String
+  name         String
+  message      String?
+  street       String
+  streetNumber String
+  zip          String
+  city         String
+  phone        String?
+  isDefault    Boolean @default(false)
+  countryId    String
+  country      Country @relation(fields: [countryId], references: [code])
+  userId       String
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OpeningTimes {
+  id           String    @id @default(uuid())
+  published    Boolean
+  day          String
+  open         String
+  close        String
+  validFrom    DateTime?
+  validTo      DateTime?
+  restaurantId String
+  restaurant   Partner   @relation(fields: [restaurantId], references: [id])
+
+  @@map("opening_times")
+}
+
+model RestaurantSiteContent {
+  id           String   @id @default(uuid())
+  title        String
+  key          String
+  icon         String
+  code         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  restaurantId String
+  restaurant   Partner  @relation(fields: [restaurantId], references: [id])
+
+  @@map("restaurant_site_content")
+}
+
+model RestaurantRating {
+  id           String     @id @default(uuid())
+  rating       Float
+  userId       String
+  restaurantId String
+  createdAt    DateTime   @default(now())
+  restaurant   Partner    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id])
+  messages     Messages[]
+
+  @@unique([userId, restaurantId])
+  @@map("ratings")
+}
+
+model DriverRating {
+  id          String     @id @default(uuid())
+  rating      Float
+  createdAt   DateTime   @default(now())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  ratedUserId String
+  ratedUser   Driver     @relation(fields: [ratedUserId], references: [id], onDelete: Cascade)
+  messages    Messages[]
+
+  @@unique([userId, ratedUserId])
+  @@map("user_ratings")
+}
+
+model Category {
+  id         String     @id @default(uuid())
+  name       String
+  image      String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  menuItems  MenuItem[]
+  restaurant Partner[]
+
+  @@map("categories")
+}
+
+model MenuItem {
+  id            String      @id @default(uuid())
+  name          String
+  description   String
+  price         Float
+  taxPercent    Float
+  image         String?
+  published     Boolean
+  availableFrom DateTime?
+  availableTo   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  categoryId    String
+  category      Category    @relation(fields: [categoryId], references: [id])
+  restaurantId  String
+  restaurant    Partner     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orderItems    OrderItem[]
+  cartItems     CartItem[]
+  messages      Messages[]
+
+  @@map("menu_items")
+}
+
+model CartItem {
+  id           String   @id @default(uuid())
+  userId       String
+  restaurantId String
+  menuItemId   String
+  quantity     Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant   Partner  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menuItem     MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, menuItemId, restaurantId])
+  @@map("cart_items")
+}
+
+model Order {
+  id            String        @id @default(uuid())
+  message       String?
+  status        OrderStatus   @default(NEW)
+  paymentMethod PaymentMethod
+  tax           Float
+  total         Float
+  deliveryFee   Float
+  driverTip     Float?
+  restaurantTip Float?
+  projectTip    Float?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  restaurantId  String
+  restaurant    Partner       @relation(fields: [restaurantId], references: [id])
+  customerId    String
+  customer      User          @relation(fields: [customerId], references: [id])
+  delivery      Delivery?
+  orderItems    OrderItem[]
+  messages      Messages[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  message    String?
+  quantity   Int
+  price      Float
+  taxPercent Float
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@map("order_items")
+}
+
+model Delivery {
+  id                       String         @id @default(uuid())
+  type                     DeliveryType
+  status                   DeliveryStatus @default(ASSIGNED)
+  message                  String?
+  estimatedDeliveryTime    Int?
+  estimatedPreparationTime Int
+  distance                 Float?
+  street                   String?
+  streetNumber             String?
+  zip                      String?
+  city                     String?
+  phone                    String?
+  latitude                 Float?
+  longitude                Float?
+  countryId                String?
+  country                  Country?       @relation(fields: [countryId], references: [code])
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+  driverId                 String?
+  driver                   Driver?        @relation(fields: [driverId], references: [id])
+  messages                 Messages[]
+  order                    Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId                  String
+
+  @@unique([orderId])
+  @@map("deliveries")
+}
+
+model Messages {
+  id                 String            @id @default(uuid())
+  type               MessageType
+  createdAt          DateTime          @default(now())
+  user               User?             @relation(fields: [userId], references: [id])
+  driver             Driver?           @relation(fields: [driverId], references: [id])
+  restaurant         Partner?          @relation(fields: [restaurantId], references: [id])
+  restaurantRating   RestaurantRating? @relation(fields: [restaurantRatingId], references: [id])
+  driverRating       DriverRating?     @relation(fields: [driverRatingId], references: [id])
+  menuItem           MenuItem?         @relation(fields: [menuItemId], references: [id])
+  order              Order?            @relation(fields: [orderId], references: [id])
+  delivery           Delivery?         @relation(fields: [deliveryId], references: [id])
+  earning            Earning?          @relation(fields: [earningId], references: [id])
+  userId             String?
+  driverId           String?
+  restaurantId       String?
+  restaurantRatingId String?
+  driverRatingId     String?
+  menuItemId         String?
+  orderId            String?
+  deliveryId         String?
+  earningId          String?
+
+  @@map("messages")
+}
+
+model Earning {
+  id         String   @id @default(uuid())
+  userId     String
+  date       DateTime
+  amount     Float
+  deliveries Int
+  createdAt  DateTime @default(now())
+
+  driver   User       @relation(fields: [userId], references: [id])
+  messages Messages[]
+
+  @@map("earnings")
+}
+
+// Code editor models
+model UI {
+  id         String      @id @default(uuid())
+  userId     String
+  public     Boolean     @default(true)
+  prompt     String
+  img        String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime
+  uiType     UiType
+  likesCount Int         @default(0)
+  viewCount  Int         @default(0)
+  subPrompts SubPrompt[]
+  likes      Like[]
+  forkedFrom String?
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model SubPrompt {
+  id        String   @id @default(uuid())
+  UIId      String
+  SUBId     String   @unique
+  createdAt DateTime @default(now())
+  subPrompt String
+  modelId   String?
+  code      Code?
+  UI        UI       @relation(fields: [UIId], references: [id], onDelete: Cascade)
+}
+
+model Code {
+  id          String    @id @default(uuid())
+  code        String
+  subPromptId String    @unique
+  subPrompt   SubPrompt @relation(fields: [subPromptId], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  UIId      String
+  createdAt DateTime @default(now())
+
+  ui UI @relation(fields: [UIId], references: [id], onDelete: Cascade)
+}
+
+model BugReport {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  reportType  String
+  severity    String
+  steps       String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

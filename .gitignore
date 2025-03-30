@@ -6,4 +6,6 @@ dist
 # Generated files
 src/app/api/generated/endpoints.ts
 prisma/db/dev.db
+
 postgres_data
+code-server

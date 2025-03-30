@@ -13,24 +13,15 @@ export default function Home(): JSX.Element {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">
-              Next Vibe Platform
+              Open<span className="text-white">Eats</span> Platform
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-primary-foreground/80">
-              An open-source starter template with batteries included for
-              building modern web applications using Next.js, Tailwind CSS,
-              TypeScript and many more.
+              An open-source food delivery platform with powerful API
+              capabilities. Get started as a user or explore our API
+              documentation.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link href={"/partner"}>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="bg-white text-primary hover:bg-white/90 font-semibold"
-                >
-                  Partner Portal
-                </Button>
-              </Link>
-              <Link href={"/app"}>
                 <Button
                   size="lg"
                   variant="outline"

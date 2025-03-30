@@ -46,7 +46,8 @@ export default [
       "coverage",
       // just until native is stable
       "**/*.native.tsx"
-    ],
+      // TODO remove
+      , "old"    ],
   },
 
   // 2) Base configuration for TypeScript files

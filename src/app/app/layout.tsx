@@ -2,23 +2,43 @@ import type { Metadata } from "next";
 import type React from "react";
 import type { JSX } from "react";
 
-import { Layout } from "@/components/layout";
 import { Toaster } from "@/components/ui/toaster";
 
+import { CartProvider } from "./components/hooks/use-cart";
+import { FavoritesProvider } from "./components/hooks/use-favorites";
+import { OrderProvider } from "./components/hooks/use-orders";
+import { RestaurantProvider } from "./components/hooks/use-restaurants";
+import { ReviewProvider } from "./components/hooks/use-reviews";
+import RootLayout from "./components/layout";
+
 export const metadata: Metadata = {
-  title: "Next-Vibe",
-  description: "Start vibing here.",
+  title: "OpenEats - Local Food Delivery",
+  description:
+    "Order from local restaurants with free delivery and pickup. Open source and community-driven.",
+  generator: "v0.dev",
 };
 
-export default function RootLayout({
+export default function Layout({
   children,
-}: Readonly<{
+  withSubMain = true,
+}: {
   children: React.ReactNode;
-}>): JSX.Element {
+  withSubMain?: boolean;
+}): JSX.Element {
   return (
-    <Layout>
-      {children}
-      <Toaster />
-    </Layout>
+    <main className="m-auto">
+      <RestaurantProvider>
+        <CartProvider>
+          <OrderProvider>
+            <FavoritesProvider>
+              <ReviewProvider>
+                <RootLayout withSubMain={withSubMain}>{children}</RootLayout>
+                <Toaster />
+              </ReviewProvider>
+            </FavoritesProvider>
+          </OrderProvider>
+        </CartProvider>
+      </RestaurantProvider>
+    </main>
   );
 }

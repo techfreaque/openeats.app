@@ -35,7 +35,4 @@
   "files.associations": {
     "schema.prisma.template": "prisma"
   },
-  "files.exclude": {
-    "postgres_data": true
-  }
 }

@@ -6,9 +6,8 @@ import type { JSX } from "react";
 import { Layout } from "@/components/layout";
 
 export const metadata: Metadata = {
-  title: `${APP_NAME} Next-Vibe Developer`,
-  description:
-    "Her you can find the developer documentation for your Next-Vibe env.",
+  title: `${APP_NAME} Partner Portal`,
+  description: "Partner portal for restaurants, drivers, and administrators",
 };
 
 export default function RootLayout({

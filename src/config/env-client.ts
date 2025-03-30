@@ -1,7 +1,7 @@
 /* eslint-disable node/no-process-env */
 import { envClientSchema as portalEnvClientSchema } from "next-vibe/client/env-client";
 import { validateEnv } from "next-vibe/shared/utils/env-util";
-import type { z } from "zod";
+import { z } from "zod";
 
 const isServer = typeof window === "undefined";
 const isReactNative = !isServer && !window.document;
@@ -13,7 +13,9 @@ export const platform = {
   isBrowser,
 };
 
-export const envClientSchema = portalEnvClientSchema.extend({});
+export const envClientSchema = portalEnvClientSchema.extend({
+  NEXT_PUBLIC_GA_ID: z.string().min(1),
+});
 
 export type EnvFrontend = z.infer<typeof envClientSchema>;
 export type EnvFrontendInput = z.input<typeof envClientSchema>;
@@ -22,6 +24,7 @@ export type EnvFrontendInput = z.input<typeof envClientSchema>;
 export const envClient: EnvFrontend = validateEnv(
   {
     // explicitly use env variables so next.js can replace them
+    NEXT_PUBLIC_GA_ID: process.env["NEXT_PUBLIC_GA_ID"],
     NEXT_PUBLIC_APP_NAME: process.env["NEXT_PUBLIC_APP_NAME"],
     NODE_ENV: process.env["NODE_ENV"],
     NEXT_PUBLIC_FRONTEND_APP_URL: process.env["NEXT_PUBLIC_FRONTEND_APP_URL"],
