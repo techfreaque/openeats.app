@@ -23,22 +23,7 @@ export async function signJwt(payload: JwtPayloadType): Promise<string> {
  * Verify a JWT and return its payload
  */
 export async function verifyJwt(token: string): Promise<JwtPayloadType> {
-  // Special handling for test tokens
-  if (
-    token.endsWith(".test_signature_for_e2e_tests") &&
-    env.NODE_ENV === "test"
-  ) {
-    try {
-      const base64Payload = token.split(".")[0];
-      const payload = JSON.parse(atob(base64Payload)) as JwtPayloadType;
-      return payload;
-    } catch {
-      throw new Error("Invalid token");
-    }
-  }
-
   const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-
   try {
     const { payload } = await jwtVerify<JwtPayloadType>(token, secret);
     return payload as JwtPayloadType;
