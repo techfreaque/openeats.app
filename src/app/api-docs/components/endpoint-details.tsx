@@ -22,7 +22,10 @@ interface EndpointDetailsProps {
   responseStatus: number | null;
   apiForm: ApiFormReturn<unknown, unknown, unknown>;
   selectedDomain: string;
-  handleTryIt: (event?: FormEvent<HTMLFormElement>) => void;
+  handleTryIt: (
+    event: FormEvent<HTMLFormElement> | undefined,
+    urlParamVariables: unknown,
+  ) => void;
 }
 
 export function EndpointDetails({
@@ -127,7 +130,7 @@ export function EndpointDetails({
 
               <Button
                 className="w-full"
-                onClick={() => handleTryIt}
+                onClick={() => handleTryIt(undefined, undefined)}
                 disabled={apiForm.isSubmitting}
               >
                 {apiForm.isSubmitting ? "Sending..." : "Try It"}

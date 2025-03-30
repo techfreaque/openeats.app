@@ -57,7 +57,7 @@ function getFieldType(field: ZodType): string {
   if (field instanceof z.ZodString) {
     // Optional: Detect longtext based on some criteria
     // e.g., if it has a specific description or min length
-    const hasLongTextConstraint = field._def.checks?.some(
+    const hasLongTextConstraint = field._def.checks.some(
       (check) => check.kind === "min" && check.value > 50,
     );
 
@@ -295,7 +295,12 @@ export function DynamicFormFields({
 
   return (
     <Form {...apiForm.form}>
-      <form onSubmit={apiForm.submitForm} className="space-y-6">
+      <form
+        onSubmit={(event) =>
+          apiForm.submitForm(event, { urlParamVariables: undefined })
+        }
+        className="space-y-6"
+      >
         <div className="space-y-4 py-2">{formFields.map(renderField)}</div>
       </form>
     </Form>

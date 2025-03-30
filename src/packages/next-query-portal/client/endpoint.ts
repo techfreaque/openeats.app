@@ -12,15 +12,15 @@ import type { ApiQueryOptions } from "./hooks/types";
  * API endpoint configuration
  */
 export class ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey> {
-  public description: string;
-  public method: Methods;
-  public path: string[];
-  public apiQueryOptions: ApiQueryOptions;
-  public allowedRoles: UserRoleValue[];
-  public requestSchema: z.ZodType<TRequest>;
-  public requestUrlSchema: z.ZodType<TUrlVariables>;
-  public responseSchema: z.ZodType<TResponse>;
-  public fieldDescriptions: TRequest extends undefined
+  description: string;
+  method: Methods;
+  path: string[];
+  apiQueryOptions: ApiQueryOptions;
+  allowedRoles: UserRoleValue[];
+  requestSchema: z.ZodType<TRequest>;
+  requestUrlSchema: z.ZodType<TUrlVariables>;
+  responseSchema: z.ZodType<TResponse>;
+  fieldDescriptions: TRequest extends undefined
     ? TUrlVariables extends undefined
       ? undefined
       : Record<keyof TUrlVariables, string>
@@ -28,8 +28,8 @@ export class ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey> {
       ? Record<keyof TRequest, string>
       : Record<keyof TRequest, string> & Record<keyof TUrlVariables, string>;
 
-  public errorCodes: Record<string, string> & { 500: string };
-  public examples: {
+  errorCodes: Record<string, string> & { 500: string };
+  examples: {
     urlPathVariables: TUrlVariables extends undefined
       ? undefined
       : ExamplesList<TUrlVariables, TExampleKey>;
@@ -74,11 +74,11 @@ export class ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey> {
     };
   }
 
-  public requiresAuthentication(): boolean {
+  requiresAuthentication(): boolean {
     return !this.allowedRoles.includes(UserRoleValue.PUBLIC);
   }
 
-  public getRequestData({
+  getRequestData({
     requestData,
     pathParams,
   }: {

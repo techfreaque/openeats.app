@@ -10,10 +10,6 @@ const releaseConfig: ReleaseConfig = {
       build: true,
       release: {
         version: "1.0.0",
-        foldersToScanAndBumpThisPackage: [
-          // scan whole dev env
-          { folder: "./examples" },
-        ],
       },
     },
   ],

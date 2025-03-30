@@ -21,6 +21,11 @@ export const updateUser: ApiHandlerCallBackFunctionType<
       success: false,
       message: "Email already registered",
       errorCode: 400,
+    } as {
+      success: false;
+      message: string;
+      errorCode: number;
+      data?: never;
     };
   }
   await db.user.update({
@@ -35,6 +40,6 @@ export const updateUser: ApiHandlerCallBackFunctionType<
   const fullUser = await getFullUser(id);
   return {
     success: true,
-    data: fullUser,
+    data: fullUser as UserResponseType,
   };
 };

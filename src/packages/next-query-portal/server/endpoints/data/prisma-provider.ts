@@ -11,7 +11,7 @@ export class PrismaDataProvider implements DataProvider {
   private prisma: PrismaClient;
 
   constructor(prismaClient?: PrismaClient) {
-    this.prisma = prismaClient || new PrismaClient();
+    this.prisma = prismaClient ?? new PrismaClient();
   }
 
   /**

@@ -1,9 +1,9 @@
 import type { ApiEndpoint } from "next-query-portal/client/endpoint";
 import type { JwtPayloadType } from "next-query-portal/server/endpoints/auth/jwt";
-import type { ApiHandlerReturnType } from "next-query-portal/server/endpoints/core/api-handler";
+import type { ExamplesList } from "next-query-portal/shared/types/endpoint";
 import { describe, expect, it } from "vitest";
 
-import { mockExecute } from "./mock-execution";
+import { sendTestRequest } from "./send-test-request";
 import type { TestEndpointOptions, TestRunner } from "./types";
 
 /**
@@ -34,7 +34,6 @@ type ExampleEntry<T> = [string, T];
  */
 export function testEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>(
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
-  handler: ApiHandlerReturnType<TResponse, TUrlVariables>,
   options: TestEndpointOptions<
     TRequest,
     TResponse,
@@ -42,12 +41,7 @@ export function testEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>(
     TExampleKey
   > = {},
 ): void {
-  const {
-    mockUser = { id: "admin" },
-    mockData = {},
-    customTests = {},
-    skipExampleTests = false,
-  } = options;
+  const { customTests = {}, skipExampleTests = false } = options;
 
   describe(`API: ${endpoint.method} ${endpoint.path.join("/")}`, () => {
     // Create a test runner that can be reused
@@ -58,14 +52,17 @@ export function testEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>(
       TExampleKey
     > = {
       endpoint,
-      executeWith: async ({ data, urlParams, user = mockUser }) => {
-        return mockExecute<TRequest, TResponse, TUrlVariables, TExampleKey>({
+      executeWith: async ({ data, urlParams, user }) => {
+        return await sendTestRequest<
+          TRequest,
+          TResponse,
+          TUrlVariables,
+          TExampleKey
+        >({
           endpoint,
-          handler,
           data,
           urlParams,
           user,
-          mockData,
         });
       },
     };
@@ -92,53 +89,30 @@ export function testEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>(
     }
 
     // Group tests for payload examples
-    if (endpoint.examples.payloads) {
+    const payloads = endpoint.examples.payloads as unknown as
+      | ExamplesList<TRequest, "default">
+      | undefined;
+    const urlPathVariables = endpoint.examples.urlPathVariables as unknown as
+      | ExamplesList<TUrlVariables, "default">
+      | undefined;
+    if (payloads) {
       describe("Payload Examples", () => {
         // Test each example payload
-        const payloadEntries = Object.entries(
-          endpoint.examples.payloads,
-        ) as Array<ExampleEntry<TRequest>>;
+        const payloadEntries = Object.entries(payloads) as Array<
+          ExampleEntry<TRequest>
+        >;
 
         payloadEntries.forEach(([exampleName, payload]) => {
           it(`should handle ${exampleName} example`, async () => {
-            const urlParams = endpoint.examples.urlPathVariables?.default;
+            const urlParams = urlPathVariables
+              ? (urlPathVariables as ExamplesList<TUrlVariables, string>)[
+                  exampleName
+                ]
+              : undefined;
 
             const response = await testRunner.executeWith({
               data: payload,
               urlParams: urlParams as TUrlVariables,
-            });
-
-            // Expect success
-            expect(response.success).toBe(true);
-
-            // Validate response data against schema
-            if (response.success && response.data) {
-              const validation = endpoint.responseSchema.safeParse(
-                response.data,
-              );
-              expect(validation.success).toBe(true);
-            }
-          });
-        });
-      });
-    }
-
-    // Group tests for URL parameter examples
-    if (endpoint.examples.urlPathVariables) {
-      describe("URL Parameter Examples", () => {
-        // Test each example URL parameter
-        const urlParamEntries = Object.entries(
-          endpoint.examples.urlPathVariables,
-        ) as Array<ExampleEntry<TUrlVariables>>;
-
-        urlParamEntries.forEach(([exampleName, urlParams]) => {
-          it(`should handle ${exampleName} URL params example`, async () => {
-            // Use default payload if available, otherwise undefined
-            const payload = endpoint.examples.payloads?.default;
-
-            const response = await testRunner.executeWith({
-              data: payload as TRequest,
-              urlParams: urlParams,
             });
 
             // Expect success
@@ -165,9 +139,8 @@ export function testEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>(
           const unauthorizedUser: JwtPayloadType = { id: "unauthorized-user" };
 
           const response = await testRunner.executeWith({
-            data: endpoint.examples?.payloads?.default as TRequest,
-            urlParams: endpoint.examples?.urlPathVariables
-              ?.default as TUrlVariables,
+            data: payloads?.default as TRequest,
+            urlParams: urlPathVariables?.default as TUrlVariables,
             user: unauthorizedUser,
           });
 
@@ -187,9 +160,8 @@ export function testEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>(
             if (validRoles.length > 0) {
               // Test is only relevant if there are non-public roles
               const response = await testRunner.executeWith({
-                data: endpoint.examples?.payloads?.default as TRequest,
-                urlParams: endpoint.examples?.urlPathVariables
-                  ?.default as TUrlVariables,
+                data: payloads?.default as TRequest,
+                urlParams: urlPathVariables?.default as TUrlVariables,
               });
 
               // Should succeed with proper authorization

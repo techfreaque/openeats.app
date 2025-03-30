@@ -9,17 +9,18 @@ export const errorResponseSchema = z.object({
 
 export type ResponseType<TResponseData> =
   | SuccessResponseType<TResponseData>
-  | ErrorResponseType<TResponseData>;
+  | ErrorResponseType;
 
 export type MessageResponseType = z.input<typeof messageResponseSchema>;
 
-export type ErrorResponseType<TResponseData> = {
-  data?: TResponseData;
+export interface ErrorResponseType {
   success: false;
   message: string;
-};
+  data?: never;
+}
 
-export type SuccessResponseType<TResponseData> = {
+export interface SuccessResponseType<TResponseData> {
   success: true;
   data: TResponseData;
-};
+  message?: never;
+}

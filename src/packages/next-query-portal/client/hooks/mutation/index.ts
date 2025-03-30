@@ -49,7 +49,7 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables, TExampleKey>(
       (state: ApiStore): MutationStoreType<TResponse> =>
         (state.mutations[mutationId] as unknown as
           | undefined
-          | MutationStoreType<TResponse>) || defaultState,
+          | MutationStoreType<TResponse>) ?? defaultState,
     // eslint-disable-next-line react-compiler/react-compiler
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [mutationId],
@@ -81,7 +81,7 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables, TExampleKey>(
       requestData: TRequest;
       urlParams: TUrlVariables;
     }): Promise<TResponse> => {
-      return executeMutation(
+      return await executeMutation(
         endpoint,
         variables.requestData,
         variables.urlParams,
@@ -114,7 +114,7 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables, TExampleKey>(
     isError: mutationState.isError,
     error: mutationState.error,
     isSuccess: mutationState.isSuccess,
-    data: mutationState.data as TResponse,
+    data: mutationState.data,
     reset,
     status: mutationState.isPending
       ? "pending"

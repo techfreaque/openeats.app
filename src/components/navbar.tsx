@@ -22,10 +22,10 @@ export function Navbar(): JSX.Element {
         </Link>
         <nav className="flex items-center space-x-2">
           {!isLoading &&
-            (isLoggedIn ? (
+            (isLoggedIn && user ? (
               <>
                 <Link href="/auth/private/profile">
-                  <div>{user!.email}</div>
+                  <div>{user.email}</div>
                 </Link>
                 <Button
                   onClick={logout}

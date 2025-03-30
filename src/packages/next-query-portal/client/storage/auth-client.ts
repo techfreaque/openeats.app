@@ -15,7 +15,7 @@ export async function getAuthToken(): Promise<string | null> {
   if (envClient.platform.isServer) {
     return null;
   }
-  return getStorageItem<string>(TOKEN_KEY);
+  return await getStorageItem<string>(TOKEN_KEY);
 }
 
 /**

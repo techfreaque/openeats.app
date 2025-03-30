@@ -20,12 +20,12 @@ export const POST = apiHandler({
   },
   handler: async ({ data }) => {
     const resetPayload = await verifyPasswordResetToken(data.token);
-    if (!resetPayload || !resetPayload.email || !resetPayload.userId) {
+    if (!resetPayload?.email || !resetPayload.userId) {
       return {
         success: false,
         message: "Invalid or expired token",
         errorCode: 400,
-      };
+      } as { success: false; message: string; errorCode: number; data?: never };
     }
     const user = await db.user.findUnique({
       where: { email: resetPayload.email, id: resetPayload.userId },

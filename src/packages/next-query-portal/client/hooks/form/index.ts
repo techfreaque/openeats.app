@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { ZodType } from "zod";
 
 import { parseError } from "../../../shared/utils/parse-error";
 import type { ApiEndpoint } from "../../endpoint";
@@ -65,7 +65,7 @@ export function useApiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
   );
 
   // Extract state from the Zustand store with shallow comparison
-  const mutationState = useApiStore(mutationSelector) || {
+  const mutationState = useApiStore(mutationSelector) ?? {
     isPending: false,
     isError: false,
     error: null,
@@ -73,23 +73,21 @@ export function useApiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
     data: undefined,
   };
 
-  const formState = useApiStore(formSelector) || {
+  const formState = useApiStore(formSelector) ?? {
     formError: null,
+    isSubmitting: false,
   };
 
   // Extract store methods for error handling
   const setFormErrorStore = useApiStore((state) => state.setFormError);
   const clearFormErrorStore = useApiStore((state) => state.clearFormError);
-
   // Create base configuration without resolver
-  const formConfig: ApiFormOptions<TRequest> = {
+  const formConfig: ApiFormOptions<ZodType<TRequest>> = {
     ...options,
-    resolver: zodResolver(
-      z.object({
-        ...endpoint.requestSchema.shape,
-        ...endpoint.requestUrlSchema.shape,
-      }),
-    ),
+    // We force our form types with this
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    resolver: zodResolver(endpoint.requestSchema),
   };
 
   // Initialize form with the proper configuration
@@ -110,11 +108,10 @@ export function useApiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
 
   // Create a submit handler that validates and submits the form
   const submitForm: SubmitFormFunction<TRequest, TResponse, TUrlVariables> = (
-    event?,
-    callbacks?,
+    event,
+    options,
   ): void => {
     const _submitForm = async (): Promise<void> => {
-      const urlParamVariables: TUrlVariables = undefined; // TODO
       try {
         // Get form data
         const formData = formMethods.getValues();
@@ -126,22 +123,22 @@ export function useApiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
         const result = await executeMutation(
           endpoint,
           formData,
-          urlParamVariables,
+          options.urlParamVariables,
           mutationOptions,
         );
         if (result === undefined) {
           return undefined;
         }
-        callbacks?.onSuccess?.({
+        options.onSuccess?.({
           responseData: result,
-          pathParams: urlParamVariables,
+          pathParams: options.urlParamVariables,
           requestData: formData,
         });
       } catch (error) {
         // Handle any errors that occur during submission
         const parsedError = parseError(error);
         setError(parsedError);
-        callbacks?.onError?.(parsedError);
+        options.onError?.(parsedError);
       }
     };
     void formMethods.handleSubmit(_submitForm)(event);
@@ -152,8 +149,8 @@ export function useApiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
     submitForm,
     isSubmitting: mutationState.isPending,
     isSubmitSuccessful: mutationState.isSuccess,
-    submitError: mutationState.error || formState.formError || undefined,
+    submitError: mutationState.error ?? formState.formError ?? undefined,
     errorMessage:
-      mutationState.error?.message || formState.formError?.message || undefined,
+      mutationState.error?.message ?? formState.formError?.message ?? undefined,
   };
 }

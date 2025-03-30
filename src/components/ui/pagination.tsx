@@ -50,6 +50,7 @@ const PaginationLink = ({
   className,
   isActive,
   size = "icon",
+  children,
   ...props
 }: PaginationLinkProps): React.JSX.Element => (
   <a
@@ -62,7 +63,9 @@ const PaginationLink = ({
       className,
     )}
     {...props}
-  />
+  >
+    {children}
+  </a>
 );
 PaginationLink.displayName = "PaginationLink";
 

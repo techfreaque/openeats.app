@@ -43,7 +43,7 @@ export interface ApiConfig {
    */
   onError?: (
     error: Error,
-    endpoint?: ApiEndpoint<unknown, unknown, unknown>,
+    endpoint?: ApiEndpoint<unknown, unknown, unknown, "default">,
   ) => void;
 }
 

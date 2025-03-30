@@ -53,6 +53,6 @@ export const userRoleResponseSchema = z.object({
     .uuid()
     .optional()
     .nullable()
-    .transform((val) => val || undefined),
+    .transform((val) => val ?? undefined),
 });
 export type UserRoleResponseType = z.input<typeof userRoleResponseSchema>;

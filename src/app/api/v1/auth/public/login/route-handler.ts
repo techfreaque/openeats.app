@@ -13,7 +13,7 @@ import type { UndefinedType } from "next-query-portal/shared/types/common.schema
 import { env } from "../../../../../../config/env";
 import { db } from "../../../../db";
 import { getFullUser } from "../../me/route-handler/get-me";
-import type { LoginFormType, LoginResponseType } from "./schema";
+import type { LoginFormInputType, LoginResponseInputType } from "./schema";
 
 /**
  * Authenticate user with credentials
@@ -21,8 +21,8 @@ import type { LoginFormType, LoginResponseType } from "./schema";
 
 export async function loginUser({
   data,
-}: ApiHandlerCallBackProps<LoginFormType, UndefinedType>): Promise<
-  SafeReturnType<LoginResponseType>
+}: ApiHandlerCallBackProps<LoginFormInputType, UndefinedType>): Promise<
+  SafeReturnType<LoginResponseInputType>
 > {
   const { email, password } = data;
   const minimalUser = await db.user.findUnique({
@@ -47,12 +47,13 @@ export async function loginUser({
       errorCode: 401,
     };
   }
-  return createSessionAndGetUser(minimalUser.id);
+  return await createSessionAndGetUser(minimalUser.id);
 }
 
 export async function createSessionAndGetUser(
   userId: string,
-): Promise<SafeReturnType<LoginResponseType>> {
+  setCookies = true,
+): Promise<SafeReturnType<LoginResponseInputType>> {
   const user = await getFullUser(userId);
   // JWT payload
   const tokenPayload: JwtPayloadType = {
@@ -60,17 +61,18 @@ export async function createSessionAndGetUser(
   };
 
   const token = await signJwt(tokenPayload);
-
-  const cookiesStore = await cookies();
-  cookiesStore.set({
-    name: "token",
-    value: token,
-    httpOnly: true,
-    path: "/",
-    secure: env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 60 * 60 * 24 * 7, // 1 week
-  });
+  if (setCookies) {
+    const cookiesStore = await cookies();
+    cookiesStore.set({
+      name: "token",
+      value: token,
+      httpOnly: true,
+      path: "/",
+      secure: env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+    });
+  }
   return {
     success: true,
     data: {

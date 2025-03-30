@@ -9,15 +9,15 @@ import type { UndefinedType } from "next-query-portal/shared/types/common.schema
 import { db } from "@/app/api/db";
 
 import { createSessionAndGetUser } from "../../public/login/route-handler";
-import type { LoginResponseType } from "../../public/login/schema";
+import type { LoginResponseInputType } from "../../public/login/schema";
 import type { UserResponseType } from "../schema";
 
 export async function getUser({
   user,
 }: ApiHandlerCallBackProps<UndefinedType, UndefinedType>): Promise<
-  SafeReturnType<LoginResponseType>
+  SafeReturnType<LoginResponseInputType>
 > {
-  return createSessionAndGetUser(user.id);
+  return await createSessionAndGetUser(user.id);
 }
 
 export interface FullUser extends UserResponseType {

@@ -3,11 +3,11 @@ import { envClient } from "next-query-portal/client/env-client";
 import { errorLogger } from "./logger";
 import { parseError } from "./parse-error";
 
-export type ErrorHandlerOptions = {
+export interface ErrorHandlerOptions {
   logError?: boolean;
   context?: string;
   silent?: boolean;
-};
+}
 
 /**
  * Standard error response format
@@ -53,7 +53,7 @@ export function handleError(
   if (error && typeof error === "object") {
     const errorObj = error as { code?: number; statusCode?: number };
     if ("code" in errorObj || "statusCode" in errorObj) {
-      errorResponse.code = errorObj.code || errorObj.statusCode || 500;
+      errorResponse.code = errorObj.code ?? errorObj.statusCode ?? 500;
     } else {
       errorResponse.code = 500;
     }

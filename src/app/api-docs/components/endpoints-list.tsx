@@ -52,9 +52,7 @@ export function EndpointsList({
     let current: ApiSection | ApiEndpoint<unknown, unknown, unknown, unknown> =
       data;
     for (const segment of path) {
-      const currentSegment = (current as ApiSection)[segment] as
-        | ApiSection
-        | ApiEndpoint<unknown, unknown, unknown, unknown>;
+      const currentSegment = current[segment] as ApiSection;
       if (!currentSegment) {
         return null;
       }
@@ -167,7 +165,7 @@ export function EndpointsList({
     }
 
     const isEndpointGroup = !isHttpMethod(section);
-    const isExpanded = expandedSections[section] || false;
+    const isExpanded = expandedSections[section] ?? false;
 
     // Check if this is a leaf endpoint or a group
     const isLeaf =

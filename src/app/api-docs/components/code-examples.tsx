@@ -34,7 +34,7 @@ export function CodeExamples({
 
     // Choose an example - either use default or the first available
     const example =
-      activeEndpoint.examples.payloads?.["default"] ||
+      activeEndpoint.examples.payloads["default"] ??
       (activeEndpoint.examples.payloads &&
         Object.values(activeEndpoint.examples.payloads)[0]);
 
@@ -113,8 +113,10 @@ print_r($response);
 
   // Get available tabs based on examples
   const availableExamples = Object.keys(activeEndpoint.examples || {});
-  const defaultTab =
-    availableExamples.length > 0 ? availableExamples[0]! : "default";
+  const defaultTab: string =
+    availableExamples.length > 0
+      ? (availableExamples[0] ?? "default")
+      : "default";
 
   return (
     <div className="p-4">
@@ -165,7 +167,7 @@ print_r($response);
                 <div className="bg-gray-50 rounded-lg p-4 border">
                   <pre className="text-sm overflow-auto max-h-[200px]">
                     {JSON.stringify(
-                      activeEndpoint.examples.payloads?.[example],
+                      activeEndpoint.examples.payloads[example],
                       null,
                       2,
                     )}

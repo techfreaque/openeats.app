@@ -28,4 +28,8 @@ seedTestDatabase()
   })
   .finally(() => {
     void db.$disconnect();
+  })
+  .catch((e) => {
+    errorLogger("Error shutting down database:", e);
+    process.exit(1);
   });

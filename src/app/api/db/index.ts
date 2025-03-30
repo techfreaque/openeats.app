@@ -5,7 +5,7 @@ import { env } from "../../../config/env";
 let prisma: PrismaClient | undefined;
 
 export const db =
-  prisma ||
+  prisma ??
   new PrismaClient({
     log: ["query", "info", "warn", "error"],
   });

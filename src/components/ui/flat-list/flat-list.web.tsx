@@ -42,7 +42,7 @@ function FlatListComponent<T>(
         >
           <div className="flex" style={contentContainerStyle}>
             {data.map((item, index) => (
-              <Fragment key={keyExtractor?.(item, index) || index.toString()}>
+              <Fragment key={keyExtractor?.(item, index) ?? index.toString()}>
                 {renderItem({ item, index })}
               </Fragment>
             ))}
@@ -75,7 +75,7 @@ function FlatListComponent<T>(
             }}
           >
             {data.map((item, index) => (
-              <Fragment key={keyExtractor?.(item, index) || index.toString()}>
+              <Fragment key={keyExtractor?.(item, index) ?? index.toString()}>
                 {renderItem({ item, index })}
               </Fragment>
             ))}
@@ -100,7 +100,7 @@ function FlatListComponent<T>(
       >
         <div className="flex flex-col" style={contentContainerStyle}>
           {data.map((item, index) => (
-            <Fragment key={keyExtractor?.(item, index) || index.toString()}>
+            <Fragment key={keyExtractor?.(item, index) ?? index.toString()}>
               {renderItem({ item, index })}
             </Fragment>
           ))}

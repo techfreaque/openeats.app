@@ -1,14 +1,15 @@
+import { withExpo } from "@expo/next-adapter";
 import type { NextConfig } from "next";
-import type { Configuration } from "webpack";
+import { generateEndpoints } from "next-query-portal/scripts/generate-endpoints";
+import type { Compiler, Configuration } from "webpack";
 
-import nextPortalConfig from "./next.portal.config";
-import { generateEndpoints } from "./src/packages/next-query-portal/scripts/generate-endpoints";
+const useNextQueryPortalPackage = false;
 
-const nextConfig: NextConfig = {
+const nextConfig: NextConfig = withExpo({
   webpack: (config: Configuration, { dev, isServer }) => {
     if (!isServer) {
-      config.module = config.module || {};
-      config.module.rules = config.module.rules || [];
+      config.module = config.module ?? {};
+      config.module.rules = config.module.rules ?? [];
       config.module.rules.push({
         test: /\.native\.tsx$/,
         use: "ignore-loader",
@@ -16,22 +17,22 @@ const nextConfig: NextConfig = {
     }
 
     // Set up path aliases for the next-query-portal package
-    config.resolve = config.resolve || {};
+    config.resolve = config.resolve ?? {};
     if (!config.resolve.alias || Array.isArray(config.resolve.alias)) {
       config.resolve.alias = {};
     }
     config.resolve.alias["react-native"] = "react-native-web";
 
-    if (!nextPortalConfig.useNextQueryPortalPackage) {
+    if (!useNextQueryPortalPackage) {
       config.resolve.alias["next-query-portal"] =
         "./src/packages/next-query-portal";
     }
 
     // Add a plugin to generate endpoints during development
     if (dev) {
-      config.plugins = config.plugins || [];
+      config.plugins = config.plugins ?? [];
       config.plugins.push({
-        apply: (compiler) => {
+        apply: (compiler: Compiler) => {
           compiler.hooks.done.tap("GenerateApiEndpoints", () => {
             generateEndpoints(__dirname);
           });
@@ -51,8 +52,9 @@ const nextConfig: NextConfig = {
   },
   // TODO remove
   eslint: {
+    dirs: ["fg"],
     ignoreDuringBuilds: true,
   },
-};
+} as NextConfig);
 
 export default nextConfig;

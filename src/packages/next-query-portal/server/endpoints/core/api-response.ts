@@ -67,8 +67,8 @@ export function createErrorResponse<
 >(
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   message: string,
-  status: number = 400,
-): NextResponse<ErrorResponseType<TResponse>> {
+  status = 400,
+): NextResponse<ErrorResponseType> {
   const {
     message: validationError,
     data,
@@ -86,14 +86,20 @@ export function createErrorResponse<
       {
         success: false,
         message: validationError,
-      } as ErrorResponseType<TResponse>,
+      } as ErrorResponseType,
       { status: 500 },
     );
   }
   data.message = `[${endpoint.path.join("/")}:${endpoint.method}]: ${message}`;
-  return NextResponse.json(data, {
-    status,
-  });
+  return NextResponse.json(
+    {
+      success: false,
+      message: data.message,
+    } as ErrorResponseType,
+    {
+      status,
+    },
+  );
 }
 
 /**

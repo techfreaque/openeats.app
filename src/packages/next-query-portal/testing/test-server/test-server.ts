@@ -9,8 +9,8 @@ import { parse } from "url";
 import { env } from "@/config/env";
 
 // Server state (singleton)
-let app: ReturnType<typeof next> | null = null;
-let server: Server | null = null;
+let app: ReturnType<typeof next> | undefined = undefined;
+let server: Server | undefined = undefined;
 
 /**
  * Starts the Next.js test server on a random available port if preferred port is in use
@@ -24,13 +24,6 @@ export async function startServer(): Promise<void> {
   try {
     console.log(`Starting test server on ${env.TEST_SERVER_URL}:4000`);
 
-    // Ensure we're using test environment variables
-    env.NODE_ENV = "test";
-
-    // Set JWT secret key
-    env.JWT_SECRET_KEY = "test-secret-key-for-e2e-tests";
-    console.log("Set JWT_SECRET_KEY for test server:", env.JWT_SECRET_KEY);
-
     app = next({
       dev: true,
       dir: cwd(),
@@ -41,10 +34,10 @@ export async function startServer(): Promise<void> {
 
     const handle = app.getRequestHandler();
 
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       // Try with preferred port first, but fall back to a random port if needed
       server = createServer((req, res) => {
-        const parsedUrl = parse(req.url || "", true);
+        const parsedUrl = parse(req.url ?? "", true);
         void handle(req, res, parsedUrl);
       });
 
@@ -77,7 +70,7 @@ export async function startServer(): Promise<void> {
  * This is designed to be called once from global-teardown
  */
 export async function stopServer(): Promise<void> {
-  return new Promise((resolve) => {
+  return await new Promise((resolve) => {
     if (!server) {
       console.log("Server is not running, nothing to stop");
       resolve();
@@ -92,8 +85,8 @@ export async function stopServer(): Promise<void> {
       }
 
       console.log("> E2E test server closed");
-      server = null;
-      app = null;
+      server = undefined;
+      app = undefined;
 
       // Add a small delay to ensure all connections are properly closed
       setTimeout(() => {

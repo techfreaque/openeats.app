@@ -1,5 +1,7 @@
+import type * as LucideIcons from "lucide-react";
+
 export interface IconProps {
-  name: string;
+  name: keyof typeof LucideIcons;
   size?: number;
   color?: string;
   className?: string;

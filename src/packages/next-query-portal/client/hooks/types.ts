@@ -2,7 +2,6 @@ import type {
   DefaultError,
   QueryKey,
   UseQueryOptions,
-  UseQueryResult,
 } from "@tanstack/react-query";
 import type { FormEvent } from "react";
 import type { UseFormProps, UseFormReturn } from "react-hook-form";
@@ -10,18 +9,20 @@ import type { UseFormProps, UseFormReturn } from "react-hook-form";
 /**
  * Enhanced query result with additional loading state info
  */
-export type EnhancedQueryResult<
-  TResponse,
-  TError = unknown,
-  TData = TResponse,
-> = Omit<UseQueryResult<TData, TError>, "data" | "status" | "refetch"> & {
-  data: TData;
+export interface EnhancedQueryResult<TResponse> {
+  data: TResponse | undefined;
+  error: Error | undefined;
   isLoadingFresh: boolean;
+  isLoading: boolean;
+  isFetching: boolean;
+  isError: boolean;
+  isSuccess: boolean;
   isCachedData: boolean;
   statusMessage: string;
   status: "loading" | "success" | "error" | "idle";
   refetch: () => Promise<TResponse>;
-};
+  remove: () => void;
+}
 
 /**
  * Type for the API query options
@@ -72,7 +73,7 @@ export type ApiFormOptions<TRequest> = UseFormProps<TRequest> & {
   defaultValues?: Partial<TRequest>;
 };
 
-export type ApiFormReturn<TRequest, TResponse, TUrlVariables> = {
+export interface ApiFormReturn<TRequest, TResponse, TUrlVariables> {
   // We force our form types with this
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -82,11 +83,12 @@ export type ApiFormReturn<TRequest, TResponse, TUrlVariables> = {
   submitForm: SubmitFormFunction<TRequest, TResponse, TUrlVariables>;
   submitError: Error | undefined;
   errorMessage: string | undefined;
-};
+}
 
 export type SubmitFormFunction<TRequest, TResponse, TUrlVariables> = (
-  event?: FormEvent<HTMLFormElement>,
-  callbacks?: {
+  event: FormEvent<HTMLFormElement> | undefined,
+  options: {
+    urlParamVariables: TUrlVariables;
     onSuccess?: (data: {
       requestData: TRequest;
       pathParams: TUrlVariables;

@@ -455,6 +455,11 @@
     "@eslint/core" "^0.12.0"
     levn "^0.4.1"
 
+"@expo/next-adapter@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@expo/next-adapter/-/next-adapter-6.0.0.tgz#bb9f165c953cd8497a64c769a566e8603fb881bd"
+  integrity sha512-hFAcH6OLIOkLeD0oCoozqcTAxcPK1wYsZO40NSWA+Bi25hF9h/Az6SlLSNOtYv+tyCF5iAHT/rwWsDNlUyxDmg==
+
 "@floating-ui/core@^1.6.0":
   version "1.6.9"
   resolved "https://registry.yarnpkg.com/@floating-ui/core/-/core-1.6.9.tgz#64d1da251433019dafa091de9b2886ff35ec14e6"
@@ -4009,7 +4014,7 @@ eslint-plugin-import@2.31.0, eslint-plugin-import@^2.31.0:
     string.prototype.trimend "^1.0.8"
     tsconfig-paths "^3.15.0"
 
-eslint-plugin-jsx-a11y@^6.10.0:
+eslint-plugin-jsx-a11y@^6.10.0, eslint-plugin-jsx-a11y@^6.10.2:
   version "6.10.2"
   resolved "https://registry.yarnpkg.com/eslint-plugin-jsx-a11y/-/eslint-plugin-jsx-a11y-6.10.2.tgz#d2812bb23bf1ab4665f1718ea442e8372e638483"
   integrity sha512-scB3nz4WmG75pV8+3eRUQOHZlNSUhFNq37xnpgRkCCELU3XMvXAxLk1eqWWyE22Ki4Q01Fnsw9BA3cJHDPgn2Q==
@@ -4050,6 +4055,13 @@ eslint-plugin-prettier@5.2.3:
     prettier-linter-helpers "^1.0.0"
     synckit "^0.9.1"
 
+eslint-plugin-promise@^7.2.1:
+  version "7.2.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-promise/-/eslint-plugin-promise-7.2.1.tgz#a0652195700aea40b926dc3c74b38e373377bfb0"
+  integrity sha512-SWKjd+EuvWkYaS+uN2csvj0KoP43YTu7+phKQ5v+xw6+A0gutVX2yqCeCkC3uLCJFiPfR2dD8Es5L7yUsmvEaA==
+  dependencies:
+    "@eslint-community/eslint-utils" "^4.4.0"
+
 eslint-plugin-react-compiler@19.0.0-beta-e1e972c-20250221:
   version "19.0.0-beta-e1e972c-20250221"
   resolved "https://registry.yarnpkg.com/eslint-plugin-react-compiler/-/eslint-plugin-react-compiler-19.0.0-beta-e1e972c-20250221.tgz#78fd54ad5d62760b4f925846903d6d83e4ac5e29"
@@ -4067,7 +4079,7 @@ eslint-plugin-react-hooks@5.2.0, eslint-plugin-react-hooks@^5.0.0:
   resolved "https://registry.yarnpkg.com/eslint-plugin-react-hooks/-/eslint-plugin-react-hooks-5.2.0.tgz#1be0080901e6ac31ce7971beed3d3ec0a423d9e3"
   integrity sha512-+f15FfK64YQwZdJNELETdn5ibXEUQmW1DZL6KXhNnc2heoy/sg9VJJeT7n8TlMWouzWqSWavFkIhHyIbIAEapg==
 
-eslint-plugin-react@^7.37.0:
+eslint-plugin-react@^7.37.0, eslint-plugin-react@^7.37.4:
   version "7.37.4"
   resolved "https://registry.yarnpkg.com/eslint-plugin-react/-/eslint-plugin-react-7.37.4.tgz#1b6c80b6175b6ae4b26055ae4d55d04c414c7181"
   integrity sha512-BGP0jRmfYyvOyvMoRX/uoUeW+GqNj9y16bPQzqAHf3AYII/tDs+jMN0dBVkl88/OZwNGwrVFxE7riHsXVfy/LQ==
@@ -4799,7 +4811,7 @@ input-otp@^1.4.2:
   resolved "https://registry.yarnpkg.com/input-otp/-/input-otp-1.4.2.tgz#f4d3d587d0f641729e55029b3b8c4870847f4f07"
   integrity sha512-l3jWwYNvrEa6NTCt7BECfCm48GvwuZzkoeG3gBL2w4CHeOXW3eKFmf9UNYkNfYc3mxMrthMnxjIE07MT0zLBQA==
 
-inquirer@^12.4.3:
+inquirer@^12.4.3, inquirer@^12.5.0:
   version "12.5.0"
   resolved "https://registry.yarnpkg.com/inquirer/-/inquirer-12.5.0.tgz#de28d9a94888dc454d1253431c8d02665343fcba"
   integrity sha512-aiBBq5aKF1k87MTxXDylLfwpRwToShiHrSv4EmB07EYyLgmnjEz5B3rn0aGw1X3JA/64Ngf2T54oGwc+BCsPIQ==
@@ -5599,6 +5611,11 @@ npm-check-updates@17.1.15:
   version "17.1.15"
   resolved "https://registry.yarnpkg.com/npm-check-updates/-/npm-check-updates-17.1.15.tgz#3e5734f5acf91de1c4ef3cd4ac460172d9195c99"
   integrity sha512-miATvKu5rjec/1wxc5TGDjpsucgtCHwRVZorZpDkS6NzdWXfnUWlN4abZddWb7XSijAuBNzzYglIdTm9SbgMVg==
+
+npm-check-updates@17.1.16:
+  version "17.1.16"
+  resolved "https://registry.yarnpkg.com/npm-check-updates/-/npm-check-updates-17.1.16.tgz#28f5debfb81b29bf152162de810beb526b638226"
+  integrity sha512-9nohkfjLRzLfsLVGbO34eXBejvrOOTuw5tvNammH73KEFG5XlFoi3G2TgjTExHtnrKWCbZ+mTT+dbNeSjASIPw==
 
 npmlog@^5.0.1:
   version "5.0.1"
@@ -6560,6 +6577,16 @@ sovendus-release-tool@^1.4.1:
     npm-check-updates "17.1.15"
     vite "^6.2.2"
 
+sovendus-release-tool@^1.4.2:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/sovendus-release-tool/-/sovendus-release-tool-1.4.2.tgz#93886827c7cda55fb4c5877ccee7ac6ccdc55e2d"
+  integrity sha512-gOs6IL3KizfujklALO0Th2ovod6RW0gqVn4GZLL/GWccLFbYrUxwAld7xdatnHPrjRq/f9v0x2CApj2PpH4WuQ==
+  dependencies:
+    commander "13.1.0"
+    inquirer "^12.5.0"
+    npm-check-updates "17.1.16"
+    vite "^6.2.3"
+
 sprintf-js@~1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
@@ -7171,6 +7198,17 @@ vite-tsconfig-paths@^5.1.4:
   version "6.2.2"
   resolved "https://registry.yarnpkg.com/vite/-/vite-6.2.2.tgz#8098b12a6bfd95abe39399aa7d5faa56545d7a1a"
   integrity sha512-yW7PeMM+LkDzc7CgJuRLMW2Jz0FxMOsVJ8Lv3gpgW9WLcb9cTW+121UEr1hvmfR7w3SegR5ItvYyzVz1vxNJgQ==
+  dependencies:
+    esbuild "^0.25.0"
+    postcss "^8.5.3"
+    rollup "^4.30.1"
+  optionalDependencies:
+    fsevents "~2.3.3"
+
+vite@^6.2.3:
+  version "6.2.3"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-6.2.3.tgz#249e92d32886981ab46bc1f049ac72abc6fa81e2"
+  integrity sha512-IzwM54g4y9JA/xAeBPNaDXiBF8Jsgl3VBQ2YQ/wOY6fyW3xMdSoltIV3Bo59DErdqdE6RxUfv8W69DvUorE4Eg==
   dependencies:
     esbuild "^0.25.0"
     postcss "^8.5.3"

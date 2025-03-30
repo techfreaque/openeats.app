@@ -63,7 +63,7 @@ export function apiHandler<TRequest, TResponse, TUrlVariables, TExampleKey>({
     if (!response.success) {
       return createErrorResponse(endpoint, response.message, 500);
     }
-    return createSuccessResponse<
+    return await createSuccessResponse<
       TRequest,
       TResponse,
       TUrlVariables,
@@ -89,9 +89,9 @@ async function validateRequest<TRequest, TResponse, TUrlVariables, TExampleKey>(
   request: Request,
 ): Promise<SafeReturnType<TRequest>> {
   if (endpoint.method === Methods.GET) {
-    return validateGetRequest<TRequest>(request, endpoint.requestSchema);
+    return await validateGetRequest<TRequest>(request, endpoint.requestSchema);
   }
-  return validatePostRequest<TRequest>(request, endpoint.requestSchema);
+  return await validatePostRequest<TRequest>(request, endpoint.requestSchema);
 }
 
 async function safeExecute<TRequest, TResponse, TUrlVariables>(
@@ -101,7 +101,7 @@ async function safeExecute<TRequest, TResponse, TUrlVariables>(
   urlVariables: TUrlVariables,
 ): Promise<SafeReturnType<TResponse>> {
   try {
-    return handler({
+    return await handler({
       data: validatedData,
       urlVariables,
       user,
@@ -121,15 +121,15 @@ export type ApiHandlerCallBackFunctionType<TRequest, TResponse, TUrlVariables> =
     | Promise<SafeReturnType<TResponse>>
     | SafeReturnType<TResponse>;
 
-export type ApiHandlerCallBackProps<TRequest, TUrlVariables> = {
+export interface ApiHandlerCallBackProps<TRequest, TUrlVariables> {
   data: TRequest;
   urlVariables: TUrlVariables;
   user: JwtPayloadType;
-};
+}
 
 export type SafeReturnType<TResponse> =
   | { data: TResponse; success: true; message?: never; errorCode?: never }
-  | { success: false; message: string; errorCode: number; data?: TResponse };
+  | { success: false; message: string; errorCode: number; data?: never };
 
 export interface ApiHandlerProps<
   TRequest,

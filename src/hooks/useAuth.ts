@@ -5,59 +5,26 @@ import {
   removeAuthToken,
   setAuthToken,
 } from "next-query-portal/client/storage/auth-client";
-import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
 import { errorLogger } from "next-query-portal/shared/utils/logger";
 import { useEffect } from "react";
 
 import logoutEndpoint from "@/app/api/v1/auth/logout/definition";
 import meEndpoint from "@/app/api/v1/auth/me/definition";
-import type {
-  UserResponseType,
-  UserUpdateRequestType,
-} from "@/app/api/v1/auth/me/schema";
 import loginEndpoint from "@/app/api/v1/auth/public/login/definition";
-import type {
-  LoginFormType,
-  LoginResponseType,
-} from "@/app/api/v1/auth/public/login/schema";
 import registerEndpoint from "@/app/api/v1/auth/public/register/definition";
-import type { RegisterType } from "@/app/api/v1/auth/public/register/schema";
 import { useApiForm } from "@/packages/next-query-portal/client/hooks/form";
 
-export interface UseAuthReturn {
-  user: UserResponseType | undefined;
-  isLoggedIn: boolean;
-  isLoading: boolean;
-  loginForm: ReturnType<
-    typeof useApiForm<
-      LoginFormType,
-      UndefinedType,
-      LoginResponseType,
-      "default"
-    >
-  >;
-  signupForm: ReturnType<
-    typeof useApiForm<RegisterType, UndefinedType, LoginResponseType, "default">
-  >;
-  userForm: ReturnType<
-    typeof useApiForm<
-      UserUpdateRequestType,
-      UndefinedType,
-      UserResponseType,
-      "default"
-    >
-  >;
-  logout: () => void;
-}
+export type UseAuthReturn = ReturnType<typeof useAuth>;
 
-export function useAuth(): UseAuthReturn {
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export function useAuth() {
   // Use useApiQuery for ME endpoint with proper dependencies
   const {
     data: user,
     isLoading,
     isError,
     refetch,
-  } = useApiQuery(meEndpoint.GET, {
+  } = useApiQuery(meEndpoint.GET, undefined, undefined, {
     enabled: false, // Initially disabled, we'll check auth first
   });
   // Check authentication status and enable ME query if authenticated
@@ -87,7 +54,7 @@ export function useAuth(): UseAuthReturn {
     {},
     {
       onSuccess: async ({ responseData }) => {
-        if (responseData?.token) {
+        if (responseData.token) {
           await setAuthToken(responseData.token);
           await refetch();
         }
@@ -99,7 +66,7 @@ export function useAuth(): UseAuthReturn {
     {},
     {
       onSuccess: async ({ responseData }) => {
-        if (responseData?.token) {
+        if (responseData.token) {
           await setAuthToken(responseData.token);
           await refetch();
         }
@@ -128,13 +95,13 @@ export function useAuth(): UseAuthReturn {
   });
 
   return {
-    user: user?.user || undefined,
+    user: user?.user ?? undefined,
     isLoggedIn: !!user && !isError,
     isLoading,
     loginForm,
     signupForm,
     userForm,
-    logout: () =>
+    logout: (): void =>
       logout.mutate({ requestData: undefined, urlParams: undefined }),
   };
 }

@@ -22,9 +22,7 @@ function isSuccessResponse<T>(
   );
 }
 
-function isErrorResponse<TResponse>(
-  response: unknown,
-): response is ErrorResponseType<TResponse> {
+function isErrorResponse(response: unknown): response is ErrorResponseType {
   return (
     typeof response === "object" &&
     response !== null &&
@@ -80,7 +78,7 @@ export async function callApi<TRequest, TResponse, TUrlVariables, TExampleKey>(
 
     // Handle API response
     if (!response.ok) {
-      const errorMessage = isErrorResponse<TResponse>(json)
+      const errorMessage = isErrorResponse(json)
         ? json.message
         : `API error: ${response.status} ${response.statusText}`;
       return {
@@ -106,13 +104,13 @@ export async function callApi<TRequest, TResponse, TUrlVariables, TExampleKey>(
         data: validationResponse.data,
       };
     } else {
-      const errorMessage = isErrorResponse<TResponse>(json)
+      const errorMessage = isErrorResponse(json)
         ? json.message
         : "Unknown error";
       return {
         success: false,
         message: errorMessage,
-      } as ErrorResponseType<TResponse>;
+      } as ErrorResponseType;
     }
   } catch (error) {
     return {

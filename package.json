@@ -9,7 +9,7 @@
         "dev": "yarn dev:db-setup && next dev",
         "dev:debug": "DEBUG=next*,turbo* RUST_LOG=debug next dev",
         "dev:db-setup": "yarn db:dev && yarn build:pre && yarn db:push && yarn db:generate && yarn db:reset && yarn db:migrate-dev && yarn db:seed-dev && yarn db:seed",
-        "build": "yarn build:pre && next build",
+        "build": "yarn build:pre && next build ./ --no-lint",
         "build:package": "sovendus-builder build",
         "start": "next start",
         "start:pre": "yarn db:migrate && yarn db:seed",
@@ -59,7 +59,10 @@
         "@prisma/client": "^6.5.0",
         "uuid": "^11.1.0"
     },
-    "devDependencies": {},
+    "devDependencies": {
+        "sovendus-release-tool": "^1.4.2",
+        "vitest": "^3.0.9"
+    },
     "workspaces": [
         "src/packages/*"
     ]

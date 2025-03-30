@@ -12,14 +12,14 @@ export type EmailFunctionType<TRequest, TResponse, TUrlVariables> = ({
   | Promise<SafeReturnType<EmailTemplateReturnType>>
   | SafeReturnType<EmailTemplateReturnType>;
 
-export type EmailRenderProps<TRequest, TResponse, TUrlVariables> = {
+export interface EmailRenderProps<TRequest, TResponse, TUrlVariables> {
   requestData: TRequest;
   urlVariables: TUrlVariables;
   responseData: TResponse;
   user: JwtPayloadType;
-};
+}
 
-export type EmailTemplateReturnType = {
+export interface EmailTemplateReturnType {
   jsx: JSX.Element;
   subject: string;
   fromName?: string;
@@ -27,7 +27,7 @@ export type EmailTemplateReturnType = {
   toEmail: string;
   toName: string;
   replyToEmail?: string;
-};
+}
 
 export async function handleEmails<TRequest, TResponse, TUrlVariables>({
   email,

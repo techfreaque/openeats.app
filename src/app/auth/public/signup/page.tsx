@@ -57,7 +57,13 @@ export default function SignupPage(): JSX.Element {
       )}
 
       <Form {...signupForm.form}>
-        <form onSubmit={signupForm.submitForm} className="space-y-6" noValidate>
+        <form
+          onSubmit={(event) =>
+            signupForm.submitForm(event, { urlParamVariables: undefined })
+          }
+          className="space-y-6"
+          noValidate
+        >
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={signupForm.form.control}

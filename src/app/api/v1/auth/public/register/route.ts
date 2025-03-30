@@ -11,7 +11,7 @@ import { UserRoleValue } from "next-query-portal/shared/types/enums";
 
 import { db } from "../../../../db";
 import { loginUser } from "../login/route-handler";
-import type { LoginResponseType } from "../login/schema";
+import type { LoginResponseInputType } from "../login/schema";
 import registerEndpoint from "./definition";
 import { renderRegisterMail } from "./email";
 import type { RegisterType } from "./schema";
@@ -34,10 +34,10 @@ export const POST = apiHandler({
  */
 async function registerUser(
   props: ApiHandlerCallBackProps<RegisterType, UndefinedType>,
-): Promise<SafeReturnType<LoginResponseType>> {
+): Promise<SafeReturnType<LoginResponseInputType>> {
   const { success, message, errorCode } = await createUser(props.data);
   if (success) {
-    return loginUser(props);
+    return await loginUser(props);
   }
   return { success: false, message, errorCode };
 }
@@ -79,7 +79,7 @@ export async function createUser(
         password: hashedPassword,
         firstName,
         lastName,
-        imageUrl: imageUrl || null,
+        imageUrl: imageUrl ?? null,
         userRoles: {
           create: {
             role: role,
@@ -91,7 +91,7 @@ export async function createUser(
         password: hashedPassword,
         firstName,
         lastName,
-        imageUrl: imageUrl || null,
+        imageUrl: imageUrl ?? null,
         userRoles: {
           create: { role },
         },
@@ -105,7 +105,7 @@ export async function createUser(
         password: hashedPassword,
         firstName,
         lastName,
-        imageUrl: imageUrl || null,
+        imageUrl: imageUrl ?? null,
         userRoles: {
           create: { role },
         },
@@ -116,5 +116,5 @@ export async function createUser(
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  return hash(password, 10);
+  return await hash(password, 10);
 }

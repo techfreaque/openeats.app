@@ -12,7 +12,7 @@ export interface JwtPayloadType {
  */
 export async function signJwt(payload: JwtPayloadType): Promise<string> {
   const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-  return new SignJWT({ ...payload } as JWTPayload)
+  return await new SignJWT({ ...payload } as JWTPayload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d") // Token expires in 7 days

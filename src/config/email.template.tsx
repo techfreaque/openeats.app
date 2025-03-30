@@ -13,11 +13,11 @@ import type { JSX, ReactNode } from "react";
 
 import { env } from "./env";
 
-type EmailTemplateProps = {
+interface EmailTemplateProps {
   title: string;
   previewText?: string;
   children: ReactNode;
-};
+}
 
 export function EmailTemplate({
   title,

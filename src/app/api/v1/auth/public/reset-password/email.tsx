@@ -19,7 +19,12 @@ export const renderResetPasswordMail: EmailFunctionType<
   });
   if (!existingUser) {
     // will not get sent to the user as ignoreError is true
-    return { success: false, message: "Email not found", errorCode: 404 };
+    return { success: false, message: "Email not found", errorCode: 404 } as {
+      success: false;
+      message: string;
+      errorCode: number;
+      data?: never;
+    };
   }
   const token = await generatePasswordResetToken(
     requestData.email,

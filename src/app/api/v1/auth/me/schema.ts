@@ -31,7 +31,7 @@ export const userUpdateRequestSchema = z.object({
     .url()
     .nullable()
     .optional()
-    .transform((url) => url || undefined),
+    .transform((url) => url ?? undefined),
 });
 export type UserUpdateRequestType = z.input<typeof userUpdateRequestSchema>;
 
@@ -45,7 +45,7 @@ export const userResponseSchema = z.object({
     .url()
     .nullable()
     .optional()
-    .transform((url) => url || undefined),
+    .transform((url) => url ?? undefined),
   userRoles: z.array(userRoleResponseSchema),
   createdAt: dateSchema,
   updatedAt: dateSchema,

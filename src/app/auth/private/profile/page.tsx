@@ -38,6 +38,7 @@ export default function ProfilePage(): JSX.Element | null {
 
   const handleSaveProfile = (event: FormEvent<HTMLFormElement>): void => {
     userForm.submitForm(event, {
+      urlParamVariables: undefined,
       onSuccess: () => setIsEditing(false),
     });
   };
@@ -61,7 +62,7 @@ export default function ProfilePage(): JSX.Element | null {
                     <div className="relative h-32 w-32 overflow-hidden rounded-full">
                       <Image
                         src={
-                          user.imageUrl ||
+                          user.imageUrl ??
                           "/placeholder.svg?height=128&width=128"
                         }
                         alt={user.firstName}

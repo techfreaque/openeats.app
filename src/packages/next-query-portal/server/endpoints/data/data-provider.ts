@@ -63,12 +63,12 @@ export class MockDataProvider implements DataProvider {
   private roles: Record<string, UserRoleResponseType[]> = {};
 
   constructor(mockData?: Record<string, UserRoleResponseType[]>) {
-    this.roles = mockData || {};
+    this.roles = mockData ?? {};
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async getUserRoles(userId: string): Promise<UserRoleResponseType[]> {
-    return this.roles[userId] || [];
+    return this.roles[userId] ?? [];
   }
 
   setUserRoles(userId: string, roles: UserRoleResponseType[]): void {

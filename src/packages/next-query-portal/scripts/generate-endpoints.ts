@@ -154,7 +154,7 @@ import type { ApiSection } from "next-query-portal/shared";
     imports.push(`import { default as ${varName} } from "${importPath}";`);
 
     // Generate code to ensure path exists before assigning
-    const pathCreationCode = [];
+    const pathCreationCode: string[] = [];
     let currentPath = "endpoints";
     for (const segment of pathSegments) {
       currentPath += `["${segment}"]`;

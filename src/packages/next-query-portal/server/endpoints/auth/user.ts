@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 import { UserRoleValue } from "../../../shared/types/enums";
 import { getDataProvider } from "../data/data-provider";
@@ -59,10 +58,10 @@ export async function getCurrentUser(): Promise<JwtPayloadType | null> {
     const authHeader = (await headers()).get("Authorization");
     const headerToken = authHeader?.startsWith("Bearer ")
       ? authHeader.substring(7)
-      : authHeader || null;
+      : (authHeader ?? undefined);
 
     // Then check for cookie if no header token
-    const token = headerToken || (await cookies()).get("token")?.value;
+    const token = headerToken ?? (await cookies()).get("token")?.value;
 
     if (!token) {
       return null;

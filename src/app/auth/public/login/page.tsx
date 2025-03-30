@@ -57,7 +57,13 @@ export default function LoginPage(): JSX.Element {
       )}
 
       <Form {...loginForm.form}>
-        <form onSubmit={loginForm.submitForm} className="space-y-6" noValidate>
+        <form
+          onSubmit={(event) =>
+            loginForm.submitForm(event, { urlParamVariables: undefined })
+          }
+          className="space-y-6"
+          noValidate
+        >
           <FormField
             control={loginForm.form.control}
             name="email"

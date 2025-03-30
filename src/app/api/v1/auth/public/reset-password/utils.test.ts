@@ -56,9 +56,9 @@ describe("Password Reset Tokens", () => {
       });
 
       expect(resetRecord).toBeTruthy();
-      expect(resetRecord!.token).toBe(token);
-      expect(resetRecord!.userId).toBe(mockUserId);
-      expect(resetRecord!.expiresAt > new Date()).toBeTruthy();
+      expect(resetRecord.token).toBe(token);
+      expect(resetRecord.userId).toBe(mockUserId);
+      expect(resetRecord.expiresAt > new Date()).toBeTruthy();
     });
   });
 

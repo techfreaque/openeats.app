@@ -1,6 +1,7 @@
 "use client";
 
 import { DashIcon } from "@radix-ui/react-icons";
+import type { SlotProps } from "input-otp";
 import { OTPInput, OTPInputContext } from "input-otp";
 import { cn } from "next-query-portal/shared/utils/utils";
 import * as React from "react";
@@ -34,7 +35,11 @@ const InputOTPSlot = React.forwardRef<
   React.ComponentPropsWithoutRef<"div"> & { index: number }
 >(({ index, className, ...props }, ref) => {
   const inputOTPContext = React.useContext(OTPInputContext);
-  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index]!;
+  const slotProps = inputOTPContext.slots[index];
+  if (!slotProps) {
+    return null;
+  }
+  const { char, hasFakeCaret, isActive }: SlotProps = slotProps;
 
   return (
     <div

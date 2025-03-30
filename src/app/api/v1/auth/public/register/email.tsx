@@ -5,12 +5,12 @@ import type { UndefinedType } from "next-query-portal/shared/types/common.schema
 
 import { EmailTemplate } from "../../../../../../config/email.template";
 import { env } from "../../../../../../config/env";
-import type { LoginResponseType } from "../login/schema";
+import type { LoginResponseInputType } from "../login/schema";
 import type { RegisterType } from "./schema";
 
 export const renderRegisterMail: EmailFunctionType<
   RegisterType,
-  LoginResponseType,
+  LoginResponseInputType,
   UndefinedType
 > = ({ responseData }) => {
   const baseUrl = env.NEXT_PUBLIC_FRONTEND_APP_URL;

@@ -7,6 +7,7 @@
 import { db } from "@/app/api/db";
 import seedTestDatabase from "@/app/api/db/scripts/seed-dev-db";
 
+import teardown from "./global-teardown";
 import { startServer } from "./test-server";
 
 export default async function setup() {
@@ -15,8 +16,9 @@ export default async function setup() {
     await seedTestDatabase();
 
     // Return a teardown function that will be run after all tests
-    return (): void => {
+    return async (): Promise<void> => {
       console.log("Global setup teardown function called");
+      await teardown();
       // The actual teardown logic is in global-teardown.ts
     };
   } catch (error) {

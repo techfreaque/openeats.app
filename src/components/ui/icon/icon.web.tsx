@@ -23,7 +23,7 @@ export const Icon = forwardRef<
     ref,
   ) => {
     // Get the icon component from lucide-react
-    const IconComponent = LucideIcons[name as keyof typeof LucideIcons] as FC<
+    const IconComponent = LucideIcons[name] as FC<
       SVGProps<SVGSVGElement> & {
         size?: number;
         color?: string;

@@ -17,7 +17,7 @@ export function format<T = Record<string, string>>(
   return strings.map((part) =>
     part.replace(
       /{(\w+)}/g,
-      (_, key: string) => (values as Record<string, string>)[key] || "",
+      (_, key: string) => (values as Record<string, string>)[key] ?? "",
     ),
   );
 }

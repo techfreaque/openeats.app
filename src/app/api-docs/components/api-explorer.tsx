@@ -97,7 +97,7 @@ export function ApiExplorer(): JSX.Element {
     setResponseStatus(null);
 
     // Reset form with default values from examples if available
-    if (newEndpoint.examples.payloads?.["default"]) {
+    if (newEndpoint.examples.payloads["default"]) {
       apiForm.form.reset(newEndpoint.examples.payloads["default"]);
     } else {
       apiForm.form.reset({});
@@ -105,8 +105,11 @@ export function ApiExplorer(): JSX.Element {
   };
 
   // Fix the unused variable by implementing URL path variable handling in form submission
-  const handleTryIt = (event?: FormEvent<HTMLFormElement>): void => {
-    apiForm.submitForm(event);
+  const handleTryIt = (
+    event: FormEvent<HTMLFormElement> | undefined,
+    urlParamVariables: unknown,
+  ): void => {
+    apiForm.submitForm(event, { urlParamVariables });
   };
 
   return (
@@ -175,9 +178,9 @@ export function ApiExplorer(): JSX.Element {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="2" y1="12" x2="22" y2="12"></line>
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
                 <div>
                   <div className="text-xs">USE IN</div>

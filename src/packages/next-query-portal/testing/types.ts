@@ -1,21 +1,6 @@
 import type { ApiEndpoint } from "next-query-portal/client/endpoint";
 import type { JwtPayloadType } from "next-query-portal/server/endpoints/auth/jwt";
 import type { SafeReturnType } from "next-query-portal/server/endpoints/core/api-handler";
-import type { UserRoleResponseType } from "next-query-portal/shared/types/user-roles.schema";
-
-/**
- * Specific mock data structure for tests
- */
-export interface MockTestData {
-  users?: Array<{ id: string; [key: string]: unknown }>;
-  roles?: UserRoleResponseType[];
-  restaurants?: Array<{ id: string; [key: string]: unknown }>;
-  orders?: Array<{ id: string; [key: string]: unknown }>;
-  products?: Array<{ id: string; [key: string]: unknown }>;
-  [collectionName: string]:
-    | Array<{ id: string; [key: string]: unknown }>
-    | undefined;
-}
 
 /**
  * Options for testing an API endpoint
@@ -26,16 +11,6 @@ export interface TestEndpointOptions<
   TUrlVariables,
   TExampleKey,
 > {
-  /**
-   * Mock user for authenticated endpoints
-   */
-  mockUser?: JwtPayloadType;
-
-  /**
-   * Mock data for the data provider
-   */
-  mockData?: MockTestData;
-
   /**
    * Custom test cases to run in addition to (or instead of) example tests
    */

@@ -79,7 +79,7 @@ export interface ApiStore {
   ) => string;
 }
 
-export type QueryStoreType<TResponse> = {
+export interface QueryStoreType<TResponse> {
   data: TResponse | undefined;
   error: Error | null;
   isLoading: boolean;
@@ -90,15 +90,15 @@ export type QueryStoreType<TResponse> = {
   isCachedData: boolean;
   statusMessage: string;
   lastFetchTime: number | null;
-};
+}
 
-export type MutationStoreType<TResponse> = {
+export interface MutationStoreType<TResponse> {
   isPending: boolean;
   isError: boolean;
   error: Error | null;
   isSuccess: boolean;
   data: TResponse | undefined;
-};
+}
 
 export const useApiStore = create<ApiStore>((set, get) => ({
   queries: {},
@@ -124,7 +124,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
     } = {},
   ): Promise<TResponse> => {
     const queryId = get().getQueryId(
-      options.queryKey || [endpoint.path.join("/"), endpoint.method],
+      options.queryKey ?? [endpoint.path.join("/"), endpoint.method],
     );
     const storageKey = queryId;
     const requestKey = `${queryId}|${JSON.stringify(requestData)}|${JSON.stringify(pathParams)}`;
@@ -144,7 +144,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
           isFetching: true,
           statusMessage: "Loading data...",
           isLoadingFresh: state.queries[queryId]?.data ? false : true,
-          ...(state.queries[queryId] || {}),
+          ...(state.queries[queryId] ?? {}),
         },
       },
     }));
@@ -155,7 +155,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
       options.deduplicateRequests !== false
     ) {
       try {
-        return inFlightRequests.get(requestKey) as Promise<TResponse>;
+        return (await inFlightRequests.get(requestKey)) as TResponse;
       } catch (error) {
         // If the shared request fails, we'll continue and try again
         errorLogger("Shared request failed, retrying", error);
@@ -172,8 +172,8 @@ export const useApiStore = create<ApiStore>((set, get) => ({
               ...state.queries,
               [queryId]: {
                 data: cachedData,
-                lastFetchTime: state.queries[queryId]?.lastFetchTime || null,
-                ...(state.queries[queryId] || {}),
+                lastFetchTime: state.queries[queryId]?.lastFetchTime ?? null,
+                ...(state.queries[queryId] ?? {}),
                 error: null,
                 isLoading: false,
                 isFetching: false,
@@ -191,15 +191,19 @@ export const useApiStore = create<ApiStore>((set, get) => ({
           const refreshDelay = options.refreshDelay ?? 50; // 50ms default delay
 
           const refreshPromise = new Promise<void>((resolve) => {
+            const { executeQuery } = get();
             setTimeout(() => {
-              get()
-                .executeQuery(endpoint, requestData, pathParams, {
-                  ...options,
-                  queryKey: options.queryKey as QueryKey,
-                  disableLocalCache: true,
-                })
+              executeQuery(endpoint, requestData, pathParams, {
+                ...options,
+                queryKey: options.queryKey as QueryKey,
+                disableLocalCache: true,
+              })
                 .catch((err) => errorLogger("Background refresh failed:", err))
-                .finally(() => resolve());
+                .finally(() => resolve())
+                .catch((err) => {
+                  resolve();
+                  errorLogger("Background refresh finalization failed:", err);
+                });
             }, refreshDelay);
           });
 
@@ -280,15 +284,15 @@ export const useApiStore = create<ApiStore>((set, get) => ({
           queries: {
             ...state.queries,
             [queryId]: {
-              ...(state.queries[queryId] || {}),
-              data: state.queries[queryId]?.data || undefined,
+              ...(state.queries[queryId] ?? {}),
+              data: state.queries[queryId]?.data ?? undefined,
               error: new Error(errorResponse.message),
               isLoading: false,
               isFetching: false,
               isError: true,
               isSuccess: false,
               isLoadingFresh: false,
-              isCachedData: state.queries[queryId]?.isCachedData || false,
+              isCachedData: state.queries[queryId]?.isCachedData ?? false,
               statusMessage: `Error: ${errorResponse.message}`,
               lastFetchTime: Date.now(),
             },
@@ -310,7 +314,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
     // Register the in-flight request
     inFlightRequests.set(requestKey, fetchPromise);
 
-    return fetchPromise;
+    return await fetchPromise;
   },
 
   executeMutation: async <TRequest, TResponse, TUrlVariables, TExampleKey>(
@@ -465,7 +469,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
       forms: {
         ...state.forms,
         [formId]: {
-          ...(state.forms[formId] || { isSubmitting: false }),
+          ...(state.forms[formId] ?? { isSubmitting: false }),
           formError: error,
         },
       },
@@ -477,7 +481,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
       forms: {
         ...state.forms,
         [formId]: {
-          ...(state.forms[formId] || { formError: null, isSubmitting: false }),
+          ...(state.forms[formId] ?? { formError: null, isSubmitting: false }),
           formError: null,
         },
       },
@@ -504,7 +508,7 @@ export const apiClient = {
       queryKey?: QueryKey;
     } = {},
   ): Promise<TResponse> => {
-    return useApiStore
+    return await useApiStore
       .getState()
       .executeQuery(endpoint, requestData, pathParams, options);
   },
@@ -518,7 +522,7 @@ export const apiClient = {
     pathParams: TUrlVariables,
     options: ApiMutationOptions<TRequest, TResponse, TUrlVariables> = {},
   ): Promise<TResponse> => {
-    return useApiStore
+    return await useApiStore
       .getState()
       .executeMutation(endpoint, data, pathParams, options);
   },

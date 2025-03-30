@@ -17,9 +17,9 @@ import type { EnhancedQueryResult } from "../types";
  */
 export function useApiQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
+  requestData: TRequest,
+  urlParams: TUrlVariables,
   options: {
-    data?: TRequest;
-    urlParams?: TUrlVariables;
     queryKey?: QueryKey;
     enabled?: boolean;
     staleTime?: number;
@@ -29,19 +29,14 @@ export function useApiQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
     disableLocalCache?: boolean;
     refreshDelay?: number;
   } = {},
-): EnhancedQueryResult<TResponse, Error> {
-  const {
-    data: requestData,
-    urlParams: pathParams,
-    queryKey: customQueryKey,
-    ...queryOptions
-  } = options;
+): EnhancedQueryResult<TResponse> {
+  const { queryKey: customQueryKey, ...queryOptions } = options;
 
-  const queryKey: QueryKey = customQueryKey || [
+  const queryKey: QueryKey = customQueryKey ?? [
     endpoint.path,
     endpoint.method,
     requestData,
-    pathParams,
+    urlParams,
   ];
 
   const { executeQuery, getQueryId } = useApiStore();
@@ -76,7 +71,7 @@ export function useApiQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
       (state: ApiStore): QueryStoreType<TResponse> =>
         (state.queries[queryId] as unknown as
           | undefined
-          | QueryStoreType<TResponse>) || defaultState,
+          | QueryStoreType<TResponse>) ?? defaultState,
     // eslint-disable-next-line react-compiler/react-compiler
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [queryId, options.enabled],
@@ -92,7 +87,7 @@ export function useApiQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
     if (options.enabled === false) {
       //   setIsInitialized(true);
     } else {
-      void executeQuery(endpoint, requestData, pathParams, {
+      void executeQuery(endpoint, requestData, urlParams, {
         ...queryOptions,
         queryKey,
       });
@@ -108,10 +103,10 @@ export function useApiQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
   }, [queryId, options.enabled]);
 
   const refetch = async (): Promise<TResponse> => {
-    return executeQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
+    return await executeQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
       endpoint,
-      requestData!,
-      pathParams!,
+      requestData,
+      urlParams,
       {
         ...queryOptions,
         queryKey,
@@ -121,9 +116,9 @@ export function useApiQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
   };
 
   // Create a result object that matches React Query's API
-  const result: EnhancedQueryResult<TResponse, Error> = {
-    data: (queryState.data || undefined) as TResponse,
-    error: queryState.error,
+  const result: EnhancedQueryResult<TResponse> = {
+    data: queryState.data ?? undefined,
+    error: queryState.error ?? undefined,
     isLoading: queryState.isLoading || queryState.isFetching,
     isFetching: queryState.isFetching,
     isError: queryState.isError,
@@ -141,9 +136,6 @@ export function useApiQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
           : queryState.isSuccess
             ? "success"
             : "idle",
-    failureCount: 0,
-    failureReason: queryState.error,
-    errorUpdateCount: 0,
     refetch,
     remove: () => {
       // Clear from in-memory state
@@ -153,7 +145,6 @@ export function useApiQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
         return { queries };
       });
     },
-    fetchStatus: queryState.isFetching ? "fetching" : "idle",
   };
 
   return result;

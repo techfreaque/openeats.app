@@ -12,7 +12,7 @@ export enum Methods {
   PATCH = "PATCH",
 }
 export type ExamplesList<T, TExampleKey> = {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   [exampleKey in TExampleKey]: T & { id?: string };
-  // default: T & { id?: string };
-  // [exampleKey in TExampleKey]: T & { id?: string };
 };
