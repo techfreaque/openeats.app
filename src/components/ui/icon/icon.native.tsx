@@ -1,5 +1,5 @@
 import * as LucideIcons from "lucide-react-native";
-import { cn } from "next-query-portal/shared/utils/utils";
+import { cn } from "next-vibe/shared/utils/utils";
 import type { ReactElement } from "react";
 import { forwardRef } from "react";
 import type { SvgProps } from "react-native-svg";

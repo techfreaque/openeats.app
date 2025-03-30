@@ -1,6 +1,6 @@
 "use client";
 
-import { ENDPOINT_DOMAINS } from "next-query-portal/shared/constants";
+import { ENDPOINT_DOMAINS } from "next-vibe/shared/constants";
 import type { JSX } from "react";
 
 import {

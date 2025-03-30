@@ -2,13 +2,13 @@ import "./globals.css";
 
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { APP_NAME } from "next-query-portal/shared/constants";
+import { APP_NAME } from "next-vibe/shared/constants";
 import type React from "react";
 import type { JSX } from "react";
 
 import { ThemeProvider } from "@/components/theme-provider";
 
-import { TranslationProvider } from "../packages/next-query-portal/i18n";
+import { TranslationProvider } from "../packages/next-vibe/i18n";
 
 const inter = Inter({ subsets: ["latin"] });
 

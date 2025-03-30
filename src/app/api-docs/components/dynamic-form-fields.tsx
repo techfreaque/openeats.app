@@ -1,6 +1,6 @@
-import type { ApiEndpoint } from "next-query-portal/client/endpoint";
-import type { ApiFormReturn } from "next-query-portal/client/hooks/types";
-import { cn } from "next-query-portal/shared/utils/utils";
+import type { ApiEndpoint } from "next-vibe/client/endpoint";
+import type { ApiFormReturn } from "next-vibe/client/hooks/types";
+import { cn } from "next-vibe/shared/utils/utils";
 import type { JSX, ReactNode } from "react";
 import React from "react";
 import { type FieldValues } from "react-hook-form";

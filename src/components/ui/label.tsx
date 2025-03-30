@@ -2,7 +2,7 @@
 
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "next-query-portal/shared/utils/utils";
+import { cn } from "next-vibe/shared/utils/utils";
 import * as React from "react";
 
 const labelVariants = cva(

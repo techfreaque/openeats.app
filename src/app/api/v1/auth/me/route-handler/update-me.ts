@@ -1,7 +1,7 @@
 import "server-only";
 
-import type { ApiHandlerCallBackFunctionType } from "next-query-portal/server/endpoints/core/api-handler";
-import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
+import type { ApiHandlerCallBackFunctionType } from "next-vibe/server/endpoints/core/api-handler";
+import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 
 import { db } from "../../../../db";
 import type { UserResponseType, UserUpdateRequestType } from "../schema";

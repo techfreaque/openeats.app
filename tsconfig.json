@@ -2,14 +2,14 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "next-query-portal/*": [
-        "./src/packages/next-query-portal/*"
+      "next-vibe/*": [
+        "./src/packages/next-vibe/*"
       ],
       "@/*": [
         "./src/*"
       ],
       "server-only": [
-        "src/packages/next-query-portal/server/utils/server-only.ts"
+        "src/packages/next-vibe/server/utils/server-only.ts"
       ],
       "react-native/*": [
         "./node_modules/react-native-web/*"

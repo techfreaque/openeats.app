@@ -2,13 +2,13 @@ import "server-only";
 
 import { compare } from "bcrypt";
 import { cookies } from "next/headers";
-import type { JwtPayloadType } from "next-query-portal/server/endpoints/auth/jwt";
-import { signJwt } from "next-query-portal/server/endpoints/auth/jwt";
+import type { JwtPayloadType } from "next-vibe/server/endpoints/auth/jwt";
+import { signJwt } from "next-vibe/server/endpoints/auth/jwt";
 import {
   type ApiHandlerCallBackProps,
   type SafeReturnType,
-} from "next-query-portal/server/endpoints/core/api-handler";
-import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
+} from "next-vibe/server/endpoints/core/api-handler";
+import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 
 import { env } from "../../../../../../config/env";
 import { db } from "../../../../db";

@@ -1,7 +1,7 @@
 "use client";
 
-import type { ApiEndpoint } from "next-query-portal/client/endpoint";
-import { Methods } from "next-query-portal/shared/types/endpoint";
+import type { ApiEndpoint } from "next-vibe/client/endpoint";
+import { Methods } from "next-vibe/shared/types/endpoint";
 import type { JSX } from "react";
 import { useState } from "react";
 

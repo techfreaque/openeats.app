@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { APP_NAME } from "next-query-portal/shared/constants";
+import { APP_NAME } from "next-vibe/shared/constants";
 import type { JSX, ReactNode } from "react";
 
 import { Navbar } from "./navbar";

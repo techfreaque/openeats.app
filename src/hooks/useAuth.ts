@@ -1,18 +1,18 @@
-import { useApiMutation } from "next-query-portal/client/hooks/mutation";
-import { useApiQuery } from "next-query-portal/client/hooks/query";
+import { useApiMutation } from "next-vibe/client/hooks/mutation";
+import { useApiQuery } from "next-vibe/client/hooks/query";
 import {
   isAuthenticated,
   removeAuthToken,
   setAuthToken,
-} from "next-query-portal/client/storage/auth-client";
-import { errorLogger } from "next-query-portal/shared/utils/logger";
+} from "next-vibe/client/storage/auth-client";
+import { errorLogger } from "next-vibe/shared/utils/logger";
 import { useEffect } from "react";
 
 import logoutEndpoint from "@/app/api/v1/auth/logout/definition";
 import meEndpoint from "@/app/api/v1/auth/me/definition";
 import loginEndpoint from "@/app/api/v1/auth/public/login/definition";
 import registerEndpoint from "@/app/api/v1/auth/public/register/definition";
-import { useApiForm } from "@/packages/next-query-portal/client/hooks/form";
+import { useApiForm } from "@/packages/next-vibe/client/hooks/form";
 
 export type UseAuthReturn = ReturnType<typeof useAuth>;
 

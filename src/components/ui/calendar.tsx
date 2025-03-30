@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "next-query-portal/shared/utils/utils";
+import { cn } from "next-vibe/shared/utils/utils";
 import type { ComponentProps, JSX } from "react";
 import { DayPicker } from "react-day-picker";
 

@@ -1,4 +1,4 @@
-import { UserRoleValue } from "next-query-portal/shared/types/enums";
+import { UserRoleValue } from "next-vibe/shared/types/enums";
 
 import { db } from "@/app/api/db";
 

@@ -1,5 +1,5 @@
 import type { NextResponse } from "next/server";
-import { Methods } from "next-query-portal/shared/types/endpoint";
+import { Methods } from "next-vibe/shared/types/endpoint";
 
 import type { ApiEndpoint } from "../../../client/endpoint";
 import type { ResponseType } from "../../../shared/types/response.schema";

@@ -1,4 +1,4 @@
-import { testEndpoint } from "next-query-portal/testing/test-endpoint";
+import { testEndpoint } from "next-vibe/testing/test-endpoint";
 
 import meEndpoint from "./definition";
 

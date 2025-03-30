@@ -1,8 +1,8 @@
 import "server-only";
 
-import { debugLogger } from "next-query-portal/shared/utils/logger";
+import { debugLogger } from "next-vibe/shared/utils/logger";
 
-import { apiHandler } from "@/packages/next-query-portal/server/endpoints/core/api-handler";
+import { apiHandler } from "@/packages/next-vibe/server/endpoints/core/api-handler";
 
 import definitions from "./definition";
 import { renderMail } from "./email";

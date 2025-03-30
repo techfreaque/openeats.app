@@ -1,6 +1,6 @@
 import { withExpo } from "@expo/next-adapter";
 import type { NextConfig } from "next";
-import { generateEndpoints } from "next-query-portal/scripts/generate-endpoints";
+import { generateEndpoints } from "next-vibe/scripts/generate-endpoints";
 import type { Compiler, Configuration } from "webpack";
 
 const useNextQueryPortalPackage = false;
@@ -16,7 +16,7 @@ const nextConfig: NextConfig = withExpo({
       });
     }
 
-    // Set up path aliases for the next-query-portal package
+    // Set up path aliases for the next-vibe package
     config.resolve = config.resolve ?? {};
     if (!config.resolve.alias || Array.isArray(config.resolve.alias)) {
       config.resolve.alias = {};
@@ -24,8 +24,8 @@ const nextConfig: NextConfig = withExpo({
     config.resolve.alias["react-native"] = "react-native-web";
 
     if (!useNextQueryPortalPackage) {
-      config.resolve.alias["next-query-portal"] =
-        "./src/packages/next-query-portal";
+      config.resolve.alias["next-vibe"] =
+        "./src/packages/next-vibe";
     }
 
     // Add a plugin to generate endpoints during development

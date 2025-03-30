@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trans, useTranslation } from "next-query-portal/i18n";
+import { Trans, useTranslation } from "next-vibe/i18n";
 import { type JSX, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";

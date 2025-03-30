@@ -1,4 +1,4 @@
-import { dateSchema } from "next-query-portal/shared/types/common.schema";
+import { dateSchema } from "next-vibe/shared/types/common.schema";
 import { z } from "zod";
 
 import { userResponseSchema } from "../../me/schema";

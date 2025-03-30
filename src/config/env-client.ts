@@ -1,6 +1,6 @@
 /* eslint-disable node/no-process-env */
-import { envClientSchema as portalEnvClientSchema } from "next-query-portal/client/env-client";
-import { validateEnv } from "next-query-portal/shared/utils/env-util";
+import { envClientSchema as portalEnvClientSchema } from "next-vibe/client/env-client";
+import { validateEnv } from "next-vibe/shared/utils/env-util";
 import type { z } from "zod";
 
 const isServer = typeof window === "undefined";

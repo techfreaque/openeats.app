@@ -1,8 +1,8 @@
 import { Section, Text } from "@react-email/components";
-import type { EmailFunctionType } from "next-query-portal/server/email/handle-emails";
-import { APP_NAME } from "next-query-portal/shared/constants";
-import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
-import type { MessageResponseType } from "next-query-portal/shared/types/response.schema";
+import type { EmailFunctionType } from "next-vibe/server/email/handle-emails";
+import { APP_NAME } from "next-vibe/shared/constants";
+import type { UndefinedType } from "next-vibe/shared/types/common.schema";
+import type { MessageResponseType } from "next-vibe/shared/types/response.schema";
 
 import { EmailTemplate } from "../../../../../../config/email.template";
 import { getFullUser } from "../../me/route-handler/get-me";

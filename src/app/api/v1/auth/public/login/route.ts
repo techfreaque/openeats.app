@@ -1,6 +1,6 @@
 import "server-only";
 
-import { apiHandler } from "next-query-portal/server/endpoints/core/api-handler";
+import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
 
 import loginEndpoint from "./definition";
 import { loginUser } from "./route-handler";

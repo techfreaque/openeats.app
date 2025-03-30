@@ -3,7 +3,7 @@ import type { ReleaseConfig } from "sovendus-release-tool/types";
 const releaseConfig: ReleaseConfig = {
   packages: [
     {
-      directory: "./src/packages/next-query-portal",
+      directory: "./src/packages/next-vibe",
       updateDeps: true,
       test: false,
       lint: false,

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ApiEndpoint } from "next-query-portal/client/endpoint";
+import type { ApiEndpoint } from "next-vibe/client/endpoint";
 import type { JSX } from "react";
 import React from "react";
 import type { ZodType } from "zod";

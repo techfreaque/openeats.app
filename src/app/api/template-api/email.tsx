@@ -1,7 +1,7 @@
 import { Button, Section, Text } from "@react-email/components";
-import type { EmailFunctionType } from "next-query-portal/server/email/handle-emails";
-import { APP_NAME } from "next-query-portal/shared/constants";
-import { debugLogger } from "next-query-portal/shared/utils/logger";
+import type { EmailFunctionType } from "next-vibe/server/email/handle-emails";
+import { APP_NAME } from "next-vibe/shared/constants";
+import { debugLogger } from "next-vibe/shared/utils/logger";
 
 import { EmailTemplate } from "../../../config/email.template";
 import { env } from "../../../config/env";

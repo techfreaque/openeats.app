@@ -11,7 +11,7 @@ export default defineConfig({
       // Create an alias for server-only for testing purposes
       "server-only": path.resolve(
         __dirname,
-        "src/packages/next-query-portal/server/utils/server-only.ts",
+        "src/packages/next-vibe/server/utils/server-only.ts",
       ),
     },
   },
@@ -20,7 +20,7 @@ export default defineConfig({
     globals: true,
     // setupFiles: ["./src/tests/setup.ts"],
     globalSetup:
-      "./src/packages/next-query-portal/testing/test-server/global-setup.ts",
+      "./src/packages/next-vibe/testing/test-server/global-setup.ts",
     include: ["./**/*.test.ts"],
     isolate: false, // Important - keep test files in the same process
     sequence: {

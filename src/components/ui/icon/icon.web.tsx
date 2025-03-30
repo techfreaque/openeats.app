@@ -1,6 +1,6 @@
 import * as LucideIcons from "lucide-react";
-import { errorLogger } from "next-query-portal/shared/utils/logger";
-import { cn } from "next-query-portal/shared/utils/utils";
+import { errorLogger } from "next-vibe/shared/utils/logger";
+import { cn } from "next-vibe/shared/utils/utils";
 import type { FC, SVGProps } from "react";
 import { forwardRef } from "react";
 

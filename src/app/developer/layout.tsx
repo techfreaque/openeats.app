@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { APP_NAME } from "next-query-portal/shared/constants";
+import { APP_NAME } from "next-vibe/shared/constants";
 import type React from "react";
 import type { JSX } from "react";
 

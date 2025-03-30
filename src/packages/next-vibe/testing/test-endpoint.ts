@@ -1,6 +1,6 @@
-import type { ApiEndpoint } from "next-query-portal/client/endpoint";
-import type { JwtPayloadType } from "next-query-portal/server/endpoints/auth/jwt";
-import type { ExamplesList } from "next-query-portal/shared/types/endpoint";
+import type { ApiEndpoint } from "next-vibe/client/endpoint";
+import type { JwtPayloadType } from "next-vibe/server/endpoints/auth/jwt";
+import type { ExamplesList } from "next-vibe/shared/types/endpoint";
 import { describe, expect, it } from "vitest";
 
 import { sendTestRequest } from "./send-test-request";

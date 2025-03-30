@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { getEndpoints } from "next-query-portal/client/endpoints";
-import { useApiForm } from "next-query-portal/client/hooks/form";
-import { APP_NAME, ENDPOINT_DOMAINS } from "next-query-portal/shared/constants";
-import type { Methods } from "next-query-portal/shared/types/endpoint";
+import { getEndpoints } from "next-vibe/client/endpoints";
+import { useApiForm } from "next-vibe/client/hooks/form";
+import { APP_NAME, ENDPOINT_DOMAINS } from "next-vibe/shared/constants";
+import type { Methods } from "next-vibe/shared/types/endpoint";
 import type { FormEvent, JSX } from "react";
 import { useMemo, useState } from "react";
 
@@ -12,7 +12,7 @@ import { envClient } from "@/config/env-client";
 import {
   type ApiEndpoint,
   getEndpointByPath,
-} from "@/packages/next-query-portal/client/endpoint";
+} from "@/packages/next-vibe/client/endpoint";
 
 import {
   Card,

@@ -1,9 +1,9 @@
-import { undefinedSchema } from "next-query-portal/shared/types/common.schema";
-import { Methods } from "next-query-portal/shared/types/endpoint";
-import { UserRoleValue } from "next-query-portal/shared/types/enums";
-import { messageResponseSchema } from "next-query-portal/shared/types/response.schema";
+import { undefinedSchema } from "next-vibe/shared/types/common.schema";
+import { Methods } from "next-vibe/shared/types/endpoint";
+import { UserRoleValue } from "next-vibe/shared/types/enums";
+import { messageResponseSchema } from "next-vibe/shared/types/response.schema";
 
-import { createEndpoint } from "@/packages/next-query-portal/client/endpoint";
+import { createEndpoint } from "@/packages/next-vibe/client/endpoint";
 
 import registerEndpoint from "../register/definition";
 import { resetPasswordRequestSchema } from "./schema";

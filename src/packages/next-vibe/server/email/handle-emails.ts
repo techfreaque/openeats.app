@@ -1,4 +1,4 @@
-import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
+import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import type { JSX } from "react";
 
 import type { JwtPayloadType } from "../endpoints/auth/jwt";

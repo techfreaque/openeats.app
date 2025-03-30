@@ -1,8 +1,8 @@
 "use client";
 
-import type { ApiEndpoint } from "next-query-portal/client/endpoint";
-import type { ApiFormReturn } from "next-query-portal/client/hooks/types";
-import { Methods } from "next-query-portal/shared/types/endpoint";
+import type { ApiEndpoint } from "next-vibe/client/endpoint";
+import type { ApiFormReturn } from "next-vibe/client/hooks/types";
+import { Methods } from "next-vibe/shared/types/endpoint";
 import type { FieldValues } from "node_modules/react-hook-form/dist/types";
 import type { FormEvent, JSX } from "react";
 import { useState } from "react";

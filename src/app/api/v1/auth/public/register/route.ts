@@ -4,10 +4,10 @@ import { hash } from "bcrypt";
 import type {
   ApiHandlerCallBackProps,
   SafeReturnType,
-} from "next-query-portal/server/endpoints/core/api-handler";
-import { apiHandler } from "next-query-portal/server/endpoints/core/api-handler";
-import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
-import { UserRoleValue } from "next-query-portal/shared/types/enums";
+} from "next-vibe/server/endpoints/core/api-handler";
+import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
+import type { UndefinedType } from "next-vibe/shared/types/common.schema";
+import { UserRoleValue } from "next-vibe/shared/types/enums";
 
 import { db } from "../../../../db";
 import { loginUser } from "../login/route-handler";

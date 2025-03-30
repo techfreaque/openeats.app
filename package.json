@@ -1,5 +1,5 @@
 {
-    "name": "next-query-portal-template-app",
+    "name": "next-vibe-template-app",
     "version": "1.0.0",
     "private": true,
     "description": "Next Query Portal Template App",
@@ -15,7 +15,7 @@
         "start:pre": "yarn db:migrate && yarn db:seed",
         "pub": "sovendus-release-tool",
         "build:pre": "yarn build:db-schema && yarn db:generate && yarn build:endpoints",
-        "build:endpoints": "tsx src/packages/next-query-portal/scripts/generate-endpoints.ts",
+        "build:endpoints": "tsx src/packages/next-vibe/scripts/generate-endpoints.ts",
         "build:db-schema": "tsx src/app/api/db/scripts/schema-builder.ts",
         "db:migrate": "prisma migrate deploy",
         "db:migrate-dev": "prisma migrate dev",
@@ -32,12 +32,12 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/techfreaque/next-query-portal.git"
+        "url": "git+https://github.com/techfreaque/next-vibe.git"
     },
     "bugs": {
-        "url": "https://github.com/techfreaque/next-query-portal/issues"
+        "url": "https://github.com/techfreaque/next-vibe/issues"
     },
-    "homepage": "https://github.com/techfreaque/next-query-portal#readme",
+    "homepage": "https://github.com/techfreaque/next-vibe#readme",
     "keywords": [
         "next",
         "portal",

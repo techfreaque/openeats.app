@@ -3,7 +3,7 @@ import "dotenv/config";
 import {
   debugLogger,
   errorLogger,
-} from "next-query-portal/shared/utils/logger";
+} from "next-vibe/shared/utils/logger";
 
 import { db } from "@/app/api/db";
 

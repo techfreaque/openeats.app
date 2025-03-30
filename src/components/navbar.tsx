@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { JSX } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
-import { APP_NAME } from "@/packages/next-query-portal/shared/constants";
+import { APP_NAME } from "@/packages/next-vibe/shared/constants";
 
 import { Button } from "./ui";
 

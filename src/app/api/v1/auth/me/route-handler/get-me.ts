@@ -3,8 +3,8 @@ import "server-only";
 import type {
   ApiHandlerCallBackProps,
   SafeReturnType,
-} from "next-query-portal/server/endpoints/core/api-handler";
-import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
+} from "next-vibe/server/endpoints/core/api-handler";
+import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 
 import { db } from "@/app/api/db";
 

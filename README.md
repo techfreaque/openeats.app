@@ -1,10 +1,10 @@
 # Next Query Portal Template
 
-A comprehensive starter template for building Next.js applications with strongly typed API endpoints, leveraging the next-query-portal framework.
+A comprehensive starter template for building Next.js applications with strongly typed API endpoints, leveraging the next-vibe framework.
 
 ## Overview
 
-This template provides a complete development environment for creating Next.js applications with type-safe, validated API endpoints. It includes the next-query-portal package, which delivers strongly typed APIs, role-based access control, data providers, and client-side hooks.
+This template provides a complete development environment for creating Next.js applications with type-safe, validated API endpoints. It includes the next-vibe package, which delivers strongly typed APIs, role-based access control, data providers, and client-side hooks.
 
 ## Features
 
@@ -58,13 +58,13 @@ yarn run dev
 yarn run build
 ```
 
-## Using next-query-portal
+## Using next-vibe
 
-This template offers two ways to use the next-query-portal package:
+This template offers two ways to use the next-vibe package:
 
 ### 1. Local Package (default)
 
-The package is included in the [./src/packages/next-query-portal](./src/packages/next-query-portal) directory. This approach allows you to:
+The package is included in the [./src/packages/next-vibe](./src/packages/next-vibe) directory. This approach allows you to:
 - Directly modify the package code if needed
 - Debug and step through the package code
 - Make local customizations
@@ -81,8 +81,8 @@ export default {
 Alternatively, you can use the published npm package:
 
 ```bash
-TODO handle removing the next-query-portal before installing package version
-yarn add next-query-portal
+TODO handle removing the next-vibe before installing package version
+yarn add next-vibe
 ```
 
 And update next.portal.config.ts:
@@ -100,7 +100,7 @@ export default {
 │   ├── components/     # React components
 │   ├── config/         # Application configuration
 │   ├── hooks/          # Custom React hooks
-│   └── packages/       # Local packages including next-query-portal
+│   └── packages/       # Local packages including next-vibe
 ├── prisma/
 │   └── schema.prisma   # Prisma database schema
 ├── .env.example        # Example environment variables
@@ -143,8 +143,8 @@ export type UserCreateResponseType = z.infer<typeof userCreateResponseSchema>;
 
 2. **Create the endpoint definition** (similar to `definition.ts`):
 ```typescript
-import { createEndpoint } from "next-query-portal/client";
-import { UserRoleValue } from "next-query-portal/shared";
+import { createEndpoint } from "next-vibe/client";
+import { UserRoleValue } from "next-vibe/shared";
 import { userCreateRequestSchema, userCreateResponseSchema } from "./schema";
 
 export default createEndpoint({
@@ -180,7 +180,7 @@ export default createEndpoint({
 
 3. **Implement the route handler** (in `route.ts`):
 ```typescript
-import { apiHandler } from "next-query-portal/server";
+import { apiHandler } from "next-vibe/server";
 import { db } from "../../db";
 import endpoint from "./definition";
 import type { UserCreateRequestType, UserCreateResponseType } from "./schema";
@@ -213,7 +213,7 @@ The template automatically discovers your endpoints and generates type definitio
 ### Using Your Endpoint in Frontend Components
 
 ```tsx
-import { useApiForm } from "next-query-portal/client";
+import { useApiForm } from "next-vibe/client";
 import { endpoints } from "@/app/api/generated/endpoints";
 
 function CreateUserForm() {
@@ -278,11 +278,11 @@ vercel
 
 ## Updating
 
-When new versions of the template or next-query-portal are released:
+When new versions of the template or next-vibe are released:
 
 1. Add the original repository as a remote:
 ```bash
-git remote add upstream https://github.com/techfreaque/next-query-portal.git
+git remote add upstream https://github.com/techfreaque/next-vibe.git
 ```
 
 2. Fetch the latest changes:
@@ -298,9 +298,9 @@ git merge upstream/main
 ## License
 
 - Template App: MIT
-- next-query-portal Package: GPL-3.0-only
+- next-vibe Package: GPL-3.0-only
 
 ## Resources
 
-- [GitHub Repository](https://github.com/techfreaque/next-query-portal)
-- [Issue Tracker](https://github.com/techfreaque/next-query-portal/issues)
+- [GitHub Repository](https://github.com/techfreaque/next-vibe)
+- [Issue Tracker](https://github.com/techfreaque/next-vibe/issues)

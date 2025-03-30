@@ -1,4 +1,4 @@
-import { envClient } from "next-query-portal/client/env-client";
+import { envClient } from "next-vibe/client/env-client";
 
 import { APP_NAME } from "../constants";
 import { parseError } from "./parse-error";

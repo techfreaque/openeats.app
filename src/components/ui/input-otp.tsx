@@ -3,7 +3,7 @@
 import { DashIcon } from "@radix-ui/react-icons";
 import type { SlotProps } from "input-otp";
 import { OTPInput, OTPInputContext } from "input-otp";
-import { cn } from "next-query-portal/shared/utils/utils";
+import { cn } from "next-vibe/shared/utils/utils";
 import * as React from "react";
 
 const InputOTP = React.forwardRef<

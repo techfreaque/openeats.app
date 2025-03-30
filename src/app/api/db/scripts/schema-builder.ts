@@ -1,8 +1,8 @@
 import "dotenv/config";
 
 import { readFileSync, writeFileSync } from "fs";
-import { PrismaDatabaseProvider } from "next-query-portal/server/endpoints/data";
-import { validateEnv } from "next-query-portal/shared/utils/env-util";
+import { PrismaDatabaseProvider } from "next-vibe/server/endpoints/data";
+import { validateEnv } from "next-vibe/shared/utils/env-util";
 import { z } from "zod";
 
 const envSchema = z.object({

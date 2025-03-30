@@ -4,10 +4,10 @@ import { cookies } from "next/headers";
 import type {
   ApiHandlerCallBackProps,
   SafeReturnType,
-} from "next-query-portal/server/endpoints/core/api-handler";
-import { apiHandler } from "next-query-portal/server/endpoints/core/api-handler";
-import type { UndefinedType } from "next-query-portal/shared/types/common.schema";
-import type { MessageResponseType } from "next-query-portal/shared/types/response.schema";
+} from "next-vibe/server/endpoints/core/api-handler";
+import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
+import type { UndefinedType } from "next-vibe/shared/types/common.schema";
+import type { MessageResponseType } from "next-vibe/shared/types/response.schema";
 
 import { db } from "../../../db";
 import logoutEndpoint from "./definition";

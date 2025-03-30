@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 import * as React from "react";
 
-import { cn } from "@/packages/next-query-portal/shared/utils/utils";
+import { cn } from "@/packages/next-vibe/shared/utils/utils";
 
 const ToastProvider = ToastPrimitives.Provider;
 

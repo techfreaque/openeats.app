@@ -1,6 +1,6 @@
-import type { ApiEndpoint } from "next-query-portal/client/endpoint";
-import type { JwtPayloadType } from "next-query-portal/server/endpoints/auth/jwt";
-import type { SafeReturnType } from "next-query-portal/server/endpoints/core/api-handler";
+import type { ApiEndpoint } from "next-vibe/client/endpoint";
+import type { JwtPayloadType } from "next-vibe/server/endpoints/auth/jwt";
+import type { SafeReturnType } from "next-vibe/server/endpoints/core/api-handler";
 
 /**
  * Options for testing an API endpoint

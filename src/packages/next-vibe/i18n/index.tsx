@@ -1,6 +1,6 @@
 "use client";
 
-import { errorLogger } from "next-query-portal/shared/utils/logger";
+import { errorLogger } from "next-vibe/shared/utils/logger";
 import type { JSX, ReactNode } from "react";
 import { createContext, useContext, useState } from "react";
 

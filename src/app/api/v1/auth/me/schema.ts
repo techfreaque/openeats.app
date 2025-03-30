@@ -1,5 +1,5 @@
-import { dateSchema } from "next-query-portal/shared/types/common.schema";
-import { userRoleResponseSchema } from "next-query-portal/shared/types/user-roles.schema";
+import { dateSchema } from "next-vibe/shared/types/common.schema";
+import { userRoleResponseSchema } from "next-vibe/shared/types/user-roles.schema";
 import { z } from "zod";
 
 export const userPublicResponseSchema = z.object({

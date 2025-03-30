@@ -17,7 +17,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/packages/next-query-portal/shared/utils/utils";
+import { cn } from "@/packages/next-vibe/shared/utils/utils";
 
 import { useIsMobile } from "./use-mobile";
 

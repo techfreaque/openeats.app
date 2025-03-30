@@ -1,8 +1,8 @@
-import { createEndpoint } from "next-query-portal/client/endpoint";
-import { undefinedSchema } from "next-query-portal/shared/types/common.schema";
-import { Methods } from "next-query-portal/shared/types/endpoint";
-import { UserRoleValue } from "next-query-portal/shared/types/enums";
-import { messageResponseSchema } from "next-query-portal/shared/types/response.schema";
+import { createEndpoint } from "next-vibe/client/endpoint";
+import { undefinedSchema } from "next-vibe/shared/types/common.schema";
+import { Methods } from "next-vibe/shared/types/endpoint";
+import { UserRoleValue } from "next-vibe/shared/types/enums";
+import { messageResponseSchema } from "next-vibe/shared/types/response.schema";
 
 const logoutEndpoint = createEndpoint({
   description: "Logout a user, clear the session and JWT token",

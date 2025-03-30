@@ -1,7 +1,7 @@
 import "server-only";
 
-import { apiHandler } from "next-query-portal/server/endpoints/core/api-handler";
-import { errorLogger } from "next-query-portal/shared/utils/logger";
+import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
+import { errorLogger } from "next-vibe/shared/utils/logger";
 
 import { db } from "../../../../db";
 import { hashPassword } from "../register/route";

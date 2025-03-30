@@ -1,12 +1,12 @@
 "use client";
 
 import { ChevronDown, ChevronRight } from "lucide-react";
-import type { ApiEndpoint } from "next-query-portal/client/endpoint";
+import type { ApiEndpoint } from "next-vibe/client/endpoint";
 import type {
   ApiSection,
   Methods,
-} from "next-query-portal/shared/types/endpoint";
-import { errorLogger } from "next-query-portal/shared/utils/logger";
+} from "next-vibe/shared/types/endpoint";
+import { errorLogger } from "next-vibe/shared/utils/logger";
 import type { JSX } from "react";
 import { useState } from "react";
 

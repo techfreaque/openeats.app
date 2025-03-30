@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 import { jwtVerify, SignJWT } from "jose";
-import { debugLogger } from "next-query-portal/shared/utils/logger";
+import { debugLogger } from "next-vibe/shared/utils/logger";
 
 import { env } from "../../../../../../config/env";
 import { db } from "../../../../db";

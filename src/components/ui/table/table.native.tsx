@@ -1,4 +1,4 @@
-import { cn } from "next-query-portal/shared/utils/utils";
+import { cn } from "next-vibe/shared/utils/utils";
 import type { ElementRef } from "react";
 import { forwardRef } from "react";
 import type { ViewProps } from "react-native";

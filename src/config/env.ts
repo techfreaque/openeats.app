@@ -1,5 +1,5 @@
-import { envSchema as portalEnvSchema } from "next-query-portal/server/env";
-import { validateEnv } from "next-query-portal/shared/utils/env-util";
+import { envSchema as portalEnvSchema } from "next-vibe/server/env";
+import { validateEnv } from "next-vibe/shared/utils/env-util";
 import { z } from "zod";
 
 export const envSchema = portalEnvSchema.extend({
