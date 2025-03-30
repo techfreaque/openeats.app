@@ -4,7 +4,7 @@ import { Heart, Star } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { cn } from "next-vibe/shared/utils/utils";
-import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import type { JSX } from "react";
 import { useState } from "react";
 

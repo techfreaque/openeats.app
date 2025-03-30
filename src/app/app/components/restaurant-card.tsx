@@ -4,7 +4,7 @@ import { Clock, Heart, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "next-vibe/shared/utils/utils";
-import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import type React from "react";
 
 import { Badge } from "@/components/ui/badge";

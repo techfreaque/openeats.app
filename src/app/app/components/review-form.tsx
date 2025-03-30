@@ -1,7 +1,7 @@
 "use client";
 
 import { Star } from "lucide-react";
-import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import type React from "react";
 import type { JSX } from "react";
 import { useState } from "react";

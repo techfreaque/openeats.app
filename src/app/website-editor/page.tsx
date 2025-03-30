@@ -8,7 +8,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
 import { useModel } from "openeats-client/hooks/website-editor/useModel";
 import { useUIState } from "openeats-client/hooks/website-editor/useUIState";

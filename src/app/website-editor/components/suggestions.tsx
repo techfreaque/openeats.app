@@ -1,6 +1,6 @@
 import { MoveUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
 import { useUIState } from "openeats-client/hooks/website-editor/useUIState";
 import type { JSX } from "react";

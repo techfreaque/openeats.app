@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import type { JSX } from "react";
 
 import { Badge, Button } from "@/components/ui";

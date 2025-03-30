@@ -2,12 +2,12 @@
 import { Github } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useAuth } from "openeats-client/hooks/useAuth";
 import type React from "react";
 import type { JSX } from "react";
 
 import { Badge } from "@/components/ui";
 import { Toaster } from "@/components/ui/toaster";
+import { useAuth } from "@/hooks/useAuth";
 
 import { Trans, useTranslation } from "./lib/i18n";
 import { LocationSelector } from "./location-selector";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import type { JSX } from "react";
 
 import { RestaurantRecommendForm } from "../../components/restaurant-recommend-form";

@@ -2,7 +2,7 @@ import { LogOut, Settings, SquareLibrary } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import type { JSX } from "react";
 
 import { Button } from "@/components/ui";

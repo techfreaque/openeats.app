@@ -2,7 +2,7 @@
 import html2canvas from "html2canvas";
 import { LoaderCircle, SendHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth
 import { useClientMode } from "openeats-client/hooks/website-editor/useMode";
 import { useModel } from "openeats-client/hooks/website-editor/useModel";
 import { useUIState } from "openeats-client/hooks/website-editor/useUIState";

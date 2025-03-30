@@ -1,6 +1,6 @@
 import { GitFork } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
 import { useBugReportModal } from "openeats-client/hooks/website-editor/useBugReportModal";
 import type { FormEvent, JSX } from "react";

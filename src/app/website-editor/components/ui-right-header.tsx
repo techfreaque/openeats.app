@@ -13,7 +13,7 @@ import {
   Tablet,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
 import type { UiType } from "openeats-client/types/website-editor";
 import type { JSX } from "react";

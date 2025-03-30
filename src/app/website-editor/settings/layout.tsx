@@ -1,6 +1,6 @@
 "use client";
 import { redirect } from "next/navigation";
-import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import React, { useEffect } from "react";
 
 import Header from "../components/header";

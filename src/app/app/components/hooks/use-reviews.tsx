@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "openeats-client/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import type React from "react";
 import type { JSX } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
