@@ -4,15 +4,15 @@ import { Heart, Star } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { cn } from "next-vibe/shared/utils/utils";
-import { useAuth } from "@/hooks/useAuth";
 import type { JSX } from "react";
 import { useState } from "react";
 
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
 import { Button } from "@/components/ui";
 
 import { FeaturedCollection } from "../../components/featured-collection";
 import { useFavorites } from "../../components/hooks/use-favorites";
-import { useRestaurants } from "../../components/hooks/use-restaurants";
 import {
   type OrderType,
   OrderTypeSelector,
@@ -26,13 +26,12 @@ export default function RestaurantHomePage(): JSX.Element | null {
   const params = useParams<{ id: string }>();
   const id = params.id;
 
-  const { getRestaurantById } = useRestaurants();
   const { user } = useAuth();
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const config = useRestaurantConfig();
 
-  const restaurant = getRestaurantById(id);
-  const favorite = restaurant ? isFavorite(restaurant.id) : false;
+  const { data: restaurant } = useRestaurant(id);
+  const favorite = restaurant ? isFavorite(restaurant?.id) : false;
 
   const [orderType, setOrderType] = useState<OrderType>("delivery");
 

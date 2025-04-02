@@ -7,7 +7,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { CartProvider } from "./components/hooks/use-cart";
 import { FavoritesProvider } from "./components/hooks/use-favorites";
 import { OrderProvider } from "./components/hooks/use-orders";
-import { RestaurantProvider } from "./components/hooks/use-restaurants";
 import { ReviewProvider } from "./components/hooks/use-reviews";
 import RootLayout from "./components/layout";
 
@@ -27,18 +26,16 @@ export default function Layout({
 }): JSX.Element {
   return (
     <main className="m-auto">
-      <RestaurantProvider>
-        <CartProvider>
-          <OrderProvider>
-            <FavoritesProvider>
-              <ReviewProvider>
-                <RootLayout withSubMain={withSubMain}>{children}</RootLayout>
-                <Toaster />
-              </ReviewProvider>
-            </FavoritesProvider>
-          </OrderProvider>
-        </CartProvider>
-      </RestaurantProvider>
+      <CartProvider>
+        <OrderProvider>
+          <FavoritesProvider>
+            <ReviewProvider>
+              <RootLayout withSubMain={withSubMain}>{children}</RootLayout>
+              <Toaster />
+            </ReviewProvider>
+          </FavoritesProvider>
+        </OrderProvider>
+      </CartProvider>
     </main>
   );
 }

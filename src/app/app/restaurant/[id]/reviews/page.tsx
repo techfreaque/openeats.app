@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuthh
 import type { JSX } from "react";
 import { useState } from "react";
 
