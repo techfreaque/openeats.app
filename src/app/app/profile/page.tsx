@@ -3,7 +3,6 @@
 import { Camera, Edit2, Mail, MapPin, Phone, User } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
 import type { JSX } from "react";
 import { useState } from "react";
 
@@ -13,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 export default function ProfilePage(): JSX.Element | null {
   const router = useRouter();

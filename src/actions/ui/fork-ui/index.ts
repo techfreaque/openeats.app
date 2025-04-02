@@ -1,8 +1,8 @@
 "use server";
 import { errorLogger } from "next-vibe/shared/utils/logger";
-import type { FullUI } from "openeats-client/types/website-editor";
 
 import { db } from "@/app/api/db";
+import type { FullUI } from "@/lib/website-editor/types";
 
 export async function forkUI(uiId: string, userId: string): Promise<FullUI> {
   try {

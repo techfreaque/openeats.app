@@ -1,3 +1,5 @@
+import type { Countries, Languages } from "./index";
+
 // German translations
 const translations = {
   common: {
@@ -217,6 +219,8 @@ const translations = {
       feeDescription:
         "OpenEats ist kostenlos für Benutzer und Partner. Nur Online-Zahlungen verursachen eine kleine Bearbeitungsgebühr.",
       copyright: "© {{year}} OpenEats. Open Source unter MIT-Lizenz.",
+      starUsOnGithub: "Sterne uns auf GitHub",
+      learnMoreAboutFees: "Erfahre mehr über unsere Gebühren",
     },
   },
 
@@ -287,6 +291,69 @@ const translations = {
         "Wir werden uns so schnell wie möglich bei dir melden",
       missingInfo: "Fehlende Informationen",
       missingInfoDescription: "Bitte fülle alle Felder aus",
+    },
+    new: {
+      title: "Neues Restaurant erstellen",
+      subtitle:
+        "Fügen Sie Ihr Restaurant zu Open Delivery hinzu und erhalten Sie Online-Bestellungen.",
+      sections: {
+        basic: "Grundinformationen",
+        contact: "Kontaktinformationen",
+        address: "Adresse",
+        category: "Restaurantkategorie",
+      },
+      fields: {
+        name: {
+          label: "Restaurantname",
+          placeholder: "Geben Sie den Namen Ihres Restaurants ein",
+        },
+        description: {
+          label: "Beschreibung",
+          placeholder:
+            "Beschreiben Sie Ihr Restaurant, Ihre Küche, besondere Angebote usw.",
+        },
+        image: {
+          label: "Restaurant-Bild-URL",
+          placeholder: "https://beispiel.de/ihr-restaurant-bild.jpg",
+        },
+        email: {
+          label: "E-Mail",
+          placeholder: "restaurant@beispiel.de",
+        },
+        phone: {
+          label: "Telefonnummer",
+          placeholder: "+49 123 456789",
+        },
+        street: {
+          label: "Straße",
+          placeholder: "Hauptstraße",
+        },
+        streetNumber: {
+          label: "Hausnummer",
+          placeholder: "123",
+        },
+        city: {
+          label: "Stadt",
+          placeholder: "Berlin",
+        },
+        zip: {
+          label: "Postleitzahl",
+          placeholder: "10115",
+        },
+        country: {
+          label: "Land",
+          placeholder: "Wählen Sie ein Land",
+        },
+        mainCategory: {
+          label: "Hauptkategorie",
+          placeholder: "Wählen Sie Ihre Hauptküchenkategorie",
+        },
+      },
+      buttons: {
+        create: "Restaurant erstellen",
+        creating: "Wird erstellt...",
+        cancel: "Abbrechen",
+      },
     },
   },
 
@@ -466,14 +533,114 @@ const translations = {
       "Beim Speichern deiner Änderungen ist ein Fehler aufgetreten. Bitte versuche es erneut.",
   },
 
-  // Language names (for language selector)
-  languages: {
-    en: "English",
-    es: "Español",
-    fr: "Français",
-    de: "Deutsch",
-    zh: "中文",
+  // About page
+  about: {
+    header: {
+      title: "Über {{appName}}",
+      subtitle:
+        "Die freie Alternative zu Lieferando & Co. - ohne Zwischenhändlergebühren",
+    },
+    mission: {
+      title: "Unsere Mission",
+      paragraph1:
+        "{{appName}} verbindet Restaurants direkt mit Kunden über ein innovatives Peer-to-Peer-Netzwerk. Wir glauben an eine faire Gastronomiebranche ohne die überhöhten Gebühren, die die ohnehin schon geringen Margen der lokalen Restaurants belasten.",
+      paragraph2:
+        "Als Open-Source-Plattform stellen wir sicher, dass wir der Gemeinschaft verpflichtet sind, die wir bedienen - nicht Aktionären oder Risikokapitalgebern.",
+      imageAlt: "Lokales Restaurant",
+    },
+    orderTypes: {
+      title: "Flexible Bestellwege",
+      delivery: {
+        title: "Lieferung",
+        description:
+          "Lassen Sie sich Ihr Essen bequem nach Hause liefern - entweder mit den eigenen Fahrern des Restaurants oder über unser Fahrernetzwerk.",
+      },
+      pickup: {
+        title: "Abholung",
+        description:
+          "Bestellen Sie vor und holen Sie Ihr Essen ohne Wartezeit ab. Einfach, schnell und bequem.",
+      },
+      table: {
+        title: "Tischbestellung",
+        description:
+          "Bestellen Sie direkt vom Smartphone am Tisch - ohne Kellner rufen zu müssen. Modern und effizient.",
+      },
+    },
+    business: {
+      title: "Unser Geschäftsmodell",
+      description:
+        "Anders als kommerzielle Plattformen, die bis zu 30% Provision verlangen, bietet {{appName}} alle Grundfunktionen kostenlos an. Wir verdienen nur an optionalen Zusatzleistungen.",
+      imageAlt: "Transparentes Geschäftsmodell",
+      features: {
+        basic: {
+          title: "Grundfunktionen",
+          value: "KOSTENLOS",
+        },
+        delivery: {
+          title: "Liefernetzwerk",
+          value: "Nur bei Nutzung (Selbstlieferung kostenlos)",
+        },
+        payments: {
+          title: "Online-Zahlungen",
+          value: "Kleine Gebühr (Barzahlung vor Ort kostenlos)",
+        },
+      },
+    },
+    stakeholders: {
+      title: "Für alle Beteiligten",
+      restaurants: {
+        title: "Für Gastronomen",
+        description:
+          "Kostenlose Bestellverwaltung, digitale Speisekarten und ein eigener Online-Auftritt ohne versteckte Gebühren oder lange Vertragsbindungen.",
+      },
+      customers: {
+        title: "Für Kunden",
+        description:
+          "Bestellen Sie bei lokalen Restaurants mit transparenten Preisen und ohne versteckte Aufschläge - egal ob zur Lieferung, Abholung oder am Tisch.",
+      },
+      drivers: {
+        title: "Für Fahrer",
+        description:
+          "Faire Vergütung durch ein transparentes Bezahlmodell, flexible Einsatzzeiten und 100% Ihrer Trinkgelder bleiben bei Ihnen.",
+      },
+    },
+    opensource: {
+      title: "Open Source",
+      paragraph1:
+        "{{appName}} wird von einer Gemeinschaft von Entwicklern aufgebaut und gepflegt, die an die Kraft von Open Source glauben. Unser Code ist frei verfügbar für jeden, der ihn nutzen, modifizieren oder dazu beitragen möchte.",
+      paragraph2:
+        "Durch unseren Open-Source-Ansatz stellen wir sicher, dass unsere Plattform transparent, sicher und an den Interessen der Gemeinschaft ausgerichtet bleibt.",
+      githubButton: "Auf GitHub ansehen",
+      imageAlt: "Open-Source-Gemeinschaft",
+    },
+    join: {
+      title: "Werden Sie Teil der Bewegung",
+      description:
+        "Ob Kunde, Restaurantbesitzer, Fahrer oder Entwickler - für jeden gibt es einen Platz in der {{appName}}-Gemeinschaft.",
+      buttons: {
+        order: "Essen bestellen",
+        restaurant: "Restaurant anmelden",
+        driver: "Fahrer werden",
+      },
+    },
   },
+
+  // Language names
+  languages: {
+    EN: "English",
+    ES: "Español",
+    FR: "Français",
+    IT: "Italiano",
+    DE: "Deutsch",
+    ZH: "中文",
+  } as { [key in Languages]: string },
+
+  // Country names
+  countries: {
+    DE: "Deutschland",
+    AT: "Österreich",
+    CH: "Schweiz",
+  } as { [key in Countries]: string },
 
   // Add auth section
   auth: {

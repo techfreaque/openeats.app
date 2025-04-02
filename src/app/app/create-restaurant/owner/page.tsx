@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
 import type { JSX } from "react";
+
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 import { CreateRestaurantForm } from "../../components/create-restaurant-form";
 

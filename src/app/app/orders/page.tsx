@@ -4,7 +4,6 @@ import { format } from "date-fns";
 import { ChevronRight, Clock, MapPin, Search } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
 import type { JSX } from "react";
 import { useState } from "react";
 
@@ -13,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 import { useOrders } from "../components/hooks/use-orders";
 

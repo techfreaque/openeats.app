@@ -1,4 +1,4 @@
-import type { TranslationSchema } from "../types";
+import type { TranslationSchema } from "./index";
 
 // English translations
 const translations: TranslationSchema = {
@@ -219,6 +219,8 @@ const translations: TranslationSchema = {
       feeDescription:
         "OpenEats is free for users and partners. Only online payments incur a small processing fee.",
       copyright: "© {{year}} OpenEats. Open source under MIT License.",
+      starUsOnGithub: "Star us on GitHub",
+      learnMoreAboutFees: "Learn more about our fees",
     },
   },
 
@@ -288,6 +290,69 @@ const translations: TranslationSchema = {
       messageSentDescription: "We'll get back to you as soon as possible",
       missingInfo: "Missing information",
       missingInfoDescription: "Please fill in all fields",
+    },
+    new: {
+      title: "Create a New Restaurant",
+      subtitle:
+        "Add your restaurant to Open Delivery and start receiving orders online.",
+      sections: {
+        basic: "Basic Information",
+        contact: "Contact Information",
+        address: "Address",
+        category: "Restaurant Category",
+      },
+      fields: {
+        name: {
+          label: "Restaurant Name",
+          placeholder: "Enter your restaurant name",
+        },
+        description: {
+          label: "Description",
+          placeholder:
+            "Describe your restaurant, cuisine, special offerings, etc.",
+        },
+        image: {
+          label: "Restaurant Image URL",
+          placeholder: "https://example.com/your-restaurant-image.jpg",
+        },
+        email: {
+          label: "Email",
+          placeholder: "restaurant@example.com",
+        },
+        phone: {
+          label: "Phone Number",
+          placeholder: "+1 (555) 123-4567",
+        },
+        street: {
+          label: "Street",
+          placeholder: "Main Street",
+        },
+        streetNumber: {
+          label: "Street Number",
+          placeholder: "123",
+        },
+        city: {
+          label: "City",
+          placeholder: "New York",
+        },
+        zip: {
+          label: "ZIP Code",
+          placeholder: "10001",
+        },
+        country: {
+          label: "Country",
+          placeholder: "Select a country",
+        },
+        mainCategory: {
+          label: "Main Category",
+          placeholder: "Select your main cuisine category",
+        },
+      },
+      buttons: {
+        create: "Create Restaurant",
+        creating: "Creating...",
+        cancel: "Cancel",
+      },
     },
   },
 
@@ -464,13 +529,106 @@ const translations: TranslationSchema = {
       "There was an error saving your changes. Please try again.",
   },
 
+  // About page
+  about: {
+    header: {
+      title: "About {{appName}}",
+      subtitle:
+        "The free alternative to delivery platforms - without intermediary fees",
+    },
+    mission: {
+      title: "Our Mission",
+      paragraph1:
+        "{{appName}} connects restaurants directly with customers through an innovative peer-to-peer network. We believe in a fair restaurant industry without the excessive fees that burden the already slim margins of local restaurants.",
+      paragraph2:
+        "As an open-source platform, we ensure that we are committed to the community we serve - not shareholders or venture capitalists.",
+      imageAlt: "Local restaurant",
+    },
+    orderTypes: {
+      title: "Flexible Order Options",
+      delivery: {
+        title: "Delivery",
+        description:
+          "Have your food conveniently delivered to your home - either with the restaurant's own drivers or through our driver network.",
+      },
+      pickup: {
+        title: "Pickup",
+        description:
+          "Order ahead and pick up your food without waiting. Simple, fast, and convenient.",
+      },
+      table: {
+        title: "Table Ordering",
+        description:
+          "Order directly from your smartphone at the table - without having to call a waiter. Modern and efficient.",
+      },
+    },
+    business: {
+      title: "Our Business Model",
+      description:
+        "Unlike commercial platforms that charge up to 30% commission, {{appName}} offers all basic features for free. We only earn from optional add-on services.",
+      imageAlt: "Transparent business model",
+      features: {
+        basic: {
+          title: "Basic Features",
+          value: "FREE",
+        },
+        delivery: {
+          title: "Delivery Network",
+          value: "Only when used (self-delivery is free)",
+        },
+        payments: {
+          title: "Online Payments",
+          value: "Small fee (cash payment on site is free)",
+        },
+      },
+    },
+    stakeholders: {
+      title: "For All Stakeholders",
+      restaurants: {
+        title: "For Restaurant Owners",
+        description:
+          "Free order management, digital menus, and your own online presence without hidden fees or long contract commitments.",
+      },
+      customers: {
+        title: "For Customers",
+        description:
+          "Order from local restaurants with transparent prices and no hidden surcharges - whether for delivery, pickup, or at the table.",
+      },
+      drivers: {
+        title: "For Drivers",
+        description:
+          "Fair compensation through a transparent payment model, flexible working hours, and 100% of your tips stay with you.",
+      },
+    },
+    opensource: {
+      title: "Open Source",
+      paragraph1:
+        "{{appName}} is built and maintained by a community of developers who believe in the power of open source. Our code is freely available for anyone to use, modify, or contribute to.",
+      paragraph2:
+        "Through our open-source approach, we ensure that our platform remains transparent, secure, and aligned with the interests of the community.",
+      githubButton: "View on GitHub",
+      imageAlt: "Open-source community",
+    },
+    join: {
+      title: "Become Part of the Movement",
+      description:
+        "Whether you're a customer, restaurant owner, driver, or developer - there's a place for everyone in the {{appName}} community.",
+      buttons: {
+        order: "Order Food",
+        restaurant: "Register Restaurant",
+        driver: "Become a Driver",
+      },
+    },
+  },
+
   // Language names (for language selector)
   languages: {
-    en: "English",
-    es: "Español",
-    fr: "Français",
-    de: "Deutsch",
-    zh: "中文",
+    EN: "English",
+    ES: "Español",
+    FR: "Français",
+    IT: "Italiano",
+    DE: "Deutsch",
+    ZH: "中文",
   },
 
   auth: {
@@ -532,6 +690,11 @@ const translations: TranslationSchema = {
       emailSent: "Password reset email sent",
       checkInbox: "Please check your inbox for further instructions",
     },
+  },
+  countries: {
+    DE: "Germany",
+    AT: "Austria",
+    CH: "Switzerland",
   },
 };
 

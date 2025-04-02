@@ -5,6 +5,7 @@ import { Methods } from "next-vibe/shared/types/endpoint";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 
 import registerEndpoint from "../auth/public/register/definition";
+import { categoryExamples } from "../category/definition";
 import type { RestaurantUpdateType } from "./schema/restaurant.schema";
 import {
   restaurantCreateSchema,
@@ -13,12 +14,15 @@ import {
   restaurantUpdateSchema,
 } from "./schema/restaurant.schema";
 
-export const restaurantExamples: ExamplesList<RestaurantUpdateType> = {
+export const restaurantExamples: ExamplesList<
+  RestaurantUpdateType,
+  "default" | "example1" | "example2"
+> = {
   default: {
     id: "a50e2a24-bca7-4a98-aa59-79c6c11c2533",
     name: "Restaurant Test",
     description: "Best pizza in town!",
-    image: "https://example.com/pizza-palace.jpg",
+    image: "/placeholder.svg",
     phone: "+1234567890",
     email: `restaurant${Math.random()}@example.com`,
     published: true,
@@ -39,7 +43,7 @@ export const restaurantExamples: ExamplesList<RestaurantUpdateType> = {
     id: "a50e2a24-bca7-4a98-aa59-79c6c11c2547",
     name: "Da Murauer",
     description: "Best pizza in town!",
-    image: "https://example.com/pizza-palace.jpg",
+    image: "/placeholder.svg",
     phone: "+1234567890",
     email: "contact@pizzapalace.com",
     published: true,
@@ -60,7 +64,7 @@ export const restaurantExamples: ExamplesList<RestaurantUpdateType> = {
     id: "e74ce4c1-418d-4df1-ae06-419c703f61dd",
     name: "Burger Barn",
     description: "Juicy burgers and great fries!",
-    image: "https://example.com/burger-barn.jpg",
+    image: "/placeholder.svg",
     phone: "+1234567891",
     email: "contact@burgerbarn.com",
     published: true,
@@ -79,7 +83,7 @@ export const restaurantExamples: ExamplesList<RestaurantUpdateType> = {
   },
 };
 
-const restaurantGetEndpoint = createEndpoint({
+export const restaurantGetEndpoint = createEndpoint({
   description: "Get restaurant by ID",
   path: ["v1", "restaurant"],
   method: Methods.GET,
@@ -89,15 +93,16 @@ const restaurantGetEndpoint = createEndpoint({
   apiQueryOptions: {
     queryKey: ["restaurant", "{restaurantId}"],
   },
-  requestSchema: undefinedSchema,
+  requestSchema: restaurantGetSchema,
   responseSchema: restaurantResponseSchema,
+  requestUrlSchema: undefinedSchema,
   examples: {
-    urlPathVariables: {
+    payloads: {
       default: {
         restaurantId: restaurantExamples.default.id,
       },
     },
-    payloads: undefined,
+    urlPathVariables: undefined,
   },
   allowedRoles: [
     UserRoleValue.PUBLIC,
@@ -107,7 +112,6 @@ const restaurantGetEndpoint = createEndpoint({
     UserRoleValue.PARTNER_ADMIN,
     UserRoleValue.PARTNER_EMPLOYEE,
   ],
-  requestUrlSchema: restaurantGetSchema,
   errorCodes: {
     404: "Restaurant not found",
     401: "Not authenticated",
@@ -115,7 +119,7 @@ const restaurantGetEndpoint = createEndpoint({
   },
 });
 
-const restaurantCreateEndpoint = createEndpoint({
+export const restaurantCreateEndpoint = createEndpoint({
   description: "Create a new restaurant",
   requestSchema: restaurantCreateSchema,
   responseSchema: restaurantResponseSchema,
@@ -134,7 +138,6 @@ const restaurantCreateEndpoint = createEndpoint({
     phone: "Phone number",
     email: "Email address",
     image: "Image URL",
-    published: "Published status",
     countryId: "Country ID",
     mainCategoryId: "Main category ID",
     userRoles: "User roles",
@@ -203,8 +206,9 @@ const restaurantUpdateEndpoint = createEndpoint({
     500: "Internal server error",
   },
 });
-export default {
+const restaurantEndpoint = {
   ...restaurantGetEndpoint,
   ...restaurantCreateEndpoint,
   ...restaurantUpdateEndpoint,
 };
+export default restaurantEndpoint;

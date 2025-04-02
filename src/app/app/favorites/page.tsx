@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
 import type { JSX } from "react";
 
 import { Button } from "@/components/ui";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 import { useFavorites } from "../components/hooks/use-favorites";
 import { useRestaurants } from "../components/hooks/use-restaurants";

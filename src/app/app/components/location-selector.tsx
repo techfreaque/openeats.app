@@ -1,6 +1,7 @@
 "use client";
 
 import { MapPin, Navigation, Search, X } from "lucide-react";
+import { useTranslation } from "next-vibe/i18n";
 import { errorLogger } from "next-vibe/shared/utils/logger";
 import type React from "react";
 import type { JSX } from "react";
@@ -18,8 +19,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-
-import { useTranslation } from "./lib/i18n";
 
 interface LocationSelectorProps {
   currentLocation?: string;

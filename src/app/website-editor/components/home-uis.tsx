@@ -1,7 +1,6 @@
 "use client";
 import { Eye, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { FullUI } from "openeats-client/types/website-editor";
 import React, { useEffect, useState } from "react";
 
 import { getUIHome } from "@/actions/ui/get-uis";
@@ -17,6 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui";
 import { timeAgo } from "@/lib/website-editor/time";
+import type { FullUI } from "@/lib/website-editor/types";
 
 import PromptBadge from "./prompt-badge";
 

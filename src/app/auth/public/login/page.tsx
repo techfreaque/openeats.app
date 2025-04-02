@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "next-vibe/i18n";
 import type { JSX } from "react";
 import React, { useEffect } from "react";
 
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,18 +17,19 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage(): JSX.Element {
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { isLoggedIn, isLoading, loginForm } = useAuth();
+  const redirect = searchParams.get("redirect");
   const { t } = useTranslation();
 
   useEffect(() => {
     if (isLoggedIn && !isLoading) {
-      router.push("/");
+      router.push(redirect ?? "/");
     }
-  }, [router, isLoggedIn, isLoading]);
+  }, [router, isLoggedIn, isLoading, redirect]);
   return (
     <>
       <div className="text-center">

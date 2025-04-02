@@ -1,4 +1,4 @@
-import type { TranslationSchema } from "../types";
+import type { TranslationSchema } from "./index";
 
 // French translations
 const translations: TranslationSchema = {
@@ -220,17 +220,12 @@ const translations: TranslationSchema = {
       feeDescription:
         "OpenEats est gratuit pour les utilisateurs et les partenaires. Seuls les paiements en ligne entraînent de petits frais de traitement.",
       copyright: "© {{year}} OpenEats. Code source ouvert sous licence MIT.",
+      starUsOnGithub: "Étoilez-nous sur GitHub",
+      learnMoreAboutFees: "En savoir plus sur nos frais",
     },
   },
 
-  // Languages
-  languages: {
-    en: "English",
-    es: "Español",
-    fr: "Français",
-    de: "Deutsch",
-    zh: "中文",
-  },
+  // Restaurant page
   restaurant: {
     promoted: "Mis en avant",
     addToFavorites: "Ajouter aux favoris",
@@ -297,7 +292,72 @@ const translations: TranslationSchema = {
       missingInfo: "Informations manquantes",
       missingInfoDescription: "Veuillez remplir tous les champs",
     },
+    new: {
+      title: "Créer un nouveau restaurant",
+      subtitle:
+        "Ajoutez votre restaurant à Open Delivery et commencez à recevoir des commandes en ligne.",
+      sections: {
+        basic: "Informations de base",
+        contact: "Coordonnées",
+        address: "Adresse",
+        category: "Catégorie de restaurant",
+      },
+      fields: {
+        name: {
+          label: "Nom du restaurant",
+          placeholder: "Entrez le nom de votre restaurant",
+        },
+        description: {
+          label: "Description",
+          placeholder:
+            "Décrivez votre restaurant, sa cuisine, ses offres spéciales, etc.",
+        },
+        image: {
+          label: "URL de l'image du restaurant",
+          placeholder: "https://exemple.fr/votre-image-restaurant.jpg",
+        },
+        email: {
+          label: "Email",
+          placeholder: "restaurant@exemple.fr",
+        },
+        phone: {
+          label: "Numéro de téléphone",
+          placeholder: "+33 1 23 45 67 89",
+        },
+        street: {
+          label: "Rue",
+          placeholder: "Rue Principale",
+        },
+        streetNumber: {
+          label: "Numéro",
+          placeholder: "123",
+        },
+        city: {
+          label: "Ville",
+          placeholder: "Paris",
+        },
+        zip: {
+          label: "Code postal",
+          placeholder: "75001",
+        },
+        country: {
+          label: "Pays",
+          placeholder: "Sélectionnez un pays",
+        },
+        mainCategory: {
+          label: "Catégorie principale",
+          placeholder: "Sélectionnez votre catégorie de cuisine principale",
+        },
+      },
+      buttons: {
+        create: "Créer le restaurant",
+        creating: "Création en cours...",
+        cancel: "Annuler",
+      },
+    },
   },
+
+  // Menu items
   menuItem: {
     add: "Ajouter",
     quantity: "Quantité",
@@ -306,6 +366,8 @@ const translations: TranslationSchema = {
     addToCart: "Ajouter au panier",
     cancel: "Annuler",
   },
+
+  // Reviews
   reviews: {
     title: "Avis",
     noReviews: "Pas encore d'avis. Soyez le premier à laisser un avis !",
@@ -329,6 +391,8 @@ const translations: TranslationSchema = {
     productRatingRequired: "Évaluation du produit requise",
     productRatingRequiredDescription: "Veuillez évaluer au moins un produit",
   },
+
+  // Location selector
   location: {
     setLocation: "Définir l'emplacement",
     setLocationDescription:
@@ -347,6 +411,8 @@ const translations: TranslationSchema = {
     locationNotSupportedDescription:
       "La géolocalisation n'est pas prise en charge par votre navigateur. Veuillez entrer votre emplacement manuellement.",
   },
+
+  // Search page
   search: {
     title: "Résultats de recherche",
     resultsFor: '{{count}} résultats pour "{{query}}"',
@@ -377,6 +443,8 @@ const translations: TranslationSchema = {
     noPickupRestaurants:
       "Aucun restaurant à emporter ne correspond à vos critères de recherche",
   },
+
+  // Cart
   cart: {
     title: "Votre panier",
     empty: "Votre panier est vide",
@@ -393,6 +461,8 @@ const translations: TranslationSchema = {
     quantity: "Quantité :",
     from: "de",
   },
+
+  // Checkout
   checkout: {
     title: "Commander",
     deliveryDetails: "Détails de livraison",
@@ -428,6 +498,8 @@ const translations: TranslationSchema = {
     orderFailedDescription:
       "Une erreur s'est produite lors de votre commande. Veuillez réessayer.",
   },
+
+  // Profile
   profile: {
     title: "Mon profil",
     personalInfo: "Informations personnelles",
@@ -460,6 +532,117 @@ const translations: TranslationSchema = {
     changesFailedDescription:
       "Une erreur s'est produite lors de l'enregistrement de vos modifications. Veuillez réessayer.",
   },
+
+  // About page
+  about: {
+    header: {
+      title: "À propos de {{appName}}",
+      subtitle:
+        "L'alternative gratuite aux plateformes de livraison - sans frais d'intermédiaire",
+    },
+    mission: {
+      title: "Notre Mission",
+      paragraph1:
+        "{{appName}} connecte les restaurants directement avec les clients via un réseau innovant peer-to-peer. Nous croyons en une industrie de la restauration équitable, sans les frais excessifs qui pèsent sur les marges déjà minces des restaurants locaux.",
+      paragraph2:
+        "En tant que plateforme open-source, nous nous assurons d'être engagés envers la communauté que nous servons - pas envers les actionnaires ou les investisseurs en capital-risque.",
+      imageAlt: "Restaurant local",
+    },
+    orderTypes: {
+      title: "Options de Commande Flexibles",
+      delivery: {
+        title: "Livraison",
+        description:
+          "Faites-vous livrer votre repas à domicile - soit avec les propres livreurs du restaurant, soit via notre réseau de livreurs.",
+      },
+      pickup: {
+        title: "À emporter",
+        description:
+          "Commandez à l'avance et récupérez votre repas sans attendre. Simple, rapide et pratique.",
+      },
+      table: {
+        title: "Commande à table",
+        description:
+          "Commandez directement depuis votre smartphone à table - sans avoir à appeler un serveur. Moderne et efficace.",
+      },
+    },
+    business: {
+      title: "Notre Modèle d'Affaires",
+      description:
+        "Contrairement aux plateformes commerciales qui facturent jusqu'à 30% de commission, {{appName}} offre toutes les fonctionnalités de base gratuitement. Nous ne gagnons que sur les services additionnels optionnels.",
+      imageAlt: "Modèle d'affaires transparent",
+      features: {
+        basic: {
+          title: "Fonctionnalités de base",
+          value: "GRATUIT",
+        },
+        delivery: {
+          title: "Réseau de livraison",
+          value: "Uniquement lors de l'utilisation (auto-livraison gratuite)",
+        },
+        payments: {
+          title: "Paiements en ligne",
+          value: "Petits frais (paiement en espèces sur place gratuit)",
+        },
+      },
+    },
+    stakeholders: {
+      title: "Pour Toutes les Parties Prenantes",
+      restaurants: {
+        title: "Pour les Restaurateurs",
+        description:
+          "Gestion des commandes gratuite, menus numériques et votre propre présence en ligne sans frais cachés ni engagements contractuels de longue durée.",
+      },
+      customers: {
+        title: "Pour les Clients",
+        description:
+          "Commandez auprès de restaurants locaux avec des prix transparents et sans suppléments cachés - que ce soit pour la livraison, à emporter ou à table.",
+      },
+      drivers: {
+        title: "Pour les Livreurs",
+        description:
+          "Rémunération équitable grâce à un modèle de paiement transparent, horaires de travail flexibles et 100% de vos pourboires vous sont versés.",
+      },
+    },
+    opensource: {
+      title: "Open Source",
+      paragraph1:
+        "{{appName}} est construit et maintenu par une communauté de développeurs qui croient au pouvoir de l'open source. Notre code est librement disponible pour quiconque souhaite l'utiliser, le modifier ou y contribuer.",
+      paragraph2:
+        "Grâce à notre approche open-source, nous garantissons que notre plateforme reste transparente, sécurisée et alignée sur les intérêts de la communauté.",
+      githubButton: "Voir sur GitHub",
+      imageAlt: "Communauté open-source",
+    },
+    join: {
+      title: "Rejoignez le Mouvement",
+      description:
+        "Que vous soyez client, restaurateur, livreur ou développeur - il y a une place pour chacun dans la communauté {{appName}}.",
+      buttons: {
+        order: "Commander",
+        restaurant: "Inscrire un Restaurant",
+        driver: "Devenir Livreur",
+      },
+    },
+  },
+
+  // Languages
+  languages: {
+    EN: "English",
+    ES: "Español",
+    FR: "Français",
+    IT: "Italiano",
+    DE: "Deutsch",
+    ZH: "中文",
+  },
+
+  // Countries
+  countries: {
+    DE: "Allemagne",
+    AT: "Autriche",
+    CH: "Suisse",
+  },
+
+  // Auth section
   auth: {
     login: {
       title: "Bienvenue",

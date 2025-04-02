@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, ChevronDown, Globe } from "lucide-react";
+import { useTranslation } from "next-vibe/i18n";
 import type { JSX } from "react";
 import { useState } from "react";
 
@@ -11,24 +12,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import type { Language } from "./lib/i18n";
-import { useTranslation } from "./lib/i18n";
+import { Languages } from "@/translations";
 
 export function LanguageSelector(): JSX.Element {
   const { language, setLanguage, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
-  // List of supported languages
-  const languages: { code: Language; name: string }[] = [
-    { code: "de", name: t("languages.de") },
-    { code: "fr", name: t("languages.fr") },
-    { code: "en", name: t("languages.en") },
-    { code: "es", name: t("languages.es") },
-    { code: "zh", name: t("languages.zh") },
-  ];
-
-  const handleLanguageChange = (lang: Language): void => {
+  const languages = Object.values(Languages).map((lang) => ({
+    code: lang,
+    name: t(`languages.${lang}`),
+  }));
+  const handleLanguageChange = (lang: Languages): void => {
     setLanguage(lang);
     setIsOpen(false);
   };

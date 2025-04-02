@@ -1,9 +1,6 @@
 "use client";
 
 import { InfoIcon } from "lucide-react";
-import useLangauge from "openeats-client/hooks/website-editor/useLanguage";
-import type { ModeStore } from "openeats-client/hooks/website-editor/useMode";
-import { useClientMode } from "openeats-client/hooks/website-editor/useMode";
 import React from "react";
 
 import {
@@ -22,6 +19,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import useLangauge from "@/hooks/website-editor/useLanguage";
+import type { ModeStore } from "@/hooks/website-editor/useMode";
+import { useClientMode } from "@/hooks/website-editor/useMode";
 
 export default function LLMSettingsPage(): React.JSX.Element {
   const { preciseMode, balancedMode, creativeMode, setMode }: ModeStore =

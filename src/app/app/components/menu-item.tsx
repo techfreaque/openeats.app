@@ -3,6 +3,7 @@
 import { Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslation } from "next-vibe/i18n";
 import type { JSX } from "react";
 import { useState } from "react";
 
@@ -20,7 +21,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { useCart } from "./hooks/use-cart";
-import { useTranslation } from "./lib/i18n";
 import type { MenuItemType } from "./lib/types";
 
 interface MenuItemProps {

@@ -1,7 +1,6 @@
 "use client";
 
 import { InfoIcon } from "lucide-react";
-import { useModel } from "openeats-client/hooks/website-editor/useModel";
 import React, { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useModel } from "@/hooks/website-editor/useModel";
 import { models } from "@/lib/website-editor/modellist";
 import { isModelSupported } from "@/lib/website-editor/supportedllm";
 

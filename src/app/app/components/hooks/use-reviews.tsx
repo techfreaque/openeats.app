@@ -1,10 +1,10 @@
 "use client";
 
-import { useAuth } from "@/hooks/useAuth";
 import type React from "react";
 import type { JSX } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 import { toast } from "../../../../components/ui/use-toast";

@@ -12,16 +12,32 @@ import {
   categoryUpdateSchema,
 } from "./schema";
 
-const categoryExamples: ExamplesList<CategoryUpdateType, "example1"> = {
+const defaultCategoryExampleId = uuidv4();
+
+export const categoryExamples: ExamplesList<
+  CategoryUpdateType,
+  "example1" | "example2" | "default"
+> = {
   default: {
-    id: uuidv4(),
+    id: defaultCategoryExampleId,
     name: "Pizza",
-    image: "https://www.example.com/pizza.jpg",
+    image: "/placeholder.svg",
+    parentCategoryId: null,
+    published: true,
   },
   example1: {
     id: uuidv4(),
     name: "Burgers",
-    image: "https://www.example.com/burgers.jpg",
+    image: "/placeholder.svg",
+    parentCategoryId: defaultCategoryExampleId,
+    published: true,
+  },
+  example2: {
+    id: defaultCategoryExampleId,
+    name: "Kebap",
+    image: "/placeholder.svg",
+    parentCategoryId: null,
+    published: false,
   },
 };
 
@@ -38,6 +54,8 @@ const categoryCreateEndpoint = createEndpoint({
   fieldDescriptions: {
     name: "Category name",
     image: "Image URL",
+    parentCategoryId: "Parent category ID",
+    published: "Published status",
   },
   examples: {
     payloads: categoryExamples,
@@ -72,6 +90,8 @@ const categoryUpdateEndpoint = createEndpoint({
     id: "Category ID",
     name: "Category name",
     image: "Image URL",
+    parentCategoryId: "Parent category ID",
+    published: "Published status",
   },
   examples: {
     payloads: categoryExamples,
@@ -91,7 +111,9 @@ const categoryUpdateEndpoint = createEndpoint({
     500: "Internal server error",
   },
 });
-export default {
+
+const categoryEndpoints = {
   ...categoryUpdateEndpoint,
   ...categoryCreateEndpoint,
 };
+export default categoryEndpoints;

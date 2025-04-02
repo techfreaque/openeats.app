@@ -11,6 +11,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Country {
+  DE
+  AT
+  CH
+}
+
+enum Language {
+  DE
+  FR
+  EN
+  IT
+  ES
+  ZH
+}
+
 enum UserRoleValue {
   PUBLIC
   CUSTOMER
@@ -128,8 +143,7 @@ model Partner {
   longitude             Float
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
-  countryId             String
-  country               Country                 @relation(fields: [countryId], references: [code])
+  countryId             Country
   mainCategoryId        String
   mainCategory          Category                @relation(fields: [mainCategoryId], references: [id])
   openingTimes          OpeningTimes[]
@@ -142,30 +156,6 @@ model Partner {
   RestaurantSiteContent RestaurantSiteContent[]
 
   @@map("partners")
-}
-
-model Country {
-  code      String      @id
-  name      String
-  languages Languages[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  partners  Partner[]
-  drivers   Driver[]
-  addresses Address[]
-  Delivery  Delivery[]
-
-  @@map("countries")
-}
-
-model Languages {
-  code      String    @id
-  name      String
-  countries Country[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@map("languages")
 }
 
 model Session {
@@ -192,8 +182,7 @@ model Driver {
   streetNumber String
   zip          String
   city         String
-  countryId    String
-  country      Country        @relation(fields: [countryId], references: [code])
+  countryId    Country
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   userId       String
@@ -217,8 +206,7 @@ model Address {
   city         String
   phone        String?
   isDefault    Boolean @default(false)
-  countryId    String
-  country      Country @relation(fields: [countryId], references: [code])
+  countryId    Country
   userId       String
   user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -280,13 +268,17 @@ model DriverRating {
 }
 
 model Category {
-  id         String     @id @default(uuid())
-  name       String
-  image      String
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  menuItems  MenuItem[]
-  restaurant Partner[]
+  id               String     @id @default(uuid())
+  name             String
+  image            String
+  published        Boolean
+  parentCategoryId String?
+  parentCategory   Category?  @relation("CategoryToCategory", fields: [parentCategoryId], references: [id])
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  menuItems        MenuItem[]
+  restaurant       Partner[]
+  childCategories  Category[] @relation("CategoryToCategory")
 
   @@map("categories")
 }
@@ -383,8 +375,7 @@ model Delivery {
   phone                    String?
   latitude                 Float?
   longitude                Float?
-  countryId                String?
-  country                  Country?       @relation(fields: [countryId], references: [code])
+  countryId                Country?
   createdAt                DateTime       @default(now())
   updatedAt                DateTime       @updatedAt
   driverId                 String?

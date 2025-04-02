@@ -65,6 +65,29 @@ export interface ApiMutationOptions<TRequest, TResponse, TUrlVariables> {
   invalidateQueries?: string[]; // List of queries to invalidate after mutation
 }
 
+/**
+ * Type for the API query form options
+ */
+export interface ApiQueryFormOptions<TRequest>
+  extends ApiFormOptions<TRequest> {
+  autoSubmit?: boolean; // Whether to automatically submit the form when values change
+  debounceMs?: number; // Debounce time in ms for auto-submission
+}
+
+/**
+ * Return type for useApiQueryForm hook combining form and query functionality
+ */
+export interface ApiQueryFormReturn<TRequest, TResponse, TUrlVariables>
+  extends ApiFormReturn<TRequest, TResponse, TUrlVariables> {
+  data: TResponse | undefined;
+  isLoading: boolean;
+  isFetching: boolean;
+  isError: boolean;
+  isSuccess: boolean;
+  status: "loading" | "success" | "error" | "idle";
+  refetch: () => Promise<TResponse>;
+}
+
 // Form-specific types
 // We force our form types with this
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

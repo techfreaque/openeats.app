@@ -1,4 +1,4 @@
-import type { TranslationSchema } from "../types";
+import type { TranslationSchema } from "./index";
 
 // Spanish translations
 const translations: TranslationSchema = {
@@ -220,6 +220,8 @@ const translations: TranslationSchema = {
       feeDescription:
         "OpenEats es gratuito para usuarios y socios. Solo los pagos en línea incurren en una pequeña tarifa de procesamiento.",
       copyright: "© {{year}} OpenEats. Código abierto bajo Licencia MIT.",
+      starUsOnGithub: "Danos una estrella en GitHub",
+      learnMoreAboutFees: "Aprende más sobre nuestras tarifas",
     },
   },
 
@@ -291,6 +293,69 @@ const translations: TranslationSchema = {
       missingInfo: "Información faltante",
       missingInfoDescription: "Por favor completa todos los campos",
     },
+    new: {
+      title: "Crear un nuevo restaurante",
+      subtitle:
+        "Añade tu restaurante a Open Delivery y comienza a recibir pedidos en línea.",
+      sections: {
+        basic: "Información básica",
+        contact: "Información de contacto",
+        address: "Dirección",
+        category: "Categoría del restaurante",
+      },
+      fields: {
+        name: {
+          label: "Nombre del restaurante",
+          placeholder: "Introduce el nombre de tu restaurante",
+        },
+        description: {
+          label: "Descripción",
+          placeholder:
+            "Describe tu restaurante, cocina, ofertas especiales, etc.",
+        },
+        image: {
+          label: "URL de la imagen del restaurante",
+          placeholder: "https://ejemplo.es/tu-imagen-restaurante.jpg",
+        },
+        email: {
+          label: "Correo electrónico",
+          placeholder: "restaurante@ejemplo.es",
+        },
+        phone: {
+          label: "Número de teléfono",
+          placeholder: "+34 123 456 789",
+        },
+        street: {
+          label: "Calle",
+          placeholder: "Calle Principal",
+        },
+        streetNumber: {
+          label: "Número",
+          placeholder: "123",
+        },
+        city: {
+          label: "Ciudad",
+          placeholder: "Madrid",
+        },
+        zip: {
+          label: "Código postal",
+          placeholder: "28001",
+        },
+        country: {
+          label: "País",
+          placeholder: "Selecciona un país",
+        },
+        mainCategory: {
+          label: "Categoría principal",
+          placeholder: "Selecciona tu categoría principal de cocina",
+        },
+      },
+      buttons: {
+        create: "Crear restaurante",
+        creating: "Creando...",
+        cancel: "Cancelar",
+      },
+    },
   },
 
   // Menu items
@@ -325,11 +390,12 @@ const translations: TranslationSchema = {
 
   // Languages
   languages: {
-    en: "English",
-    es: "Español",
-    fr: "Français",
-    de: "Deutsch",
-    zh: "中文",
+    EN: "English",
+    ES: "Español",
+    FR: "Français",
+    IT: "Italiano",
+    DE: "Deutsch",
+    ZH: "中文",
   },
   reviews: {
     title: "Reseñas",
@@ -526,6 +592,103 @@ const translations: TranslationSchema = {
       emailSent: "Correo de restablecimiento de contraseña enviado",
       checkInbox:
         "Por favor revisa tu bandeja de entrada para más instrucciones",
+    },
+  },
+  countries: {
+    DE: "Alemania",
+    AT: "Austria",
+    CH: "Suiza",
+  },
+
+  // About page
+  about: {
+    header: {
+      title: "Acerca de {{appName}}",
+      subtitle:
+        "La alternativa gratuita a las plataformas de entrega - sin tarifas de intermediarios",
+    },
+    mission: {
+      title: "Nuestra Misión",
+      paragraph1:
+        "{{appName}} conecta a los restaurantes directamente con los clientes a través de una innovadora red peer-to-peer. Creemos en una industria de restaurantes justa sin las excesivas tarifas que afectan a los ya reducidos márgenes de los restaurantes locales.",
+      paragraph2:
+        "Como plataforma de código abierto, nos aseguramos de estar comprometidos con la comunidad a la que servimos, no con accionistas o capitalistas de riesgo.",
+      imageAlt: "Restaurante local",
+    },
+    orderTypes: {
+      title: "Opciones de Pedido Flexibles",
+      delivery: {
+        title: "Entrega",
+        description:
+          "Recibe tu comida cómodamente en casa - ya sea con los propios repartidores del restaurante o a través de nuestra red de repartidores.",
+      },
+      pickup: {
+        title: "Recogida",
+        description:
+          "Haz tu pedido con antelación y recoge tu comida sin esperar. Simple, rápido y conveniente.",
+      },
+      table: {
+        title: "Pedido en Mesa",
+        description:
+          "Pide directamente desde tu smartphone en la mesa - sin tener que llamar al camarero. Moderno y eficiente.",
+      },
+    },
+    business: {
+      title: "Nuestro Modelo de Negocio",
+      description:
+        "A diferencia de las plataformas comerciales que cobran hasta un 30% de comisión, {{appName}} ofrece todas las funciones básicas de forma gratuita. Solo ganamos con servicios adicionales opcionales.",
+      imageAlt: "Modelo de negocio transparente",
+      features: {
+        basic: {
+          title: "Funciones Básicas",
+          value: "GRATIS",
+        },
+        delivery: {
+          title: "Red de Entrega",
+          value: "Solo cuando se utiliza (auto-entrega gratuita)",
+        },
+        payments: {
+          title: "Pagos Online",
+          value: "Pequeña tarifa (pago en efectivo in situ es gratuito)",
+        },
+      },
+    },
+    stakeholders: {
+      title: "Para Todos los Participantes",
+      restaurants: {
+        title: "Para Restaurantes",
+        description:
+          "Gestión de pedidos gratuita, menús digitales y tu propia presencia online sin tarifas ocultas ni compromisos contractuales prolongados.",
+      },
+      customers: {
+        title: "Para Clientes",
+        description:
+          "Pide en restaurantes locales con precios transparentes y sin recargos ocultos - ya sea para entrega, recogida o en mesa.",
+      },
+      drivers: {
+        title: "Para Repartidores",
+        description:
+          "Compensación justa a través de un modelo de pago transparente, horarios de trabajo flexibles y el 100% de tus propinas se quedan contigo.",
+      },
+    },
+    opensource: {
+      title: "Código Abierto",
+      paragraph1:
+        "{{appName}} está construido y mantenido por una comunidad de desarrolladores que creen en el poder del código abierto. Nuestro código está disponible gratuitamente para que cualquiera lo use, modifique o contribuya.",
+      paragraph2:
+        "A través de nuestro enfoque de código abierto, nos aseguramos de que nuestra plataforma permanezca transparente, segura y alineada con los intereses de la comunidad.",
+      githubButton: "Ver en GitHub",
+      imageAlt: "Comunidad de código abierto",
+    },
+    join: {
+      title: "Forma Parte del Movimiento",
+      description:
+        "Ya seas cliente, dueño de restaurante, repartidor o desarrollador - hay un lugar para todos en la comunidad {{appName}}.",
+      buttons: {
+        order: "Pedir Comida",
+        restaurant: "Registrar Restaurante",
+        driver: "Convertirse en Repartidor",
+      },
     },
   },
 };

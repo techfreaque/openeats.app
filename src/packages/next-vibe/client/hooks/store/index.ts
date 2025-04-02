@@ -41,6 +41,7 @@ export interface ApiStore {
     {
       formError: Error | null;
       isSubmitting: boolean;
+      queryParams?: Record<string, unknown>;
     }
   >;
 
@@ -77,6 +78,9 @@ export interface ApiStore {
   getFormId: <TRequest, TResponse, TUrlVariables, TExampleKey>(
     endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   ) => string;
+
+  setFormQueryParams: (formId: string, params: Record<string, unknown>) => void;
+  getFormQueryParams: <T>(formId: string) => T | undefined;
 }
 
 export interface QueryStoreType<TResponse> {
@@ -486,6 +490,26 @@ export const useApiStore = create<ApiStore>((set, get) => ({
         },
       },
     }));
+  },
+
+  setFormQueryParams: (
+    formId: string,
+    params: Record<string, unknown>,
+  ): void => {
+    set((state) => ({
+      forms: {
+        ...state.forms,
+        [formId]: {
+          ...(state.forms[formId] ?? { formError: null, isSubmitting: false }),
+          queryParams: params,
+        },
+      },
+    }));
+  },
+
+  getFormQueryParams: <T>(formId: string): T | undefined => {
+    const form = get().forms[formId];
+    return form?.queryParams as T | undefined;
   },
 }));
 

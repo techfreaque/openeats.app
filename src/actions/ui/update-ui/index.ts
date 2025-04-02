@@ -1,8 +1,7 @@
 "use server";
 
-import type { FullUI } from "openeats-client/types/website-editor";
-
 import { db } from "@/app/api/db";
+import type { FullUI } from "@/lib/website-editor/types";
 
 export const updateUI = async (
   UIId: string,

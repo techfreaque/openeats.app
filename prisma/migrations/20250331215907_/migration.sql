@@ -171,8 +171,11 @@ CREATE TABLE "categories" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "image" TEXT NOT NULL,
+    "published" BOOLEAN NOT NULL,
+    "parentCategoryId" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "categories_parentCategoryId_fkey" FOREIGN KEY ("parentCategoryId") REFERENCES "categories" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -213,6 +216,7 @@ CREATE TABLE "orders" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "message" TEXT,
     "status" TEXT NOT NULL DEFAULT 'NEW',
+    "paymentMethod" TEXT NOT NULL,
     "tax" REAL NOT NULL,
     "total" REAL NOT NULL,
     "deliveryFee" REAL NOT NULL,

@@ -1,10 +1,8 @@
 "use server";
 
 import type { UiType } from "@prisma/client";
-import type {
-  FullUI,
-  UiType as _UiType,
-} from "openeats-client/types/website-editor";
+
+import type { FullUI, UiType as _UiType } from "@/lib/website-editor/types";
 
 export const createUI = async (
   prompt: string,

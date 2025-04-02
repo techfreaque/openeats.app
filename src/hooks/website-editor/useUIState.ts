@@ -1,5 +1,6 @@
-import { UiType } from "openeats-client/types/website-editor";
 import { create } from "zustand";
+
+import { UiType } from "@/lib/website-editor/types";
 
 interface UIInput {
   input: string;

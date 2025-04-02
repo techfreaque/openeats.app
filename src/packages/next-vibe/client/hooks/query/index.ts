@@ -15,7 +15,12 @@ import type { EnhancedQueryResult } from "../types";
  * @param options - Query options including data and URL params
  * @returns Enhanced query result with extra loading state information
  */
-export function useApiQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
+export function useApiQuery<
+  TRequest,
+  TResponse,
+  TUrlVariables,
+  TExampleKey = "default",
+>(
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   requestData: TRequest,
   urlParams: TUrlVariables,

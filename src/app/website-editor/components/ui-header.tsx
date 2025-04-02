@@ -1,7 +1,5 @@
 import { GitFork, LockOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
 import type { JSX } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -15,6 +13,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 import PromptBadge from "./prompt-badge";

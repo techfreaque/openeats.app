@@ -3,8 +3,9 @@ import {
   userRoleRestaurantCreateSchema,
   userRoleRestaurantResponseSchema,
 } from "next-vibe/shared/types/user-roles.schema";
-import { minimalCountryResponseSchema } from "openeats-client/schema/schemas/locale.schema";
 import { z } from "zod";
+
+import { minimalCountryResponseSchema } from "@/packages/client/schema/schemas/locale.schema";
 
 import { categoryResponseSchema } from "./category.schema";
 import { menuItemResponseSchema } from "./menu.schema";
@@ -27,17 +28,24 @@ const restaurantBaseSchema = z.object({
   published: z.boolean(),
 });
 
-export const restaurantCreateSchema = restaurantBaseSchema.extend({
-  countryId: z.string().uuid({ message: "Valid country ID is required" }),
-  mainCategoryId: z.string().uuid({ message: "Valid category ID is required" }),
-  userRoles: z.array(userRoleRestaurantCreateSchema),
-});
-export type RestaurantCreateType = z.infer<typeof restaurantCreateSchema>;
+export const restaurantCreateSchema = restaurantBaseSchema
+  .omit({
+    published: true,
+  })
+  .extend({
+    countryId: z.string().uuid({ message: "Valid country ID is required" }),
+    mainCategoryId: z
+      .string()
+      .uuid({ message: "Valid category ID is required" }),
+    userRoles: z.array(userRoleRestaurantCreateSchema),
+  });
+export type RestaurantCreateType = z.input<typeof restaurantCreateSchema>;
 
 export const restaurantUpdateSchema = restaurantCreateSchema.extend({
   countryId: z.string().uuid({ message: "Valid country ID is required" }),
   mainCategoryId: z.string().uuid({ message: "Valid category ID is required" }),
   id: z.string().uuid(),
+  published: z.boolean(),
 });
 export type RestaurantUpdateType = z.infer<typeof restaurantUpdateSchema>;
 

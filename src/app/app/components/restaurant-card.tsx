@@ -3,17 +3,17 @@
 import { Clock, Heart, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslation } from "next-vibe/i18n";
 import { cn } from "next-vibe/shared/utils/utils";
-import { useAuth } from "@/hooks/useAuth";
 import type React from "react";
 
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useFavorites } from "./hooks/use-favorites";
-import { useTranslation } from "./lib/i18n";
 import type { RestaurantType } from "./lib/types";
 
 interface RestaurantCardProps {

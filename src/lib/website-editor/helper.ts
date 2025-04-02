@@ -1,4 +1,4 @@
-import type { FullUI } from "openeats-client/types/website-editor";
+import type { FullUI } from "@/lib/website-editor/types";
 
 export type SubPrompts = FullUI["subPrompts"];
 

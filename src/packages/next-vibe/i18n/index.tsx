@@ -4,17 +4,15 @@ import { errorLogger } from "next-vibe/shared/utils/logger";
 import type { JSX, ReactNode } from "react";
 import { createContext, useContext, useState } from "react";
 
-import { translations } from "@/app/translations";
+import type { TranslationElement } from "@/translations";
+import { Languages, translations } from "@/translations";
 
 import type { TranslationKey, TranslationValue } from "./types";
 
-// Define supported languages
-export type Language = "en" | "es" | "fr" | "de" | "zh";
-
 // Translation context type
 interface TranslationContextType {
-  language: Language;
-  setLanguage: (lang: Language) => void;
+  language: Languages;
+  setLanguage: (lang: Languages) => void;
   t: <K extends TranslationKey>(
     key: K,
     params?: TranslationValue<K> extends string
@@ -25,7 +23,7 @@ interface TranslationContextType {
 
 // Create context with default values
 export const TranslationContext = createContext<TranslationContextType>({
-  language: "en",
+  language: Languages.DE,
   setLanguage: () => {},
   t: (<K extends TranslationKey>(key: K) =>
     key as unknown as string) as TranslationContextType["t"],
@@ -34,25 +32,25 @@ export const TranslationContext = createContext<TranslationContextType>({
 // Translation provider props
 interface TranslationProviderProps {
   children: ReactNode;
-  defaultLanguage?: Language;
+  defaultLanguage?: Languages;
 }
 
 // Translation provider component
 export function TranslationProvider({
   children,
-  defaultLanguage = "de",
+  defaultLanguage = Languages.DE,
 }: TranslationProviderProps): JSX.Element {
   // Get initial language from localStorage or use default
-  const [language, setLanguageState] = useState<Language>(() => {
+  const [language, setLanguageState] = useState<Languages>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("language") as Language;
+      const saved = localStorage.getItem("language") as Languages;
       return saved && saved in translations ? saved : defaultLanguage;
     }
     return defaultLanguage;
   });
 
   // Update language and save to localStorage
-  const setLanguage = (lang: Language): void => {
+  const setLanguage = (lang: Languages): void => {
     setLanguageState(lang);
     if (typeof window !== "undefined") {
       localStorage.setItem("language", lang);
@@ -68,13 +66,13 @@ export function TranslationProvider({
   ): string => {
     // Split the key by dots to access nested properties
     const keys = key.split(".");
-    const currentTranslations = translations[language] || translations.en;
+    const currentTranslations = translations[language] || translations.DE;
 
     // Navigate through the translations object
-    let value: unknown = currentTranslations;
+    let value: TranslationElement | undefined = currentTranslations;
     for (const k of keys) {
       if (value && typeof value === "object" && k in value) {
-        value = (value as Record<string, unknown>)[k];
+        value = value[k] as TranslationElement;
       } else {
         value = undefined;
         break;
@@ -82,11 +80,11 @@ export function TranslationProvider({
     }
 
     // If translation not found, try fallback language
-    if (value === undefined && language !== "en") {
-      value = translations.en;
+    if (value === undefined && language !== Languages.DE) {
+      value = translations.DE;
       for (const k of keys) {
         if (value && typeof value === "object" && k in value) {
-          value = (value as Record<string, unknown>)[k];
+          value = value[k] as TranslationElement;
         } else {
           value = undefined;
           break;
@@ -99,18 +97,23 @@ export function TranslationProvider({
       errorLogger(`Translation key not found: ${key}`);
       return key;
     }
-
-    // Replace parameters in the translation string
-    if (params && typeof value === "string") {
-      Object.entries(params).forEach(([paramKey, paramValue]) => {
-        value = (value as string).replace(
-          new RegExp(`{{${paramKey}}}`, "g"),
-          String(paramValue),
-        );
-      });
+    if (typeof value === "string") {
+      let translationValue = value as string;
+      if (params) {
+        Object.entries(params).forEach(([paramKey, paramValue]) => {
+          translationValue = translationValue.replace(
+            new RegExp(`{{${paramKey}}}`, "g"),
+            String(paramValue),
+          );
+        });
+      }
+      return translationValue;
+    } else {
+      errorLogger(
+        `Translation key "${key}" is not a string or params are not provided`,
+      );
+      return JSON.stringify(value);
     }
-
-    return value as string;
   };
 
   return (

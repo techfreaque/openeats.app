@@ -2,7 +2,6 @@ import { LogOut, Settings, SquareLibrary } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
 import type { JSX } from "react";
 
 import { Button } from "@/components/ui";
@@ -15,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 export default function UserButton(): JSX.Element {
   const router = useRouter();

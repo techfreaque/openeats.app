@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { getEndpoints } from "next-vibe/client/endpoints";
-import { useApiForm } from "next-vibe/client/hooks/form";
+import { useApiForm } from "next-vibe/client/hooks/mutation-form";
 import { APP_NAME, ENDPOINT_DOMAINS } from "next-vibe/shared/constants";
 import type { Methods } from "next-vibe/shared/types/endpoint";
 import type { FormEvent, JSX } from "react";

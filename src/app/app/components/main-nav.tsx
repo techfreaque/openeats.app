@@ -13,12 +13,13 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
+import { useTranslation } from "next-vibe/i18n";
 import { cn } from "next-vibe/shared/utils/utils";
-import { useAuth } from "@/hooks/useAuth"
 import type React from "react";
 import type { JSX } from "react";
 import { useState } from "react";
 
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import { useCart } from "./hooks/use-cart";
 import { LanguageSelector } from "./language-selector";
-import { useTranslation } from "./lib/i18n";
 import { LocationSelector } from "./location-selector";
 
 export function MainNav(): JSX.Element {

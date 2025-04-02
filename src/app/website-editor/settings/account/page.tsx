@@ -1,6 +1,5 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
 import type { JSX } from "react";
 
 import { Badge, Button } from "@/components/ui";
@@ -14,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 export default function AccountPage(): JSX.Element {
   const { logout, user } = useAuth();

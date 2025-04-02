@@ -94,6 +94,9 @@ export async function createUser(
         imageUrl: imageUrl ?? null,
         userRoles: {
           create: { role },
+          connect: {
+            id: id,
+          },
         },
       },
       select: { id: true },

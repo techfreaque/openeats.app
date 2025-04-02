@@ -1,8 +1,6 @@
 import { NextUIProvider } from "@nextui-org/system";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useRouter } from "next/navigation";
-import useTheme from "openeats-client/hooks/website-editor/useTheme";
-import { UiType } from "openeats-client/types/website-editor";
 import type {
   ComponentType,
   ErrorInfo,
@@ -14,7 +12,9 @@ import JsxParser from "react-jsx-parser";
 import { toast } from "sonner";
 
 import * as UI from "@/components/ui";
+import useTheme from "@/hooks/website-editor/useTheme";
 import * as NextComponents from "@/lib/website-editor/nextui-components";
+import { UiType } from "@/lib/website-editor/types";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 import ReactLiveContent from "./react-live";

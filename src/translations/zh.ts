@@ -1,4 +1,4 @@
-import type { TranslationSchema } from "../types";
+import type { TranslationSchema } from "./index";
 
 // Chinese translations
 const translations: TranslationSchema = {
@@ -217,6 +217,8 @@ const translations: TranslationSchema = {
       feeDescription:
         "OpenEats对用户和合作伙伴免费。只有在线支付会产生少量处理费。",
       copyright: "© {{year}} OpenEats。根据MIT许可证开源。",
+      starUsOnGithub: "在 GitHub 上给我们加星",
+      learnMoreAboutFees: "了解更多关于我们的费用",
     },
   },
 
@@ -284,6 +286,67 @@ const translations: TranslationSchema = {
       messageSentDescription: "我们会尽快回复您",
       missingInfo: "信息缺失",
       missingInfoDescription: "请填写所有字段",
+    },
+    new: {
+      title: "创建新餐厅",
+      subtitle: "将您的餐厅添加到Open Delivery并开始接收在线订单。",
+      sections: {
+        basic: "基本信息",
+        contact: "联系信息",
+        address: "地址",
+        category: "餐厅类别",
+      },
+      fields: {
+        name: {
+          label: "餐厅名称",
+          placeholder: "输入您的餐厅名称",
+        },
+        description: {
+          label: "描述",
+          placeholder: "描述您的餐厅、菜系、特色菜品等",
+        },
+        image: {
+          label: "餐厅图片网址",
+          placeholder: "https://example.com/your-restaurant-image.jpg",
+        },
+        email: {
+          label: "电子邮件",
+          placeholder: "restaurant@example.com",
+        },
+        phone: {
+          label: "电话号码",
+          placeholder: "+86 123 4567 8910",
+        },
+        street: {
+          label: "街道",
+          placeholder: "主街道",
+        },
+        streetNumber: {
+          label: "门牌号",
+          placeholder: "123",
+        },
+        city: {
+          label: "城市",
+          placeholder: "北京",
+        },
+        zip: {
+          label: "邮政编码",
+          placeholder: "100000",
+        },
+        country: {
+          label: "国家",
+          placeholder: "选择一个国家",
+        },
+        mainCategory: {
+          label: "主要类别",
+          placeholder: "选择您的主要菜系类别",
+        },
+      },
+      buttons: {
+        create: "创建餐厅",
+        creating: "创建中...",
+        cancel: "取消",
+      },
     },
   },
 
@@ -371,11 +434,12 @@ const translations: TranslationSchema = {
 
   // Language names (for language selector)
   languages: {
-    en: "English",
-    es: "Español",
-    fr: "Français",
-    de: "Deutsch",
-    zh: "中文",
+    EN: "English",
+    ES: "Español",
+    FR: "Français",
+    IT: "Italiano",
+    DE: "Deutsch",
+    ZH: "中文",
   },
   cart: {
     title: "您的购物车",
@@ -513,6 +577,100 @@ const translations: TranslationSchema = {
       backToLogin: "返回登录",
       emailSent: "密码重置邮件已发送",
       checkInbox: "请检查您的收件箱获取进一步说明",
+    },
+  },
+  countries: {
+    DE: "德国",
+    AT: "奥地利",
+    CH: "瑞士",
+  },
+
+  // About page
+  about: {
+    header: {
+      title: "关于 {{appName}}",
+      subtitle: "外卖平台的免费替代品 - 无中介费",
+    },
+    mission: {
+      title: "我们的使命",
+      paragraph1:
+        "{{appName}} 通过创新的点对点网络直接连接餐厅和顾客。我们相信公平的餐饮行业，没有过高的费用来负担本地餐厅已经很小的利润空间。",
+      paragraph2:
+        "作为一个开源平台，我们确保我们对所服务的社区负责 - 而不是对股东或风险投资人负责。",
+      imageAlt: "当地餐厅",
+    },
+    orderTypes: {
+      title: "灵活的订餐方式",
+      delivery: {
+        title: "外卖",
+        description:
+          "方便地将食物送到您家 - 无论是通过餐厅自己的送餐员还是通过我们的送餐网络。",
+      },
+      pickup: {
+        title: "自取",
+        description: "提前订餐并无需等待取餐。简单、快速、方便。",
+      },
+      table: {
+        title: "桌面点餐",
+        description: "直接从您的智能手机在桌上点餐 - 无需叫服务员。现代高效。",
+      },
+    },
+    business: {
+      title: "我们的商业模式",
+      description:
+        "与收取高达30%佣金的商业平台不同，{{appName}} 提供所有基本功能完全免费。我们只从可选的附加服务中获利。",
+      imageAlt: "透明的商业模式",
+      features: {
+        basic: {
+          title: "基本功能",
+          value: "免费",
+        },
+        delivery: {
+          title: "配送网络",
+          value: "仅在使用时收费（自送免费）",
+        },
+        payments: {
+          title: "在线支付",
+          value: "小额费用（现场现金支付免费）",
+        },
+      },
+    },
+    stakeholders: {
+      title: "面向所有利益相关者",
+      restaurants: {
+        title: "对于餐厅",
+        description:
+          "免费订单管理、数字菜单和您自己的在线存在，没有隐藏费用或长期合同义务。",
+      },
+      customers: {
+        title: "对于顾客",
+        description:
+          "从当地餐厅订餐，价格透明，没有隐藏的附加费 - 无论是外卖、自取还是在餐桌上。",
+      },
+      drivers: {
+        title: "对于送餐员",
+        description:
+          "通过透明的支付模式获得公平报酬，灵活的工作时间，以及100%的小费归您所有。",
+      },
+    },
+    opensource: {
+      title: "开源",
+      paragraph1:
+        "{{appName}} 由一群相信开源力量的开发者构建和维护。我们的代码对任何想使用、修改或贡献的人都是免费可用的。",
+      paragraph2:
+        "通过我们的开源方法，我们确保我们的平台保持透明、安全并与社区利益一致。",
+      githubButton: "在 GitHub 上查看",
+      imageAlt: "开源社区",
+    },
+    join: {
+      title: "成为运动的一部分",
+      description:
+        "无论您是顾客、餐厅老板、送餐员还是开发者 - 在 {{appName}} 社区中每个人都有一席之地。",
+      buttons: {
+        order: "订餐",
+        restaurant: "注册餐厅",
+        driver: "成为送餐员",
+      },
     },
   },
 };

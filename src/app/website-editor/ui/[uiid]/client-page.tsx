@@ -2,11 +2,11 @@
 import html2canvas from "html2canvas";
 import { LoaderCircle, SendHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth
-import { useClientMode } from "openeats-client/hooks/website-editor/useMode";
-import { useModel } from "openeats-client/hooks/website-editor/useModel";
-import { useUIState } from "openeats-client/hooks/website-editor/useUIState";
-import { type FullUI, UiType } from "openeats-client/types/website-editor";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuthh
+import { useClientMode } from "@/hooks/website-editor/useMode";
+import { useModel } from "@/hooks/website-editor/useModel";
+import { useUIState } from "@/hooks/website-editor/useUIState";
+import { type FullUI, UiType } from "@/lib/website-editor/types";
 import type { JSX } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ImperativePanelGroupHandle } from "react-resizable-panels";

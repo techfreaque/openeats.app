@@ -5,11 +5,11 @@ import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
-import { envClient } from "openeats-client/env-client";
 import type { JSX, ReactNode } from "react";
 
 import { TooltipProvider } from "@/components/ui";
 import { Toaster } from "@/components/ui/sonner";
+import { envClient } from "@/config/env-client";
 
 const inter = Inter({ subsets: ["latin"] });
 

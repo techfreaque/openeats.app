@@ -1,6 +1,5 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
 import type { JSX } from "react";
 import { useState } from "react";
 
@@ -12,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui";
+import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
 
 const AuthModal = (): JSX.Element => {
   const { isOpen, toggle } = useAuthModal();

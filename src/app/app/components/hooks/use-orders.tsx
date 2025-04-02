@@ -1,8 +1,9 @@
 "use client";
 
-import { useAuth } from "@/hooks/useAuth";
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
+
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 export type OrderStatus =
   | "pending"

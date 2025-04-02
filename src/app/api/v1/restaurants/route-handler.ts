@@ -20,10 +20,10 @@ import type { RestaurantsResponseType, RestaurantsSearchType } from "./schema";
  * Gets restaurants based on search criteria with pagination and filtering
  */
 export const getRestaurants: ApiHandlerCallBackFunctionType<
-  UndefinedType,
+  RestaurantsSearchType,
   RestaurantsResponseType,
-  RestaurantsSearchType
-> = async ({ user, urlVariables }) => {
+  UndefinedType
+> = async ({ user, data }) => {
   try {
     const {
       search,
@@ -36,7 +36,13 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
       currentlyOpen,
       page,
       limit,
-    } = urlVariables;
+      // Add new filter parameters
+      category,
+      deliveryType,
+      priceRange,
+      dietary,
+      sortBy,
+    } = data;
 
     // First, get coordinates for the search location
     const {
@@ -45,8 +51,8 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
       latitude,
       longitude,
     } = await getCoordinatesFromAddress({
-      street: street || undefined,
-      streetNumber: streetNumber || undefined,
+      street: street ?? undefined,
+      streetNumber: streetNumber ?? undefined,
       zip,
       country: countryCode,
     });
@@ -59,7 +65,7 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
       };
     }
 
-    // Build base query conditions
+    // Build base query conditions with the exact type structure requested
     const where: {
       published: boolean;
       country: {
@@ -93,8 +99,20 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
               };
             };
           };
+          delivery?: boolean;
+          pickup?: boolean;
+          mainCategory?: {
+            equals: string;
+            mode: "insensitive";
+          };
+          categories?: {
+            has: string;
+          };
         },
       ];
+      rating?: {
+        gte: number;
+      };
     } = {
       published: true,
       country: {
@@ -115,43 +133,94 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
       where.rating = { gte: rating };
     }
 
+    // Build AND conditions while keeping the exact structure
+    const andCondition: {
+      openingTimes?: {
+        some: {
+          published: boolean;
+          day: number;
+          open: {
+            lte: number;
+          };
+          close: {
+            gte: number;
+          };
+          validFrom: {
+            lte: Date;
+          };
+          validTo: {
+            gte: Date;
+          };
+        };
+      };
+      delivery?: boolean;
+      pickup?: boolean;
+      OR?: Array<Record<string, unknown>>;
+    } = {};
+
     // Filter by current open status if requested
-    // This is complex and requires checking current time against opening hours
     if (currentlyOpen === true) {
       const now = new Date();
       const dayOfWeek = now.getDay(); // 0 is Sunday, 1 is Monday, etc.
       const currentTime = now.getHours() * 60 + now.getMinutes(); // Convert to minutes since midnight
 
-      const openingTimeCondition = {
-        openingTimes: {
-          some: {
-            published: true,
-            day: dayOfWeek,
-            open: { lte: currentTime },
-            close: { gte: currentTime },
-            validFrom: {
-              lte: now,
-            },
-            validTo: {
-              gte: now,
-            },
+      andCondition.openingTimes = {
+        some: {
+          published: true,
+          day: dayOfWeek,
+          open: { lte: currentTime },
+          close: { gte: currentTime },
+          validFrom: {
+            lte: now,
+          },
+          validTo: {
+            gte: now,
           },
         },
       };
+    }
 
-      // Add this condition to the where clause
-      where.AND = [openingTimeCondition];
+    // Add delivery type filter
+    if (deliveryType === "delivery") {
+      andCondition.delivery = true;
+    } else if (deliveryType === "pickup") {
+      andCondition.pickup = true;
+    }
+
+    // Add category filter if provided
+    if (category) {
+      andCondition.OR = [
+        { mainCategory: { equals: category, mode: "insensitive" } },
+        { categories: { has: category } },
+      ];
+    }
+
+    // Only set AND if we have conditions to apply
+    if (
+      Object.keys(andCondition).length > 0 ||
+      currentlyOpen === true ||
+      deliveryType ||
+      category
+    ) {
+      where.AND = [andCondition];
     }
 
     // Get all restaurants that match the base criteria
     const allRestaurants = await db.partner.findMany({
       where,
       select: restaurantQuery,
-      orderBy: { rating: "desc" },
+      orderBy:
+        sortBy === "rating"
+          ? { rating: "desc" }
+          : sortBy === "price-low"
+            ? { priceLevel: "asc" }
+            : sortBy === "price-high"
+              ? { priceLevel: "desc" }
+              : { rating: "desc" }, // Default to rating for relevance
     });
 
     // Calculate distance for each restaurant and filter by radius
-    const restaurantsWithDistance: RestaurantResponseType[] = allRestaurants
+    let restaurantsWithDistance: RestaurantResponseType[] = allRestaurants
       .map((restaurant) => {
         // Calculate distance in km between search location and restaurant
         const distance = calculateDistance(
@@ -164,6 +233,23 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
       })
       .filter((restaurant) => restaurant.distance <= radius)
       .sort((a, b) => a.distance - b.distance); // Sort by distance
+
+    // Additional filtering based on dietary preferences
+    if (dietary && dietary.length > 0) {
+      restaurantsWithDistance = restaurantsWithDistance.filter(
+        (restaurant) =>
+          restaurant.dietaryOptions &&
+          dietary.some((diet) => restaurant.dietaryOptions.includes(diet)),
+      );
+    }
+
+    // Additional filtering based on price range
+    if (priceRange && priceRange.length > 0) {
+      restaurantsWithDistance = restaurantsWithDistance.filter(
+        (restaurant) =>
+          restaurant.priceLevel && priceRange.includes(restaurant.priceLevel),
+      );
+    }
 
     // Apply pagination
     const skip = (page - 1) * limit;

@@ -12,7 +12,7 @@ import logoutEndpoint from "@/app/api/v1/auth/logout/definition";
 import meEndpoint from "@/app/api/v1/auth/me/definition";
 import loginEndpoint from "@/app/api/v1/auth/public/login/definition";
 import registerEndpoint from "@/app/api/v1/auth/public/register/definition";
-import { useApiForm } from "@/packages/next-vibe/client/hooks/form";
+import { useApiForm } from "next-vibe/client/hooks/mutation-form";
 
 export type UseAuthReturn = ReturnType<typeof useAuth>;
 

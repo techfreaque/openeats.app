@@ -1,4 +1,4 @@
-import type { TranslationSchema } from "@/app/translations";
+import type { TranslationSchema } from "@/translations";
 
 // Utility type to create dot-notation paths for nested objects
 type DotPrefix<T extends string> = T extends "" ? "" : `.${T}`;

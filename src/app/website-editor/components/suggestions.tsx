@@ -1,14 +1,14 @@
 import { MoveUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
-import { useUIState } from "openeats-client/hooks/website-editor/useUIState";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { createUI } from "@/actions/ui/create-ui";
 import { Badge } from "@/components/ui";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
+import { useUIState } from "@/hooks/website-editor/useUIState";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 const Suggestions = (): JSX.Element => {

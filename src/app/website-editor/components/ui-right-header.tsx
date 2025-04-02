@@ -13,9 +13,6 @@ import {
   Tablet,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useAuth } from "@/hooks/useAuth";
-import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
-import type { UiType } from "openeats-client/types/website-editor";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -52,10 +49,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
 import { embededCode } from "@/lib/website-editor/code";
 import { getCss } from "@/lib/website-editor/globalCss";
 import type { Theme } from "@/lib/website-editor/themes";
 import { themes as defaultThemes, themes } from "@/lib/website-editor/themes";
+import type { UiType } from "@/lib/website-editor/types";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 import LikeButton from "./like-button";

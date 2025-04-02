@@ -1,8 +1,5 @@
 import { GitFork } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
-import { useBugReportModal } from "openeats-client/hooks/website-editor/useBugReportModal";
 import type { FormEvent, JSX } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -27,6 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
+import { useBugReportModal } from "@/hooks/website-editor/useBugReportModal";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 export const BugReportModal = (): JSX.Element => {

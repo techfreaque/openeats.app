@@ -1,11 +1,11 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
-import { useBugReportModal } from "openeats-client/hooks/website-editor/useBugReportModal";
 import type { JSX } from "react";
 
 import { Button } from "@/components/ui";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
+import { useBugReportModal } from "@/hooks/website-editor/useBugReportModal";
 
 import { BugReportModal } from "./bug-report-modal";
 import UserButton from "./user-button";

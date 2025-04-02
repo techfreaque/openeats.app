@@ -1,4 +1,4 @@
-import { UiType } from "openeats-client/types/website-editor";
+import { UiType } from "@/lib/website-editor/types";
 
 export const getComponents = (uiType: UiType): string => {
   if (uiType === UiType.SHADCN_REACT) {

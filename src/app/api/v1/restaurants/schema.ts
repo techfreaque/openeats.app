@@ -13,8 +13,21 @@ export const restaurantsSearchSchema = z.object({
   currentlyOpen: z.boolean().optional().nullable(),
   page: z.number().int().positive().default(1),
   limit: z.number().int().positive().max(100).default(100),
+
+  // Add new filter options
+  category: z.string().optional().nullable(),
+  deliveryType: z
+    .enum(["delivery", "pickup", "all"])
+    .optional()
+    .default("delivery"),
+  priceRange: z.array(z.string()).optional().nullable(),
+  dietary: z.array(z.string()).optional().nullable(),
+  sortBy: z
+    .enum(["relevance", "rating", "delivery-time", "price-low", "price-high"])
+    .optional()
+    .default("relevance"),
 });
-export type RestaurantsSearchType = z.infer<typeof restaurantsSearchSchema>;
+export type RestaurantsSearchType = z.input<typeof restaurantsSearchSchema>;
 
 export const restaurantsResponseSchema = z.object({
   restaurants: z.array(restaurantResponseSchema),
@@ -25,4 +38,4 @@ export const restaurantsResponseSchema = z.object({
     pages: z.number(),
   }),
 });
-export type RestaurantsResponseType = z.infer<typeof restaurantsResponseSchema>;
+export type RestaurantsResponseType = z.input<typeof restaurantsResponseSchema>;

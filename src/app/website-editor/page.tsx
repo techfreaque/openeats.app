@@ -8,16 +8,12 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { useAuthModal } from "openeats-client/hooks/website-editor/useAuthModal";
-import { useModel } from "openeats-client/hooks/website-editor/useModel";
-import { useUIState } from "openeats-client/hooks/website-editor/useUIState";
-import { UiType } from "openeats-client/types/website-editor";
 import type { ChangeEvent, JSX } from "react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { createUI } from "@/actions/ui/create-ui";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import {
   Badge,
   Button,
@@ -29,6 +25,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
+import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
+import { useModel } from "@/hooks/website-editor/useModel";
+import { useUIState } from "@/hooks/website-editor/useUIState";
+import { UiType } from "@/lib/website-editor/types";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 import Header from "./components/header";

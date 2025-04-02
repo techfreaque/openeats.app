@@ -1,7 +1,8 @@
 "use client";
 import { redirect } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
 import React, { useEffect } from "react";
+
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 import Header from "../components/header";
 import SettingsSidebar from "../components/settings-sidebar";

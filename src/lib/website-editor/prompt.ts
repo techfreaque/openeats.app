@@ -1,4 +1,4 @@
-import { UiType } from "openeats-client/types/website-editor";
+import { UiType } from "@/lib/website-editor/types";
 
 import { getComponents } from "./components";
 
