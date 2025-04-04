@@ -15,6 +15,7 @@ export const platform = {
 
 export const envClientSchema = portalEnvClientSchema.extend({
   NEXT_PUBLIC_GA_ID: z.string().min(1),
+  NEXT_PUBLIC_PAYPAL_CLIENT_ID: z.string().min(1),
 });
 
 export type EnvFrontend = z.infer<typeof envClientSchema>;
@@ -32,6 +33,7 @@ export const envClient: EnvFrontend = validateEnv(
     NEXT_PUBLIC_BACKEND_PROD: process.env["NEXT_PUBLIC_BACKEND_PROD"],
     NEXT_PUBLIC_BACKEND_DEV: process.env["NEXT_PUBLIC_BACKEND_DEV"],
     NEXT_PUBLIC_BACKEND_TEST: process.env["NEXT_PUBLIC_BACKEND_TEST"],
+    NEXT_PUBLIC_PAYPAL_CLIENT_ID: process.env["NEXT_PUBLIC_PAYPAL_CLIENT_ID"],
     platform,
   } as EnvFrontendInput,
   envClientSchema,

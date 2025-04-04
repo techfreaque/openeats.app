@@ -40,7 +40,7 @@ export function RestaurantCard({
   };
 
   return (
-    <Link href={`/app/restaurant/${restaurant.id}`}>
+    <Link href={`/restaurant/${restaurant.id}`}>
       <Card className="overflow-hidden transition-all hover:shadow-md">
         <div className="relative aspect-video overflow-hidden">
           <Image

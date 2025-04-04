@@ -2,7 +2,7 @@
 
 import { ArrowLeft, Menu } from "lucide-react";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { cn } from "next-vibe/shared/utils/utils";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
@@ -26,7 +26,7 @@ export function RestaurantNavbar({
   const config = useRestaurantConfig();
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [activePage, setActivePage] = useState<string>("home");
-
+  const router = useRouter();
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = (): void => {
@@ -77,17 +77,18 @@ export function RestaurantNavbar({
           <Button
             variant="ghost"
             size="icon"
+            onClick={() => router.back()}
             asChild
             className="text-foreground hover:bg-background/80"
           >
-            <Link href="/app">
+            <>
               <ArrowLeft className="h-5 w-5" />
               <span className="sr-only">Back to OpenEats</span>
-            </Link>
+            </>
           </Button>
 
           <Link
-            href={`/app/restaurant/${restaurantId}`}
+            href={`/restaurant/${restaurantId}`}
             className="font-semibold text-lg hidden md:block"
           >
             {restaurantName}
@@ -101,8 +102,8 @@ export function RestaurantNavbar({
               key={page.id}
               href={
                 page.slug === "home"
-                  ? `/app/restaurant/${restaurantId}`
-                  : `/app/restaurant/${restaurantId}/${page.slug}`
+                  ? `/restaurant/${restaurantId}`
+                  : `/restaurant/${restaurantId}/${page.slug}`
               }
               className={cn(
                 "text-sm font-medium transition-colors hover:text-primary",
@@ -127,7 +128,7 @@ export function RestaurantNavbar({
           <SheetContent side="right">
             <div className="flex flex-col space-y-4 mt-8">
               <Link
-                href={`/app/restaurant/${restaurantId}`}
+                href={`/restaurant/${restaurantId}`}
                 className="text-lg font-semibold"
               >
                 {restaurantName}
@@ -138,8 +139,8 @@ export function RestaurantNavbar({
                   key={page.id}
                   href={
                     page.slug === "home"
-                      ? `/app/restaurant/${restaurantId}`
-                      : `/app/restaurant/${restaurantId}/${page.slug}`
+                      ? `/restaurant/${restaurantId}`
+                      : `/restaurant/${restaurantId}/${page.slug}`
                   }
                   className={cn(
                     "text-sm font-medium transition-colors hover:text-primary py-2",
@@ -154,15 +155,20 @@ export function RestaurantNavbar({
 
               <div className="pt-4">
                 <Button asChild className="w-full">
-                  <Link href={`/app/restaurant/${restaurantId}/menu`}>
+                  <Link href={`/restaurant/${restaurantId}/menu`}>
                     Order Now
                   </Link>
                 </Button>
               </div>
 
               <div className="pt-4">
-                <Button variant="outline" asChild className="w-full">
-                  <Link href="/app">Back to OpenEats</Link>
+                <Button
+                  variant="outline"
+                  asChild
+                  className="w-full"
+                  onClick={() => router.back()}
+                >
+                  Back to OpenEats
                 </Button>
               </div>
             </div>
@@ -171,7 +177,7 @@ export function RestaurantNavbar({
 
         {/* Order Button */}
         <Button asChild className="hidden md:flex">
-          <Link href={`/app/restaurant/${restaurantId}/menu`}>Order Now</Link>
+          <Link href={`/restaurant/${restaurantId}/menu`}>Order Now</Link>
         </Button>
       </div>
     </header>

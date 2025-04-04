@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslation } from "next-vibe/i18n";
 import { errorLogger } from "next-vibe/shared/utils/logger";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
@@ -13,7 +14,6 @@ import { useToast } from "@/components/ui/use-toast";
 
 import { CategoryPill } from "./components/category-pill";
 import { useRestaurants } from "./components/hooks/use-restaurants";
-import { useTranslation } from "./components/lib/i18n";
 import {
   RestaurantCard,
   RestaurantCardSkeleton,

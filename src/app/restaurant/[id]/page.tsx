@@ -4,23 +4,20 @@ import { Heart, Star } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { cn } from "next-vibe/shared/utils/utils";
-import { useAuth } from "@/hooks/useAuth";
 import type { JSX } from "react";
 import { useState } from "react";
 
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { FeaturedCollection } from "@/app/app/components/featured-collection";
+import { useFavorites } from "@/app/app/components/hooks/use-favorites";
+import { useRestaurants } from "@/app/app/components/hooks/use-restaurants";
+import type { OrderType } from "@/app/app/components/order-type-selector";
+import { OrderTypeSelector } from "@/app/app/components/order-type-selector";
+import { useRestaurantConfig } from "@/app/app/components/restaurant-config-provider";
+import { RestaurantHero } from "@/app/app/components/restaurant-hero";
+import { RestaurantStory } from "@/app/app/components/restaurant-story";
+import { SpecialOffers } from "@/app/app/components/special-offers";
 import { Button } from "@/components/ui";
-
-import { FeaturedCollection } from "../../components/featured-collection";
-import { useFavorites } from "../../components/hooks/use-favorites";
-import { useRestaurants } from "../../components/hooks/use-restaurants";
-import {
-  type OrderType,
-  OrderTypeSelector,
-} from "../../components/order-type-selector";
-import { useRestaurantConfig } from "../../components/restaurant-config-provider";
-import { RestaurantHero } from "../../components/restaurant-hero";
-import { RestaurantStory } from "../../components/restaurant-story";
-import { SpecialOffers } from "../../components/special-offers";
 
 export default function RestaurantHomePage(): JSX.Element | null {
   const params = useParams<{ id: string }>();
