@@ -5,7 +5,7 @@ import type { JSX } from "react";
 import { useState } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { useRestaurants } from "@/app/app/components/hooks/use-restaurants";
+import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
 import type { MenuItemType } from "@/app/app/components/lib/types";
 import { ReviewForm } from "@/app/app/components/review-form";
 import { ReviewsList } from "@/app/app/components/reviews-list";

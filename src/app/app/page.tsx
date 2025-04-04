@@ -5,28 +5,39 @@ import Link from "next/link";
 import { useTranslation } from "next-vibe/i18n";
 import { errorLogger } from "next-vibe/shared/utils/logger";
 import type { JSX } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 
+import { useRestaurants } from "../api/v1/restaurants/hooks";
 import { CategoryPill } from "./components/category-pill";
-import { useRestaurants } from "./components/hooks/use-restaurants";
 import {
   RestaurantCard,
   RestaurantCardSkeleton,
 } from "./components/restaurant-card";
 
+// Category icons mapping
+const CATEGORY_ICONS: Record<string, string> = {
+  "all": "🍽️",
+  "fast food": "🍔",
+  "pizza": "🍕",
+  "sushi": "🍣",
+  "chinese": "🥡",
+  "mexican": "🌮",
+  "italian": "🍝",
+  "dessert": "🍰",
+  "breakfast": "🥞",
+  "healthy": "🥗",
+  // Fallback for unknown categories
+  "default": "🍴",
+};
+
 export default function Home(): JSX.Element {
-  const {
-    restaurants,
-    featuredRestaurants,
-    popularRestaurants,
-    isLoading,
-    filterRestaurantsByCategory,
-  } = useRestaurants();
+  const { form, data, isLoading, submitForm } = useRestaurants();
+  const restaurants = data?.restaurants || [];
 
   const [activeCategory, setActiveCategory] = useState("all");
   const [deliveryType, setDeliveryType] = useState("delivery");
@@ -34,13 +45,101 @@ export default function Home(): JSX.Element {
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  // Add proper return type to the handleLocationChange function
+  // Dynamically extract categories from restaurant data
+  const categories = useMemo(() => {
+    // Start with "All" category
+    const allCategory = { name: "All", icon: "🍽️", value: "all" };
+
+    // If we don't have data yet, return just the "All" category
+    if (!restaurants || restaurants.length === 0) {
+      return [allCategory];
+    }
+
+    // Extract unique categories from restaurants
+    const uniqueCategories = new Set<string>();
+    restaurants.forEach((restaurant) => {
+      if (restaurant.mainCategory) {
+        uniqueCategories.add(restaurant.mainCategory);
+      }
+    });
+
+    // Map to category objects with icons
+    const categoryList = Array.from(uniqueCategories).map((category) => ({
+      name: category.charAt(0).toUpperCase() + category.slice(1),
+      icon: CATEGORY_ICONS[category.toLowerCase()] || CATEGORY_ICONS.default,
+      value: category.toLowerCase(),
+    }));
+
+    // Sort alphabetically and add All at the beginning
+    return [
+      allCategory,
+      ...categoryList.sort((a, b) => a.name.localeCompare(b.name)),
+    ];
+  }, [restaurants]);
+
+  // Update the form when category changes
+  useEffect(() => {
+    if (form) {
+      if (activeCategory === "all") {
+        form.setValue("category", undefined);
+      } else {
+        form.setValue("category", activeCategory);
+      }
+
+      // Only submit if we have location data
+      if (form.getValues("zip") && form.getValues("countryCode")) {
+        submitForm(undefined, { urlParamVariables: undefined });
+      }
+    }
+  }, [activeCategory, form, submitForm]);
+
+  // Update the form when delivery type changes
+  useEffect(() => {
+    if (form) {
+      form.setValue("deliveryType", deliveryType);
+
+      // Only submit if we have location data
+      if (form.getValues("zip") && form.getValues("countryCode")) {
+        submitForm(undefined, { urlParamVariables: undefined });
+      }
+    }
+  }, [deliveryType, form, submitForm]);
+
+  // Function to handle location change
   const handleLocationChange = (newLocation: string): void => {
     setLocation(newLocation);
     localStorage.setItem("openeats-location", newLocation);
+
+    // Extract zip and country from location (simplified)
+    const [zip, countryCode] = parseLocation(newLocation);
+
+    if (zip && countryCode) {
+      form.setValue("zip", zip);
+      form.setValue("countryCode", countryCode);
+    } else {
+      // Fallback to defaults if parsing fails
+      form.setValue("zip", "10001");
+      form.setValue("countryCode", "US");
+    }
+
+    form.setValue("radius", 10);
+    submitForm(undefined, { urlParamVariables: undefined });
   };
 
-  // Update the useEffect with proper type for the geolocation error
+  // Helper function to parse location string
+  const parseLocation = (loc: string): [string | null, string | null] => {
+    // This is a simplified parsing logic - in a real app, you'd use geocoding
+    if (loc.includes(",")) {
+      // For demo purposes, we'll assume format "zip, countryCode" or "city, countryCode"
+      const parts = loc.split(",").map((p) => p.trim());
+      if (parts.length >= 2) {
+        return [parts[0], parts[1]];
+      }
+    }
+    return [null, null];
+  };
+
+  // Initialize with location from localStorage if available
   useEffect(() => {
     // Check if we have a saved location
     const savedLocation = localStorage.getItem("openeats-location");
@@ -78,7 +177,7 @@ export default function Home(): JSX.Element {
         { timeout: 10000, enableHighAccuracy: false },
       );
     }
-  }, [toast, t]);
+  }, [form, toast, t, submitForm]);
 
   // Save location when it changes
   useEffect(() => {
@@ -87,28 +186,21 @@ export default function Home(): JSX.Element {
     }
   }, [location]);
 
-  const filteredRestaurants =
-    activeCategory === "all"
-      ? restaurants
-      : filterRestaurantsByCategory(activeCategory);
-
+  // Filter by delivery type (need to do this client-side since we're not resubmitting the form)
   const displayedRestaurants =
     deliveryType === "pickup"
-      ? filteredRestaurants.filter((r) => r.pickup)
-      : filteredRestaurants;
+      ? restaurants.filter((r) => r.pickup)
+      : restaurants;
 
-  const categories = [
-    { name: "All", icon: "🍽️", value: "all" },
-    { name: "Fast Food", icon: "🍔", value: "fast food" },
-    { name: "Pizza", icon: "🍕", value: "pizza" },
-    { name: "Sushi", icon: "🍣", value: "sushi" },
-    { name: "Chinese", icon: "🥡", value: "chinese" },
-    { name: "Mexican", icon: "🌮", value: "mexican" },
-    { name: "Italian", icon: "🍝", value: "italian" },
-    { name: "Dessert", icon: "🍰", value: "dessert" },
-    { name: "Breakfast", icon: "🥞", value: "breakfast" },
-    { name: "Healthy", icon: "🥗", value: "healthy" },
-  ];
+  // Features restaurants - top 4 by rating
+  const featuredRestaurants = [...restaurants]
+    .sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0))
+    .slice(0, 4);
+
+  // Popular restaurants - top 4 by rating
+  const popularRestaurants = [...restaurants]
+    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    .slice(0, 4);
 
   return (
     <>

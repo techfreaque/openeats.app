@@ -8,11 +8,13 @@ import type { JSX } from "react";
 import { useState } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
 import { FeaturedCollection } from "@/app/app/components/featured-collection";
 import { useFavorites } from "@/app/app/components/hooks/use-favorites";
-import { useRestaurants } from "@/app/app/components/hooks/use-restaurants";
-import type { OrderType } from "@/app/app/components/order-type-selector";
-import { OrderTypeSelector } from "@/app/app/components/order-type-selector";
+import {
+  type OrderType,
+  OrderTypeSelector,
+} from "@/app/app/components/order-type-selector";
 import { useRestaurantConfig } from "@/app/app/components/restaurant-config-provider";
 import { RestaurantHero } from "@/app/app/components/restaurant-hero";
 import { RestaurantStory } from "@/app/app/components/restaurant-story";
@@ -23,13 +25,12 @@ export default function RestaurantHomePage(): JSX.Element | null {
   const params = useParams<{ id: string }>();
   const id = params.id;
 
-  const { getRestaurantById } = useRestaurants();
   const { user } = useAuth();
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const config = useRestaurantConfig();
 
-  const restaurant = getRestaurantById(id);
-  const favorite = restaurant ? isFavorite(restaurant.id) : false;
+  const { data: restaurant } = useRestaurant(id);
+  const favorite = restaurant ? isFavorite(restaurant?.id) : false;
 
   const [orderType, setOrderType] = useState<OrderType>("delivery");
 
