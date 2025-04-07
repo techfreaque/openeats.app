@@ -102,7 +102,7 @@ export default function RootLayout({
                       height="24"
                       viewBox="0 0 112.285 133.477"
                     >
-                      <g fill-rule="evenodd" clip-rule="evenodd">
+                      <g fillRule="evenodd" clipRule="evenodd">
                         <path
                           d="M103.357 116.784c-2.448 4.032-4.896 7.056-7.848 9.863-3.312 2.952-4.248 5.544-11.88 6.553-5.4 1.008-10.08-1.009-11.88-1.8-5.4-2.521-8.209-3.312-11.448-3.312-3.168 0-5.832.792-11.16 3.24-1.656.863-6.12 2.808-11.592 1.8-5.616-1.008-8.496-3.168-10.584-4.968-4.32-3.816-7.56-7.416-10.512-11.592l86.904.216z"
                           fill="#fff"
@@ -158,7 +158,9 @@ export default function RootLayout({
                   className="flex items-center gap-2 px-3 py-2 bg-muted rounded-md hover:bg-muted/80 transition text-sm"
                 >
                   <Github className="h-5 w-5" />
-                  <span className="font-medium">{t("home.footer.starUsOnGithub")}</span>
+                  <span className="font-medium">
+                    {t("home.footer.starUsOnGithub")}
+                  </span>
                 </Link>
                 {/* Add more social icons here if needed */}
               </div>

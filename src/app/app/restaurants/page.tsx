@@ -1,7 +1,6 @@
 "use client";
 
 import { Clock, Filter, Search, Star } from "lucide-react";
-import { Trans, useTranslation } from "next-vibe/i18n";
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -31,7 +30,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
-import { Countries } from "@/translations";
 
 import { CategoryPill } from "../components/category-pill";
 import {
@@ -55,63 +53,6 @@ const CATEGORY_ICONS: Record<string, string> = {
   "default": "🍴",
 };
 
-// Location entry screen
-const LocationEntryScreen = ({
-  onSave,
-}: {
-  onSave: (countryCode: string, zip: string) => void;
-}) => {
-  const [countryCode, setCountryCode] = useState("DE");
-  const [zip, setZip] = useState("");
-  const { t } = useTranslation();
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center">
-      <div className="text-6xl mb-4">📍</div>
-      <h2 className="text-2xl font-bold mb-6">We Need Your Location</h2>
-      <p className="text-muted-foreground mb-8 max-w-md">
-        Please enter your location details so we can show you restaurants in
-        your area.
-      </p>
-
-      <div className="w-full max-w-sm space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="country">Country</Label>
-          <Select defaultValue={countryCode} onValueChange={setCountryCode}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select country" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.values(Countries).map((country) => (
-                <SelectItem key={country} value={country}>
-                  <Trans i18nKey={`countries.${country}`} />
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="zip">Zip/Postal Code</Label>
-          <Input
-            id="zip"
-            value={zip}
-            onChange={(e) => setZip(e.target.value)}
-            placeholder="Enter zip code"
-          />
-        </div>
-
-        <Button
-          className="w-full"
-          onClick={() => onSave(countryCode, zip)}
-          disabled={!zip || !countryCode}
-        >
-          Find Restaurants
-        </Button>
-      </div>
-    </div>
-  );
-};
-
 export default function RestaurantsPage(): React.JSX.Element {
   const { form, data, isLoading, submitForm } = useRestaurants();
   const [filterOpen, setFilterOpen] = useState(false);
@@ -130,19 +71,23 @@ export default function RestaurantsPage(): React.JSX.Element {
       return [allCategory];
     }
 
-    // Extract unique categories from restaurants
-    const uniqueCategories = new Set<string>();
+    const uniqueCategories: {
+      id: {
+        name: string;
+        image: string;
+        id: string;
+      };
+    } = {};
     restaurants.forEach((restaurant) => {
-      if (restaurant.mainCategory) {
-        uniqueCategories.add(restaurant.mainCategory);
-      }
+      uniqueCategories[restaurant.mainCategory.id] = restaurant.mainCategory;
     });
 
     // Map to category objects with icons
-    const categoryList = Array.from(uniqueCategories).map((category) => ({
-      name: category.charAt(0).toUpperCase() + category.slice(1),
-      icon: CATEGORY_ICONS[category.toLowerCase()] || CATEGORY_ICONS.default,
-      value: category.toLowerCase(),
+    const categoryList = Object.values(uniqueCategories).map((category) => ({
+      name: category.name.charAt(0).toUpperCase() + category.name.slice(1),
+      icon:
+        CATEGORY_ICONS[category.name.toLowerCase()] ?? CATEGORY_ICONS.default,
+      value: category.id,
     }));
 
     // Sort alphabetically and add All at the beginning
@@ -278,11 +223,6 @@ export default function RestaurantsPage(): React.JSX.Element {
     }
     return count;
   };
-
-  // If we don't have location info, show the entry screen
-  if (!locationSet) {
-    return <LocationEntryScreen onSave={setLocation} />;
-  }
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">

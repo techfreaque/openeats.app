@@ -2,8 +2,8 @@
 import { useRouter } from "next/navigation";
 import type { JSX } from "react";
 
-import { Button } from "@/components/ui";
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { Button } from "@/components/ui";
 import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
 import { useBugReportModal } from "@/hooks/website-editor/useBugReportModal";
 

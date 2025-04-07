@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { DeliveryStatus } from "@/client-package/types/types";
+import { db } from "@/app/api/db";
+
+import { DeliveryStatus } from "../../order/delivery.schema";
+
 // replaced db with prisma, for example
 
 export async function GET(): Promise<NextResponse> {

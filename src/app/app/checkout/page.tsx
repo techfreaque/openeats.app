@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import type { JSX } from "react";
 import { useState } from "react";
 
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,11 +18,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 import { useCart } from "../components/hooks/use-cart";
 import { useOrders } from "../components/hooks/use-orders";
-import { useRestaurants } from "../components/hooks/use-restaurants";
 
 export default function CheckoutPage(): JSX.Element | null {
   const router = useRouter();
@@ -37,9 +37,7 @@ export default function CheckoutPage(): JSX.Element | null {
     clearCart,
   } = useCart();
   const { placeOrder, isLoading } = useOrders();
-  const { getRestaurantById } = useRestaurants();
-
-  const restaurant = restaurantId ? getRestaurantById(restaurantId) : null;
+  const { data: restaurant } = useRestaurant(restaurantId);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");

@@ -3,8 +3,8 @@
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
-import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { toast } from "@/components/ui/use-toast";
 
 interface FavoritesContextType {
   favorites: string[]; // Restaurant IDs

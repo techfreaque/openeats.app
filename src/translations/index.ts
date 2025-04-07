@@ -11,6 +11,17 @@ export enum Countries {
   CH = "CH",
 }
 
+export enum Currencies {
+  EUR = "EUR",
+  CHF = "CHF",
+}
+
+export const currencyByCountry = {
+  [Countries.DE]: Currencies.EUR,
+  [Countries.AT]: Currencies.EUR,
+  [Countries.CH]: Currencies.CHF,
+} as const;
+
 export enum Languages {
   DE = "DE",
   FR = "FR",

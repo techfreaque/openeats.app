@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { z } from "zod";
 
-import type { MenuItemCreateType } from "@/client-package/schema/schemas";
-import { menuItemCreateSchema } from "@/client-package/schema/schemas";
-import { env } from "@/lib/env/env";
+import { env } from "@/config/env";
+
+import type { MenuItemCreateType } from "../restaurant/schema/menu.schema";
+import { menuItemCreateSchema } from "../restaurant/schema/menu.schema";
 
 // Initialize OpenAI client
 const openai = new OpenAI({

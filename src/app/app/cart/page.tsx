@@ -4,9 +4,11 @@ import { ArrowLeft, Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "next-vibe/i18n";
 import type React from "react";
 import { useState } from "react";
 
+import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,10 +23,10 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useCart } from "../components/hooks/use-cart";
-import { useRestaurants } from "../components/hooks/use-restaurants";
 
 export default function CartPage(): React.JSX.Element {
   const router = useRouter();
+  const { t } = useTranslation();
   const {
     items,
     updateQuantity,
@@ -38,8 +40,7 @@ export default function CartPage(): React.JSX.Element {
     clearCart,
   } = useCart();
 
-  const { getRestaurantById } = useRestaurants();
-  const restaurant = restaurantId ? getRestaurantById(restaurantId) : null;
+  const { data: restaurant } = useRestaurant(restaurantId);
 
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryInstructions, setDeliveryInstructions] = useState("");
@@ -217,7 +218,13 @@ export default function CartPage(): React.JSX.Element {
                       <div className="rounded-lg border p-4">
                         <h3 className="font-medium">{restaurant.name}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {restaurant.address}
+                          {restaurant.street} {restaurant.streetNumber}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {restaurant.city}, {restaurant.zip}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {t(`countries.${restaurant.countryId}`)}
                         </p>
                         <p className="mt-2 text-sm">
                           Ready for pickup in 15-20 minutes

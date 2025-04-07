@@ -4,7 +4,7 @@ import { z } from "zod";
 import { llm } from "@/lib/website-editor/llm";
 import {
   getElementProperty,
-  getRefienedElementProperty,
+  getRefinedElementProperty,
 } from "@/lib/website-editor/prompt";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
@@ -34,7 +34,7 @@ export async function POST(req: Request): Promise<Response> {
             {
               type: "text",
               text: refine
-                ? getRefienedElementProperty(oldProperties || "")
+                ? getRefinedElementProperty(oldProperties ?? "")
                 : getElementProperty(),
             },
             {

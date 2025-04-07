@@ -4,16 +4,14 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import type { JSX } from "react";
 
-import { useRestaurants } from "@/app/app/components/hooks/use-restaurants";
+import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
 import { useRestaurantConfig } from "@/app/app/components/restaurant-config-provider";
 
 export default function RestaurantAboutPage(): JSX.Element | null {
   const { id } = useParams<{ id: string }>();
 
-  const { getRestaurantById } = useRestaurants();
+  const { data: restaurant } = useRestaurant(id);
   const config = useRestaurantConfig();
-
-  const restaurant = getRestaurantById(id);
 
   if (!restaurant) {
     return null;

@@ -14,8 +14,24 @@ export async function forkUI(uiId: string, userId: string): Promise<FullUI> {
       where: {
         id: uiId,
       },
-      include: {
-        subPrompts: true,
+      select: {
+        id: true,
+        uiType: true,
+        userId: true,
+        prompt: true,
+        public: true,
+        img: true,
+        subPrompts: {
+          select: {
+            SUBId: true,
+            subPrompt: true,
+            code: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -39,7 +55,7 @@ export async function forkUI(uiId: string, userId: string): Promise<FullUI> {
           create: originalUI.subPrompts.map((subPrompt) => ({
             SUBId: subPrompt.SUBId,
             subPrompt: subPrompt.subPrompt,
-            codeId: subPrompt.codeId,
+            codeId: subPrompt.code!.id,
           })),
         },
       },
@@ -69,7 +85,6 @@ export async function forkUI(uiId: string, userId: string): Promise<FullUI> {
             createdAt: true,
             subPrompt: true,
             modelId: true,
-            codeId: true,
             code: {
               select: {
                 id: true,

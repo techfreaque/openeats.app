@@ -4,31 +4,22 @@ import { errorLogger } from "next-vibe/shared/utils/logger";
 
 import { db } from "@/app/api/db";
 
+import {
+  type CreateSubPromptReturn,
+  subPromptSelect,
+} from "../create-subprompt";
+
 export const updateSubPrompt = async (
   UIId: string,
   code: string,
   modelId: string,
   subid?: string,
-): Promise<{
-  data: {
-    id: string;
-    createdAt: Date;
-    subPrompt: string;
-    UIId: string;
-    SUBId: string;
-    modelId: string | null;
-    codeId: string;
-  };
-  codeData: {
-    id: string;
-    code: string;
-  };
-} | null> => {
+): Promise<CreateSubPromptReturn | null> => {
   try {
     const existingSubPrompt = await db.subPrompt.findFirst({
       where: {
         UIId: UIId,
-        SUBId: subid,
+        ...(subid ? { SUBId: subid } : {}),
       },
     });
 
@@ -36,26 +27,22 @@ export const updateSubPrompt = async (
       return null;
     }
 
-    const codeData = await db.code.create({
-      data: {
-        code: code,
-      },
-    });
-
     const data = await db.subPrompt.update({
       where: {
         id: existingSubPrompt.id,
       },
       data: {
-        codeId: codeData.id,
+        code: {
+          create: {
+            code: code,
+          },
+        },
         modelId: modelId,
       },
+      select: subPromptSelect,
     });
 
-    return {
-      data,
-      codeData,
-    };
+    return data as CreateSubPromptReturn;
   } catch (error) {
     errorLogger("Error updating subprompt:", error);
     return null;

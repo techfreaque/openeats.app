@@ -167,7 +167,6 @@ import type { ApiSection } from "next-vibe/shared";
 
   // Create the endpoints object and setup function
   fileContent += `export const endpoints: ApiSection = {};\n\n`;
-  fileContent += `// Setup nested structure\n`;
   fileContent += `function setupEndpoints() {\n`;
 
   // Use Set to remove duplicate path creation entries
@@ -178,7 +177,6 @@ import type { ApiSection } from "next-vibe/shared";
 
   fileContent += `  return endpoints;\n`;
   fileContent += `}\n\n`;
-  fileContent += `// Initialize the endpoints structure\n`;
   fileContent += `setupEndpoints();\n`;
 
   // Write the file
@@ -187,7 +185,6 @@ import type { ApiSection } from "next-vibe/shared";
   return definitionFiles.length;
 }
 
-// Run the script if called directly - using ES Module pattern
 if (import.meta.url === `file://${process.argv[1]}`) {
   generateEndpoints(process.cwd());
 }

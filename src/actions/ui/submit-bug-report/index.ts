@@ -59,7 +59,7 @@ export async function submitBugReport(
         description: validatedInput.description,
         reportType: validatedInput.reportType,
         severity: validatedInput.severity,
-        steps: validatedInput.steps,
+        steps: validatedInput.steps ?? null,
         userId: userId,
       },
     });

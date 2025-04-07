@@ -105,7 +105,7 @@ export default function RestaurantHomePage(): JSX.Element | null {
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-muted-foreground">Categories:</span>
-                  <span>{restaurant.categories.join(", ")}</span>
+                  <span>{restaurant.mainCategory.name}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-muted-foreground">Delivery:</span>
@@ -176,7 +176,7 @@ export default function RestaurantHomePage(): JSX.Element | null {
               Explore our full menu and place your order for delivery or pickup.
             </p>
             <Button size="lg" asChild>
-              <Link href={`/app/restaurant/${restaurant.id}/menu`}>
+              <Link href={`/restaurant/${restaurant.id}/menu`}>
                 View Full Menu
               </Link>
             </Button>

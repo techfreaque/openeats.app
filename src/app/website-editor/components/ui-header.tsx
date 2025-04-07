@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { forkUI } from "@/actions/ui/fork-ui";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import {
   Badge,
   Button,
@@ -13,7 +14,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui";
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 

@@ -88,7 +88,7 @@ export const createRestaurant: ApiHandlerCallBackFunctionType<
       data: {
         name: data.name,
         description: data.description,
-        published: data.published && !hasLocationError,
+        published: false,
         email: data.email,
         latitude: latitude || 0,
         longitude: longitude || 0,
@@ -98,6 +98,13 @@ export const createRestaurant: ApiHandlerCallBackFunctionType<
         city: data.city,
         zip: data.zip,
         countryId: data.countryId,
+        priceLevel: Number(data.priceLevel),
+        verified: false,
+        delivery: data.delivery,
+        dineIn: data.dineIn,
+        pickup: data.pickup,
+        orderCount: 0,
+        rating: 0,
         image: data.image,
         mainCategoryId: data.mainCategoryId,
       },
@@ -204,7 +211,7 @@ export const updateRestaurant: ApiHandlerCallBackFunctionType<
       };
     }
     return {
-      data: updatedRestaurant,
+      data: updatedRestaurant as RestaurantResponseType,
       success: true,
     };
   } catch (err) {
@@ -227,12 +234,20 @@ export const restaurantQuery = {
   longitude: true,
   street: true,
   streetNumber: true,
+  rating: true,
+  delivery: true,
+  pickup: true,
+  dineIn: true,
+  verified: true,
+  priceLevel: true,
+  updatedAt: true,
   phone: true,
   city: true,
   zip: true,
   countryId: true,
   image: true,
   createdAt: true,
+  orderCount: true,
   menuItems: {
     select: {
       id: true,
@@ -242,6 +257,10 @@ export const restaurantQuery = {
       image: true,
       taxPercent: true,
       published: true,
+      availableFrom: true,
+      availableTo: true,
+      createdAt: true,
+      updatedAt: true,
       category: {
         select: {
           id: true,
@@ -273,21 +292,23 @@ export const restaurantQuery = {
     select: {
       role: true,
       userId: true,
-      restaurantId: true,
+      partnerId: true,
     },
   },
 };
 
 export const getRestaurant: ApiHandlerCallBackFunctionType<
-  UndefinedType,
+  RestaurantGetType,
   RestaurantResponseType,
-  RestaurantGetType
-> = async ({ user, urlVariables }) => {
+  UndefinedType
+> = async ({ user, data }) => {
   try {
-    const { success, data, message, errorCode } = await fetchRestaurantById(
-      urlVariables.restaurantId,
-      user.id,
-    );
+    const {
+      success,
+      data: restaurantData,
+      message,
+      errorCode,
+    } = await fetchRestaurantById(data.restaurantId, user.id);
 
     if (!success) {
       return {
@@ -297,7 +318,7 @@ export const getRestaurant: ApiHandlerCallBackFunctionType<
       };
     }
 
-    if (data.restaurant.published === false) {
+    if (restaurantData.restaurant.published === false) {
       // Only the restaurant or admin can view unpublished restaurants
       return {
         success: false,
@@ -307,7 +328,7 @@ export const getRestaurant: ApiHandlerCallBackFunctionType<
     }
 
     // Apply filters for non-privileged users
-    let filteredRestaurant = data.restaurant;
+    let filteredRestaurant = restaurantData.restaurant;
     filteredRestaurant = filterPrivateData(filteredRestaurant);
     filteredRestaurant = filterOpeningTimes(filteredRestaurant);
     filteredRestaurant = filterMenuItems(filteredRestaurant);

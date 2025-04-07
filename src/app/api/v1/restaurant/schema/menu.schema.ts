@@ -13,23 +13,29 @@ const menuItemBaseSchema = z.object({
   availableFrom: dateSchema.nullable(),
   availableTo: dateSchema.nullable(),
   isAvailable: z.boolean().default(true),
+  restaurantId: z.string().uuid({ message: "Valid restaurant ID is required" }),
+  createdAt: dateSchema,
+  updatedAt: dateSchema,
 });
 
 export const menuItemCreateSchema = menuItemBaseSchema.extend({
   categoryId: z.string().uuid({ message: "Valid category ID is required" }),
-  restaurantId: z.string().uuid({ message: "Valid restaurant ID is required" }),
 });
 export type MenuItemCreateType = z.infer<typeof menuItemCreateSchema>;
 
-export const menuItemUpdateSchema = menuItemCreateSchema;
+export const menuItemUpdateSchema = menuItemCreateSchema.extend({
+  id: z.string().uuid({ message: "Valid menu item ID is required" }),
+});
 export type MenuItemUpdateType = z.infer<typeof menuItemUpdateSchema>;
 
-export const menuItemResponseSchema = menuItemBaseSchema.extend({
-  category: categoryResponseSchema,
-  restaurantId: z.string().uuid(),
-  createdAt: dateSchema,
-  updatedAt: dateSchema,
-});
+export const menuItemResponseSchema = menuItemUpdateSchema
+  .omit({
+    categoryId: true,
+  })
+  .extend({
+    category: categoryResponseSchema,
+    restaurantId: z.string().uuid(),
+  });
 export type MenuItemResponseType = z.input<typeof menuItemResponseSchema>;
 
 export const menuItemSearchSchema = z.object({

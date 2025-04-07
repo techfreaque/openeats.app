@@ -6,10 +6,10 @@ import Link from "next/link";
 import type { JSX } from "react";
 import { useState } from "react";
 
+import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
-import { useRestaurants } from "./hooks/use-restaurants";
 import type { MenuItemType } from "./lib/types";
 
 interface FeaturedCollectionProps {

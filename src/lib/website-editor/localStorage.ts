@@ -3,7 +3,7 @@ export const getLocalStorageItem = (
   defaultValue: string,
 ): string => {
   if (typeof window !== "undefined") {
-    return window.localStorage.getItem(key) || defaultValue;
+    return window.localStorage.getItem(key) ?? defaultValue;
   }
   return defaultValue;
 };

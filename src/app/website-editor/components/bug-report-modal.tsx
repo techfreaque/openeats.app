@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { submitBugReport } from "@/actions/ui/submit-bug-report";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { Badge, Button, RadioGroup, RadioGroupItem } from "@/components/ui";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -24,7 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
 import { useBugReportModal } from "@/hooks/website-editor/useBugReportModal";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";

@@ -3,11 +3,11 @@
 import { useRouter } from "next/navigation";
 import type { JSX } from "react";
 
-import { Button } from "@/components/ui";
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
+import { Button } from "@/components/ui";
 
 import { useFavorites } from "../components/hooks/use-favorites";
-import { useRestaurants } from "../components/hooks/use-restaurants";
 import {
   RestaurantCard,
   RestaurantCardSkeleton,
@@ -17,14 +17,14 @@ export default function FavoritesPage(): JSX.Element | null {
   const router = useRouter();
   const { user } = useAuth();
   const { favorites, isLoading: favoritesLoading } = useFavorites();
-  const { restaurants, isLoading: restaurantsLoading } = useRestaurants();
+  const { data: restaurants, isLoading: restaurantsLoading } = useRestaurants();
 
   if (!user) {
     router.push("/auth/public/login?redirect=/app/favorites");
     return null;
   }
 
-  const favoriteRestaurants = restaurants.filter((restaurant) =>
+  const favoriteRestaurants = restaurants?.filter((restaurant) =>
     favorites.includes(restaurant.id),
   );
 
@@ -52,7 +52,7 @@ export default function FavoritesPage(): JSX.Element | null {
               </div>
             ) : favoriteRestaurants.length > 0 ? (
               <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                {favoriteRestaurants.map((restaurant) => (
+                {favoriteRestaurants?.map((restaurant) => (
                   <RestaurantCard key={restaurant.id} restaurant={restaurant} />
                 ))}
               </div>

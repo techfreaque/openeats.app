@@ -56,10 +56,14 @@
     ],
     "dependencies": {
         "@next/third-parties": "^15.2.4",
+        "@nextui-org/system": "^2.4.6",
+        "@nextui-org/theme": "^2.4.5",
         "@paypal/checkout-server-sdk": "^1.0.3",
         "@paypal/react-paypal-js": "^8.8.2",
         "@prisma/client": "^6.5.0",
         "@vercel/analytics": "^1.5.0",
+        "html2canvas": "^1.4.1",
+        "openai": "^4.91.1",
         "uuid": "^11.1.0"
     },
     "devDependencies": {

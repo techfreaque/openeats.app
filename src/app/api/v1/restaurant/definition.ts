@@ -192,6 +192,7 @@ const restaurantUpdateEndpoint = createEndpoint({
     urlPathVariables: undefined,
   },
   allowedRoles: [
+    UserRoleValue.ADMIN,
     UserRoleValue.CUSTOMER,
     UserRoleValue.COURIER,
     UserRoleValue.ADMIN,

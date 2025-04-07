@@ -7,6 +7,8 @@ import { driverPublicResponseSchema } from "../../../../packages/client/schema/s
 export enum DeliveryType {
   PICKUP = "PICKUP",
   DELIVERY = "DELIVERY",
+  DINE_IN = "DINE_IN",
+  ALL = "ALL",
 }
 
 export enum DeliveryStatus {

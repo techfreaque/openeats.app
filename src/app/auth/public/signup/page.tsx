@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Trans, useTranslation } from "next-vibe/i18n";
 import { type JSX, useEffect } from "react";
 
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,7 +16,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 export default function SignupPage(): JSX.Element {
   const router = useRouter();

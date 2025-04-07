@@ -78,13 +78,13 @@ export function RestaurantNavbar({
             variant="ghost"
             size="icon"
             onClick={() => router.back()}
-            asChild
+            // asChild
             className="text-foreground hover:bg-background/80"
           >
-            <>
+            <span>
               <ArrowLeft className="h-5 w-5" />
               <span className="sr-only">Back to OpenEats</span>
-            </>
+            </span>
           </Button>
 
           <Link

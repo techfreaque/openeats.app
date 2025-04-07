@@ -2,11 +2,11 @@
 import Image from "next/image";
 import type { JSX } from "react";
 
+import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-import { useRestaurants } from "./hooks/use-restaurants";
 import { useRestaurantConfig } from "./restaurant-config-provider";
 
 interface SpecialOffersProps {

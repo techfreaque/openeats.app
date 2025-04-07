@@ -4,6 +4,7 @@ import { z } from "zod";
 import { trimCode } from "@/lib/website-editor/code";
 import { llm } from "@/lib/website-editor/llm";
 import { getGenerationPrompt } from "@/lib/website-editor/prompt";
+import { UiType } from "@/lib/website-editor/types";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 export const maxDuration = 60;
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 const inputSchema = z.object({
   codeDescription: z.string().min(1, "Code description is required"),
   modelId: z.string(),
-  uiType: z.string(),
+  uiType: z.nativeEnum(UiType),
 });
 
 export async function POST(req: Request): Promise<Response> {

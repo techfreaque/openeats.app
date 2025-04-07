@@ -137,7 +137,7 @@ export default [
       "@typescript-eslint/ban-ts-comment": ["error", { "ts-ignore": "allow-with-description" }],
       "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
       // "@typescript-eslint/no-unnecessary-condition": "error",
-      "@typescript-eslint/prefer-nullish-coalescing": "error",
+      "@typescript-eslint/prefer-nullish-coalescing": "warn",
       "@typescript-eslint/prefer-optional-chain": "error",
       // "@typescript-eslint/strict-boolean-expressions": "error",
       // "@typescript-eslint/no-unnecessary-type-assertion": "error",

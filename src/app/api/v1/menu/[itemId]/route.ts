@@ -1,15 +1,12 @@
 import type { NextRequest, NextResponse } from "next/server";
-
-import {
-  menuItemResponseSchema,
-  menuItemUpdateSchema,
-} from "@/client-package/schema/schemas";
+import { getCurrentUser } from "next-vibe/server/endpoints/auth/user";
 import {
   createErrorResponse,
   createSuccessResponse,
   validatePostRequest,
-} from "@/next-portal/api/api-response";
-import { getCurrentUser } from "@/next-portal/api/auth/user";
+} from "next-vibe/server/endpoints/core/api-response";
+
+import { db } from "@/app/api/db";
 
 // GET a specific menu item
 export async function GET(
@@ -50,7 +47,7 @@ export async function PUT(
       return createErrorResponse("Unauthorized", 401);
     }
 
-    const restaurant = await db.restaurant.findUnique({
+    const restaurant = await db.partner.findUnique({
       where: { id: params.restaurantId },
     });
 
@@ -93,7 +90,7 @@ export async function DELETE(
       return createErrorResponse("Unauthorized", 401);
     }
 
-    const restaurant = await db.restaurant.findUnique({
+    const restaurant = await db.partner.findUnique({
       where: { id: params.restaurantId },
     });
 

@@ -3,12 +3,14 @@
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
+import type { MenuItemResponseType } from "@/app/api/v1/restaurant/schema/menu.schema";
+
 import { toast } from "../../../../components/ui/use-toast";
 import type { MenuItemType } from "../lib/types";
 
 export interface CartItem {
   id: string;
-  menuItem: MenuItemType;
+  menuItem: MenuItemResponseType;
   quantity: number;
   specialInstructions?: string;
 }
@@ -17,7 +19,7 @@ interface CartContextType {
   items: CartItem[];
   restaurantId: string | null;
   addItem: (
-    menuItem: MenuItemType,
+    menuItem: MenuItemResponseType,
     quantity: number,
     specialInstructions?: string,
   ) => void;

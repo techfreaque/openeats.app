@@ -6,7 +6,7 @@ import { UserRoleValue } from "next-vibe/shared/types/enums";
 import registerEndpoint from "../auth/public/register/definition";
 import { restaurantExamples } from "../restaurant/definition";
 import { DeliveryStatus, DeliveryType } from "./delivery.schema";
-import { orderCreateSchema, orderResponseSchema } from "./order.schema";
+import { orderCreateSchema, orderResponseSchema } from "./schema";
 
 const createOrderEndpoint = createEndpoint({
   description: "Create a new order",
@@ -78,7 +78,7 @@ const createOrderEndpoint = createEndpoint({
       },
       example1: {
         id: "03820091-b135-4e0b-877e-8a26b4265274",
-        restaurantId: restaurantExamples["example1"]!.id,
+        restaurantId: restaurantExamples["example1"].id,
         orderItems: [
           {
             menuItemId: this.menuItemExamples.example1.id,
@@ -112,7 +112,7 @@ const createOrderEndpoint = createEndpoint({
       },
       example2: {
         id: "8d5fef47-2b8e-4187-9554-527e6a524073",
-        restaurantId: restaurantExamples["example2"]!.id,
+        restaurantId: restaurantExamples["example2"].id,
         orderItems: [
           {
             menuItemId: this.menuItemExamples.example2.id,

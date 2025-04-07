@@ -279,7 +279,7 @@ export const getElementProperty = (): string => {
     `;
 };
 
-export const getRefienedElementProperty = (description: string): string => {
+export const getRefinedElementProperty = (description: string): string => {
   return `
         Compare the described UI elements with the provided image and identify any missing elements or inaccuracies. Also Describe the color of the elements. Provide a refined and accurate description of the UI elements based on this comparison. Here is the initial description: ${description}
         Add properties for the missing elements and correct any inaccuracies in the initial description. Ensure that the refined description is accurate and comprehensive, covering all key aspects of the UI elements.

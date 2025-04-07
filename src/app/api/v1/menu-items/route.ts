@@ -1,4 +1,5 @@
 import type { NextRequest, NextResponse } from "next/server";
+import { menuItemCreateSchema } from "../restaurant/schema/menu.schema";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {

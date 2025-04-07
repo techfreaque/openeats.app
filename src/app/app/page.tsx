@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 
+import { DeliveryType } from "../api/v1/order/delivery.schema";
 import { useRestaurants } from "../api/v1/restaurants/hooks";
 import { CategoryPill } from "./components/category-pill";
 import {
@@ -20,7 +21,7 @@ import {
 } from "./components/restaurant-card";
 
 // Category icons mapping
-const CATEGORY_ICONS: Record<string, string> = {
+const CATEGORY_ICONS = {
   "all": "🍽️",
   "fast food": "🍔",
   "pizza": "🍕",
@@ -40,7 +41,9 @@ export default function Home(): JSX.Element {
   const restaurants = data?.restaurants || [];
 
   const [activeCategory, setActiveCategory] = useState("all");
-  const [deliveryType, setDeliveryType] = useState("delivery");
+  const [deliveryType, setDeliveryType] = useState<DeliveryType>(
+    DeliveryType.ALL,
+  );
   const [location, setLocation] = useState<string>("");
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -56,18 +59,23 @@ export default function Home(): JSX.Element {
     }
 
     // Extract unique categories from restaurants
-    const uniqueCategories = new Set<string>();
+    const uniqueCategories: {
+      id: {
+        name: string;
+        image: string;
+        id: string;
+      };
+    } = {};
     restaurants.forEach((restaurant) => {
-      if (restaurant.mainCategory) {
-        uniqueCategories.add(restaurant.mainCategory);
-      }
+      uniqueCategories[restaurant.mainCategory.id] = restaurant.mainCategory;
     });
 
     // Map to category objects with icons
-    const categoryList = Array.from(uniqueCategories).map((category) => ({
-      name: category.charAt(0).toUpperCase() + category.slice(1),
-      icon: CATEGORY_ICONS[category.toLowerCase()] || CATEGORY_ICONS.default,
-      value: category.toLowerCase(),
+    const categoryList = Object.values(uniqueCategories).map((category) => ({
+      name: category.name.charAt(0).toUpperCase() + category.name.slice(1),
+      icon:
+        CATEGORY_ICONS[category.name.toLowerCase()] ?? CATEGORY_ICONS.default,
+      value: category.id,
     }));
 
     // Sort alphabetically and add All at the beginning
@@ -275,7 +283,7 @@ export default function Home(): JSX.Element {
       <section className="w-full py-12">
         <div className="container">
           <Tabs
-            defaultValue="delivery"
+            defaultValue={DeliveryType.DELIVERY}
             className="w-full"
             onValueChange={(value) => setDeliveryType(value)}
           >
@@ -284,15 +292,15 @@ export default function Home(): JSX.Element {
                 {t("home.restaurantsNearYou.title")}
               </h2>
               <TabsList>
-                <TabsTrigger value="delivery">
+                <TabsTrigger value={DeliveryType.DELIVERY}>
                   {t("home.restaurantsNearYou.delivery")}
                 </TabsTrigger>
-                <TabsTrigger value="pickup">
+                <TabsTrigger value={DeliveryType.PICKUP}>
                   {t("home.restaurantsNearYou.pickup")}
                 </TabsTrigger>
               </TabsList>
             </div>
-            <TabsContent value="delivery" className="mt-6">
+            <TabsContent value={DeliveryType.DELIVERY} className="mt-6">
               {isLoading ? (
                 <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {Array(8)
@@ -318,7 +326,7 @@ export default function Home(): JSX.Element {
                 </div>
               )}
             </TabsContent>
-            <TabsContent value="pickup" className="mt-6">
+            <TabsContent value={DeliveryType.PICKUP} className="mt-6">
               {isLoading ? (
                 <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {Array(4)

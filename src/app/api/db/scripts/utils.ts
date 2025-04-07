@@ -1,4 +1,5 @@
 import {
+  Day,
   DeliveryStatus,
   DeliveryType,
   MessageType,
@@ -9,9 +10,10 @@ import {
 } from "@prisma/client";
 import { hash } from "bcrypt";
 import { debugLogger } from "next-vibe/shared/utils/logger";
+import { timeToSeconds } from "next-vibe/shared/utils/time";
 
 import { db } from "@/app/api/db";
-import { Countries } from "@/translations";
+import { Countries, currencyByCountry } from "@/translations";
 
 import { CATEGORY_NAME_TO_ID, SEED_IDS, type UUID } from "./seed-constants";
 
@@ -26,7 +28,7 @@ const randomDate = (daysAgo = 30): Date => {
 export async function createAdminUser(): Promise<void> {
   debugLogger("Creating admin user...");
 
-  const password = await hash("admin123", 10);
+  const password = await hash("password", 10);
 
   const user = await db.user.upsert({
     where: { id: SEED_IDS.adminUser },
@@ -35,7 +37,7 @@ export async function createAdminUser(): Promise<void> {
       password,
       firstName: "Admin",
       lastName: "User",
-      imageUrl: "https://randomuser.me/api/portraits/men/1.jpg",
+      imageUrl: "/placeholder.svg",
     },
     create: {
       id: SEED_IDS.adminUser,
@@ -43,11 +45,16 @@ export async function createAdminUser(): Promise<void> {
       password,
       firstName: "Admin",
       lastName: "User",
-      imageUrl: "https://randomuser.me/api/portraits/men/1.jpg",
+      imageUrl: "/placeholder.svg",
       userRoles: {
-        create: {
-          role: UserRoleValue.ADMIN,
-        },
+        create: [
+          {
+            role: UserRoleValue.ADMIN,
+          },
+          {
+            role: UserRoleValue.CUSTOMER,
+          },
+        ],
       },
     },
   });
@@ -60,18 +67,30 @@ export async function createCategories(): Promise<void> {
   debugLogger("Creating categories...");
 
   const mainCategories = [
-    { id: CATEGORY_NAME_TO_ID["Pizza"], name: "Pizza", image: "pizza.jpg" },
-    { id: CATEGORY_NAME_TO_ID["Burger"], name: "Burger", image: "burger.jpg" },
-    { id: CATEGORY_NAME_TO_ID["Sushi"], name: "Sushi", image: "sushi.jpg" },
+    {
+      id: CATEGORY_NAME_TO_ID["Pizza"],
+      name: "Pizza",
+      image: "/placeholder.svg",
+    },
+    {
+      id: CATEGORY_NAME_TO_ID["Burger"],
+      name: "Burger",
+      image: "/placeholder.svg",
+    },
+    {
+      id: CATEGORY_NAME_TO_ID["Sushi"],
+      name: "Sushi",
+      image: "/placeholder.svg",
+    },
     {
       id: CATEGORY_NAME_TO_ID["Italian"],
       name: "Italian",
-      image: "italian.jpg",
+      image: "/placeholder.svg",
     },
     {
       id: CATEGORY_NAME_TO_ID["Mexican"],
       name: "Mexican",
-      image: "mexican.jpg",
+      image: "/placeholder.svg",
     },
   ];
 
@@ -96,25 +115,25 @@ export async function createCategories(): Promise<void> {
     {
       id: CATEGORY_NAME_TO_ID["Appetizers"],
       name: "Appetizers",
-      image: "appetizers.jpg",
+      image: "/placeholder.svg",
       parentId: CATEGORY_NAME_TO_ID["Italian"],
     },
     {
       id: CATEGORY_NAME_TO_ID["Pasta"],
       name: "Pasta",
-      image: "pasta.jpg",
+      image: "/placeholder.svg",
       parentId: CATEGORY_NAME_TO_ID["Italian"],
     },
     {
       id: CATEGORY_NAME_TO_ID["Tacos"],
       name: "Tacos",
-      image: "tacos.jpg",
+      image: "/placeholder.svg",
       parentId: CATEGORY_NAME_TO_ID["Mexican"],
     },
     {
       id: CATEGORY_NAME_TO_ID["Burritos"],
       name: "Burritos",
-      image: "burritos.jpg",
+      image: "/placeholder.svg",
       parentId: CATEGORY_NAME_TO_ID["Mexican"],
     },
   ];
@@ -149,19 +168,19 @@ export async function createCustomers(): Promise<void> {
 
   const customers = [
     {
-      id: SEED_IDS.customers[0],
+      id: SEED_IDS.customers[0]!,
       email: "customer1@example.com",
       firstName: "John",
       lastName: "Doe",
     },
     {
-      id: SEED_IDS.customers[1],
+      id: SEED_IDS.customers[1]!,
       email: "customer2@example.com",
       firstName: "Jane",
       lastName: "Smith",
     },
     {
-      id: SEED_IDS.customers[2],
+      id: SEED_IDS.customers[2]!,
       email: "customer3@example.com",
       firstName: "Bob",
       lastName: "Johnson",
@@ -184,7 +203,7 @@ export async function createCustomers(): Promise<void> {
         password,
         firstName: customer.firstName,
         lastName: customer.lastName,
-        imageUrl: `https://randomuser.me/api/portraits/men/${parseInt(customer.id.substring(35), 16) % 50}.jpg`,
+        imageUrl: "/placeholder.svg",
         userRoles: {
           create: {
             role: UserRoleValue.CUSTOMER,
@@ -203,21 +222,21 @@ export async function createPartners(): Promise<void> {
 
   const partners = [
     {
-      id: SEED_IDS.partners[0],
+      id: SEED_IDS.partners[0]!,
       name: "Pizza Palace",
       description: "Best pizza in town",
       categoryId: CATEGORY_NAME_TO_ID["Pizza"],
       countryCode: Countries.DE,
     },
     {
-      id: SEED_IDS.partners[1],
+      id: SEED_IDS.partners[1]!,
       name: "Burger Heaven",
       description: "Juicy burgers and crispy fries",
       categoryId: CATEGORY_NAME_TO_ID["Burger"],
       countryCode: Countries.DE,
     },
     {
-      id: SEED_IDS.partners[2],
+      id: SEED_IDS.partners[2]!,
       name: "Sushi World",
       description: "Fresh sushi and Japanese cuisine",
       categoryId: CATEGORY_NAME_TO_ID["Sushi"],
@@ -228,7 +247,7 @@ export async function createPartners(): Promise<void> {
   for (const [index, partner] of partners.entries()) {
     // Create partner user first
     const password = await hash("partner123", 10);
-    const userId = `33333333-3333-3333-3333-00000000000${index + 1}` as UUID;
+    const userId = `33333333-3333-3333-3333-00000000000${index + 1}`;
 
     await db.user.upsert({
       where: { id: userId },
@@ -243,7 +262,7 @@ export async function createPartners(): Promise<void> {
         password,
         firstName: "Partner",
         lastName: `${index + 1}`,
-        imageUrl: `https://randomuser.me/api/portraits/men/${50 + index}.jpg`,
+        imageUrl: "/placeholder.svg",
       },
     });
 
@@ -261,6 +280,12 @@ export async function createPartners(): Promise<void> {
         id: partner.id,
         name: partner.name,
         description: partner.description,
+        delivery: true,
+        pickup: true,
+        dineIn: true,
+        rating: 4.5,
+
+        priceLevel: 2,
         published: true,
         street: "Bachstraße",
         streetNumber: `1`,
@@ -268,7 +293,7 @@ export async function createPartners(): Promise<void> {
         city: "Simbach am Inn",
         phone: `555-123-${1000 + index}`,
         email: `contact@${partner.name.toLowerCase().replace(" ", "")}.com`,
-        image: `${partner.name.toLowerCase().replace(" ", "_")}.jpg`,
+        image: "/placeholder.svg",
         latitude: 40.7128 + index * 0.01,
         longitude: -74.006 + index * 0.01,
         countryId: partner.countryCode,
@@ -303,7 +328,7 @@ export async function createDrivers(): Promise<void> {
 
   const drivers = [
     {
-      id: SEED_IDS.drivers[0],
+      id: SEED_IDS.drivers[0]!,
       userId: `44444444-4444-4444-4444-000000000001` as UUID,
       email: "driver1@example.com",
       firstName: "Dave",
@@ -312,7 +337,7 @@ export async function createDrivers(): Promise<void> {
       licensePlate: "ABC123",
     },
     {
-      id: SEED_IDS.drivers[1],
+      id: SEED_IDS.drivers[1]!,
       userId: `44444444-4444-4444-4444-000000000002` as UUID,
       email: "driver2@example.com",
       firstName: "Mike",
@@ -339,7 +364,7 @@ export async function createDrivers(): Promise<void> {
         password,
         firstName: driver.firstName,
         lastName: driver.lastName,
-        imageUrl: `https://randomuser.me/api/portraits/men/${60 + index}.jpg`,
+        imageUrl: "/placeholder.svg",
         userRoles: {
           create: {
             role: UserRoleValue.COURIER,
@@ -361,6 +386,7 @@ export async function createDrivers(): Promise<void> {
       streetNumber: `${index + 1}`,
       zip: "10001",
       city: "Driver City",
+      phone: `555-555-${1000 + index}`,
       countryId: Countries.DE,
     };
 
@@ -386,8 +412,7 @@ export async function createAddresses(): Promise<void> {
     const addressTypes = ["Home", "Work"];
 
     for (const [i, label] of addressTypes.entries()) {
-      const addressId =
-        `55555555-0000-0000-0000-${customerId.substring(24, 36)}${i}` as UUID;
+      const addressId = `55555555-0000-0000-0000-${customerId.substring(24, 36)}${i}`;
 
       await db.address.upsert({
         where: { id: addressId },
@@ -427,41 +452,43 @@ export async function createAddresses(): Promise<void> {
 export async function createOpeningTimes(): Promise<void> {
   debugLogger("Creating opening times...");
 
-  const days = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
-
   for (const partnerId of SEED_IDS.partners) {
-    for (const day of days) {
+    for (const day of Object.values(Day)) {
       // Different hours for weekends
-      const isWeekend = day === "Saturday" || day === "Sunday";
+      const isWeekend = day === Day.SATURDAY || day === Day.SUNDAY;
 
-      await db.openingTimes.upsert({
+      // First, check if the record exists
+      const existingOpeningTime = await db.openingTimes.findFirst({
         where: {
-          restaurantId_day: {
-            restaurantId: partnerId,
-            day,
-          },
-        },
-        update: {
-          published: true,
-          open: isWeekend ? "10:00" : "09:00",
-          close: isWeekend ? "22:00" : "21:00",
-        },
-        create: {
           restaurantId: partnerId,
-          published: true,
           day,
-          open: isWeekend ? "10:00" : "09:00",
-          close: isWeekend ? "22:00" : "21:00",
         },
       });
+
+      if (existingOpeningTime) {
+        // Update existing record
+        await db.openingTimes.update({
+          where: {
+            id: existingOpeningTime.id,
+          },
+          data: {
+            published: true,
+            open: timeToSeconds(isWeekend ? "10:00" : "09:00"),
+            close: timeToSeconds(isWeekend ? "22:00" : "21:00"),
+          },
+        });
+      } else {
+        // Create new record
+        await db.openingTimes.create({
+          data: {
+            restaurantId: partnerId,
+            published: true,
+            day,
+            open: timeToSeconds(isWeekend ? "10:00" : "09:00"),
+            close: timeToSeconds(isWeekend ? "22:00" : "21:00"),
+          },
+        });
+      }
     }
   }
 
@@ -495,26 +522,38 @@ export async function createRestaurantSiteContent(): Promise<void> {
 
   for (const partnerId of SEED_IDS.partners) {
     for (const content of contentTypes) {
-      await db.restaurantSiteContent.upsert({
+      // First, check if the record exists
+      const existingContent = await db.restaurantSiteContent.findFirst({
         where: {
-          restaurantId_key: {
-            restaurantId: partnerId,
-            key: content.key,
-          },
-        },
-        update: {
-          title: content.title,
-          icon: content.icon,
-          code: content.code,
-        },
-        create: {
           restaurantId: partnerId,
-          title: content.title,
           key: content.key,
-          icon: content.icon,
-          code: content.code,
         },
       });
+
+      if (existingContent) {
+        // Update existing record
+        await db.restaurantSiteContent.update({
+          where: {
+            id: existingContent.id,
+          },
+          data: {
+            title: content.title,
+            icon: content.icon,
+            code: content.code,
+          },
+        });
+      } else {
+        // Create new record
+        await db.restaurantSiteContent.create({
+          data: {
+            restaurantId: partnerId,
+            title: content.title,
+            key: content.key,
+            icon: content.icon,
+            code: content.code,
+          },
+        });
+      }
     }
   }
 
@@ -525,22 +564,26 @@ export async function createRestaurantSiteContent(): Promise<void> {
 export async function createMenuItems(): Promise<void> {
   debugLogger("Creating menu items...");
 
+  const getMenuItemId = (index: number): string => {
+    return SEED_IDS.menuItems[index]!;
+  };
+
   const menuItemsByCategory = {
     Pizza: [
       {
-        id: SEED_IDS.menuItems[0],
+        id: getMenuItemId(0),
         name: "Margherita",
         description: "Classic tomato and cheese",
         price: 10.99,
       },
       {
-        id: SEED_IDS.menuItems[1],
+        id: getMenuItemId(1),
         name: "Pepperoni",
         description: "Pepperoni and cheese",
         price: 12.99,
       },
       {
-        id: SEED_IDS.menuItems[2],
+        id: getMenuItemId(2),
         name: "Vegetarian",
         description: "Mixed vegetables",
         price: 11.99,
@@ -548,19 +591,19 @@ export async function createMenuItems(): Promise<void> {
     ],
     Burger: [
       {
-        id: SEED_IDS.menuItems[3],
+        id: getMenuItemId(3),
         name: "Classic Burger",
         description: "Beef patty with lettuce and tomato",
         price: 8.99,
       },
       {
-        id: SEED_IDS.menuItems[4],
+        id: getMenuItemId(4),
         name: "Cheeseburger",
         description: "Classic with cheese",
         price: 9.99,
       },
       {
-        id: SEED_IDS.menuItems[5],
+        id: getMenuItemId(5),
         name: "Veggie Burger",
         description: "Plant-based patty",
         price: 10.99,
@@ -568,19 +611,19 @@ export async function createMenuItems(): Promise<void> {
     ],
     Sushi: [
       {
-        id: SEED_IDS.menuItems[6],
+        id: getMenuItemId(6),
         name: "California Roll",
         description: "Crab, avocado, cucumber",
         price: 14.99,
       },
       {
-        id: SEED_IDS.menuItems[7],
+        id: getMenuItemId(7),
         name: "Salmon Nigiri",
         description: "Fresh salmon",
         price: 16.99,
       },
       {
-        id: SEED_IDS.menuItems[8],
+        id: getMenuItemId(8),
         name: "Tuna Roll",
         description: "Fresh tuna roll",
         price: 15.99,
@@ -615,7 +658,7 @@ export async function createMenuItems(): Promise<void> {
           price: item.price,
           taxPercent: 8.5,
           published: true,
-          image: `${item.name.toLowerCase().replace(" ", "_")}.jpg`,
+          image: "/placeholder.svg",
           categoryId: partner.mainCategoryId,
         },
         create: {
@@ -626,8 +669,11 @@ export async function createMenuItems(): Promise<void> {
           description: item.description,
           price: item.price,
           taxPercent: 8.5,
+          availableFrom: new Date(),
+          isAvailable: true,
           published: true,
-          image: `${item.name.toLowerCase().replace(" ", "_")}.jpg`,
+          currency: currencyByCountry[Countries.DE],
+          image: "/placeholder.svg",
         },
       });
     }
@@ -643,12 +689,14 @@ export async function createCartItems(): Promise<void> {
   // Add a few random cart items
   for (let i = 0; i < 5; i++) {
     const customerId =
-      SEED_IDS.customers[Math.floor(Math.random() * SEED_IDS.customers.length)];
+      SEED_IDS.customers[
+        Math.floor(Math.random() * SEED_IDS.customers.length)
+      ]!;
     const menuItem = await db.menuItem.findUnique({
       where: {
         id: SEED_IDS.menuItems[
           Math.floor(Math.random() * SEED_IDS.menuItems.length)
-        ],
+        ]!,
       },
       include: { restaurant: true },
     });
@@ -680,33 +728,6 @@ export async function createCartItems(): Promise<void> {
   debugLogger("Cart items created");
 }
 
-// Create sessions
-export async function createSessions(): Promise<void> {
-  debugLogger("Creating sessions...");
-
-  // Create a session for each user
-  for (const userId of SEED_IDS.users) {
-    const expires = new Date();
-    expires.setDate(expires.getDate() + 7);
-    const token = `token-${Math.random().toString(36).substring(2, 15)}`;
-
-    await db.session.upsert({
-      where: { token },
-      update: {
-        userId,
-        expiresAt: expires,
-      },
-      create: {
-        userId,
-        token,
-        expiresAt: expires,
-      },
-    });
-  }
-
-  debugLogger("Sessions created");
-}
-
 // Create orders
 export async function createOrders(): Promise<void> {
   debugLogger("Creating orders...");
@@ -720,10 +741,10 @@ export async function createOrders(): Promise<void> {
   ];
 
   for (let i = 0; i < SEED_IDS.orders.length; i++) {
-    const customerId = SEED_IDS.customers[i % SEED_IDS.customers.length];
-    const partnerId = SEED_IDS.partners[i % SEED_IDS.partners.length];
-    const status = statuses[i % statuses.length];
-    const orderId = SEED_IDS.orders[i];
+    const customerId = SEED_IDS.customers[i % SEED_IDS.customers.length]!;
+    const partnerId = SEED_IDS.partners[i % SEED_IDS.partners.length]!;
+    const status = statuses[i % statuses.length]!;
+    const orderId = SEED_IDS.orders[i]!;
 
     await db.order.upsert({
       where: { id: orderId },
@@ -735,7 +756,7 @@ export async function createOrders(): Promise<void> {
           PaymentMethod.CARD,
           PaymentMethod.CASH,
           PaymentMethod.ONLINE,
-        ][i % 3],
+        ][i % 3]!,
         tax: 8.5,
         total: 30 + i * 5, // Deterministic total
         deliveryFee: 5.99,
@@ -752,13 +773,14 @@ export async function createOrders(): Promise<void> {
           PaymentMethod.CARD,
           PaymentMethod.CASH,
           PaymentMethod.ONLINE,
-        ][i % 3],
+        ][i % 3]!,
         tax: 8.5,
         total: 30 + i * 5, // Deterministic total
         deliveryFee: 5.99,
         driverTip: i + 1, // Deterministic tip
         restaurantTip: i * 0.5,
         createdAt: randomDate(30),
+        currency: currencyByCountry[Countries.DE],
       },
     });
   }
@@ -770,6 +792,8 @@ export async function createOrders(): Promise<void> {
 export async function createOrderItems(): Promise<void> {
   debugLogger("Creating order items...");
 
+  let orderItemIndex = 0;
+
   for (const orderId of SEED_IDS.orders) {
     // Add 1-3 items to each order
     const itemCount = 1 + Math.floor(Math.random() * 3);
@@ -778,7 +802,7 @@ export async function createOrderItems(): Promise<void> {
       const menuItemId =
         SEED_IDS.menuItems[
           Math.floor(Math.random() * SEED_IDS.menuItems.length)
-        ];
+        ]!;
       const menuItem = await db.menuItem.findUnique({
         where: { id: menuItemId },
       });
@@ -787,20 +811,26 @@ export async function createOrderItems(): Promise<void> {
         continue;
       }
 
+      const orderItemId = SEED_IDS.orderItems[orderItemIndex++]!;
+
+      // Use the id directly instead of the compound key
       await db.orderItem.upsert({
         where: {
-          orderId_menuItemId: {
-            orderId,
-            menuItemId,
-          },
+          id: orderItemId,
         },
         update: {
           quantity: 1 + Math.floor(Math.random() * 3),
           price: menuItem.price,
           taxPercent: menuItem.taxPercent,
+          currency: currencyByCountry[Countries.DE],
+          message: "Hello, please add extra cheese.",
+          menuItemId,
         },
         create: {
+          id: orderItemId,
           orderId,
+          currency: currencyByCountry[Countries.DE],
+          message: "Hello, please add extra cheese.",
           menuItemId,
           quantity: 1 + Math.floor(Math.random() * 3),
           price: menuItem.price,
@@ -825,7 +855,7 @@ export async function createDeliveries(): Promise<void> {
   });
 
   for (const [index, order] of eligibleOrders.entries()) {
-    const driverId = SEED_IDS.drivers[index % SEED_IDS.drivers.length];
+    const driverId = SEED_IDS.drivers[index % SEED_IDS.drivers.length]!;
     const status =
       order.status === OrderStatus.DELIVERED
         ? DeliveryStatus.DELIVERED
@@ -851,10 +881,10 @@ export async function createDeliveries(): Promise<void> {
 
     // Use upsert instead of create to handle existing deliveries
     await db.delivery.upsert({
-      where: { id: SEED_IDS.deliveries[index] },
+      where: { id: SEED_IDS.deliveries[index]! },
       update: deliveryData,
       create: {
-        id: SEED_IDS.deliveries[index],
+        id: SEED_IDS.deliveries[index]!,
         orderId: order.id,
         ...deliveryData,
       },
@@ -955,8 +985,8 @@ export async function createMessages(): Promise<void> {
 
   // Create 20 random messages
   for (let i = 0; i < 20; i++) {
-    const type = messageTypes[Math.floor(Math.random() * messageTypes.length)];
-    const messageId = SEED_IDS.messages[i];
+    const type = messageTypes[Math.floor(Math.random() * messageTypes.length)]!;
+    const messageId = SEED_IDS.messages[i]!;
 
     let data: MessageData = {
       type,
@@ -967,13 +997,15 @@ export async function createMessages(): Promise<void> {
       data.userId =
         SEED_IDS.customers[
           Math.floor(Math.random() * SEED_IDS.customers.length)
-        ];
+        ]!;
     } else if (type === MessageType.RESTAURANT) {
       data.restaurantId =
-        SEED_IDS.partners[Math.floor(Math.random() * SEED_IDS.partners.length)];
+        SEED_IDS.partners[
+          Math.floor(Math.random() * SEED_IDS.partners.length)
+        ]!;
     } else if (type === MessageType.ORDER) {
       data.orderId =
-        SEED_IDS.orders[Math.floor(Math.random() * SEED_IDS.orders.length)];
+        SEED_IDS.orders[Math.floor(Math.random() * SEED_IDS.orders.length)]!;
     }
 
     await db.messages.upsert({
@@ -1009,24 +1041,37 @@ export async function createEarnings(): Promise<void> {
       const date = new Date();
       date.setDate(date.getDate() - i);
 
-      await db.earning.upsert({
+      // First check if a record already exists for this user and date
+      const existingEarning = await db.earning.findFirst({
         where: {
-          userId_date: {
-            userId: driver.userId,
-            date,
+          userId: driver.userId,
+          date: {
+            gte: new Date(date.setHours(0, 0, 0, 0)),
+            lt: new Date(date.setHours(23, 59, 59, 999)),
           },
         },
-        update: {
-          amount: 50 + (index % 150), // $50-$200 per day
-          deliveries: 5 + (index % 10), // 5-15 deliveries
-        },
-        create: {
-          userId: driver.userId,
-          date,
-          amount: 50 + (index % 150), // $50-$200 per day
-          deliveries: 5 + (index % 10), // 5-15 deliveries
-        },
       });
+
+      if (existingEarning) {
+        // Update existing record
+        await db.earning.update({
+          where: { id: existingEarning.id },
+          data: {
+            amount: 50 + (index % 150), // $50-$200 per day
+            deliveries: 5 + (index % 10), // 5-15 deliveries
+          },
+        });
+      } else {
+        // Create new record
+        await db.earning.create({
+          data: {
+            userId: driver.userId,
+            date,
+            amount: 50 + (index % 150), // $50-$200 per day
+            deliveries: 5 + (index % 10), // 5-15 deliveries
+          },
+        });
+      }
     }
   }
 
@@ -1041,16 +1086,16 @@ export async function createUIs(): Promise<void> {
 
   // Create 5 UI entries
   for (let i = 0; i < 5; i++) {
-    const uiId = SEED_IDS.uis[i];
+    const uiId = SEED_IDS.uis[i]!;
 
     await db.uI.upsert({
       where: { id: uiId },
       update: {
         userId:
-          SEED_IDS.users[Math.floor(Math.random() * SEED_IDS.users.length)],
+          SEED_IDS.users[Math.floor(Math.random() * SEED_IDS.users.length)]!,
         prompt: `Design a ${i % 2 === 0 ? "restaurant" : "food delivery"} interface`,
-        img: `ui_${i}.jpg`,
-        uiType: uiTypes[i % 2],
+        img: "/placeholder.svg",
+        uiType: uiTypes[i % 2]!,
         public: true,
         updatedAt: new Date(),
         likesCount: Math.floor(Math.random() * 50),
@@ -1059,10 +1104,10 @@ export async function createUIs(): Promise<void> {
       create: {
         id: uiId,
         userId:
-          SEED_IDS.users[Math.floor(Math.random() * SEED_IDS.users.length)],
+          SEED_IDS.users[Math.floor(Math.random() * SEED_IDS.users.length)]!,
         prompt: `Design a ${i % 2 === 0 ? "restaurant" : "food delivery"} interface`,
-        img: `ui_${i}.jpg`,
-        uiType: uiTypes[i % 2],
+        img: "/placeholder.svg",
+        uiType: uiTypes[i % 2]!,
         public: true,
         updatedAt: new Date(),
         likesCount: Math.floor(Math.random() * 50),
@@ -1083,17 +1128,21 @@ export async function createSubPrompts(): Promise<void> {
     const count = 2 + Math.floor(Math.random() * 2);
 
     for (let i = 0; i < count; i++) {
-      const subId = SEED_IDS.subPrompts[index * 3 + i];
+      const subId = SEED_IDS.subPrompts[index * 3 + i]!;
+      // Generate unique SUBId by including the UI index
+      const SUBId = `${String.fromCharCode(97 + i)}-${index}-0`; // 'a-0-0', 'b-0-0', etc. for first UI, 'a-1-0', 'b-1-0' for second UI
 
       await db.subPrompt.upsert({
         where: { id: subId },
         update: {
           UIId: uiId,
+          SUBId,
           subPrompt: `Create a ${i === 0 ? "header" : i === 1 ? "main content" : "footer"} component`,
         },
         create: {
           id: subId,
           UIId: uiId,
+          SUBId,
           subPrompt: `Create a ${i === 0 ? "header" : i === 1 ? "main content" : "footer"} component`,
         },
       });
@@ -1107,17 +1156,25 @@ export async function createSubPrompts(): Promise<void> {
 export async function createCodes(): Promise<void> {
   debugLogger("Creating codes...");
 
-  // Create code for each subPrompt
-  for (const subPromptId of SEED_IDS.subPrompts) {
+  // First, get all subPrompts that actually exist in the database
+  const subPrompts = await db.subPrompt.findMany();
+
+  if (subPrompts.length === 0) {
+    debugLogger("No SubPrompts found to create Codes for");
+    return;
+  }
+
+  // Create code for each existing subPrompt
+  for (const subPrompt of subPrompts) {
     await db.code.upsert({
-      where: { subPromptId },
+      where: { subPromptId: subPrompt.id },
       update: {
         code: `function Component() {
   return <div>Sample component code</div>;
 }`,
       },
       create: {
-        subPromptId,
+        subPromptId: subPrompt.id,
         code: `function Component() {
   return <div>Sample component code</div>;
 }`,
@@ -1125,7 +1182,7 @@ export async function createCodes(): Promise<void> {
     });
   }
 
-  debugLogger("Codes created");
+  debugLogger(`${subPrompts.length} Codes created`);
 }
 
 // Create likes
@@ -1135,22 +1192,29 @@ export async function createLikes(): Promise<void> {
   // Create 15 random likes
   for (let i = 0; i < 15; i++) {
     const userId =
-      SEED_IDS.users[Math.floor(Math.random() * SEED_IDS.users.length)];
-    const uiId = SEED_IDS.uis[Math.floor(Math.random() * SEED_IDS.uis.length)];
+      SEED_IDS.users[Math.floor(Math.random() * SEED_IDS.users.length)]!;
+    const uiId = SEED_IDS.uis[Math.floor(Math.random() * SEED_IDS.uis.length)]!;
 
-    await db.like.upsert({
+    // First check if a like already exists for this user and UI
+    const existingLike = await db.like.findFirst({
       where: {
-        userId_UIId: {
-          userId,
-          UIId: uiId,
-        },
-      },
-      update: {},
-      create: {
-        userId,
+        userId: userId,
         UIId: uiId,
       },
     });
+
+    if (existingLike) {
+      // Like already exists, nothing to do
+      continue;
+    } else {
+      // Create new like
+      await db.like.create({
+        data: {
+          userId,
+          UIId: uiId,
+        },
+      });
+    }
   }
 
   debugLogger("Likes created");
@@ -1162,21 +1226,21 @@ export async function createBugReports(): Promise<void> {
 
   const bugReports = [
     {
-      id: SEED_IDS.bugReports[0],
+      id: SEED_IDS.bugReports[0]!,
       title: "Checkout not working",
       description: "When I try to checkout, the page freezes",
       type: "Bug",
       severity: "High",
     },
     {
-      id: SEED_IDS.bugReports[1],
+      id: SEED_IDS.bugReports[1]!,
       title: "Menu images not loading",
       description: "Images are showing broken links",
       type: "UI Issue",
       severity: "Medium",
     },
     {
-      id: SEED_IDS.bugReports[2],
+      id: SEED_IDS.bugReports[2]!,
       title: "Feature request: Save favorite restaurants",
       description: "Would like to bookmark favorite places",
       type: "Feature Request",
@@ -1185,7 +1249,7 @@ export async function createBugReports(): Promise<void> {
   ];
 
   for (const [index, report] of bugReports.entries()) {
-    const userId = SEED_IDS.customers[index % SEED_IDS.customers.length];
+    const userId = SEED_IDS.customers[index % SEED_IDS.customers.length]!;
 
     await db.bugReport.upsert({
       where: { id: report.id },
@@ -1198,7 +1262,7 @@ export async function createBugReports(): Promise<void> {
         steps:
           report.type === "Bug"
             ? "1. Go to checkout\n2. Click Pay Now\n3. Page freezes"
-            : undefined,
+            : null,
       },
       create: {
         id: report.id,
@@ -1210,7 +1274,7 @@ export async function createBugReports(): Promise<void> {
         steps:
           report.type === "Bug"
             ? "1. Go to checkout\n2. Click Pay Now\n3. Page freezes"
-            : undefined,
+            : null,
       },
     });
   }

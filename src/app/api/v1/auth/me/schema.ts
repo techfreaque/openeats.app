@@ -28,7 +28,6 @@ export const userUpdateRequestSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   imageUrl: z
     .string()
-    .url()
     .nullable()
     .optional()
     .transform((url) => url ?? undefined),
@@ -42,7 +41,6 @@ export const userResponseSchema = z.object({
   lastName: z.string().min(1, { message: "Last Name is required" }),
   imageUrl: z
     .string()
-    .url()
     .nullable()
     .optional()
     .transform((url) => url ?? undefined),

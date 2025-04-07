@@ -1,7 +1,13 @@
 import { apiHandler } from "@/packages/next-vibe/server/endpoints/core/api-handler";
 
 import definitions from "./definition";
-import { createCategory, updateCategory } from "./route-handler";
+import { createCategory, getCategories, updateCategory } from "./route-handler";
+
+export const GET = apiHandler({
+  endpoint: definitions.GET,
+  handler: getCategories,
+  email: undefined,
+});
 
 export const POST = apiHandler({
   endpoint: definitions.POST,

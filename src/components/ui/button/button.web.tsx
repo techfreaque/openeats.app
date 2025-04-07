@@ -13,7 +13,7 @@ export interface ButtonProps
 // Web implementation using Radix's Slot for polymorphism.
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { className, variant, size, asChild = false, ...props },
+    { className, variant, size, asChild = false, children, ...props },
     ref,
   ): ReactElement => {
     const Comp = asChild ? Slot : "button";
@@ -22,7 +22,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         {...props}
-      />
+      >
+        {children}
+      </Comp>
     );
   },
 );

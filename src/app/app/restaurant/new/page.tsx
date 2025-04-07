@@ -8,11 +8,15 @@ import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { type JSX, useEffect } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useCategories } from "@/app/api/v1/category/hooks";
 import restaurantEndpoint from "@/app/api/v1/restaurant/definition";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,12 +30,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { Countries } from "@/translations";
 
 export default function NewRestaurantPage(): JSX.Element {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { data: categories } = useCategories();
   const formData = useApiForm(
     restaurantEndpoint.POST,
     {},
@@ -67,18 +72,32 @@ export default function NewRestaurantPage(): JSX.Element {
     }
   }, [router, user, isLoading]);
 
-  // Mock data for countries and categories - in a real app you would fetch these
-  const countries = [
-    { id: "550e8400-e29b-41d4-a716-446655440000", name: "United States" },
-    { id: "550e8400-e29b-41d4-a716-446655440001", name: "Canada" },
-    { id: "550e8400-e29b-41d4-a716-446655440002", name: "United Kingdom" },
-  ];
-
-  const categories = [
-    { id: "550e8400-e29b-41d4-a716-446655440003", name: "Fast Food" },
-    { id: "550e8400-e29b-41d4-a716-446655440004", name: "Italian" },
-    { id: "550e8400-e29b-41d4-a716-446655440005", name: "Asian" },
-    { id: "550e8400-e29b-41d4-a716-446655440006", name: "Mexican" },
+  const priceLevels = [
+    {
+      value: "0",
+      label: "€",
+      description: t("restaurant.new.fields.priceLevel.options.budget"),
+    },
+    {
+      value: "1",
+      label: "€€",
+      description: t("restaurant.new.fields.priceLevel.options.budget"),
+    },
+    {
+      value: "2",
+      label: "€€€",
+      description: t("restaurant.new.fields.priceLevel.options.moderate"),
+    },
+    {
+      value: "3",
+      label: "€€€€",
+      description: t("restaurant.new.fields.priceLevel.options.expensive"),
+    },
+    {
+      value: "4",
+      label: "€€€€",
+      description: t("restaurant.new.fields.priceLevel.options.premium"),
+    },
   ];
 
   return user?.id ? (
@@ -108,94 +127,25 @@ export default function NewRestaurantPage(): JSX.Element {
           className="space-y-8"
           noValidate
         >
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">
-              {t("restaurant.new.sections.basic")}
-            </h2>
-
-            <FormField
-              control={formData.form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("restaurant.new.fields.name.label")}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t("restaurant.new.fields.name.placeholder")}
-                      {...field}
-                      value={field.value || ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={formData.form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t("restaurant.new.fields.description.label")}
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={t(
-                        "restaurant.new.fields.description.placeholder",
-                      )}
-                      className="min-h-[120px]"
-                      {...field}
-                      value={field.value || ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={formData.form.control}
-              name="image"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t("restaurant.new.fields.image.label")}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t("restaurant.new.fields.image.placeholder")}
-                      {...field}
-                      value={field.value || ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">
-              {t("restaurant.new.sections.contact")}
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">
+                {t("restaurant.new.sections.basic")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <FormField
                 control={formData.form.control}
-                name="email"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {t("restaurant.new.fields.email.label")}
+                      {t("restaurant.new.fields.name.label")}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        type="email"
                         placeholder={t(
-                          "restaurant.new.fields.email.placeholder",
+                          "restaurant.new.fields.name.placeholder",
                         )}
                         {...field}
                         value={field.value || ""}
@@ -208,49 +158,18 @@ export default function NewRestaurantPage(): JSX.Element {
 
               <FormField
                 control={formData.form.control}
-                name="phone"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {t("restaurant.new.fields.phone.label")}
+                      {t("restaurant.new.fields.description.label")}
                     </FormLabel>
                     <FormControl>
-                      <Input
+                      <Textarea
                         placeholder={t(
-                          "restaurant.new.fields.phone.placeholder",
+                          "restaurant.new.fields.description.placeholder",
                         )}
-                        {...field}
-                        value={field.value || ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">
-              {t("restaurant.new.sections.address")}
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={formData.form.control}
-                name="street"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {t("restaurant.new.fields.street.label")}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={t(
-                          "restaurant.new.fields.street.placeholder",
-                        )}
+                        className="min-h-[120px]"
                         {...field}
                         value={field.value || ""}
                       />
@@ -262,45 +181,24 @@ export default function NewRestaurantPage(): JSX.Element {
 
               <FormField
                 control={formData.form.control}
-                name="streetNumber"
+                name="image"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {t("restaurant.new.fields.streetNumber.label")}
+                      {t("restaurant.new.fields.image.label")}
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder={t(
-                          "restaurant.new.fields.streetNumber.placeholder",
+                          "restaurant.new.fields.image.placeholder",
                         )}
                         {...field}
                         value={field.value || ""}
                       />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={formData.form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {t("restaurant.new.fields.city.label")}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={t(
-                          "restaurant.new.fields.city.placeholder",
-                        )}
-                        {...field}
-                        value={field.value || ""}
-                      />
-                    </FormControl>
+                    <FormDescription>
+                      {t("restaurant.new.fields.image.description")}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -308,101 +206,357 @@ export default function NewRestaurantPage(): JSX.Element {
 
               <FormField
                 control={formData.form.control}
-                name="zip"
+                name="mainCategoryId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {t("restaurant.new.fields.zip.label")}
+                      {t("restaurant.new.fields.mainCategory.label")}
                     </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={t("restaurant.new.fields.zip.placeholder")}
-                        {...field}
-                        value={field.value || ""}
-                      />
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={t(
+                              "restaurant.new.fields.mainCategory.placeholder",
+                            )}
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories?.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
 
-            <FormField
-              control={formData.form.control}
-              name="countryId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t("restaurant.new.fields.country.label")}
-                  </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={t(
-                            "restaurant.new.fields.country.placeholder",
-                          )}
+              <FormField
+                control={formData.form.control}
+                name="priceLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {t("restaurant.new.fields.priceLevel.label")}
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={t(
+                              "restaurant.new.fields.priceLevel.placeholder",
+                            )}
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {priceLevels.map((level) => (
+                          <SelectItem key={level.value} value={level.value}>
+                            <span className="flex items-center gap-2">
+                              <span className="font-semibold">
+                                {level.label}
+                              </span>
+                              <span className="text-muted-foreground text-sm">
+                                - {level.description}
+                              </span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      {t("restaurant.new.fields.priceLevel.description")}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">
+                {t("restaurant.new.sections.serviceOptions")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={formData.form.control}
+                  name="delivery"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
                         />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {countries.map((country) => (
-                        <SelectItem key={country.id} value={country.id}>
-                          {country.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          {t("restaurant.new.fields.delivery.label")}
+                        </FormLabel>
+                        <FormDescription>
+                          {t("restaurant.new.fields.delivery.description")}
+                        </FormDescription>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <Separator />
-
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">
-              {t("restaurant.new.sections.category")}
-            </h2>
-
-            <FormField
-              control={formData.form.control}
-              name="mainCategoryId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t("restaurant.new.fields.mainCategory.label")}
-                  </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={t(
-                            "restaurant.new.fields.mainCategory.placeholder",
-                          )}
+                <FormField
+                  control={formData.form.control}
+                  name="pickup"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
                         />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          {t("restaurant.new.fields.pickup.label")}
+                        </FormLabel>
+                        <FormDescription>
+                          {t("restaurant.new.fields.pickup.description")}
+                        </FormDescription>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={formData.form.control}
+                  name="dineIn"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          {t("restaurant.new.fields.dineIn.label")}
+                        </FormLabel>
+                        <FormDescription>
+                          {t("restaurant.new.fields.dineIn.description")}
+                        </FormDescription>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">
+                {t("restaurant.new.sections.contact")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={formData.form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t("restaurant.new.fields.email.label")}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder={t(
+                            "restaurant.new.fields.email.placeholder",
+                          )}
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={formData.form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t("restaurant.new.fields.phone.label")}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t(
+                            "restaurant.new.fields.phone.placeholder",
+                          )}
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">
+                {t("restaurant.new.sections.address")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={formData.form.control}
+                  name="street"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t("restaurant.new.fields.street.label")}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t(
+                            "restaurant.new.fields.street.placeholder",
+                          )}
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={formData.form.control}
+                  name="streetNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t("restaurant.new.fields.streetNumber.label")}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t(
+                            "restaurant.new.fields.streetNumber.placeholder",
+                          )}
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={formData.form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t("restaurant.new.fields.city.label")}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t(
+                            "restaurant.new.fields.city.placeholder",
+                          )}
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={formData.form.control}
+                  name="zip"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t("restaurant.new.fields.zip.label")}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t(
+                            "restaurant.new.fields.zip.placeholder",
+                          )}
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={formData.form.control}
+                name="countryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {t("restaurant.new.fields.country.label")}
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={t(
+                              "restaurant.new.fields.country.placeholder",
+                            )}
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(Countries).map((country) => (
+                          <SelectItem key={country} value={country}>
+                            {t(`countries.${country}`)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
 
           <div className="flex gap-4 pt-4">
             <Button

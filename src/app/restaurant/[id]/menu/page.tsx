@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
 
-import { useRestaurants } from "@/app/app/components/hooks/use-restaurants";
+import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
 import { MenuItem } from "@/app/app/components/menu-item";
 import { useRestaurantConfig } from "@/app/app/components/restaurant-config-provider";
 import { RestaurantMenuCategories } from "@/app/app/components/restaurant-menu-categories";
@@ -13,19 +13,26 @@ export default function RestaurantMenuPage(): JSX.Element | null {
   const params = useParams<{ id: string }>();
   const id = params.id;
 
-  const { getRestaurantById, getMenuItemsByRestaurantId } = useRestaurants();
+  const { data: restaurant, getMenuItemsByRestaurantId } = useRestaurant(id);
   const config = useRestaurantConfig();
 
-  const restaurant = getRestaurantById(id);
-  const menuItems = getMenuItemsByRestaurantId(id);
+  const menuItems = restaurant?.menuItems || [];
 
   const [activeCategory, setActiveCategory] = useState<string>("");
 
   // Group menu items by category
-  const categories = [...new Set(menuItems.map((item) => item.category))];
+  const _categories: {
+    [id: string]: {
+      name: string;
+      image: string;
+      id: string;
+    };
+  } = {};
+  menuItems.forEach((item) => (_categories[item.category.id] = item.category));
+  const categories = Object.values(_categories);
   const itemsByCategory = categories.map((category) => ({
     category,
-    items: menuItems.filter((item) => item.category === category),
+    items: menuItems.filter((item) => item.category.id === category.id),
   }));
 
   // Set initial active category
@@ -33,7 +40,7 @@ export default function RestaurantMenuPage(): JSX.Element | null {
     if (categories.length > 0 && !activeCategory) {
       setActiveCategory(categories[0]);
     }
-  }, [activeCategory]);
+  }, []);
 
   if (!restaurant) {
     return null;
@@ -60,17 +67,18 @@ export default function RestaurantMenuPage(): JSX.Element | null {
         <div className="space-y-12">
           {itemsByCategory
             .filter(
-              ({ category }) => !activeCategory || category === activeCategory,
+              ({ category }) =>
+                !activeCategory || category.id === activeCategory,
             )
             .map(({ category, items }) => (
               <div
-                key={category}
-                id={category.toLowerCase().replace(/\s+/g, "-")}
+                key={category.name}
+                id={category.name.toLowerCase().replace(/\s+/g, "-")}
               >
-                <h2 className="text-2xl font-bold mb-6">{category}</h2>
+                <h2 className="text-2xl font-bold mb-6">{category.name}</h2>
                 <div className="grid gap-6 md:grid-cols-2">
                   {items.map((item) => (
-                    <MenuItem key={item.id} item={item} />
+                    <MenuItem key={item.name} item={item} />
                   ))}
                 </div>
               </div>

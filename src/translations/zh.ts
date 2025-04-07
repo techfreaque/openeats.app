@@ -295,6 +295,7 @@ const translations: TranslationSchema = {
         contact: "联系信息",
         address: "地址",
         category: "餐厅类别",
+        serviceOptions: "服务选项",
       },
       fields: {
         name: {
@@ -340,6 +341,29 @@ const translations: TranslationSchema = {
         mainCategory: {
           label: "主要类别",
           placeholder: "选择您的主要菜系类别",
+        },
+        priceLevel: {
+          label: "价格水平",
+          placeholder: "选择价格水平",
+          description: "这有助于顾客了解您的价格范围",
+          options: {
+            budget: "经济实惠",
+            moderate: "中等价格",
+            expensive: "高档价格",
+            premium: "顶级餐饮",
+          },
+        },
+        delivery: {
+          label: "外送服务",
+          description: "提供送餐到顾客地址的服务",
+        },
+        pickup: {
+          label: "自取服务",
+          description: "允许顾客到您的餐厅自取订单",
+        },
+        dineIn: {
+          label: "堂食选项",
+          description: "允许顾客在您的餐厅用餐",
         },
       },
       buttons: {

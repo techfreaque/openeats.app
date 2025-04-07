@@ -1,7 +1,8 @@
 import { type NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { getCurrentUser } from "next-vibe/server/endpoints/auth/user";
 
-import { getCurrentUser } from "@/next-portal/api/auth/user";
+import { db } from "../../db";
 
 export async function GET(
   request: NextRequest,
@@ -42,7 +43,7 @@ export async function POST(
     }
 
     // Check if user owns this restaurant
-    const restaurant = await db.restaurant.findUnique({
+    const restaurant = await db.partner.findUnique({
       where: {
         id: restaurantId,
         userId: user.id,

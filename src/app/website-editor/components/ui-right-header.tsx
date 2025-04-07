@@ -20,6 +20,7 @@ import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { toast } from "sonner";
 
 import { toggleLike } from "@/actions/ui/toggle-like-ui";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -49,7 +50,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
 import { embededCode } from "@/lib/website-editor/code";
 import { getCss } from "@/lib/website-editor/globalCss";

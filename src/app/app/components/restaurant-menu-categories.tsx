@@ -6,7 +6,11 @@ import type { JSX } from "react";
 import { useRestaurantConfig } from "./restaurant-config-provider";
 
 interface RestaurantMenuCategoriesProps {
-  categories: string[];
+  categories: {
+    name: string;
+    image: string;
+    id: string;
+  }[];
   onSelectCategory: (category: string) => void;
   activeCategory?: string;
 }
@@ -61,16 +65,16 @@ export function RestaurantMenuCategories({
     <div className="flex flex-wrap gap-2 mb-8">
       {categories.map((category) => (
         <button
-          key={category}
+          key={category.id}
           className={cn(
             "px-4 py-2 rounded-full transition-colors",
-            activeCategory === category
+            activeCategory === category.id
               ? "bg-primary text-primary-foreground"
               : "bg-muted hover:bg-muted/80",
           )}
-          onClick={() => onSelectCategory(category)}
+          onClick={() => onSelectCategory(category.id)}
         >
-          {category}
+          {category.name}
         </button>
       ))}
     </div>

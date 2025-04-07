@@ -3,11 +3,12 @@
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { useTranslation } from "next-vibe/i18n";
 import type React from "react";
 import type { JSX } from "react";
 import { useState } from "react";
 
-import { useRestaurants } from "@/app/app/components/hooks/use-restaurants";
+import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,11 +19,9 @@ export default function RestaurantContactPage(): JSX.Element | null {
   const params = useParams<{ id: string }>();
   const id = params.id;
 
-  const { getRestaurantById } = useRestaurants();
+  const { data: restaurant } = useRestaurant(id);
   const { toast } = useToast();
-
-  const restaurant = getRestaurantById(id);
-
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -76,7 +75,13 @@ export default function RestaurantContactPage(): JSX.Element | null {
                   <div>
                     <h3 className="font-medium">Address</h3>
                     <p className="text-muted-foreground">
-                      {restaurant.address}
+                      {restaurant.street} {restaurant.streetNumber}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {restaurant.city}, {restaurant.zip}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {t(`countries.${restaurant.countryId}`)}
                     </p>
                   </div>
                 </div>
@@ -84,17 +89,14 @@ export default function RestaurantContactPage(): JSX.Element | null {
                   <Phone className="h-5 w-5 text-primary mt-0.5" />
                   <div>
                     <h3 className="font-medium">Phone</h3>
-                    <p className="text-muted-foreground">(555) 123-4567</p>
+                    <p className="text-muted-foreground">{restaurant.phone}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <Mail className="h-5 w-5 text-primary mt-0.5" />
                   <div>
                     <h3 className="font-medium">Email</h3>
-                    <p className="text-muted-foreground">
-                      info@{restaurant.name.toLowerCase().replace(/\s+/g, "")}
-                      .com
-                    </p>
+                    <p className="text-muted-foreground">{restaurant.email}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

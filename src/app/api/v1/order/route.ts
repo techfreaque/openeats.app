@@ -4,14 +4,14 @@ import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
 import definitions from "./definition";
-import { renderMail } from "./email";
+import { renderOrderCreateMail } from "./email";
 
 export const POST = apiHandler({
   endpoint: definitions.POST,
   email: {
     afterHandlerEmails: [
       {
-        render: renderMail,
+        render: renderOrderCreateMail,
         // you can ignore errors even if the email fails to send
         ignoreErrors: false,
       },

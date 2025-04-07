@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import type React from "react";
 import { useEffect, useState } from "react";
 
+import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,6 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { useRestaurants } from "../components/hooks/use-restaurants";
 import type { FilterOptions, RestaurantType } from "../components/lib/types";
 import {
   RestaurantCard,
@@ -31,7 +31,7 @@ export default function SearchPage(): React.JSX.Element {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
 
-  const { restaurants, isLoading, searchRestaurants } = useRestaurants();
+  const { data: restaurants, isLoading } = useRestaurants();
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [deliveryType, setDeliveryType] = useState("delivery");
   const [priceFilter, setPriceFilter] = useState<string[]>([]);

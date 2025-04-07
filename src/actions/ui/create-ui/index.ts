@@ -2,6 +2,7 @@
 
 import type { UiType } from "@prisma/client";
 
+import { db } from "@/app/api/db";
 import type { FullUI, UiType as _UiType } from "@/lib/website-editor/types";
 
 export const createUI = async (

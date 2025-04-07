@@ -5,7 +5,7 @@ import {
 } from "next-vibe/shared/types/user-roles.schema";
 import { z } from "zod";
 
-import { minimalCountryResponseSchema } from "@/packages/client/schema/schemas/locale.schema";
+import { Countries } from "@/translations";
 
 import { categoryResponseSchema } from "./category.schema";
 import { menuItemResponseSchema } from "./menu.schema";
@@ -24,8 +24,22 @@ const restaurantBaseSchema = z.object({
     .string()
     .min(5, { message: "Phone number must be at least 5 characters long" }),
   email: z.string().email({ message: "Invalid email address" }),
-  image: z.string().url({ message: "Image must be a valid URL" }),
+  image: z.string({ message: "Image must be a valid URL" }),
   published: z.boolean(),
+  delivery: z.boolean(),
+  pickup: z.boolean(),
+  dineIn: z.boolean(),
+  priceLevel: z
+    .union([z.string(), z.number()])
+    .transform((val) => {
+      if (typeof val === "string") {
+        return parseInt(val, 10);
+      }
+      return val;
+    })
+    .refine((val) => val >= 0 && val <= 4 && Number.isInteger(val), {
+      message: "Price level must be an integer between 0 and 4",
+    }),
 });
 
 export const restaurantCreateSchema = restaurantBaseSchema
@@ -33,7 +47,9 @@ export const restaurantCreateSchema = restaurantBaseSchema
     published: true,
   })
   .extend({
-    countryId: z.string().uuid({ message: "Valid country ID is required" }),
+    countryId: z.nativeEnum(Countries, {
+      message: "Valid country ID is required",
+    }),
     mainCategoryId: z
       .string()
       .uuid({ message: "Valid category ID is required" }),
@@ -42,7 +58,9 @@ export const restaurantCreateSchema = restaurantBaseSchema
 export type RestaurantCreateType = z.input<typeof restaurantCreateSchema>;
 
 export const restaurantUpdateSchema = restaurantCreateSchema.extend({
-  countryId: z.string().uuid({ message: "Valid country ID is required" }),
+  countryId: z.nativeEnum(Countries, {
+    message: "Valid country ID is required",
+  }),
   mainCategoryId: z.string().uuid({ message: "Valid category ID is required" }),
   id: z.string().uuid(),
   published: z.boolean(),
@@ -60,11 +78,14 @@ export const restaurantResponseSchema = restaurantBaseSchema.extend({
   rating: z.number().min(0).max(5),
   createdAt: dateSchema,
   updatedAt: dateSchema,
-  country: minimalCountryResponseSchema,
+  countryId: z.nativeEnum(Countries, {
+    message: "Valid country ID is required",
+  }),
   mainCategory: categoryResponseSchema,
-  menuItems: z.array(menuItemResponseSchema),
+  menuItems: z.array(menuItemResponseSchema.omit({ restaurantId: true })),
   userRoles: z.array(userRoleRestaurantResponseSchema).optional(),
   openingTimes: openingTimesResponseSchema,
+  verified: z.boolean(),
   latitude: z.number(),
   longitude: z.number(),
 });
@@ -80,7 +101,7 @@ export type RestaurantPrivateResponseType = z.infer<
 export const restaurantProfileMinimalSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1, { message: "Restaurant name is required" }),
-  image: z.string().url().nullable(),
+  image: z.string().nullable(),
 });
 export type RestaurantProfileMinimalType = z.infer<
   typeof restaurantProfileMinimalSchema

@@ -8,16 +8,16 @@ import { cn } from "next-vibe/shared/utils/utils";
 import type React from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import type { RestaurantResponseType } from "@/app/api/v1/restaurant/schema/restaurant.schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useFavorites } from "./hooks/use-favorites";
-import type { RestaurantType } from "./lib/types";
 
 interface RestaurantCardProps {
-  restaurant: RestaurantType;
+  restaurant: RestaurantResponseType;
 }
 
 export function RestaurantCard({
@@ -82,7 +82,7 @@ export function RestaurantCard({
           <div className="space-y-1">
             <h3 className="font-semibold">{restaurant.name}</h3>
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              {restaurant.categories.join(", ")}
+              {restaurant.mainCategory.name}
             </div>
           </div>
         </CardContent>

@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   userPublicResponseSchema,
   userResponseMinimalSchema,
-} from "@/app/api/v1/auth/me/schema/user.schema";
+} from "@/app/api/v1/auth/me/schema";
 import { dateSchema } from "@/packages/next-vibe/shared/types/common.schema";
 
 import { earningResponseSchema } from "./driver-earning.schema";

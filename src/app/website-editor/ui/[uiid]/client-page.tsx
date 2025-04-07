@@ -2,11 +2,6 @@
 import html2canvas from "html2canvas";
 import { LoaderCircle, SendHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuthh
-import { useClientMode } from "@/hooks/website-editor/useMode";
-import { useModel } from "@/hooks/website-editor/useModel";
-import { useUIState } from "@/hooks/website-editor/useUIState";
-import { type FullUI, UiType } from "@/lib/website-editor/types";
 import type { JSX } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ImperativePanelGroupHandle } from "react-resizable-panels";
@@ -18,9 +13,14 @@ import { getCodeFromId } from "@/actions/ui/get-code";
 import { getUI } from "@/actions/ui/get-uis";
 import { updateSubPrompt } from "@/actions/ui/update-subprompt";
 import { updateUI } from "@/actions/ui/update-ui";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { Button, Card, Input } from "@/components/ui";
+import { useClientMode } from "@/hooks/website-editor/useMode";
+import { useModel } from "@/hooks/website-editor/useModel";
+import { useUIState } from "@/hooks/website-editor/useUIState";
 import { isParent } from "@/lib/website-editor/helper";
 import { isModelSupported } from "@/lib/website-editor/supportedllm";
+import { type FullUI, UiType } from "@/lib/website-editor/types";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 import Sidebar from "../../components/sidebar";

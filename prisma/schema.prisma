@@ -26,6 +26,21 @@ enum Language {
   ZH
 }
 
+enum Currency {
+  EUR
+  CHF
+}
+
+enum Day {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
 enum UserRoleValue {
   PUBLIC
   CUSTOMER
@@ -139,8 +154,16 @@ model Partner {
   phone                 String
   email                 String
   image                 String
+  rating                Float                   @default(0)
+  ratingCount           Int                     @default(0)
+  orderCount            Int                     @default(0)
   latitude              Float
   longitude             Float
+  priceLevel            Int
+  verified              Boolean                 @default(false)
+  delivery              Boolean
+  pickup                Boolean
+  dineIn                Boolean
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   countryId             Country
@@ -153,7 +176,7 @@ model Partner {
   userRoles             UserRole[]
   ratings               RestaurantRating[]
   messages              Messages[]
-  RestaurantSiteContent RestaurantSiteContent[]
+  restaurantSiteContent RestaurantSiteContent[]
 
   @@map("partners")
 }
@@ -178,6 +201,7 @@ model Driver {
   radius       Float // in kilometers
   latitude     Float
   longitude    Float
+  phone        String
   street       String
   streetNumber String
   zip          String
@@ -187,6 +211,8 @@ model Driver {
   updatedAt    DateTime       @updatedAt
   userId       String
   user         User           @relation(fields: [userId], references: [id])
+  rating       Float          @default(0)
+  ratingCount  Int            @default(0)
   ratings      DriverRating[]
   messages     Messages[]
   delivery     Delivery[]
@@ -214,9 +240,9 @@ model Address {
 model OpeningTimes {
   id           String    @id @default(uuid())
   published    Boolean
-  day          String
-  open         String
-  close        String
+  day          Day
+  open         Int // Seconds from midnight
+  close        Int // Seconds from midnight
   validFrom    DateTime?
   validTo      DateTime?
   restaurantId String
@@ -289,8 +315,10 @@ model MenuItem {
   description   String
   price         Float
   taxPercent    Float
+  currency      Currency
   image         String?
   published     Boolean
+  isAvailable   Boolean
   availableFrom DateTime?
   availableTo   DateTime?
   createdAt     DateTime    @default(now())
@@ -328,6 +356,7 @@ model Order {
   status        OrderStatus   @default(NEW)
   paymentMethod PaymentMethod
   tax           Float
+  currency      Currency
   total         Float
   deliveryFee   Float
   driverTip     Float?
@@ -352,6 +381,7 @@ model OrderItem {
   quantity   Int
   price      Float
   taxPercent Float
+  currency   Currency
   orderId    String
   order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   menuItemId String

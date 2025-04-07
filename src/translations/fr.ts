@@ -301,6 +301,7 @@ const translations: TranslationSchema = {
         contact: "Coordonnées",
         address: "Adresse",
         category: "Catégorie de restaurant",
+        serviceOptions: "Options de service",
       },
       fields: {
         name: {
@@ -347,6 +348,30 @@ const translations: TranslationSchema = {
         mainCategory: {
           label: "Catégorie principale",
           placeholder: "Sélectionnez votre catégorie de cuisine principale",
+        },
+        priceLevel: {
+          label: "Niveau de prix",
+          placeholder: "Sélectionnez un niveau de prix",
+          description: "Cela aide les clients à comprendre votre gamme de prix",
+          options: {
+            budget: "Économique",
+            moderate: "Prix modéré",
+            expensive: "Cher",
+            premium: "Restaurant haut de gamme",
+          },
+        },
+        delivery: {
+          label: "Service de livraison",
+          description: "Proposer la livraison aux adresses des clients",
+        },
+        pickup: {
+          label: "Service de retrait",
+          description:
+            "Permettre aux clients de récupérer leurs commandes au restaurant",
+        },
+        dineIn: {
+          label: "Option sur place",
+          description: "Permettre aux clients de manger dans votre restaurant",
         },
       },
       buttons: {

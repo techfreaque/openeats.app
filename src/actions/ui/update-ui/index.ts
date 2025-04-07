@@ -41,7 +41,6 @@ export const updateUI = async (
           createdAt: true,
           subPrompt: true,
           modelId: true,
-          codeId: true,
           code: {
             select: {
               id: true,

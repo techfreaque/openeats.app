@@ -1,21 +1,21 @@
 import { dateSchema } from "next-vibe/shared/types/common.schema";
 import { z } from "zod";
 
+export enum Day {
+  MONDAY = "MONDAY",
+  TUESDAY = "TUESDAY",
+  WEDNESDAY = "WEDNESDAY",
+  THURSDAY = "THURSDAY",
+  FRIDAY = "FRIDAY",
+  SATURDAY = "SATURDAY",
+  SUNDAY = "SUNDAY",
+}
+
 const openingTimeBaseSchema = z.object({
   published: z.boolean().default(false),
-  day: z.coerce.number().int().min(1).max(7), // 1-7 for Monday-Sunday
-  open: z
-    .string()
-    .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, {
-      message: "Opening time must be in HH:mm format",
-    })
-    .optional(),
-  close: z
-    .string()
-    .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, {
-      message: "Closing time must be in HH:mm format",
-    })
-    .optional(),
+  day: z.nativeEnum(Day),
+  open: z.number().int().min(0).max(86400),
+  close: z.number().int().min(0).max(86400),
   validFrom: dateSchema.nullable(),
   validTo: dateSchema.nullable(),
 });

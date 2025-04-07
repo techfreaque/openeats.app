@@ -1,8 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { getCurrentUser } from "@/next-portal/api/auth/user";
-
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     // Authenticate user

@@ -6,7 +6,7 @@ import { debugLogger } from "next-vibe/shared/utils/logger";
 import { EmailTemplate } from "@/config/email.template";
 import { env } from "@/config/env";
 
-import { getFullUser } from "../auth/me/route";
+import { getFullUser } from "../auth/me/route-handler/get-me";
 import type {
   TemplatePostRequestType,
   TemplatePostRequestUrlParamsType,

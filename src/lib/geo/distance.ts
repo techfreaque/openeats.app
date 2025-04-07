@@ -2,6 +2,8 @@ import { Client } from "@googlemaps/google-maps-services-js";
 
 import { env } from "@/config/env";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
+import type { Countries } from "@/translations";
+import translations from "@/translations/de";
 
 /**
  * Calculate the distance between two geographical coordinates using the Haversine formula
@@ -45,7 +47,7 @@ export async function getCoordinatesFromAddress({
   streetNumber?: string | undefined;
   zip?: string | undefined;
   city?: string | undefined;
-  country?: string | undefined;
+  country?: Countries | undefined;
 }): Promise<
   | {
       success: true;
@@ -85,7 +87,8 @@ export async function getCoordinatesFromAddress({
     addressParts.push(city);
   }
   if (country) {
-    addressParts.push(country);
+    const countryName = translations.countries[country];
+    addressParts.push(countryName);
   }
   const address = addressParts.join(", ");
   if (!address) {

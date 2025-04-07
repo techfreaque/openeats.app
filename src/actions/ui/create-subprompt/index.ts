@@ -2,17 +2,16 @@
 
 import { errorLogger } from "next-vibe/shared/utils/logger";
 
+import { db } from "@/app/api/db";
+
 export interface CreateSubPromptReturn {
-  data: {
-    id: string;
-    createdAt: Date;
-    subPrompt: string;
-    UIId: string;
-    SUBId: string;
-    modelId: string | null;
-    codeId: string;
-  };
-  codeData: {
+  id: string;
+  createdAt: Date;
+  subPrompt: string;
+  UIId: string;
+  SUBId: string;
+  modelId: string | null;
+  code: {
     id: string;
     code: string;
   };
@@ -30,26 +29,23 @@ export const createSubPrompt = async (
     subPrompt.startsWith("balanced-") ||
     subPrompt.startsWith("creative-")
   ) {
-    const codeData = await db.code.create({
-      data: {
-        code: code,
-      },
-    });
     try {
       const data = await db.subPrompt.create({
         data: {
           UIId: UIId,
           subPrompt: subPrompt,
           SUBId: parentSUBId,
-          codeId: codeData.id,
+          code: {
+            create: {
+              code: code,
+            },
+          },
           modelId: modelId,
         },
+        select: subPromptSelect,
       });
 
-      return {
-        data,
-        codeData,
-      };
+      return data as CreateSubPromptReturn;
     } catch (error) {
       errorLogger("Error creating subprompt:", error);
     }
@@ -86,32 +82,43 @@ export const createSubPrompt = async (
     if (existingSubPrompts.length === 0) {
       newSUBId = `${nextSubIdBase}-1`;
     } else {
-      const lastSUBId = existingSubPrompts[0].SUBId;
+      const lastSUBId = existingSubPrompts[0]!.SUBId;
       const parts = lastSUBId.split("-");
-      const lastNumber = parseInt(parts[parts.length - 1], 10);
+      const lastNumber = parseInt(parts[parts.length - 1]!, 10);
       parts[parts.length - 1] = (lastNumber + 1).toString();
       newSUBId = parts.join("-");
     }
   }
-
-  const codeData = await db.code.create({
-    data: {
-      code: code,
-    },
-  });
 
   const data = await db.subPrompt.create({
     data: {
       UIId: UIId,
       subPrompt: subPrompt,
       SUBId: newSUBId,
-      codeId: codeData.id,
+      code: {
+        create: {
+          code: code,
+        },
+      },
       modelId: modelId,
     },
+    select: subPromptSelect,
   });
 
-  return {
-    data,
-    codeData,
-  };
+  return data as CreateSubPromptReturn;
+};
+
+export const subPromptSelect = {
+  id: true,
+  UIId: true,
+  SUBId: true,
+  createdAt: true,
+  subPrompt: true,
+  modelId: true,
+  code: {
+    select: {
+      id: true,
+      code: true,
+    },
+  },
 };

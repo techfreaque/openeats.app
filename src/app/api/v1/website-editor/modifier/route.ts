@@ -4,6 +4,7 @@ import { z } from "zod";
 import { trimCode } from "@/lib/website-editor/code";
 import { llm } from "@/lib/website-editor/llm";
 import { getModifierPromt } from "@/lib/website-editor/prompt";
+import { UiType } from "@/lib/website-editor/types";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 export const maxDuration = 60;
@@ -13,7 +14,7 @@ const inputSchema = z.object({
   modifyDescription: z.string().min(1, "Modify description is required"),
   precode: z.string().min(1, "Pre-code is required"),
   modelId: z.string(),
-  uiType: z.string(),
+  uiType: z.nativeEnum(UiType),
 });
 
 export async function POST(req: Request): Promise<Response> {

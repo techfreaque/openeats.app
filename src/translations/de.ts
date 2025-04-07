@@ -301,6 +301,7 @@ const translations = {
         contact: "Kontaktinformationen",
         address: "Adresse",
         category: "Restaurantkategorie",
+        serviceOptions: "Serviceoptionen",
       },
       fields: {
         name: {
@@ -347,6 +348,30 @@ const translations = {
         mainCategory: {
           label: "Hauptkategorie",
           placeholder: "Wählen Sie Ihre Hauptküchenkategorie",
+        },
+        priceLevel: {
+          label: "Preisniveau",
+          placeholder: "Wählen Sie ein Preisniveau",
+          description: "Dies hilft Kunden, Ihre Preisklasse zu verstehen",
+          options: {
+            budget: "Preisgünstig",
+            moderate: "Mittlere Preisklasse",
+            expensive: "Gehoben",
+            premium: "Premium-Gastronomie",
+          },
+        },
+        delivery: {
+          label: "Lieferservice",
+          description: "Bieten Sie Lieferung an die Adressen der Kunden an",
+        },
+        pickup: {
+          label: "Abholservice",
+          description:
+            "Ermöglichen Sie Kunden, Bestellungen in Ihrem Restaurant abzuholen",
+        },
+        dineIn: {
+          label: "Vor-Ort-Option",
+          description: "Ermöglichen Sie Kunden, in Ihrem Restaurant zu essen",
         },
       },
       buttons: {

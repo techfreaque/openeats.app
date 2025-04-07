@@ -6,7 +6,7 @@ import {
   type OrderCreateType,
   type OrderResponseType,
   OrderStatus,
-} from "./order.schema";
+} from "./schema";
 
 export const createOrder: ApiHandlerCallBackFunctionType<
   OrderCreateType,

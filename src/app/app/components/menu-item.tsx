@@ -7,6 +7,7 @@ import { useTranslation } from "next-vibe/i18n";
 import type { JSX } from "react";
 import { useState } from "react";
 
+import type { MenuItemResponseType } from "@/app/api/v1/restaurant/schema/menu.schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
@@ -21,10 +22,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { useCart } from "./hooks/use-cart";
-import type { MenuItemType } from "./lib/types";
 
 interface MenuItemProps {
-  item: MenuItemType;
+  item: MenuItemResponseType;
 }
 
 export function MenuItem({ item }: MenuItemProps): JSX.Element {

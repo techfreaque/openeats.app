@@ -1,7 +1,8 @@
+import { errorLogger } from "next-vibe/shared/utils/logger";
 import React from "react";
 
 interface ComponentMap {
-  [key: string]: React.ComponentType<any>;
+  [key: string]: React.ComponentType<unknown>;
 }
 
 const simpleJsxParser = (
@@ -32,11 +33,18 @@ const simpleJsxParser = (
 
       const [fullMatch, tag, attributes, children, voidTag, voidAttributes] =
         match;
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
       const componentName = tag || voidTag;
       const Component =
-        components[componentName] || componentName.toLowerCase();
+        componentName &&
+        (components[componentName] ?? componentName.toLowerCase());
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
       const props = parseAttributes(attributes || voidAttributes || "");
-
+      if (!Component) {
+        errorLogger(`Component "${componentName}" not found.`);
+        lastIndex = match.index + fullMatch.length;
+        continue;
+      }
       if (children) {
         parts.push(React.createElement(Component, props, parseJsx(children)));
       } else {

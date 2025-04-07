@@ -25,7 +25,6 @@ import {
   createPartners,
   createRestaurantRatings,
   createRestaurantSiteContent,
-  createSessions,
   createSubPrompts,
   createUIs,
 } from "./utils";
@@ -48,7 +47,6 @@ export default async function seedTestDatabase(): Promise<void> {
 
   // Related to users
   await createAddresses();
-  await createSessions();
 
   // Restaurant related
   await createOpeningTimes();

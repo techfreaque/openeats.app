@@ -1,5 +1,7 @@
+import type { Day } from "@prisma/client";
 import type { ApiHandlerCallBackFunctionType } from "next-vibe/server/endpoints/core/api-handler";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
+import { getDayEnumFromDate } from "next-vibe/shared/utils/time";
 
 import {
   calculateDistance,
@@ -14,13 +16,16 @@ import {
   restaurantQuery,
 } from "../restaurant/route-handler";
 import type { RestaurantResponseType } from "../restaurant/schema/restaurant.schema";
-import type { RestaurantsResponseType, RestaurantsSearchType } from "./schema";
+import type {
+  RestaurantsResponseType,
+  RestaurantsSearchOutputType,
+} from "./schema";
 
 /**
  * Gets restaurants based on search criteria with pagination and filtering
  */
 export const getRestaurants: ApiHandlerCallBackFunctionType<
-  RestaurantsSearchType,
+  RestaurantsSearchOutputType,
   RestaurantsResponseType,
   UndefinedType
 > = async ({ user, data }) => {
@@ -44,33 +49,43 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
       sortBy,
     } = data;
 
-    // First, get coordinates for the search location
-    const {
-      success: locationSuccess,
-      error,
-      latitude,
-      longitude,
-    } = await getCoordinatesFromAddress({
-      street: street ?? undefined,
-      streetNumber: streetNumber ?? undefined,
-      zip,
-      country: countryCode,
-    });
+    // Variables to hold coordinates if we do location-based filtering
+    let latitude: number | undefined;
+    let longitude: number | undefined;
+    let doLocationFiltering = false;
 
-    if (!locationSuccess) {
-      return {
-        success: false,
-        message: `Location not found, error: ${error}`,
-        errorCode: 404,
-      };
+    // Only attempt geocoding if zip is provided
+    if (zip) {
+      const {
+        success: locationSuccess,
+        error,
+        latitude: lat,
+        longitude: lng,
+      } = await getCoordinatesFromAddress({
+        street: street ?? undefined,
+        streetNumber: streetNumber ?? undefined,
+        zip,
+        country: countryCode,
+      });
+
+      if (locationSuccess) {
+        latitude = lat;
+        longitude = lng;
+        doLocationFiltering = true;
+      } else {
+        // Location lookup failed but we had a zip - return the error
+        return {
+          success: false,
+          message: `Location not found, error: ${error}`,
+          errorCode: 404,
+        };
+      }
     }
 
     // Build base query conditions with the exact type structure requested
     const where: {
       published: boolean;
-      country: {
-        code: string;
-      };
+      countryId: string;
       OR?: [
         {
           name: { contains: string; mode: "insensitive" };
@@ -115,9 +130,7 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
       };
     } = {
       published: true,
-      country: {
-        code: countryCode,
-      },
+      countryId: countryCode,
     };
 
     // Add name/description search if provided
@@ -138,7 +151,7 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
       openingTimes?: {
         some: {
           published: boolean;
-          day: number;
+          day: Day;
           open: {
             lte: number;
           };
@@ -161,7 +174,7 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
     // Filter by current open status if requested
     if (currentlyOpen === true) {
       const now = new Date();
-      const dayOfWeek = now.getDay(); // 0 is Sunday, 1 is Monday, etc.
+      const dayOfWeek = getDayEnumFromDate(now);
       const currentTime = now.getHours() * 60 + now.getMinutes(); // Convert to minutes since midnight
 
       andCondition.openingTimes = {
@@ -208,6 +221,7 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
     // Get all restaurants that match the base criteria
     const allRestaurants = await db.partner.findMany({
       where,
+
       select: restaurantQuery,
       orderBy:
         sortBy === "rating"
@@ -219,20 +233,35 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
               : { rating: "desc" }, // Default to rating for relevance
     });
 
-    // Calculate distance for each restaurant and filter by radius
-    let restaurantsWithDistance: RestaurantResponseType[] = allRestaurants
-      .map((restaurant) => {
-        // Calculate distance in km between search location and restaurant
-        const distance = calculateDistance(
-          latitude,
-          longitude,
-          restaurant.latitude,
-          restaurant.longitude,
-        );
-        return { ...restaurant, distance };
-      })
-      .filter((restaurant) => restaurant.distance <= radius)
-      .sort((a, b) => a.distance - b.distance); // Sort by distance
+    // Apply distance filtering only if we have coordinates
+    let restaurantsWithDistance: RestaurantResponseType[] = [];
+
+    if (
+      doLocationFiltering &&
+      latitude !== undefined &&
+      longitude !== undefined
+    ) {
+      // Calculate distance for each restaurant and filter by radius
+      restaurantsWithDistance = allRestaurants
+        .map((restaurant) => {
+          // Calculate distance in km between search location and restaurant
+          const distance = calculateDistance(
+            latitude,
+            longitude,
+            restaurant.latitude,
+            restaurant.longitude,
+          );
+          return { ...restaurant, distance };
+        })
+        .filter((restaurant) => restaurant.distance <= radius)
+        .sort((a, b) => a.distance - b.distance); // Sort by distance
+    } else {
+      // Skip distance filtering if no coordinates
+      restaurantsWithDistance = allRestaurants.map((restaurant) => ({
+        ...restaurant,
+        distance: 0, // Set a default distance
+      }));
+    }
 
     // Additional filtering based on dietary preferences
     if (dietary && dietary.length > 0) {
