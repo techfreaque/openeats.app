@@ -155,6 +155,7 @@ model Partner {
   email                 String
   image                 String
   rating                Float                   @default(0)
+  ratingRecent          Float                   @default(0)
   ratingCount           Int                     @default(0)
   orderCount            Int                     @default(0)
   latitude              Float
@@ -212,6 +213,7 @@ model Driver {
   userId       String
   user         User           @relation(fields: [userId], references: [id])
   rating       Float          @default(0)
+  ratingRecent Float          @default(0)
   ratingCount  Int            @default(0)
   ratings      DriverRating[]
   messages     Messages[]
