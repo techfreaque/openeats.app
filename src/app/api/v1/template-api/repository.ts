@@ -8,8 +8,8 @@ import type { DbId } from "next-vibe/server/db/types";
 
 import { db } from "../../../../packages/next-vibe/server/db";
 import { ApiRepositoryImpl } from "../../../../packages/next-vibe/server/db/repository-postgres";
-import type { NewTemplate, selectTemplateSchema, Template } from "./db";
-import { insertTemplateSchema, templates } from "./db";
+import type { NewTemplate, Template } from "./db";
+import { templates, insertTemplateSchema } from "./db";
 
 /**
  * Template repository interface
@@ -61,7 +61,7 @@ export class TemplateRepositoryImpl
     typeof templates,
     Template,
     NewTemplate,
-    typeof selectTemplateSchema
+    typeof insertTemplateSchema
   >
   implements TemplateRepository
 {
@@ -69,7 +69,7 @@ export class TemplateRepositoryImpl
    * Constructor
    */
   constructor() {
-    super(templates, insertTemplateSchema);
+    super(templates, insertTemplateSchema, "id");
   }
 
   /**
