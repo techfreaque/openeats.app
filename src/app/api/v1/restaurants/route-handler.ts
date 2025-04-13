@@ -290,17 +290,20 @@ export const getRestaurants = async ({ data }: {
           }));
 
     // Additional filtering based on dietary preferences
-    if (dietary && dietary.length > 0) {
+    if (dietary && Array.isArray(dietary) && dietary.length > 0 && restaurantsWithDistanceAndFilters) {
       restaurantsWithDistanceAndFilters =
         restaurantsWithDistanceAndFilters.filter((restaurant) => {
-          const restaurantAny = restaurant as any;
-          const dietaryOpts = restaurantAny.dietaryOptions || [];
+          if (!restaurant) return false;
+          
+          const restaurantAny = restaurant as Record<string, unknown>;
+          const dietaryOpts = restaurantAny["dietaryOptions"] || [];
           
           // Ensure dietaryOptions is an array
           const dietaryOptions = Array.isArray(dietaryOpts) ? dietaryOpts : [];
 
           // Check if any of the dietary preferences match
           return dietary.some((diet) => {
+            if (diet === null || diet === undefined) return false;
             const dietStr = String(diet);
             return dietaryOptions.includes(dietStr);
           });
@@ -308,11 +311,13 @@ export const getRestaurants = async ({ data }: {
     }
 
     // Additional filtering based on price range
-    if (priceRange && priceRange.length > 0) {
+    if (priceRange && priceRange.length > 0 && restaurantsWithDistanceAndFilters) {
       restaurantsWithDistanceAndFilters =
         restaurantsWithDistanceAndFilters.filter((restaurant) => {
-          const restaurantAny = restaurant as any;
-          const minimumOrderAmount = Number(restaurantAny.minimumOrderAmount || 0);
+          if (!restaurant) return false;
+          
+          const restaurantAny = restaurant as Record<string, unknown>;
+          const minimumOrderAmount = Number(restaurantAny["minimumOrderAmount"] || 0);
           if (isNaN(minimumOrderAmount)) {
             return false;
           }
@@ -337,8 +342,9 @@ export const getRestaurants = async ({ data }: {
 
     // Filter out private data, unpublished opening times, and unpublished menu items
     const filteredRestaurants = paginatedRestaurants.map((restaurant) => {
-      // Cast to RestaurantResponseType to ensure type safety
-      const typedRestaurant = restaurant as unknown as RestaurantResponseType;
+      if (!restaurant) return {} as RestaurantResponseType;
+      
+      const typedRestaurant = restaurant as Record<string, unknown> as RestaurantResponseType;
       return filterMenuItems(
         filterOpeningTimes(filterPrivateData(typedRestaurant)),
       );
