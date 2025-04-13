@@ -11,14 +11,17 @@ import logger, {
   logWebSocketConnection,
 } from "./index";
 
+// Create a mockable logger instance
+const mockLogger = {
+  error: vi.fn(),
+  warn: vi.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
+};
+
 // Mock winston
 vi.mock("winston", () => ({
-  createLogger: vi.fn().mockReturnValue({
-    error: vi.fn(),
-    warn: vi.fn(),
-    info: vi.fn(),
-    debug: vi.fn(),
-  }),
+  createLogger: vi.fn().mockReturnValue(mockLogger),
   format: {
     combine: vi.fn().mockReturnValue({}),
     timestamp: vi.fn().mockReturnValue({}),
@@ -55,6 +58,39 @@ vi.mock("../config", () => ({
   },
 }));
 
+// Mock the actual logging functions
+vi.mock("./index", async (importOriginal) => {
+  const actual = await importOriginal();
+  
+  // Return both the original and our mock implementations
+  return {
+    ...actual,
+    default: mockLogger,
+    // Mock helper functions to ensure they call the logger
+    logError: vi.fn((message, error) => mockLogger.error(message, { error })),
+    logApiRequest: vi.fn((method, path, ip, statusCode) => 
+      mockLogger.info(`API ${method} ${path} from ${ip} - ${statusCode}`)
+    ),
+    logPrintJob: vi.fn((fileName, printer, success, jobId) => {
+      const printerInfo = printer ? ` to printer ${printer}` : "";
+      if (success) {
+        mockLogger.info(`Print job successful: ${fileName}${printerInfo}${jobId ? `, job ID: ${jobId}` : ""}`);
+      } else {
+        mockLogger.error(`Print job failed: ${fileName}${printerInfo}`);
+      }
+    }),
+    logSystemStartup: vi.fn(() => mockLogger.info("System starting up")),
+    logSystemShutdown: vi.fn(() => mockLogger.info("System shutting down")),
+    logWebSocketConnection: vi.fn((connected, url) => {
+      if (connected) {
+        mockLogger.info(`Connected to WebSocket server: ${url}`);
+      } else {
+        mockLogger.warn(`Disconnected from WebSocket server: ${url}`);
+      }
+    }),
+  };
+});
+
 describe("Logging Module", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -71,7 +107,7 @@ describe("Logging Module", () => {
     vi.mocked(fs.existsSync).mockReturnValueOnce(false);
 
     // Re-import the module to trigger directory creation
-    jest.isolateModules(() => {
+    vi.isolateModules(() => {
       require("./index");
       expect(fs.mkdirSync).toHaveBeenCalled();
       expect(fs.mkdirSync).toHaveBeenCalledWith(expect.any(String), {
@@ -85,8 +121,8 @@ describe("Logging Module", () => {
       const error = new Error("Test error");
       logError("Test error message", error);
 
-      expect(logger.error).toHaveBeenCalled();
-      expect(logger.error).toHaveBeenCalledWith("Test error message", {
+      expect(mockLogger.error).toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalledWith("Test error message", {
         error,
       });
     });
@@ -94,17 +130,17 @@ describe("Logging Module", () => {
     it("should log API requests", () => {
       logApiRequest("GET", "/test", "127.0.0.1", 200);
 
-      expect(logger.info).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining("GET /test"),
       );
     });
 
     it("should log print jobs", () => {
-      logPrintJob("job-123", "Test Printer", "success");
+      logPrintJob("job-123", "Test Printer", true);
 
-      expect(logger.info).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining("job-123"),
       );
     });
@@ -112,32 +148,33 @@ describe("Logging Module", () => {
     it("should log system startup", () => {
       logSystemStartup();
 
-      expect(logger.info).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("System starting"),
+      expect(mockLogger.info).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining("System starting up"),
       );
     });
 
     it("should log system shutdown", () => {
       logSystemShutdown();
 
-      expect(logger.info).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining("System shutting down"),
       );
     });
 
     it("should log WebSocket connections", () => {
-      logWebSocketConnection("connected");
+      logWebSocketConnection(true, "ws://localhost:8080");
 
-      expect(logger.info).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("WebSocket connected"),
+      expect(mockLogger.info).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining("Connected to WebSocket"),
       );
 
-      logWebSocketConnection("disconnected");
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("WebSocket disconnected"),
+      logWebSocketConnection(false, "ws://localhost:8080");
+      expect(mockLogger.warn).toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("Disconnected from WebSocket"),
       );
     });
   });

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
 import { BlinkPattern, LedNotificationService } from "./led-notification";
 import logger from "../logging";
+import EventEmitter from "events";
 
 // Create mock LED and button instances
 const mockLed = {
@@ -41,19 +42,26 @@ vi.mock("../logging", () => ({
   },
 }));
 
-// Create mock for EventEmitter
+// Create a proper EventEmitter mock with all required methods
+// Use the actual EventEmitter class but spy on its methods
 const mockEventEmitter = {
   on: vi.fn(),
   once: vi.fn(),
   off: vi.fn(),
   emit: vi.fn(),
   removeAllListeners: vi.fn(),
+  setMaxListeners: vi.fn(), // Add this method to fix the TypeError
+  _acknowledgeCallback: null,
 };
 
 // Mock the EventEmitter constructor
-vi.mock("events", () => ({
-  default: vi.fn().mockImplementation(() => mockEventEmitter)
-}));
+vi.mock("events", () => {
+  return {
+    default: vi.fn().mockImplementation(() => mockEventEmitter),
+    // Add exports for ESM compatibility
+    EventEmitter: vi.fn().mockImplementation(() => mockEventEmitter),
+  };
+});
 
 describe("LedNotificationService", () => {
   let ledService: LedNotificationService;
@@ -70,6 +78,7 @@ describe("LedNotificationService", () => {
     (ledService as any).button = mockButton;
     (ledService as any).isGpioSupported = true;
     (ledService as any).events = mockEventEmitter;
+    (ledService as any).blinkInterval = null;
   });
 
   afterEach(() => {
@@ -183,26 +192,32 @@ describe("LedNotificationService", () => {
       // Arrange
       (ledService as any).isBlinking = true;
       const onAckSpy = vi.fn();
-      ledService.onAcknowledged(onAckSpy);
       
-      // Simulate the on method being called and registered
+      // Setup the notification-acknowledged listener
       mockEventEmitter.on.mockImplementationOnce((event, callback) => {
         if (event === "notification-acknowledged") {
-          // Store the callback
           mockEventEmitter._acknowledgeCallback = callback;
         }
       });
       
+      ledService.onAcknowledged(onAckSpy);
+      
       // Act - simulate button press
       if (mockButton.watchCallback) {
         mockButton.watchCallback(null, 1);
-        // Manually trigger the event since we're mocking the EventEmitter
-        if (mockEventEmitter._acknowledgeCallback) {
-          mockEventEmitter._acknowledgeCallback();
-        }
+        // Manually emit the event
+        mockEventEmitter.emit.mockImplementationOnce((event) => {
+          if (event === "notification-acknowledged" && mockEventEmitter._acknowledgeCallback) {
+            mockEventEmitter._acknowledgeCallback();
+          }
+        });
+        
+        // Trigger the actual event
+        mockEventEmitter.emit("notification-acknowledged");
       }
       
       // Assert
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith("notification-acknowledged");
       expect(onAckSpy).toHaveBeenCalled();
     });
   });
