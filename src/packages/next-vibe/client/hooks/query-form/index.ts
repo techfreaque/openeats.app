@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import type { FieldValues, UseFormProps, UseFormReturn } from "react-hook-form";
 import { useForm } from "react-hook-form";
 
 import { parseError } from "../../../shared/utils/parse-error";
@@ -26,7 +27,7 @@ import type {
  * Useful for search forms, filters, and other query parameter-based APIs
  */
 export function useApiQueryForm<
-  TRequest,
+  TRequest extends FieldValues,
   TResponse,
   TUrlVariables,
   TExampleKey = "default",
@@ -50,7 +51,7 @@ export function useApiQueryForm<
   const debounceTimerRef = useRef<number | null>(null);
 
   // Get query params directly from the function, not via a selector
-  const queryParams = getFormQueryParams<TRequest>(formId) ?? ({} as TRequest);
+  const queryParams = getFormQueryParams(formId) as TRequest ?? ({} as TRequest);
 
   // Create a function to update query params in the store
   const setQueryParams = useCallback(
@@ -90,7 +91,7 @@ export function useApiQueryForm<
   };
 
   // Initialize form with the proper configuration
-  const formMethods = useForm<TRequest>(formConfig);
+  const formMethods = useForm<TRequest>(formConfig as UseFormProps<TRequest>);
   const { watch, getValues } = formMethods;
 
   // Error management functions
@@ -107,7 +108,7 @@ export function useApiQueryForm<
   // Use API query with form values as parameters from the store
   const query = useApiQuery(endpoint, queryParams, urlVariables, {
     ...queryOptions,
-    enabled: queryOptions.enabled !== false,
+    enabled: queryOptions.enabled === true,
   });
 
   // Watch for form changes and update query params
@@ -119,7 +120,9 @@ export function useApiQueryForm<
         }
 
         debounceTimerRef.current = window.setTimeout(() => {
-          setQueryParams(formData as TRequest);
+          if (formData) {
+            setQueryParams(formData as TRequest);
+          }
         }, debounceMs);
       });
 
@@ -147,7 +150,7 @@ export function useApiQueryForm<
         clearFormError();
 
         // Update query params immediately
-        setQueryParams(formData);
+        setQueryParams(formData as TRequest);
 
         // Refetch with the new params
         const result = await query.refetch();
@@ -155,7 +158,7 @@ export function useApiQueryForm<
         options.onSuccess?.({
           responseData: result,
           pathParams: options.urlParamVariables,
-          requestData: formData,
+          requestData: formData as TRequest,
         });
       } catch (error) {
         // Handle any errors that occur during submission
@@ -171,7 +174,7 @@ export function useApiQueryForm<
   };
 
   return {
-    form: formMethods,
+    form: formMethods as UseFormReturn<TRequest>,
     submitForm,
     isSubmitting: query.isLoading,
     isSubmitSuccessful: query.isSuccess,
