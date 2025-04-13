@@ -53,7 +53,7 @@ export async function startServer(): Promise<void> {
           return;
         }
 
-        reject(err);
+        reject(new Error(`Failed to start server: ${err.message}`));
       });
       server.listen(4000, () => {
         debugLogger(`> E2E test server started on ${env.TEST_SERVER_URL}:4000`);
