@@ -5,7 +5,7 @@ import type { ZodType } from "zod";
  * Extended UseFormProps interface with proper typing
  */
 export interface ExtendedUseFormProps<TRequest extends FieldValues>
-  extends UseFormProps<TRequest> {
+  extends Omit<UseFormProps<TRequest>, 'defaultValues'> {
   defaultValues?: Partial<TRequest>;
 }
 

@@ -81,10 +81,10 @@ export function useApiMutation<TResponse, TRequest, TUrlVariables, TExampleKey>(
 
   // Create a selector function for the store
   const selector = useCallback(
-    (state: ApiStore): MutationStoreType<TResponse> =>
-      (state.mutations[mutationId] as unknown as
-        | undefined
-        | MutationStoreType<TResponse>) ?? defaultState,
+    (state: ApiStore): MutationStoreType<TResponse> => {
+      const mutation = state.mutations[mutationId];
+      return mutation ? (mutation as MutationStoreType<TResponse>) : defaultState;
+    },
     [mutationId, defaultState],
   );
 
