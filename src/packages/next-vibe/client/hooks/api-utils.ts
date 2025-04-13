@@ -17,7 +17,7 @@ function isSuccessResponse<T>(
     typeof response === "object" &&
     response !== null &&
     "success" in response &&
-    (response as { success: unknown }).success === true &&
+    (response as { success: boolean }).success === true &&
     "data" in response
   );
 }
@@ -27,9 +27,9 @@ function isErrorResponse<TData>(response: unknown): response is ErrorResponseTyp
     typeof response === "object" &&
     response !== null &&
     "success" in response &&
-    (response as { success: unknown }).success === false &&
+    (response as { success: boolean }).success === false &&
     "message" in response &&
-    typeof (response as { message: unknown }).message === "string"
+    typeof (response as { message: string }).message === "string"
   );
 }
 
