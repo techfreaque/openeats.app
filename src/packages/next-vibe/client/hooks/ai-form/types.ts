@@ -1,5 +1,7 @@
 "use client";
 
+import type { FieldValues } from "react-hook-form";
+
 import type { ApiFormOptions, ApiFormReturn } from "../types";
 
 /**
@@ -22,7 +24,7 @@ export type ChatMessageContent = string;
 export interface ChatMessage {
   role: ChatMessageRole;
   content: ChatMessageContent;
-  timestamp: Date;
+  timestamp: number; // Using number instead of Date for better serialization
   metadata?: Record<string, unknown>; // For additional data like parsed fields, etc.
 }
 
@@ -41,7 +43,7 @@ export enum FieldParsingStatus {
 export interface FieldParsingResult {
   fieldName: string;
   status: FieldParsingStatus;
-  value: any; // Using any here as it needs to match the form field type
+  value: unknown; // Using unknown for better type safety, consumers must explicitly type-check
   error?: string;
   retryCount?: number;
 }
@@ -49,7 +51,8 @@ export interface FieldParsingResult {
 /**
  * AI form options extending the standard form options
  */
-export interface AiFormOptions<TRequest> extends ApiFormOptions<TRequest> {
+export interface AiFormOptions<TRequest extends FieldValues>
+  extends ApiFormOptions<TRequest> {
   /**
    * Initial system prompt for the AI
    */
@@ -82,14 +85,17 @@ export interface AiFormOptions<TRequest> extends ApiFormOptions<TRequest> {
   /**
    * Custom field parsers for specific field types
    */
-  fieldParsers?: Record<string, (value: string) => any>;
+  fieldParsers?: Record<string, (value: string) => unknown>;
 }
 
 /**
  * AI form return type extending the standard form return
  */
-export interface AiFormReturn<TRequest, TResponse, TUrlVariables>
-  extends ApiFormReturn<TRequest, TResponse, TUrlVariables> {
+export interface AiFormReturn<
+  TRequest extends FieldValues,
+  TResponse,
+  TUrlVariables,
+> extends ApiFormReturn<TRequest, TResponse, TUrlVariables> {
   /**
    * Chat messages
    */

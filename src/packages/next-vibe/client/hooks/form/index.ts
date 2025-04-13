@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useMemo } from "react";
+import type { FieldValues } from "react-hook-form";
 import { useForm } from "react-hook-form";
-import type { ZodType } from "zod";
 
 import { parseError } from "../../../shared/utils/parse-error";
 import type { ApiEndpoint } from "../../endpoint";
@@ -22,7 +22,12 @@ import type {
  *
  * Simplified version that focuses on form functionality and hides implementation details
  */
-export function useApiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
+export function useApiForm<
+  TRequest extends FieldValues,
+  TResponse,
+  TUrlVariables,
+  TExampleKey,
+>(
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   options: ApiFormOptions<TRequest> = {},
   mutationOptions: ApiMutationOptions<TRequest, TResponse, TUrlVariables> = {},
@@ -82,18 +87,11 @@ export function useApiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
   const setFormErrorStore = useApiStore((state) => state.setFormError);
   const clearFormErrorStore = useApiStore((state) => state.clearFormError);
   // Create base configuration without resolver
-  const formConfig: ApiFormOptions<ZodType<TRequest>> = {
+  const formConfig: ApiFormOptions<TRequest> = {
     ...options,
-    // We force our form types with this
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     resolver: zodResolver(endpoint.requestSchema),
   };
 
-  // Initialize form with the proper configuration
-  // We force our form types with this
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   const formMethods = useForm<TRequest>(formConfig);
   // Error management functions
   const clearFormError = useCallback(

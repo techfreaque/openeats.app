@@ -2,9 +2,10 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Path, UseFormReturn } from "react-hook-form";
 import { useForm } from "react-hook-form";
-import type { ZodType } from "zod";
 
+import { llmApiEndpoint } from "../../../shared/endpoints/ai-chat";
 import { parseError } from "../../../shared/utils/parse-error";
 import type { ApiEndpoint } from "../../endpoint";
 import type { ApiStore } from "../store";
@@ -14,7 +15,6 @@ import type {
   ApiMutationOptions,
   SubmitFormFunction,
 } from "../types";
-import { mockLlmApi } from "./mock-api";
 import type {
   AiFormOptions,
   AiFormReturn,
@@ -28,7 +28,12 @@ import { ChatMessageRole, FieldParsingStatus } from "./types";
  * Creates a form with AI assistance for filling out fields
  * Extends the standard form hook with chat capabilities
  */
-export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
+export function useAiForm<
+  TRequest extends Record<string, unknown>,
+  TResponse,
+  TUrlVariables,
+  TExampleKey,
+>(
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   options: AiFormOptions<TRequest> = {},
   mutationOptions: ApiMutationOptions<TRequest, TResponse, TUrlVariables> = {},
@@ -37,7 +42,6 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
   const {
     systemPrompt = "I'm an AI assistant that will help you fill out this form. I'll ask you questions about the required information and help you complete the form step by step.",
     autoStart = false,
-    maxRetries = 3,
     retryDelayMs = 1000,
     includeFieldDescriptions = true,
     fieldParsers,
@@ -99,19 +103,12 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
   const setFormErrorStore = useApiStore((state) => state.setFormError);
   const clearFormErrorStore = useApiStore((state) => state.clearFormError);
 
-  // Create base configuration without resolver
-  const formConfig: ApiFormOptions<ZodType<TRequest>> = {
+  const formConfig: ApiFormOptions<TRequest> = {
     ...formOptions,
-    // We force our form types with this
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     resolver: zodResolver(endpoint.requestSchema),
   };
 
   // Initialize form with the proper configuration
-  // We force our form types with this
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   const formMethods = useForm<TRequest>(formConfig);
 
   // Error management functions
@@ -130,7 +127,7 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
     {
       role: ChatMessageRole.SYSTEM,
       content: systemPrompt,
-      timestamp: new Date(),
+      timestamp: Date.now(),
     },
   ]);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
@@ -153,39 +150,61 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
       const userMessage: ChatMessage = {
         role: ChatMessageRole.USER,
         content: message,
-        timestamp: new Date(),
+        timestamp: Date.now(),
       };
 
       setChatMessages((prev) => [...prev, userMessage]);
       setIsAiProcessing(true);
 
       try {
-        // In a real implementation, this would call the LLM API
-        // For now, we'll use our mock implementation
         const updatedMessages = [...chatMessages, userMessage];
 
-        const response = await mockLlmApi({
+        const requestData = {
           messages: updatedMessages,
           formSchema: endpoint.requestSchema,
           fieldDescriptions,
-          retryDelayMs,
-        });
+        };
+
+        const { success, endpointUrl, postBody } =
+          llmApiEndpoint.POST.getRequestData({
+            requestData,
+          });
+
+        if (!success) {
+          throw new Error("Failed to prepare request data");
+        }
+
+        const response = await fetch(endpointUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: postBody,
+        } as RequestInit);
+
+        if (!response.ok) {
+          throw new Error(`API call failed: ${response.statusText}`);
+        }
+
+        const responseData = await response.json();
 
         // Add assistant message to chat
         const assistantMessage: ChatMessage = {
           role: ChatMessageRole.ASSISTANT,
-          content: response.message.content,
-          timestamp: new Date(),
-          metadata: { parsedFields: response.parsedFields },
+          content: responseData.message.content,
+          timestamp: Date.now(),
+          metadata: { parsedFields: responseData.parsedFields },
         };
 
         setChatMessages((prev) => [...prev, assistantMessage]);
 
         // Update form fields with parsed values
-        if (response.parsedFields) {
+        if (responseData.parsedFields) {
           const newParsingResults: Record<string, FieldParsingResult> = {};
 
-          for (const [field, value] of Object.entries(response.parsedFields)) {
+          for (const [field, value] of Object.entries(
+            responseData.parsedFields,
+          )) {
             try {
               // Use custom field parser if available
               const parsedValue = fieldParsers?.[field]
@@ -193,8 +212,13 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
                 : value;
 
               // Validate the field value using the form's validation
-              formMethods.setValue(field, parsedValue);
-              const fieldError = formMethods.getFieldState(field).error;
+              formMethods.setValue(
+                field as unknown as Path<TRequest>,
+                parsedValue as any,
+              );
+              const fieldError = formMethods.getFieldState(
+                field as unknown as Path<TRequest>,
+              ).error;
 
               // Create field parsing result
               newParsingResults[field] = {
@@ -233,7 +257,7 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
         const errorAssistantMessage: ChatMessage = {
           role: ChatMessageRole.ASSISTANT,
           content: `Sorry, I encountered an error: ${errorMessage}`,
-          timestamp: new Date(),
+          timestamp: Date.now(),
         };
 
         setChatMessages((prev) => [...prev, errorAssistantMessage]);
@@ -249,7 +273,6 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
       fieldParsers,
       fieldParsingResults,
       formMethods,
-      retryDelayMs,
       setError,
     ],
   );
@@ -267,9 +290,9 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
       "I need to fill out a form with the following fields:\n\n";
 
     // Extract field information from the schema
-    const schemaShape = endpoint.requestSchema.shape || {};
+    const fieldNames = Object.keys(formMethods.getValues());
 
-    for (const [field, validator] of Object.entries(schemaShape)) {
+    for (const field of fieldNames) {
       const description = fieldDescriptions?.[field] || field;
       initialPrompt += `- ${description}\n`;
     }
@@ -291,7 +314,7 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
       {
         role: ChatMessageRole.SYSTEM,
         content: systemPrompt,
-        timestamp: new Date(),
+        timestamp: Date.now(),
       },
     ]);
     setFieldParsingResults({});
@@ -340,7 +363,7 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
           const successMessage: ChatMessage = {
             role: ChatMessageRole.ASSISTANT,
             content: "Great! The form has been submitted successfully.",
-            timestamp: new Date(),
+            timestamp: Date.now(),
           };
 
           setChatMessages((prev) => [...prev, successMessage]);
@@ -356,7 +379,7 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
           const errorMessage: ChatMessage = {
             role: ChatMessageRole.ASSISTANT,
             content: `Sorry, there was an error submitting the form: ${parsedError.message}`,
-            timestamp: new Date(),
+            timestamp: Date.now(),
           };
 
           setChatMessages((prev) => [...prev, errorMessage]);
@@ -375,7 +398,7 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
     const userMessage: ChatMessage = {
       role: ChatMessageRole.USER,
       content: "Submit the form",
-      timestamp: new Date(),
+      timestamp: Date.now(),
     };
 
     setChatMessages((prev) => [...prev, userMessage]);
@@ -390,14 +413,14 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
 
       for (const [field, error] of Object.entries(errors)) {
         const description = fieldDescriptions?.[field] || field;
-        errorMessage += `- ${description}: ${error.message}\n`;
+        errorMessage += `- ${description}: ${error?.message || "Invalid value"}\n`;
       }
 
       // Add error message to chat
       const validationErrorMessage: ChatMessage = {
         role: ChatMessageRole.ASSISTANT,
         content: errorMessage,
-        timestamp: new Date(),
+        timestamp: Date.now(),
       };
 
       setChatMessages((prev) => [...prev, validationErrorMessage]);
@@ -407,12 +430,12 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
     // Submit the form
     submitForm(undefined, {
       urlParamVariables: {} as TUrlVariables,
-      onSuccess: (data) => {
+      onSuccess: (_data) => {
         // Add success message to chat
         const successMessage: ChatMessage = {
           role: ChatMessageRole.ASSISTANT,
           content: "Great! The form has been submitted successfully.",
-          timestamp: new Date(),
+          timestamp: Date.now(),
         };
 
         setChatMessages((prev) => [...prev, successMessage]);
@@ -422,7 +445,7 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
         const errorMessage: ChatMessage = {
           role: ChatMessageRole.ASSISTANT,
           content: `Sorry, there was an error submitting the form: ${error.message}`,
-          timestamp: new Date(),
+          timestamp: Date.now(),
         };
 
         setChatMessages((prev) => [...prev, errorMessage]);
@@ -439,11 +462,11 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
 
     // Add form values
     for (const [field, value] of Object.entries(formValues)) {
-      const description = fieldDescriptions?.[field] || field;
+      const description = fieldDescriptions?.[field] ?? field;
       const fieldError = formErrors[field];
 
       if (value !== undefined && value !== "") {
-        summary += `- ${description}: ${value}`;
+        summary += `- ${description}: ${String(value)}`;
         if (fieldError) {
           summary += ` (Error: ${fieldError.message})`;
         }
@@ -457,16 +480,16 @@ export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
   // Function to get missing fields
   const getMissingFields = useCallback((): string[] => {
     const formValues = formMethods.getValues();
-    const schemaShape = endpoint.requestSchema.shape || {};
+    const fieldNames = Object.keys(formValues);
 
-    return Object.keys(schemaShape).filter((field) => {
+    return fieldNames.filter((field) => {
       const value = formValues[field as keyof typeof formValues];
       return value === undefined || value === "" || value === null;
     });
-  }, [endpoint.requestSchema, formMethods]);
+  }, [formMethods]);
 
   return {
-    form: formMethods,
+    form: formMethods as UseFormReturn<TRequest>,
     submitForm,
     isSubmitting: mutationState.isPending,
     isSubmitSuccessful: mutationState.isSuccess,

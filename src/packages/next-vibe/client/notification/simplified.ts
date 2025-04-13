@@ -22,7 +22,7 @@ export interface Notification {
   message: string;
 
   /** Additional data */
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 
   /** Timestamp */
   timestamp: number;

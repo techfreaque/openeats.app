@@ -4,7 +4,7 @@ import type {
   UseQueryOptions,
 } from "@tanstack/react-query";
 import type { FormEvent } from "react";
-import type { UseFormProps, UseFormReturn } from "react-hook-form";
+import type { FieldValues, UseFormProps, UseFormReturn } from "react-hook-form";
 
 /**
  * Enhanced query result with additional loading state info
@@ -69,7 +69,7 @@ export interface ApiMutationOptions<TRequest, TResponse, TUrlVariables> {
 /**
  * Type for the API query form options
  */
-export interface ApiQueryFormOptions<TRequest>
+export interface ApiQueryFormOptions<TRequest extends FieldValues>
   extends ApiFormOptions<TRequest> {
   autoSubmit?: boolean; // Whether to automatically submit the form when values change
   debounceMs?: number; // Debounce time in ms for auto-submission
@@ -78,7 +78,7 @@ export interface ApiQueryFormOptions<TRequest>
 /**
  * Return type for useApiQueryForm hook combining form and query functionality
  */
-export interface ApiQueryFormReturn<TRequest, TResponse, TUrlVariables>
+export interface ApiQueryFormReturn<TRequest extends FieldValues, TResponse, TUrlVariables>
   extends ApiFormReturn<TRequest, TResponse, TUrlVariables> {
   data: TResponse | undefined;
   isLoading: boolean;
@@ -93,14 +93,11 @@ export interface ApiQueryFormReturn<TRequest, TResponse, TUrlVariables>
 // We force our form types with this
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-export type ApiFormOptions<TRequest> = UseFormProps<TRequest> & {
+export type ApiFormOptions<TRequest extends FieldValues> = UseFormProps<TRequest> & {
   defaultValues?: Partial<TRequest>;
 };
 
-export interface ApiFormReturn<TRequest, TResponse, TUrlVariables> {
-  // We force our form types with this
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
+export interface ApiFormReturn<TRequest extends FieldValues, TResponse, TUrlVariables> {
   form: UseFormReturn<TRequest>;
   isSubmitting: boolean;
   isSubmitSuccessful: boolean;

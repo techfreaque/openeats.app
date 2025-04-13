@@ -4,6 +4,7 @@
  */
 
 import type { PgTable } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import type { z } from "zod";
 
 import type { DbClient, DbId } from "./types";
@@ -19,7 +20,7 @@ export interface BaseRepository<
   TTable extends PgTable,
   TSelect,
   TInsert,
-  TSchema extends z.ZodType<any, any, any>,
+  TSchema extends z.ZodType<unknown>,
 > {
   /**
    * Find all records
@@ -69,7 +70,7 @@ export abstract class BaseRepositoryImpl<
   TTable extends PgTable,
   TSelect,
   TInsert,
-  TSchema extends z.ZodType<any, any, any>,
+  TSchema extends z.ZodType<unknown>,
 > implements BaseRepository<TTable, TSelect, TInsert, TSchema>
 {
   /**
@@ -91,7 +92,7 @@ export abstract class BaseRepositoryImpl<
    */
   async findAll(): Promise<TSelect[]> {
     const results = await this.db.select().from(this.table);
-    return results as unknown as TSelect[];
+    return results as TSelect[];
   }
 
   /**
@@ -111,7 +112,7 @@ export abstract class BaseRepositoryImpl<
       return undefined;
     }
 
-    return results[0] as unknown as TSelect;
+    return results[0] as TSelect;
   }
 
   /**
@@ -124,14 +125,14 @@ export abstract class BaseRepositoryImpl<
     // Type assertion needed because Drizzle's types are very strict
     const results = await this.db
       .insert(this.table)
-      .values(validatedData as any)
+      .values(validatedData as TInsert)
       .returning();
 
     if (!results || !Array.isArray(results) || results.length === 0) {
       throw new Error("Failed to create record");
     }
 
-    return results[0] as unknown as TSelect;
+    return results[0] as TSelect;
   }
 
   /**
@@ -165,7 +166,7 @@ export abstract class BaseRepositoryImpl<
       return undefined;
     }
 
-    return results[0] as unknown as TSelect;
+    return results[0] as TSelect;
   }
 
   /**
