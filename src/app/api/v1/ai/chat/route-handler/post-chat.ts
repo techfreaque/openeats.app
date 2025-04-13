@@ -133,7 +133,11 @@ export async function postChat({
   data: LlmApiRequestType;
   urlVariables: undefined;
   user: { id: string };
-}): Promise<{ success: true; data: LlmApiResponseType }> {
+}): Promise<{
+  success: true;
+  data: LlmApiResponseType;
+  status?: number;
+}> {
   const response = await processChat(requestData);
-  return { success: true, data: response };
+  return { success: true, data: response, status: 200 };
 }
