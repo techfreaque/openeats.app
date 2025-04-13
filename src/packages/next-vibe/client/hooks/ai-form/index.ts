@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { llmApiEndpoint } from "../../../shared/endpoints/ai-chat";
 import { parseError } from "../../../shared/utils/parse-error";
 import type { ApiEndpoint } from "../../endpoint";
-import type { ApiStore } from "../store";
+import type { ApiStore, MutationStoreType } from "../store";
 import { useApiStore } from "../store";
 import type {
   ApiFormOptions,
@@ -58,23 +58,9 @@ export function useAiForm<
     () =>
       (
         state: ApiStore,
-      ):
-        | {
-            isPending: boolean;
-            isError: boolean;
-            error: Error | null;
-            isSuccess: boolean;
-            data: TResponse | undefined;
-          }
-        | undefined => {
+      ): MutationStoreType<TResponse> | undefined => {
           const mutation = state.mutations[mutationId];
-          return mutation ? (mutation as { 
-            isPending: boolean;
-            isError: boolean;
-            error: Error | null;
-            isSuccess: boolean;
-            data: TResponse | undefined;
-          }) : undefined;
+          return mutation ? (mutation as MutationStoreType<TResponse>) : undefined;
         },
     [mutationId],
   );
