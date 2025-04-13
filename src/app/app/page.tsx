@@ -41,7 +41,7 @@ const CATEGORY_ICONS = {
 
 export default function Home(): JSX.Element {
   const { form, data, isLoading, submitForm } = useRestaurants();
-  const restaurants: RestaurantResponseType[] = data?.restaurants || [];
+  const restaurants = (data?.restaurants || []) as RestaurantResponseType[];
 
   const [activeCategory, setActiveCategory] = useState("all");
   const [deliveryType, setDeliveryType] = useState<DeliveryType>(
@@ -155,65 +155,81 @@ export default function Home(): JSX.Element {
   // Initialize with location from localStorage if available
   useEffect(() => {
     // Check if we have a saved location
-    const savedLocation = localStorage.getItem("openeats-location");
-    if (savedLocation) {
-      setLocation(savedLocation);
-      return;
-    }
+    try {
+      const savedLocation = localStorage.getItem("openeats-location");
+      if (savedLocation) {
+        setLocation(savedLocation);
+        return;
+      }
 
-    // Set a default location
-    setLocation("New York, NY");
-    localStorage.setItem("openeats-location", "New York, NY");
+      // Set a default location
+      const defaultLocation = "Berlin, DE";
+      setLocation(defaultLocation);
+      localStorage.setItem("openeats-location", defaultLocation);
 
-    // Try to detect location automatically
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // In a real app, we would use reverse geocoding to get the address
-          // For now, we'll just use the coordinates
-          const { latitude, longitude } = position.coords;
-          const locationString = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-          setLocation(locationString);
-          localStorage.setItem("openeats-location", locationString);
-        },
-        (error: GeolocationPositionError) => {
-          errorLogger("Error getting location:", error);
-          // Keep the default location
-          if (error.code === error.PERMISSION_DENIED) {
-            toast({
-              title: t("location.locationAccessDenied"),
-              description: t("location.locationAccessDeniedDescription"),
-              variant: "destructive",
-            });
-          }
-        },
-        { timeout: 10000, enableHighAccuracy: false },
-      );
+      // Try to detect location automatically
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // In a real app, we would use reverse geocoding to get the address
+            // For now, we'll just use the coordinates
+            const { latitude, longitude } = position.coords;
+            const locationString = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+            setLocation(locationString);
+            localStorage.setItem("openeats-location", locationString);
+          },
+          (error: GeolocationPositionError) => {
+            errorLogger("Error getting location:", error);
+            // Keep the default location
+            if (error.code === error.PERMISSION_DENIED) {
+              toast({
+                title: t("location.locationAccessDenied"),
+                description: t("location.locationAccessDeniedDescription"),
+                variant: "destructive",
+              });
+            }
+          },
+          { timeout: 10000, enableHighAccuracy: false },
+        );
+      }
+    } catch (error) {
+      errorLogger("Error accessing localStorage:", error);
+      setLocation("Berlin, DE");
     }
-  }, [form, toast, t, submitForm]);
+  }, [toast, t]);
 
   // Save location when it changes
   useEffect(() => {
-    if (location) {
-      localStorage.setItem("openeats-location", location);
+    try {
+      if (location) {
+        localStorage.setItem("openeats-location", location);
+      }
+    } catch (error) {
+      errorLogger("Error saving location to localStorage:", error);
     }
   }, [location]);
 
   // Filter by delivery type (need to do this client-side since we're not resubmitting the form)
-  const displayedRestaurants =
-    deliveryType === DeliveryType.PICKUP
-      ? restaurants.filter((r) => (r as any).pickup === true)
+  const displayedRestaurants = useMemo(() => {
+    return deliveryType === DeliveryType.PICKUP
+      ? restaurants.filter((r) => r.pickup === true)
       : restaurants;
+  }, [deliveryType, restaurants]);
 
-  // Features restaurants - top 4 by rating
-  const featuredRestaurants = [...restaurants]
-    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
-    .slice(0, 4);
+  const featuredRestaurants = useMemo(() => {
+    return [...restaurants]
+      .filter((r): r is RestaurantResponseType => !!r)
+      .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
+      .slice(0, 4);
+  }, [restaurants]);
 
   // Popular restaurants - top 4 by rating
-  const popularRestaurants = [...restaurants]
-    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
-    .slice(0, 4);
+  const popularRestaurants = useMemo(() => {
+    return [...restaurants]
+      .filter((r): r is RestaurantResponseType => !!r)
+      .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
+      .slice(0, 4);
+  }, [restaurants]);
 
   return (
     <>
