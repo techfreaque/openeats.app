@@ -173,7 +173,11 @@ export function createErrorResponse<
 export async function validatePostRequest<T>(
   request: Request,
   schema: ZodSchema<T>,
-): Promise<ApiHandlerResult<T>> {
+): Promise<{
+  data: T;
+  success: boolean;
+  message: string;
+}> {
   try {
     // Parse request body as JSON
     const body = await request.json();
@@ -181,7 +185,7 @@ export async function validatePostRequest<T>(
 
     // Validate against schema
     const validatedData = schema.parse(body);
-    return { success: true, data: validatedData };
+    return { success: true, data: validatedData, message: "Validation successful" };
   } catch (error) {
     // Handle Zod validation errors
     if (error instanceof ZodError) {
@@ -193,7 +197,7 @@ export async function validatePostRequest<T>(
       return {
         success: false,
         message: errorMessage,
-        errorCode: 400,
+        data: {} as T,
       };
     }
 
@@ -207,7 +211,7 @@ export async function validatePostRequest<T>(
     return {
       success: false,
       message: errorMessage,
-      errorCode: 400,
+      data: {} as T,
     };
   }
 }
@@ -222,7 +226,11 @@ export async function validatePostRequest<T>(
 export async function validateGetRequest<T>(
   request: Request,
   schema: ZodSchema<T>,
-): Promise<ApiHandlerResult<T>> {
+): Promise<{
+  data: T;
+  success: boolean;
+  message: string;
+}> {
   try {
     // Extract query parameters
     const { searchParams } = new URL(request.url);
@@ -248,7 +256,19 @@ export async function validateGetRequest<T>(
       );
     }
 
-    return validation as ApiHandlerResult<T>;
+    if (validation.success) {
+      return {
+        success: true,
+        data: validation.data as T,
+        message: "Validation successful"
+      };
+    } else {
+      return {
+        success: false,
+        message: validation.message || "Validation failed",
+        data: {} as T
+      };
+    }
   } catch (error) {
     const errorMessage =
       error instanceof Error
@@ -259,7 +279,7 @@ export async function validateGetRequest<T>(
     return {
       success: false,
       message: errorMessage,
-      errorCode: 400,
+      data: {} as T,
     };
   }
 }
