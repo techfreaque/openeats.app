@@ -11,7 +11,7 @@ import type {
   TemplatePostRequestType,
   TemplatePostRequestUrlParamsType,
 } from "./schema";
-import { templateRepository } from "./template.repository";
+import { templateRepository } from "./repository";
 
 // Define the response type for success and error cases
 interface ApiResponse<T> {

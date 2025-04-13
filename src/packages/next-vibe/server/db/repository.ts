@@ -1,13 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
 /**
  * Base repository pattern for database access
  * This file provides a generic repository pattern for database operations
- *
- * Note: This file uses 'any' type assertions in several places to work around
- * Drizzle ORM's strict typing system. These are necessary to make the generic
- * repository pattern work with Drizzle's complex type system.
  */
 
 import { sql } from "drizzle-orm";
