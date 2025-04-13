@@ -1,17 +1,7 @@
 import fs from "fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createLogger, transports } from "winston";
 
-import logger, {
-  logApiRequest,
-  logError,
-  logPrintJob,
-  logSystemShutdown,
-  logSystemStartup,
-  logWebSocketConnection,
-} from "./index";
-
-// Create a mockable logger instance
+// Define mockLogger before vi.mock calls since they are hoisted
 const mockLogger = {
   error: vi.fn(),
   warn: vi.fn(),
@@ -19,7 +9,7 @@ const mockLogger = {
   debug: vi.fn(),
 };
 
-// Mock winston
+// Mock winston with mockLogger
 vi.mock("winston", () => ({
   createLogger: vi.fn().mockReturnValue(mockLogger),
   format: {
@@ -37,14 +27,30 @@ vi.mock("winston", () => ({
   },
 }));
 
+// Import after mocks
+import logger, {
+  logApiRequest,
+  logError,
+  logPrintJob,
+  logSystemShutdown,
+  logSystemStartup,
+  logWebSocketConnection,
+} from "./index";
+
 // Mock DailyRotateFile
 vi.mock("winston-daily-rotate-file", () => ({}));
 
-// Mock fs
-vi.mock("fs", () => ({
-  existsSync: vi.fn().mockReturnValue(true),
-  mkdirSync: vi.fn(),
-}));
+// Mock fs with default export
+vi.mock("fs", () => {
+  const mockFs = {
+    existsSync: vi.fn().mockReturnValue(true),
+    mkdirSync: vi.fn(),
+  };
+  return {
+    ...mockFs,
+    default: mockFs,
+  };
+});
 
 // Mock config
 vi.mock("../config", () => ({

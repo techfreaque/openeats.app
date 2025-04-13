@@ -1,7 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { db, initializeDatabase } from "./index";
 
-// Create a mock db instance
+// Mock fs module functions
+const fsExistsSyncMock = vi.fn().mockReturnValue(true);
+const fsMkdirSyncMock = vi.fn();
+
+vi.mock('fs', () => {
+  const mockFs = {
+    existsSync: fsExistsSyncMock,
+    mkdirSync: fsMkdirSyncMock,
+  };
+  return {
+    ...mockFs,
+    default: mockFs
+  };
+});
+
+// Create a mock database instance
 const mockDbInstance = {
   exec: vi.fn().mockResolvedValue(undefined),
   run: vi.fn().mockResolvedValue(undefined),
@@ -14,104 +28,82 @@ const mockDbInstance = {
   close: vi.fn().mockResolvedValue(undefined),
 };
 
-// Mock fs module
-const mockFs = {
-  existsSync: vi.fn().mockReturnValue(true),
-  mkdirSync: vi.fn(),
-};
+// Mock sqlite3
+vi.mock('sqlite3', () => ({
+  Database: vi.fn()
+}));
 
-// Setup all mocks
-vi.mock("fs", () => mockFs);
+// Set up the sqlite mock with different behaviors
+const sqliteOpenMock = vi.fn().mockResolvedValue(mockDbInstance);
+vi.mock('sqlite', () => ({
+  open: sqliteOpenMock
+}));
 
-// Create a controlled mock for initializeDatabase
-vi.mock("./index", async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    initializeDatabase: vi.fn().mockImplementation(async () => {
-      // Check if directory exists, if not create it
-      if (!mockFs.existsSync("/data")) {
-        mockFs.mkdirSync("/data", { recursive: true });
-      }
-      return mockDbInstance;
-    }),
-    db: Promise.resolve(mockDbInstance),
-  };
+// Define setup to dynamically import the module (fix for ESM)
+let initializeDatabase: () => Promise<any>;
+let db: Promise<any>;
+
+// Import the module dynamically to avoid hoisting issues
+beforeEach(async () => {
+  // Reset modules to force a fresh import
+  vi.resetModules();
+  
+  // Import the module dynamically
+  const dbModule = await import('./index');
+  
+  // Assign to our variables
+  initializeDatabase = dbModule.initializeDatabase;
+  db = dbModule.db;
 });
 
-// Mocking sqlite and sqlite3 at a higher level
-vi.mock("sqlite3", () => ({
-  Database: vi.fn(),
-}));
-
-vi.mock("sqlite", () => ({
-  open: vi.fn().mockImplementation(() => Promise.resolve(mockDbInstance)),
-}));
-
-describe("Database Module", () => {
+describe('Database Module', () => {
   beforeEach(() => {
+    // Clear all mocks
     vi.clearAllMocks();
+    
+    // Set default success behavior
+    sqliteOpenMock.mockResolvedValue(mockDbInstance);
   });
 
-  describe("initializeDatabase", () => {
-    it("should initialize the database", async () => {
-      // Reset the mock implementation to success case
-      vi.mocked(initializeDatabase).mockImplementation(async () => {
-        // Call the mocked fs functions for test verification
-        if (!mockFs.existsSync("/data")) {
-          mockFs.mkdirSync("/data", { recursive: true });
-        }
-        // Call open to track it was used
-        await require("sqlite").open({
-          filename: ":memory:",
-          driver: require("sqlite3").Database,
-        });
-        return mockDbInstance;
-      });
-
-      const database = await initializeDatabase();
-
-      expect(database).toBe(mockDbInstance);
-      expect(require("sqlite").open).toHaveBeenCalled();
-      expect(mockDbInstance.exec).not.toHaveBeenCalled(); // This would be called in the real implementation
+  describe('initializeDatabase', () => {
+    it('should initialize the database', async () => {
+      // Act - call the function
+      const result = await initializeDatabase();
+      
+      // Assert - verify it was called and returned our mock
+      expect(sqliteOpenMock).toHaveBeenCalled();
+      expect(result).toBe(mockDbInstance);
     });
-
-    it("should create the data directory if it doesn't exist", async () => {
-      // Make existsSync return false for this test
-      mockFs.existsSync.mockReturnValueOnce(false);
-
-      // Reset mock implementation
-      vi.mocked(initializeDatabase).mockImplementation(async () => {
-        if (!mockFs.existsSync("/data")) {
-          mockFs.mkdirSync("/data", { recursive: true });
-        }
-        return mockDbInstance;
-      });
-
+    
+    it('should create the data directory if it doesn\'t exist', async () => {
+      // Arrange - make existsSync return false for this test
+      fsExistsSyncMock.mockReturnValueOnce(false);
+      
+      // Act - call the function
       await initializeDatabase();
-
-      expect(mockFs.existsSync).toHaveBeenCalled();
-      expect(mockFs.mkdirSync).toHaveBeenCalled();
-      expect(mockFs.mkdirSync).toHaveBeenCalledWith(expect.any(String), {
-        recursive: true,
-      });
+      
+      // Assert - verify directory was checked and created
+      expect(fsExistsSyncMock).toHaveBeenCalled();
+      expect(fsMkdirSyncMock).toHaveBeenCalled();
     });
-
-    it("should handle database initialization errors", async () => {
-      // Make initialization fail for this test
-      vi.mocked(initializeDatabase).mockRejectedValueOnce(
-        new Error("Database error")
-      );
-
-      await expect(initializeDatabase()).rejects.toThrow("Database error");
+    
+    it('should handle database initialization errors', async () => {
+      // Arrange - make sqlite.open reject for this test
+      sqliteOpenMock.mockRejectedValueOnce(new Error('Database error'));
+      
+      // Act & Assert - verify it throws the expected error
+      await expect(initializeDatabase()).rejects.toThrow('Database error');
     });
   });
-
-  describe("db singleton", () => {
-    it("should export a database promise", async () => {
-      expect(db).toBeInstanceOf(Promise);
+  
+  describe('db singleton', () => {
+    it('should export a database promise', async () => {
+      // Act - access the exported db and await it
       const database = await db;
-      expect(database).toBeDefined();
+      
+      // Assert - verify it's our mock instance
+      expect(sqliteOpenMock).toHaveBeenCalled();
+      expect(database).toBe(mockDbInstance);
     });
   });
 });

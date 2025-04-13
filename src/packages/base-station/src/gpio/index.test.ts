@@ -1,12 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { config } from "../config";
-import { createGpioService, initializeGpio } from "./index";
-
-// Mock OS module
+// Define mock functions first before they're used in vi.mock
 const mockOsPlatform = vi.fn().mockReturnValue("linux");
 const mockOsArch = vi.fn().mockReturnValue("arm64");
 
+// Mock OS module
 vi.mock("os", () => {
   return {
     platform: mockOsPlatform,
@@ -60,7 +58,7 @@ vi.mock("../logging", () => ({
   logError: vi.fn(),
 }));
 
-// Create a mocked RaspberryPiGpioService class for testing
+// Create a mocked RaspberryPiGpioService
 const mockRpiService = {
   initialize: vi.fn().mockImplementation(function() {
     this.enabled = true;
@@ -71,6 +69,10 @@ const mockRpiService = {
   }),
   enabled: false
 };
+
+// Import after mocks
+import { config } from "../config";
+import { createGpioService, initializeGpio } from "./index";
 
 // Mock the service implementation
 vi.mock("./index", async (importOriginal) => {

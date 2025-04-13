@@ -44,10 +44,17 @@ vi.mock("../logging", () => ({
   },
 }));
 
-// Mock fs
-vi.mock("fs", () => ({
-  existsSync: vi.fn().mockReturnValue(true),
-}));
+// Fix the fs mock to include default export
+vi.mock("fs", () => {
+  const mockFs = {
+    existsSync: vi.fn().mockReturnValue(true),
+    mkdirSync: vi.fn(),
+  };
+  return {
+    ...mockFs,
+    default: mockFs,
+  };
+});
 
 // Don't mock notifications module - we're testing the actual implementation
 vi.unmock("./index");

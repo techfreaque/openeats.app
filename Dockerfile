@@ -6,10 +6,6 @@ WORKDIR /app
 COPY . .
 ENV NODE_ENV=development
 RUN yarn install
-WORKDIR /app/src/packages/next-vibe
-RUN yarn install
-WORKDIR /app
-
 
 EXPOSE 3000
 

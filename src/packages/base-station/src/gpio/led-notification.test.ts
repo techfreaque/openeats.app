@@ -1,67 +1,98 @@
 import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
-import { BlinkPattern, LedNotificationService } from "./led-notification";
-import logger from "../logging";
-import EventEmitter from "events";
 
-// Create mock LED and button instances
+// Define mock functions and objects BEFORE the mocks
+const mockLedWrite = vi.fn();
+const mockLedUnexport = vi.fn();
+const mockButtonWatch = vi.fn();
+const mockButtonUnexport = vi.fn();
+const mockOn = vi.fn();
+const mockOnce = vi.fn();
+const mockOff = vi.fn();
+const mockEmit = vi.fn();
+const mockRemoveAllListeners = vi.fn();
+const mockSetMaxListeners = vi.fn();
+const mockListenerCount = vi.fn().mockReturnValue(0);
+
+// Create mock objects
 const mockLed = {
-  writeSync: vi.fn(),
-  unexport: vi.fn(),
+  writeSync: mockLedWrite,
+  unexport: mockLedUnexport,
 };
 
 const mockButton = {
   watchCallback: null,
-  watch: vi.fn(callback => {
+  watch: vi.fn((callback) => {
     mockButton.watchCallback = callback;
     return mockButton;
   }),
-  unexport: vi.fn(),
+  unexport: mockButtonUnexport,
 };
 
-// Mock the onoff module with a proper class implementation
-vi.mock("onoff", () => {
-  return {
-    Gpio: vi.fn().mockImplementation((pin, direction) => {
-      // Return different mock objects based on the pin/direction
-      if (direction === "out") {
-        return mockLed;
-      } else {
-        return mockButton;
-      }
-    })
-  };
-});
+// Create callbacks store for event emitter
+const callbacks = {};
 
-// Mock logger
+// Mock dependencies before importing the tested module
 vi.mock("../logging", () => ({
   default: {
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
     debug: vi.fn(),
-  },
+  }
 }));
 
-// Create a proper EventEmitter mock with all required methods
-// Use the actual EventEmitter class but spy on its methods
-const mockEventEmitter = {
-  on: vi.fn(),
-  once: vi.fn(),
-  off: vi.fn(),
-  emit: vi.fn(),
-  removeAllListeners: vi.fn(),
-  setMaxListeners: vi.fn(), // Add this method to fix the TypeError
-  _acknowledgeCallback: null,
-};
+// Mock the onoff module
+vi.mock("onoff", () => ({
+  Gpio: vi.fn().mockImplementation((pin, direction) => {
+    if (direction === "out") return mockLed;
+    return mockButton;
+  })
+}));
 
-// Mock the EventEmitter constructor
+// Mock EventEmitter
 vi.mock("events", () => {
+  // Implement the on method
+  mockOn.mockImplementation((event, callback) => {
+    callbacks[event] = callbacks[event] || [];
+    callbacks[event].push(callback);
+    return { callbacks };
+  });
+  
+  // Implement the emit method
+  mockEmit.mockImplementation((event, ...args) => {
+    if (callbacks[event]) {
+      callbacks[event].forEach(cb => cb(...args));
+    }
+    return true;
+  });
+  
   return {
-    default: vi.fn().mockImplementation(() => mockEventEmitter),
-    // Add exports for ESM compatibility
-    EventEmitter: vi.fn().mockImplementation(() => mockEventEmitter),
+    default: vi.fn(() => ({
+      on: mockOn,
+      once: mockOnce,
+      off: mockOff,
+      emit: mockEmit,
+      removeAllListeners: mockRemoveAllListeners,
+      setMaxListeners: mockSetMaxListeners,
+      listenerCount: mockListenerCount,
+      callbacks
+    })),
+    EventEmitter: vi.fn(() => ({
+      on: mockOn,
+      once: mockOnce,
+      off: mockOff,
+      emit: mockEmit,
+      removeAllListeners: mockRemoveAllListeners,
+      setMaxListeners: mockSetMaxListeners,
+      listenerCount: mockListenerCount,
+      callbacks
+    }))
   };
 });
+
+// Import after mocks
+import { BlinkPattern, LedNotificationService } from "./led-notification";
+import logger from "../logging";
 
 describe("LedNotificationService", () => {
   let ledService: LedNotificationService;
@@ -70,14 +101,13 @@ describe("LedNotificationService", () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     
-    // Create a new instance for each test with a mocked private events object
+    // Create a new instance for each test
     ledService = new LedNotificationService(17, 27, 500, 30000);
     
     // Force internal properties to simulate initialized state
     (ledService as any).led = mockLed;
     (ledService as any).button = mockButton;
     (ledService as any).isGpioSupported = true;
-    (ledService as any).events = mockEventEmitter;
     (ledService as any).blinkInterval = null;
   });
 
@@ -98,7 +128,7 @@ describe("LedNotificationService", () => {
       expect((ledService as any).currentPattern).toBe(BlinkPattern.NORMAL);
       
       // Verify event was emitted
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith("blinking-started", BlinkPattern.NORMAL);
+      expect(mockEmit).toHaveBeenCalledWith("blinking-started", BlinkPattern.NORMAL);
     });
 
     it("should use simulation mode when GPIO is not available", () => {
@@ -138,7 +168,7 @@ describe("LedNotificationService", () => {
       // Assert
       expect((ledService as any).isBlinking).toBe(false);
       expect(clearIntervalSpy).toHaveBeenCalled();
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith("blinking-stopped");
+      expect(mockEmit).toHaveBeenCalledWith("blinking-stopped");
     });
 
     it("should handle stopping when not active", () => {
@@ -163,7 +193,7 @@ describe("LedNotificationService", () => {
       ledService.on("blinking-started", callback);
       
       // Assert
-      expect(mockEventEmitter.on).toHaveBeenCalledWith("blinking-started", callback);
+      expect(mockOn).toHaveBeenCalledWith("blinking-started", callback);
     });
 
     it("should register one-time event listeners with once method", () => {
@@ -174,7 +204,7 @@ describe("LedNotificationService", () => {
       ledService.once("blinking-stopped", callback);
       
       // Assert
-      expect(mockEventEmitter.once).toHaveBeenCalledWith("blinking-stopped", callback);
+      expect(mockOnce).toHaveBeenCalledWith("blinking-stopped", callback);
     });
 
     it("should remove event listeners with off method", () => {
@@ -185,7 +215,7 @@ describe("LedNotificationService", () => {
       ledService.off("error", callback);
       
       // Assert
-      expect(mockEventEmitter.off).toHaveBeenCalledWith("error", callback);
+      expect(mockOff).toHaveBeenCalledWith("error", callback);
     });
 
     it("should handle button press events", () => {
@@ -193,31 +223,20 @@ describe("LedNotificationService", () => {
       (ledService as any).isBlinking = true;
       const onAckSpy = vi.fn();
       
-      // Setup the notification-acknowledged listener
-      mockEventEmitter.on.mockImplementationOnce((event, callback) => {
-        if (event === "notification-acknowledged") {
-          mockEventEmitter._acknowledgeCallback = callback;
-        }
-      });
-      
+      // Register the acknowledgement handler
       ledService.onAcknowledged(onAckSpy);
       
       // Act - simulate button press
       if (mockButton.watchCallback) {
+        // Call the button callback directly
         mockButton.watchCallback(null, 1);
-        // Manually emit the event
-        mockEventEmitter.emit.mockImplementationOnce((event) => {
-          if (event === "notification-acknowledged" && mockEventEmitter._acknowledgeCallback) {
-            mockEventEmitter._acknowledgeCallback();
-          }
-        });
-        
-        // Trigger the actual event
-        mockEventEmitter.emit("notification-acknowledged");
       }
       
       // Assert
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith("notification-acknowledged");
+      expect(mockEmit).toHaveBeenCalledWith("notification-acknowledged");
+      
+      // Since we've setup the emit mock to actually call handlers,
+      // the onAckSpy should have been called
       expect(onAckSpy).toHaveBeenCalled();
     });
   });
@@ -231,7 +250,7 @@ describe("LedNotificationService", () => {
       ledService.simulateButtonPress();
       
       // Assert
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith("notification-acknowledged");
+      expect(mockEmit).toHaveBeenCalledWith("notification-acknowledged");
     });
 
     it("should report correct active status", () => {
@@ -269,7 +288,7 @@ describe("LedNotificationService", () => {
       // Assert
       expect(mockLed.unexport).toHaveBeenCalled();
       expect(mockButton.unexport).toHaveBeenCalled();
-      expect(mockEventEmitter.removeAllListeners).toHaveBeenCalled();
+      expect(mockRemoveAllListeners).toHaveBeenCalled();
       expect((ledService as any).isBlinking).toBe(false);
     });
   });

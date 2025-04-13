@@ -1,16 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  config,
-  getApiKey,
-  loadConfig,
-  resetApiKey,
-  saveConfig,
-  updateApiKey,
-  updateConfig,
-} from "./index";
-
-// Create a mockable config object that tests can modify
+// Define mockConfigObject before vi.mock since it's hoisted
 const mockConfigObject = {
   server: { port: 3000, host: "localhost" },
   security: {
@@ -41,15 +31,31 @@ const mockConfigObject = {
   logging: { level: "info" },
 };
 
-// Mock the fs module with proper spies
-const mockFs = {
-  writeFileSync: vi.fn(),
-  readFileSync: vi.fn().mockReturnValue(JSON.stringify(mockConfigObject)),
-  existsSync: vi.fn().mockReturnValue(true),
-};
-vi.mock("fs", () => mockFs);
+// Mock fs module with default export
+vi.mock("fs", () => {
+  const mockFs = {
+    writeFileSync: vi.fn(),
+    readFileSync: vi.fn().mockReturnValue(JSON.stringify(mockConfigObject)),
+    existsSync: vi.fn().mockReturnValue(true),
+  };
+  return {
+    ...mockFs,
+    default: mockFs,
+  };
+});
 
-// Mock the loadConfig and saveConfig implementations
+// Import after mocks
+import {
+  config,
+  getApiKey,
+  loadConfig,
+  resetApiKey,
+  saveConfig,
+  updateApiKey,
+  updateConfig,
+} from "./index";
+
+// Mock loadConfig, saveConfig, and other functions
 vi.mock("./index", async (importOriginal) => {
   const actual = await importOriginal();
   return {
