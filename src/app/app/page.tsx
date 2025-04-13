@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 
+import { Countries } from "@/translations";
 import { DeliveryType } from "../api/v1/order/delivery.schema";
 import { useRestaurants } from "../api/v1/restaurants/hooks";
 import { CategoryPill } from "./components/category-pill";
@@ -59,22 +60,22 @@ export default function Home(): JSX.Element {
     }
 
     // Extract unique categories from restaurants
-    const uniqueCategories: {
-      id: {
+    const uniqueCategories: Record<string, {
         name: string;
-        image: string;
+        image?: string;
         id: string;
-      };
-    } = {};
+      }> = {};
     restaurants.forEach((restaurant) => {
-      uniqueCategories[restaurant.mainCategory.id] = restaurant.mainCategory;
+      if (restaurant.mainCategory && restaurant.mainCategory.id) {
+        uniqueCategories[restaurant.mainCategory.id] = restaurant.mainCategory;
+      }
     });
 
     // Map to category objects with icons
     const categoryList = Object.values(uniqueCategories).map((category) => ({
       name: category.name.charAt(0).toUpperCase() + category.name.slice(1),
       icon:
-        CATEGORY_ICONS[category.name.toLowerCase()] ?? CATEGORY_ICONS.default,
+        CATEGORY_ICONS[category.name.toLowerCase() as keyof typeof CATEGORY_ICONS] ?? CATEGORY_ICONS.default,
       value: category.id,
     }));
 
@@ -123,11 +124,11 @@ export default function Home(): JSX.Element {
 
     if (zip && countryCode) {
       form.setValue("zip", zip);
-      form.setValue("countryCode", countryCode);
+      form.setValue("countryCode", countryCode as Countries);
     } else {
       // Fallback to defaults if parsing fails
       form.setValue("zip", "10001");
-      form.setValue("countryCode", "US");
+      form.setValue("countryCode", Countries.DE);
     }
 
     form.setValue("radius", 10);
@@ -141,7 +142,9 @@ export default function Home(): JSX.Element {
       // For demo purposes, we'll assume format "zip, countryCode" or "city, countryCode"
       const parts = loc.split(",").map((p) => p.trim());
       if (parts.length >= 2) {
-        return [parts[0], parts[1]];
+        const zip = parts[0] || null;
+        const country = parts[1] || null;
+        return [zip, country];
       }
     }
     return [null, null];
@@ -196,13 +199,13 @@ export default function Home(): JSX.Element {
 
   // Filter by delivery type (need to do this client-side since we're not resubmitting the form)
   const displayedRestaurants =
-    deliveryType === "pickup"
+    deliveryType === DeliveryType.PICKUP
       ? restaurants.filter((r) => r.pickup)
       : restaurants;
 
   // Features restaurants - top 4 by rating
   const featuredRestaurants = [...restaurants]
-    .sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0))
+    .sort((a, b) => b.rating - a.rating)
     .slice(0, 4);
 
   // Popular restaurants - top 4 by rating
@@ -242,7 +245,7 @@ export default function Home(): JSX.Element {
             </div>
             <div className="hidden lg:block">
               <Image
-                src="/placeholder.svg?height=400&width=400"
+                src="/placeholder.svg"
                 alt="Hero Image"
                 width={400}
                 height={400}
@@ -285,7 +288,7 @@ export default function Home(): JSX.Element {
           <Tabs
             defaultValue={DeliveryType.DELIVERY}
             className="w-full"
-            onValueChange={(value) => setDeliveryType(value)}
+            onValueChange={(value) => setDeliveryType(value as DeliveryType)}
           >
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold tracking-tight">
