@@ -12,7 +12,7 @@ const defaultConfig: RestaurantConfigType = {
   },
   hero: {
     showHero: true,
-    heroHeight: "medium",
+    heroHeight: "small",
     heroStyle: "image",
   },
   layout: "standard",
@@ -26,6 +26,8 @@ const defaultConfig: RestaurantConfigType = {
     dineIn: false,
   },
   menuStyle: "sections",
+  heroStyle: "carousel",
+  heroHeight: "small",
 };
 
 const RestaurantConfigContext =

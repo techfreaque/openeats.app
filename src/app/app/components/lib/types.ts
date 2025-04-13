@@ -145,15 +145,15 @@ export interface RestaurantConfigType {
     dineIn: boolean;
   };
   heroContent?: {
-    showLogo?: string;
-    logoPosition?: string;
+    showLogo?: boolean;
+    logoPosition?: "center" | "left" | "right";
     title?: string;
     subtitle?: string;
     ctaLink?: string;
     ctaText?: string;
   };
-  heroStyle: "carousel" | "parallax" | "split";
-  heroHeight: "small" | "large";
+  heroStyle?: "carousel" | "parallax" | "split" | "image";
+  heroHeight?: "small" | "medium" | "large";
   reservations?: boolean;
   menuStyle?: "tabs" | "accordion" | "sections" | "grid";
   menuCategories?: RestaurantMenuCategoryType[];

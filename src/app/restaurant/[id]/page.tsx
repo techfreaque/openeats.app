@@ -256,14 +256,11 @@ export default function RestaurantHomePage(): JSX.Element {
               <OrderTypeSelector
                 value={orderType}
                 onChange={setOrderType}
-                options={config.orderOptions && Array.isArray(config.orderOptions) 
-                  ? config.orderOptions.filter(option => 
-                      (option.value === "delivery" && restaurant.delivery === true) || 
-                      (option.value === "pickup" && restaurant.pickup === true) ||
-                      (option.value === "dineIn" && restaurant.dineIn === true)
-                    )
-                  : []
-                }
+                options={{
+                  delivery: restaurant.delivery === true,
+                  pickup: restaurant.pickup === true,
+                  dineIn: restaurant.dineIn === true
+                }}
               />
             </div>
           </div>
