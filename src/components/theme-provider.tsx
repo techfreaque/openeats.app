@@ -7,5 +7,5 @@ export function ThemeProvider({
   children,
   ...props
 }: ThemeProviderProps): JSX.Element {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+  return <NextThemesProvider {...props} attribute="class" enableSystem={false} forcedTheme="light">{children}</NextThemesProvider>;
 }
