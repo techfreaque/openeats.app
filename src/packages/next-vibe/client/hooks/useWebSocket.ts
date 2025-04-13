@@ -200,7 +200,7 @@ export function useWebSocket(
         // Authenticate
         socket.emit("authenticate", {
           deviceId: `browser-${Math.random().toString(36).substring(2, 15)}`,
-          userId: localStorage.getItem("userId"),
+          userId: typeof localStorage !== 'undefined' ? localStorage.getItem("userId") : null,
         });
       });
 
