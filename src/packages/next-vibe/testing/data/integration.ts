@@ -63,8 +63,14 @@ export function registerEndpointExamples<
   const examples = endpoint.examples || {};
 
   // Register each example with the data repository
-  Object.entries(examples).forEach(([key, example]) => {
-    if (example?.request) {
+  Object.entries(examples).forEach(([key, exampleEntry]) => {
+    const example = exampleEntry as {
+      request?: TRequest;
+      response?: TResponse;
+      urlParams?: TUrlVariables;
+    };
+    
+    if (example.request) {
       dataRepository.register(`${entityName}_${key}_request`, {
         create: () => example.request as TRequest,
         createMany: (count) => Array(count).fill(example.request as TRequest),
@@ -72,7 +78,7 @@ export function registerEndpointExamples<
       });
     }
 
-    if (example?.response) {
+    if (example.response) {
       dataRepository.register(`${entityName}_${key}_response`, {
         create: () => example.response as TResponse,
         createMany: (count) => Array(count).fill(example.response as TResponse),
@@ -80,7 +86,7 @@ export function registerEndpointExamples<
       });
     }
 
-    if (example?.urlParams) {
+    if (example.urlParams) {
       dataRepository.register(`${entityName}_${key}_urlParams`, {
         create: () => example.urlParams as TUrlVariables,
         createMany: (count) =>
@@ -105,7 +111,7 @@ export function getEndpointExample<
   TExampleKey extends string,
 >(
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
-  entityName: string,
+  _entityName: string, // Unused parameter, prefixed with underscore
   exampleKey: TExampleKey,
 ): {
   request: TRequest;
@@ -113,17 +119,20 @@ export function getEndpointExample<
   urlParams: TUrlVariables;
 } {
   const examples = endpoint.examples || {};
-  const example = examples[exampleKey];
-
-  if (!example) {
+  
+  const payloads = examples.payloads as Record<TExampleKey, TRequest> | undefined;
+  const responses = examples.responses as Record<TExampleKey, TResponse> | undefined;
+  const urlPathVariables = examples.urlPathVariables as Record<TExampleKey, TUrlVariables> | undefined;
+  
+  if (!payloads?.[exampleKey] && !responses?.[exampleKey] && !urlPathVariables?.[exampleKey]) {
     throw new Error(
-      `Example "${exampleKey}" not found for endpoint "${endpoint.path.join("/")}"`,
+      `Example "${String(exampleKey)}" not found for endpoint "${endpoint.path.join("/")}"`,
     );
   }
 
   return {
-    request: example.request as TRequest,
-    response: example.response as TResponse,
-    urlParams: example.urlParams as TUrlVariables,
+    request: payloads?.[exampleKey] as TRequest,
+    response: responses?.[exampleKey] as TResponse,
+    urlParams: urlPathVariables?.[exampleKey] as TUrlVariables,
   };
 }
