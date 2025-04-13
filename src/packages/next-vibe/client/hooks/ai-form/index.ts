@@ -65,17 +65,17 @@ export function useAiForm<
     [mutationId],
   );
 
+  type FormStateType = {
+    formError: Error | null;
+    isSubmitting: boolean;
+  };
+
   const formSelector = useMemo(
     () =>
-      (
-        state: ApiStore,
-      ):
-        | {
-            formError: Error | null;
-            isSubmitting: boolean;
-          }
-        | undefined =>
-        state.forms[formId],
+      (state: ApiStore): FormStateType | undefined => {
+        const form = state.forms[formId];
+        return form ? (form as FormStateType) : undefined;
+      },
     [formId],
   );
 
@@ -500,7 +500,7 @@ export function useAiForm<
     const fieldNames = Object.keys(formValues);
 
     return fieldNames.filter((field) => {
-      const value = formValues[field as keyof typeof formValues];
+      const value = formValues[field as keyof TRequest];
       return value === undefined || value === "" || value === null;
     });
   }, [formMethods]);
