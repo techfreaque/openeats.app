@@ -185,7 +185,7 @@ export abstract class BaseRepositoryImpl<
     // Use type assertion to handle Drizzle's strict typing
     const results = await this.db
       .insert(this.table)
-      .values(validatedData as TInsert)
+      .values(validatedData as any)
       .returning();
 
     if (!results || !Array.isArray(results) || results.length === 0) {
