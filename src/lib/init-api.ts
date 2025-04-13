@@ -5,7 +5,7 @@ import { debugLogger } from "next-vibe/shared/utils/logger";
 
 let initialized = false;
 
-export function initializeApi() {
+export function initializeApi(): void {
   if (initialized) {
     return;
   }

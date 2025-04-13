@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { Server as HttpServer } from "http";
 
 import type { ApiConfig } from "../../../client/config";

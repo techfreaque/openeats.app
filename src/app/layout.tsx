@@ -7,8 +7,8 @@ import type React from "react";
 import type { JSX } from "react";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { initializeApi } from "@/lib/init-api";
 
-import { initializeApi } from "../lib/init-api";
 import { TranslationProvider } from "../packages/next-vibe/i18n";
 
 const inter = Inter({ subsets: ["latin"] });
