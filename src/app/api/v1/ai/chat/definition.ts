@@ -57,7 +57,7 @@ const aiChatEndpoint = createEndpoint({
         message: {
           role: ChatMessageRole.ASSISTANT,
           content: "I've captured your information. Thank you!",
-          timestamp: Date.now(),
+          timestamp: 1617235200000, // Fixed timestamp for example
         },
         parsedFields: {
           name: "John Doe",
