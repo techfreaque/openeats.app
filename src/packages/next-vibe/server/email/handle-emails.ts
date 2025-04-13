@@ -1,5 +1,9 @@
+import type {
+  ErrorResponseType,
+  ResponseType,
+  SuccessResponseType,
+} from "next-vibe/shared";
 import { ErrorResponseTypes } from "next-vibe/shared";
-import type { ResponseType } from "next-vibe/shared";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import type { JSX } from "react";
 
@@ -10,8 +14,11 @@ import { sendEmail, type SendEmailParams } from "./send-mail";
 export type EmailFunctionType<TRequest, TResponse, TUrlVariables> = ({
   requestData,
 }: EmailRenderProps<TRequest, TResponse, TUrlVariables>) =>
-  | Promise<ResponseType<EmailTemplateReturnType>>
-  | ResponseType<EmailTemplateReturnType>;
+  | Promise<
+      SuccessResponseType<EmailTemplateReturnType> | ErrorResponseType<unknown>
+    >
+  | SuccessResponseType<EmailTemplateReturnType>
+  | ErrorResponseType<unknown>;
 
 export interface EmailRenderProps<TRequest, TResponse, TUrlVariables> {
   requestData: TRequest;

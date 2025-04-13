@@ -3,7 +3,11 @@ import "server-only";
 import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
 
 import definitions from "./definition";
-import { createCategory, getCategories, updateCategory } from "./route-handler.new";
+import {
+  createCategory,
+  getCategories,
+  updateCategory,
+} from "./route-handler.new";
 
 /**
  * Category API route handlers

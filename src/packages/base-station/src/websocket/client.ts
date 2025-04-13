@@ -49,6 +49,7 @@ class WebSocketClient extends EventEmitter {
     } catch (error) {
       logger.error(`Failed to connect to WebSocket server: ${error}`);
       this.scheduleReconnect();
+      throw error;
     }
   }
 
@@ -75,6 +76,30 @@ class WebSocketClient extends EventEmitter {
   // Check if WebSocket is connected
   isConnected(): boolean {
     return this.connected && !!this.ws && this.ws.readyState === WebSocket.OPEN;
+  }
+
+  // Send system status to server
+  sendStatus(statusData: any): void {
+    this.send({
+      type: "status",
+      data: statusData,
+    });
+  }
+
+  // Send job status update to server
+  sendJobStatus(jobData: any): void {
+    this.send({
+      type: "job_status",
+      data: jobData,
+    });
+  }
+
+  // Send error notification to server
+  sendError(errorData: any): void {
+    this.send({
+      type: "error",
+      data: errorData,
+    });
   }
 
   // Handle WebSocket open event
@@ -144,7 +169,10 @@ class WebSocketClient extends EventEmitter {
     // Schedule reconnect
     this.reconnectTimer = setTimeout(() => {
       this.reconnectAttempts++;
-      this.connect();
+      this.connect().catch(() => {
+        // Catch error to prevent unhandled promise rejection
+        logger.error("Failed to reconnect");
+      });
     }, delay);
   }
 }

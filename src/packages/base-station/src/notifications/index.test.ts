@@ -157,4 +157,18 @@ describe("Notifications Module", () => {
       await expect(setVolume(50)).rejects.toThrow("Volume error");
     });
   });
+
+  describe("isNotificationEnabled", () => {
+    it("should return notification enabled status", () => {
+      // Import the function
+      const { isNotificationEnabled } = require("./index");
+      
+      // Test with default state (enabled=true from mock config)
+      expect(isNotificationEnabled()).toBe(true);
+      
+      // Set up the mock to return false next time
+      vi.mocked(config.notifications.enabled).mockReturnValueOnce(false);
+      expect(isNotificationEnabled()).toBe(false);
+    });
+  });
 });

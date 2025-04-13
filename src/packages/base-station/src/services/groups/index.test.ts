@@ -312,5 +312,86 @@ describe("Printer Group Service", () => {
         await printerGroupService.selectPrinterFromGroup("non-existent-id");
       expect(printer).toBeNull();
     });
+
+    it("should return null for non-existent group", async () => {
+      const result = await printerGroupService.selectPrinterFromGroup("non-existent-id");
+      expect(result).toBeNull();
+    });
+    
+    it("should return null for inactive group", async () => {
+      // Create an inactive group
+      const id = await printerGroupService.createGroup({
+        name: "Inactive Group",
+        printers: ["Printer1", "Printer2"],
+        balancingStrategy: "round-robin",
+        active: false,
+      });
+      
+      const result = await printerGroupService.selectPrinterFromGroup(id);
+      expect(result).toBeNull();
+    });
+    
+    it("should return null for group with no printers", async () => {
+      // Create a group with no printers
+      const id = await printerGroupService.createGroup({
+        name: "Empty Group",
+        printers: [],
+        balancingStrategy: "round-robin",
+        active: true,
+      });
+      
+      const result = await printerGroupService.selectPrinterFromGroup(id);
+      expect(result).toBeNull();
+    });
+    
+    it("should select printer using least-busy strategy", async () => {
+      // Create a group with the least-busy strategy
+      const id = await printerGroupService.createGroup({
+        name: "Least Busy Group",
+        printers: ["Printer1", "Printer2", "Printer3"],
+        balancingStrategy: "least-busy",
+        active: true,
+      });
+      
+      // Mock the printer status - Printer3 has no jobs
+      vi.spyOn(printerGroupService, "getGroupStatus").mockResolvedValueOnce({
+        id,
+        name: "Least Busy Group",
+        active: true,
+        printers: [
+          { name: "Printer1", status: "idle", jobCount: 2 },
+          { name: "Printer2", status: "idle", jobCount: 1 },
+          { name: "Printer3", status: "idle", jobCount: 0 },
+        ],
+      });
+      
+      const result = await printerGroupService.selectPrinterFromGroup(id);
+      expect(result).toBe("Printer3"); // Should select the printer with 0 jobs
+    });
+    
+    it("should select printer using failover strategy", async () => {
+      // Create a group with the failover strategy
+      const id = await printerGroupService.createGroup({
+        name: "Failover Group",
+        printers: ["Printer1", "Printer2", "Printer3"],
+        balancingStrategy: "failover",
+        active: true,
+      });
+      
+      // Mock the printer status - Printer1 has error
+      vi.spyOn(printerGroupService, "getGroupStatus").mockResolvedValueOnce({
+        id,
+        name: "Failover Group",
+        active: true,
+        printers: [
+          { name: "Printer1", status: "error", jobCount: 0 },
+          { name: "Printer2", status: "idle", jobCount: 0 },
+          { name: "Printer3", status: "idle", jobCount: 0 },
+        ],
+      });
+      
+      const result = await printerGroupService.selectPrinterFromGroup(id);
+      expect(result).toBe("Printer2"); // Should select first available printer
+    });
   });
 });

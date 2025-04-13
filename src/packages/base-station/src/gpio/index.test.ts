@@ -1,13 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import os from "os";
 
 import { config } from "../config";
-import { initializeGpio, toggleLed } from "./index";
+import { createGpioService, initializeGpio } from "./index";
+
+// Mock os module
+vi.mock("os", () => ({
+  platform: vi.fn().mockReturnValue("linux"),
+  arch: vi.fn().mockReturnValue("arm64"),
+}));
 
 // Mock the onoff library
 vi.mock("onoff", () => {
   const mockGpio = {
-    write: vi.fn(),
-    read: vi.fn().mockImplementation(() => 0),
+    writeSync: vi.fn(),
+    read: vi.fn().mockImplementation((callback) => callback(null, 0)),
     unexport: vi.fn(),
     watch: vi.fn(),
   };
@@ -24,10 +31,12 @@ vi.mock("../config", () => ({
       enabled: true,
       ledPin: 17,
       buttonPin: 27,
+      resetPin: 22,
       blinkRate: 500,
       blinkTimeout: 30000,
     },
   },
+  resetApiKey: vi.fn(),
 }));
 
 // Mock the logger
@@ -38,6 +47,7 @@ vi.mock("../logging", () => ({
     error: vi.fn(),
     debug: vi.fn(),
   },
+  logError: vi.fn(),
 }));
 
 describe("GPIO Module", () => {
@@ -47,69 +57,76 @@ describe("GPIO Module", () => {
 
   describe("initializeGpio", () => {
     it("should initialize GPIO when enabled", () => {
-      const result = initializeGpio();
+      // Act
+      const gpioService = initializeGpio(config.gpio);
 
-      expect(result).toBe(true);
-      expect(require("onoff").Gpio).toHaveBeenCalledTimes(2); // For LED and button
-      expect(require("onoff").Gpio).toHaveBeenCalledWith(17, "out");
-      expect(require("onoff").Gpio).toHaveBeenCalledWith(27, "in", "both");
+      // Assert
+      expect(gpioService).toBeDefined();
+      expect(gpioService.isEnabled()).toBe(false);  // Initially false until initialize completes
+      
+      // Call initialize to complete the setup
+      gpioService.initialize();
+      
+      // Now it should be enabled
+      expect(gpioService.isEnabled()).toBe(true);
+      expect(require("onoff").Gpio).toHaveBeenCalled();
     });
 
     it("should not initialize GPIO when disabled", () => {
-      vi.mocked(config.gpio.enabled).mockReturnValueOnce(false);
-
-      const result = initializeGpio();
-
-      expect(result).toBe(false);
+      // Arrange - create a modified config with GPIO disabled
+      const disabledConfig = { ...config.gpio, enabled: false };
+      
+      // Act
+      const gpioService = initializeGpio(disabledConfig);
+      gpioService.initialize();
+      
+      // Assert
+      expect(gpioService.isEnabled()).toBe(false);
       expect(require("onoff").Gpio).not.toHaveBeenCalled();
     });
 
     it("should handle initialization errors", () => {
-      vi.mocked(require("onoff").Gpio).mockImplementationOnce(() => {
+      // Arrange
+      const Gpio = require("onoff").Gpio;
+      vi.mocked(Gpio).mockImplementationOnce(() => {
         throw new Error("GPIO error");
       });
 
-      const result = initializeGpio();
+      // Act
+      const gpioService = initializeGpio(config.gpio);
+      gpioService.initialize();
 
-      expect(result).toBe(false);
-      expect(require("../logging").default.error).toHaveBeenCalled();
+      // Assert
+      expect(gpioService.isEnabled()).toBe(false);
+      expect(require("../logging").logError).toHaveBeenCalled();
     });
   });
 
-  describe("toggleLed", () => {
-    it("should toggle LED on when state is true", () => {
-      // First init GPIO
-      initializeGpio();
-
-      // Then toggle
-      toggleLed(true);
-
-      const mockGpio = require("onoff").Gpio.mock.results[0].value;
-      expect(mockGpio.write).toHaveBeenCalledWith(1);
+  describe("createGpioService", () => {
+    it("should create RaspberryPiGpioService on Linux ARM platform", () => {
+      // Arrange - ensure we're on Linux ARM
+      vi.mocked(os.platform).mockReturnValue("linux");
+      vi.mocked(os.arch).mockReturnValue("arm64");
+      
+      // Act
+      const service = createGpioService(config.gpio);
+      
+      // Assert - check by initializing and seeing if it tries to use GPIO
+      service.initialize();
+      expect(require("onoff").Gpio).toHaveBeenCalled();
     });
-
-    it("should toggle LED off when state is false", () => {
-      // First init GPIO
-      initializeGpio();
-
-      // Then toggle
-      toggleLed(false);
-
-      const mockGpio = require("onoff").Gpio.mock.results[0].value;
-      expect(mockGpio.write).toHaveBeenCalledWith(0);
-    });
-
-    it("should do nothing when GPIO is not initialized", () => {
-      // Reset the module state
-      vi.resetModules();
-
-      // Don't initialize GPIO
-
-      // Try to toggle
-      toggleLed(true);
-
-      // Expect no errors and no actions
-      expect(require("../logging").default.error).not.toHaveBeenCalled();
+    
+    it("should create DummyGpioService on non-Raspberry Pi platforms", () => {
+      // Arrange - ensure we're on a non-RPi platform
+      vi.mocked(os.platform).mockReturnValue("win32");
+      
+      // Act
+      const service = createGpioService(config.gpio);
+      service.initialize();
+      
+      // Assert
+      expect(service.isEnabled()).toBe(false);
+      expect(require("onoff").Gpio).not.toHaveBeenCalled();
     });
   });
 });
