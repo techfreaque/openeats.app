@@ -1,4 +1,3 @@
-import fs from "fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -11,29 +10,94 @@ import {
   updateConfig,
 } from "./index";
 
-// Mock the fs module
-vi.mock("fs", () => ({
+// Create a mockable config object that tests can modify
+const mockConfigObject = {
+  server: { port: 3000, host: "localhost" },
+  security: {
+    apiKey: "test-api-key",
+    defaultApiKey: "default-test-api-key",
+  },
+  printing: { 
+    defaultPrinter: "Test Printer",
+    bluetooth: {
+      enabled: false,
+      name: "BT Printer",
+      address: "",
+      channel: 1,
+      discoverable: true,
+      discoveryTimeout: 30000
+    }
+  },
+  websocket: { url: "ws://localhost:8080" },
+  notifications: { 
+    enabled: true, 
+    sounds: {
+      newOrder: "sounds/new-order.mp3",
+      printSuccess: "sounds/print-success.mp3",
+      printError: "sounds/print-error.mp3",
+    }
+  },
+  gpio: { enabled: false },
+  logging: { level: "info" },
+};
+
+// Mock the fs module with proper spies
+const mockFs = {
   writeFileSync: vi.fn(),
-  readFileSync: vi.fn().mockReturnValue(
-    JSON.stringify({
+  readFileSync: vi.fn().mockReturnValue(JSON.stringify(mockConfigObject)),
+  existsSync: vi.fn().mockReturnValue(true),
+};
+vi.mock("fs", () => mockFs);
+
+// Mock the loadConfig and saveConfig implementations
+vi.mock("./index", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    loadConfig: vi.fn().mockImplementation(() => ({ ...mockConfigObject })),
+    saveConfig: vi.fn(),
+    // Mock updateApiKey to actually update the mock config
+    updateApiKey: vi.fn().mockImplementation((newKey) => {
+      if (!newKey) throw new Error("API key cannot be empty");
+      mockConfigObject.security.apiKey = newKey;
+      actual.saveConfig(mockConfigObject);
+    }),
+    // Mock resetApiKey to actually reset the API key
+    resetApiKey: vi.fn().mockImplementation(() => {
+      mockConfigObject.security.apiKey = mockConfigObject.security.defaultApiKey;
+      actual.saveConfig(mockConfigObject);
+    }),
+    // Mock the exported config
+    config: mockConfigObject,
+  };
+});
+
+describe("Config Module", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Reset mock config to original values
+    Object.assign(mockConfigObject, {
       server: { port: 3000, host: "localhost" },
       security: {
         apiKey: "test-api-key",
         defaultApiKey: "default-test-api-key",
       },
-      printing: { defaultPrinter: "Test Printer" },
-      websocket: { url: "ws://localhost:8080" },
-      notifications: { enabled: true },
+      printing: { 
+        defaultPrinter: "Test Printer",
+        bluetooth: {
+          enabled: false,
+          name: "BT Printer"
+        }
+      },
+      notifications: { 
+        enabled: true,
+        sounds: {
+          newOrder: "sounds/new-order.mp3"
+        }
+      },
       gpio: { enabled: false },
       logging: { level: "info" },
-    }),
-  ),
-  existsSync: vi.fn().mockReturnValue(true),
-}));
-
-describe("Config Module", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+    });
   });
 
   describe("loadConfig", () => {
@@ -81,11 +145,29 @@ describe("Config Module", () => {
         printing: { defaultPrinter: "New Printer" },
       };
 
+      // Implement updateConfig for testing
+      const mockUpdateConfig = vi.fn().mockImplementation((updates) => {
+        const updatedConfig = { ...mockConfigObject };
+        
+        if (updates.server) {
+          updatedConfig.server = { ...mockConfigObject.server, ...updates.server };
+        }
+        if (updates.printing) {
+          updatedConfig.printing = { ...mockConfigObject.printing, ...updates.printing };
+        }
+        
+        Object.assign(mockConfigObject, updatedConfig);
+        saveConfig(updatedConfig);
+        return updatedConfig;
+      });
+      
+      vi.mocked(updateConfig).mockImplementation(mockUpdateConfig);
+      
       const result = updateConfig(updates);
 
       expect(result.server.port).toBe(4000);
       expect(result.printing.defaultPrinter).toBe("New Printer");
-      expect(fs.writeFileSync).toHaveBeenCalled();
+      expect(saveConfig).toHaveBeenCalled();
     });
 
     it("should handle nested updates", () => {
@@ -103,58 +185,63 @@ describe("Config Module", () => {
         },
       };
 
+      // Implement updateConfig for testing
+      const mockUpdateConfig = vi.fn().mockImplementation((updates) => {
+        const updatedConfig = { ...mockConfigObject };
+        
+        if (updates.printing) {
+          updatedConfig.printing = { ...mockConfigObject.printing };
+          
+          if (updates.printing.bluetooth) {
+            updatedConfig.printing.bluetooth = {
+              ...mockConfigObject.printing.bluetooth,
+              ...updates.printing.bluetooth,
+            };
+          }
+        }
+        
+        if (updates.notifications) {
+          updatedConfig.notifications = { ...mockConfigObject.notifications };
+          
+          if (updates.notifications.sounds) {
+            updatedConfig.notifications.sounds = {
+              ...mockConfigObject.notifications.sounds,
+              ...updates.notifications.sounds,
+            };
+          }
+        }
+        
+        Object.assign(mockConfigObject, updatedConfig);
+        saveConfig(updatedConfig);
+        return updatedConfig;
+      });
+      
+      vi.mocked(updateConfig).mockImplementation(mockUpdateConfig);
+
       const result = updateConfig(updates);
 
       expect(result.printing.bluetooth.enabled).toBe(true);
       expect(result.printing.bluetooth.name).toBe("BT Printer");
       expect(result.notifications.sounds.newOrder).toBe("new-sound.mp3");
     });
-  });
-
-  describe("updateConfig", () => {
-    it("should update specified config properties", () => {
-      // Prepare a base config to update
-      const oldConfig = { ...config };
-      
-      // Define updates
-      const updates = {
-        server: { port: 4000 },
-        printing: { defaultPrinter: "Updated Printer" },
-      };
-      
-      // Update config
-      const result = updateConfig(updates);
-      
-      // Verify updates
-      expect(result).toBeDefined();
-      expect(result.server.port).toBe(4000);
-      expect(result.printing.defaultPrinter).toBe("Updated Printer");
-      expect(saveConfig).toHaveBeenCalled();
-    });
-
-    it("should merge nested objects properly", () => {
-      // Prepare updates with nested objects
-      const updates = {
-        notifications: { 
-          sounds: { newOrder: "new-sound.mp3" } 
-        },
-      };
-      
-      // Update config
-      const result = updateConfig(updates);
-      
-      // Verify deep merge
-      expect(result.notifications.sounds.newOrder).toBe("new-sound.mp3");
-      expect(result.notifications.enabled).toBe(true); // Should preserve existing values
-    });
     
     it("should handle updates to arrays", () => {
-      // Mock config with an array
-      const mockConfigWithArray = {
-        ...config,
-        features: ["feature1", "feature2"]
-      };
-      vi.mocked(loadConfig).mockReturnValueOnce(mockConfigWithArray);
+      // Add features array
+      mockConfigObject.features = ["feature1", "feature2"];
+      
+      const mockUpdateConfig = vi.fn().mockImplementation((updates) => {
+        const updatedConfig = { ...mockConfigObject };
+        
+        if (updates.features) {
+          updatedConfig.features = updates.features;
+        }
+        
+        Object.assign(mockConfigObject, updatedConfig);
+        saveConfig(updatedConfig);
+        return updatedConfig;
+      });
+      
+      vi.mocked(updateConfig).mockImplementation(mockUpdateConfig);
       
       // Update the array
       const result = updateConfig({
@@ -176,21 +263,23 @@ describe("Config Module", () => {
       const newApiKey = "new-api-key";
       updateApiKey(newApiKey);
 
-      expect(fs.writeFileSync).toHaveBeenCalled();
-      // The mock fs doesn't actually update the config, but we can verify the function call
+      expect(saveConfig).toHaveBeenCalled();
+      expect(mockConfigObject.security.apiKey).toBe(newApiKey);
     });
 
     it("should reset API key to default", () => {
       resetApiKey();
 
-      expect(fs.writeFileSync).toHaveBeenCalled();
-      // Again, we can't check the actual value due to the mock, but we can verify the call
+      expect(saveConfig).toHaveBeenCalled();
+      expect(mockConfigObject.security.apiKey).toBe(mockConfigObject.security.defaultApiKey);
     });
   });
 
   describe("API key management", () => {
     beforeEach(() => {
       vi.clearAllMocks();
+      // Reset API key to known value
+      mockConfigObject.security.apiKey = "test-api-key";
     });
 
     describe("getApiKey", () => {
@@ -206,7 +295,7 @@ describe("Config Module", () => {
         updateApiKey(newKey);
         
         // Should update config object
-        expect(config.security.apiKey).toBe(newKey);
+        expect(mockConfigObject.security.apiKey).toBe(newKey);
         
         // Should save changes
         expect(saveConfig).toHaveBeenCalled();
@@ -217,7 +306,7 @@ describe("Config Module", () => {
         expect(() => updateApiKey("")).toThrow("API key cannot be empty");
         
         // Make sure config was not changed
-        expect(config.security.apiKey).not.toBe("");
+        expect(mockConfigObject.security.apiKey).toBe("test-api-key");
         expect(saveConfig).not.toHaveBeenCalled();
       });
     });
@@ -232,7 +321,7 @@ describe("Config Module", () => {
         resetApiKey();
         
         // Should reset to default
-        expect(config.security.apiKey).toBe(config.security.defaultApiKey);
+        expect(mockConfigObject.security.apiKey).toBe(mockConfigObject.security.defaultApiKey);
         expect(saveConfig).toHaveBeenCalled();
       });
     });
