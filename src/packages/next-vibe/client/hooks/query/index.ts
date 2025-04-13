@@ -105,9 +105,10 @@ export function useApiQuery<
 
   // Create a selector function for the store
   const selector = useCallback(
-    (state: ApiStore): QueryStoreType<TResponse> =>
-      (state.queries[queryId] as undefined | QueryStoreType<TResponse>) ??
-      defaultState,
+    (state: ApiStore): QueryStoreType<TResponse> => {
+      const query = state.queries[queryId];
+      return query ? (query as QueryStoreType<TResponse>) : defaultState;
+    },
     [queryId, defaultState],
   );
 
@@ -179,6 +180,17 @@ export function useApiQuery<
 
   // Create a result object that matches React Query's API
   return useMemo(() => {
+    type QueryStatus = "loading" | "error" | "success" | "idle";
+    
+    const status: QueryStatus = 
+      queryState.isLoading || queryState.isFetching
+        ? "loading"
+        : queryState.isError
+          ? "error"
+          : queryState.isSuccess
+            ? "success"
+            : "idle";
+    
     const result: EnhancedQueryResult<TResponse> = {
       data: queryState.data,
       error: queryState.error ?? undefined,
@@ -191,14 +203,7 @@ export function useApiQuery<
       statusMessage: queryState.statusMessage,
 
       // Add additional methods/properties to match React Query's API
-      status:
-        queryState.isLoading || queryState.isFetching
-          ? "loading"
-          : queryState.isError
-            ? "error"
-            : queryState.isSuccess
-              ? "success"
-              : "idle",
+      status,
       refetch,
       remove,
     };
