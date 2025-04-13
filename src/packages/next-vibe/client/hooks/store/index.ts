@@ -563,36 +563,11 @@ export const apiClient = {
    */
   getQueryState: <TResponse>(
     queryKey: QueryKey,
-  ):
-    | {
-        data: TResponse;
-        error: Error | null;
-        isLoading: boolean;
-        isFetching: boolean;
-        isError: boolean;
-        isSuccess: boolean;
-        isLoadingFresh: boolean;
-        isCachedData: boolean;
-        statusMessage: string;
-        lastFetchTime: number | null;
-      }
-    | undefined => {
+  ): QueryStoreType<TResponse> | undefined => {
     const queryId = useApiStore.getState().getQueryId(queryKey);
     const state = useApiStore.getState();
-    return state.queries[queryId] as
-      | {
-          data: TResponse;
-          error: Error | null;
-          isLoading: boolean;
-          isFetching: boolean;
-          isError: boolean;
-          isSuccess: boolean;
-          isLoadingFresh: boolean;
-          isCachedData: boolean;
-          statusMessage: string;
-          lastFetchTime: number | null;
-        }
-      | undefined;
+    const query = state.queries[queryId];
+    return query ? (query as QueryStoreType<TResponse>) : undefined;
   },
 
   /**
@@ -600,25 +575,10 @@ export const apiClient = {
    */
   getMutationState: <TRequest, TResponse, TUrlVariables, TExampleKey>(
     endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
-  ):
-    | {
-        isPending: boolean;
-        isError: boolean;
-        error: Error | null;
-        isSuccess: boolean;
-        data: TResponse;
-      }
-    | undefined => {
+  ): MutationStoreType<TResponse> | undefined => {
     const mutationId = useApiStore.getState().getMutationId(endpoint);
     const state = useApiStore.getState();
-    return state.mutations[mutationId] as
-      | {
-          isPending: boolean;
-          isError: boolean;
-          error: Error | null;
-          isSuccess: boolean;
-          data: TResponse;
-        }
-      | undefined;
+    const mutation = state.mutations[mutationId];
+    return mutation ? (mutation as MutationStoreType<TResponse>) : undefined;
   },
 };
