@@ -129,15 +129,16 @@ export async function apiRequest<
         responseData.message || `API error: ${response.statusText}`;
       const error = new Error(errorMessage);
 
-      // Add additional context to the error
-      Object.assign(error, {
+      const enhancedError = Object.assign(error, {
         status: response.status,
         endpoint: endpoint.path.join("/"),
         method: endpoint.method,
         responseData,
+        errorType: responseData.errorType || 'UNKNOWN_ERROR',
+        errorCode: response.status,
       });
 
-      throw error;
+      throw enhancedError;
     }
 
     return responseData.data;
