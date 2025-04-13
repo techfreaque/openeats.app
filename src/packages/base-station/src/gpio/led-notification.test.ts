@@ -3,22 +3,24 @@ import EventEmitter from "events";
 import { BlinkPattern, LedNotificationService } from "./led-notification";
 import logger from "../logging";
 
-// Mock the onoff module
+// Mock the onoff module completely to avoid actual GPIO access
 vi.mock("onoff", () => {
-  // Create a proper mock with prototype chain
-  class MockGpio {
-    constructor() {
-      this.writeSync = vi.fn();
-      this.watchCallback = null;
-      this.watch = vi.fn(callback => {
-        this.watchCallback = callback;
-      });
-      this.unexport = vi.fn();
-    }
-  }
-
+  // Create a mock factory that returns mockGpio objects
+  const mockGpioFactory = vi.fn().mockImplementation(() => {
+    const mockGpio = {
+      writeSync: vi.fn(),
+      watchCallback: null,
+      watch: vi.fn(callback => {
+        mockGpio.watchCallback = callback;
+        return mockGpio;
+      }),
+      unexport: vi.fn(),
+    };
+    return mockGpio;
+  });
+  
   return {
-    Gpio: MockGpio
+    Gpio: mockGpioFactory
   };
 });
 
@@ -43,9 +45,8 @@ describe("LedNotificationService", () => {
     // Create a new instance for each test
     ledService = new LedNotificationService(17, 27, 500, 30000);
     
-    // Access and store the mocked GPIO instance
-    const MockGpio = require("onoff").Gpio;
-    mockGpio = new MockGpio();
+    // Get the mockGpio instance created by the mocked Gpio constructor
+    mockGpio = require("onoff").Gpio();
     
     // Replace the private LED and button references
     (ledService as any).led = mockGpio;

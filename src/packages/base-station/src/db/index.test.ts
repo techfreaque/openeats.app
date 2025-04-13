@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db, initializeDatabase } from "./index";
 import sqlite3 from "sqlite3";
 
-// Mock sqlite
+// Mock sqlite3
 vi.mock("sqlite3", () => ({
   Database: vi.fn(),
   verbose: vi.fn().mockReturnValue({
@@ -11,7 +11,7 @@ vi.mock("sqlite3", () => ({
   }),
 }));
 
-// Mock sqlite package
+// Mock sqlite package with proper mockDb
 const mockDb = {
   exec: vi.fn().mockResolvedValue(undefined),
   run: vi.fn().mockResolvedValue(undefined),
@@ -21,21 +21,24 @@ const mockDb = {
   close: vi.fn(),
 };
 
-// Mock sqlite open function
-const open = vi.fn().mockResolvedValue(mockDb);
+// Mock sqlite open function with proper implementation
+const open = vi.fn().mockImplementation(async () => mockDb);
 vi.mock("sqlite", () => ({
-  open: open,
+  open
 }));
 
-// Mock fs module
-vi.mock("fs", () => ({
+// Mock fs module with properly spied functions
+const mockFs = {
   existsSync: vi.fn().mockReturnValue(true),
   mkdirSync: vi.fn(),
-}));
+};
+vi.mock("fs", () => mockFs);
 
 describe("Database Module", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset the mock implementations
+    open.mockImplementation(async () => mockDb);
   });
 
   describe("initializeDatabase", () => {
@@ -44,28 +47,26 @@ describe("Database Module", () => {
 
       expect(database).toBeDefined();
       expect(open).toHaveBeenCalled();
-      expect(mockDb.exec).toHaveBeenCalledTimes(expect.any(Number));
+      expect(mockDb.exec).toHaveBeenCalled();
     });
 
     it("should create the data directory if it doesn't exist", async () => {
       // Arrange - mock fs.existsSync to return false for this test
-      const existsSyncMock = vi.fn().mockReturnValue(false);
-      vi.spyOn(require("fs"), "existsSync").mockImplementation(existsSyncMock);
+      mockFs.existsSync.mockReturnValueOnce(false);
 
       // Act
       await initializeDatabase();
 
       // Assert
-      expect(require("fs").mkdirSync).toHaveBeenCalled();
-      expect(require("fs").mkdirSync).toHaveBeenCalledWith(expect.any(String), {
+      expect(mockFs.mkdirSync).toHaveBeenCalled();
+      expect(mockFs.mkdirSync).toHaveBeenCalledWith(expect.any(String), {
         recursive: true,
       });
     });
 
     it("should handle database initialization errors", async () => {
-      // Arrange - mock open to reject with an error
-      const error = new Error("Database error");
-      open.mockRejectedValueOnce(error);
+      // Arrange - mock open to properly reject with an error
+      open.mockImplementationOnce(() => Promise.reject(new Error("Database error")));
 
       // Act & Assert
       await expect(initializeDatabase()).rejects.toThrow(

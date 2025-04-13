@@ -4,11 +4,20 @@ import os from "os";
 import { config } from "../config";
 import { createGpioService, initializeGpio } from "./index";
 
-// Mock os module
-vi.mock("os", () => ({
-  platform: vi.fn().mockReturnValue("linux"),
-  arch: vi.fn().mockReturnValue("arm64"),
-}));
+// Mock os module - fix the default export issue
+vi.mock("os", () => {
+  const mockPlatform = vi.fn().mockReturnValue("linux");
+  const mockArch = vi.fn().mockReturnValue("arm64");
+  
+  return {
+    platform: mockPlatform,
+    arch: mockArch,
+    default: { // Add default for ESM compatibility
+      platform: mockPlatform,
+      arch: mockArch
+    }
+  };
+});
 
 // Mock the onoff library
 vi.mock("onoff", () => {
@@ -105,8 +114,8 @@ describe("GPIO Module", () => {
   describe("createGpioService", () => {
     it("should create RaspberryPiGpioService on Linux ARM platform", () => {
       // Arrange - ensure we're on Linux ARM
-      vi.mocked(os.platform).mockReturnValue("linux");
-      vi.mocked(os.arch).mockReturnValue("arm64");
+      os.platform.mockReturnValue("linux");
+      os.arch.mockReturnValue("arm64");
       
       // Act
       const service = createGpioService(config.gpio);
@@ -118,7 +127,7 @@ describe("GPIO Module", () => {
     
     it("should create DummyGpioService on non-Raspberry Pi platforms", () => {
       // Arrange - ensure we're on a non-RPi platform
-      vi.mocked(os.platform).mockReturnValue("win32");
+      os.platform.mockReturnValue("win32");
       
       // Act
       const service = createGpioService(config.gpio);
