@@ -131,6 +131,7 @@ export async function postChat(
   _req: NextRequest,
   _context: { params: Record<string, string> },
   requestData: LlmApiRequestType,
+  _user?: { id: string },
 ): Promise<LlmApiResponseType> {
   return await processChat(requestData);
 }
