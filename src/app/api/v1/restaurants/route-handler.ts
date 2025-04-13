@@ -42,8 +42,6 @@ export const getRestaurants = async ({ data }: {
       radius,
       rating,
       currentlyOpen,
-      page,
-      limit,
       // Add new filter parameters
       category,
       deliveryType,
@@ -293,13 +291,12 @@ export const getRestaurants = async ({ data }: {
     }
 
     // Additional filtering based on dietary preferences
-    if (dietary && Array.isArray(dietary) && dietary.length > 0 && restaurantsWithDistanceAndFilters) {
-      restaurantsWithDistanceAndFilters =
-        restaurantsWithDistanceAndFilters.filter((restaurant) => {
+    if (dietary && Array.isArray(dietary) && dietary.length > 0) {
+      if (Array.isArray(restaurantsWithDistanceAndFilters)) {
+        restaurantsWithDistanceAndFilters = restaurantsWithDistanceAndFilters.filter((restaurant) => {
           if (!restaurant) return false;
           
-          const restaurantAny = restaurant as Record<string, unknown>;
-          const dietaryOpts = restaurantAny["dietaryOptions"] || [];
+          const dietaryOpts = restaurant['dietaryOptions'] || [];
           
           // Ensure dietaryOptions is an array
           const dietaryOptions = Array.isArray(dietaryOpts) ? dietaryOpts : [];
@@ -311,16 +308,16 @@ export const getRestaurants = async ({ data }: {
             return dietaryOptions.includes(dietStr);
           });
         });
+      }
     }
 
     // Additional filtering based on price range
-    if (priceRange && priceRange.length > 0 && restaurantsWithDistanceAndFilters) {
-      restaurantsWithDistanceAndFilters =
-        restaurantsWithDistanceAndFilters.filter((restaurant) => {
+    if (priceRange && Array.isArray(priceRange) && priceRange.length > 0) {
+      if (Array.isArray(restaurantsWithDistanceAndFilters)) {
+        restaurantsWithDistanceAndFilters = restaurantsWithDistanceAndFilters.filter((restaurant) => {
           if (!restaurant) return false;
           
-          const restaurantAny = restaurant as Record<string, unknown>;
-          const minimumOrderAmount = Number(restaurantAny["minimumOrderAmount"] || 0);
+          const minimumOrderAmount = Number(restaurant['minimumOrderAmount'] || 0);
           if (isNaN(minimumOrderAmount)) {
             return false;
           }
@@ -334,20 +331,21 @@ export const getRestaurants = async ({ data }: {
           
           return priceRange.includes(priceLevel);
         });
+      }
     }
 
     // Apply pagination
-    const skip = (page - 1) * limit;
+    const skip = (data.page - 1) * data.limit;
     const paginatedRestaurants = restaurantsWithDistanceAndFilters.slice(
       skip,
-      skip + limit,
+      skip + data.limit,
     );
 
     // Filter out private data, unpublished opening times, and unpublished menu items
-    const filteredRestaurants = paginatedRestaurants.map((restaurant) => {
+    const filteredRestaurants = paginatedRestaurants.map((restaurant: Record<string, unknown>) => {
       if (!restaurant) return {} as RestaurantResponseType;
       
-      const typedRestaurant = restaurant as Record<string, unknown> as RestaurantResponseType;
+      const typedRestaurant = restaurant as RestaurantResponseType;
       return filterMenuItems(
         filterOpeningTimes(filterPrivateData(typedRestaurant)),
       );
@@ -356,8 +354,8 @@ export const getRestaurants = async ({ data }: {
     debugLogger("Returning filtered restaurants", {
       count: filteredRestaurants.length,
       totalCount: restaurantsWithDistanceAndFilters.length,
-      page,
-      limit,
+      page: data.page,
+      limit: data.limit,
     });
 
     return {
@@ -366,9 +364,9 @@ export const getRestaurants = async ({ data }: {
         restaurants: filteredRestaurants,
         pagination: {
           total: restaurantsWithDistanceAndFilters.length,
-          page,
-          limit,
-          pages: Math.ceil(restaurantsWithDistanceAndFilters.length / limit),
+          page: data.page,
+          limit: data.limit,
+          pages: Math.ceil(restaurantsWithDistanceAndFilters.length / data.limit),
         },
       },
     };
