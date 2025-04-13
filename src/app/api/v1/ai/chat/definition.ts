@@ -42,7 +42,7 @@ const aiChatEndpoint = createEndpoint({
   examples: {
     urlPathVariables: undefined,
     payloads: {
-      default: llmApiRequestSchema.parse({
+      default: {
         messages: [
           {
             role: ChatMessageRole.USER,
@@ -54,10 +54,10 @@ const aiChatEndpoint = createEndpoint({
           name: "Your full name",
           email: "Your email address",
         },
-      }),
+      },
     },
     responses: {
-      default: llmApiResponseSchema.parse({
+      default: {
         message: {
           role: ChatMessageRole.ASSISTANT,
           content: "I've captured your information. Thank you!",
@@ -67,7 +67,7 @@ const aiChatEndpoint = createEndpoint({
           name: "John Doe",
           email: "john@example.com",
         },
-      }),
+      },
     },
   },
 });
