@@ -38,32 +38,32 @@ const aiChatEndpoint = createEndpoint({
   examples: {
     urlPathVariables: undefined,
     payloads: {
-      default: {
+      default: llmApiRequestSchema.parse({
         messages: [
           {
             role: ChatMessageRole.USER,
             content: "I'd like to provide my name and email",
           },
         ],
-        formSchema: {},
+        formSchema: { name: "string", email: "string" },
         fieldDescriptions: {
           name: "Your full name",
           email: "Your email address",
         },
-      },
+      }),
     },
     responses: {
-      default: {
+      default: llmApiResponseSchema.parse({
         message: {
           role: ChatMessageRole.ASSISTANT,
           content: "I've captured your information. Thank you!",
-          timestamp: 1617235200000, // Fixed timestamp for example
+          timestamp: 1617235200000,
         },
         parsedFields: {
           name: "John Doe",
           email: "john@example.com",
         },
-      },
+      }),
     },
   },
 });
