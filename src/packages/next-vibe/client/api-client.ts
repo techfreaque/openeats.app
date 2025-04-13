@@ -126,7 +126,7 @@ export async function apiRequest<
     // Handle API errors
     if (!response.ok || !responseData.success) {
       const errorMessage =
-        responseData.message || `API error: ${response.statusText}`;
+        responseData.message ?? `API error: ${response.statusText}`;
       const error = new Error(errorMessage);
 
       const enhancedError = Object.assign(error, {
@@ -134,7 +134,7 @@ export async function apiRequest<
         endpoint: endpoint.path.join("/"),
         method: endpoint.method,
         responseData,
-        errorType: responseData.errorType || "UNKNOWN_ERROR",
+        errorType: responseData.errorType ?? "UNKNOWN_ERROR",
         errorCode: response.status,
       });
 
