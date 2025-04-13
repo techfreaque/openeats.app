@@ -25,7 +25,7 @@ export interface ChatMessage {
   role: ChatMessageRole;
   content: ChatMessageContent;
   timestamp: number; // Using number instead of Date for better serialization
-  metadata?: Record<string, unknown>; // For additional data like parsed fields, etc.
+  metadata?: Record<string, string | number | boolean | null | object>; // For additional data like parsed fields, etc.
 }
 
 /**
@@ -124,7 +124,7 @@ export interface AiFormReturn<
   /**
    * Field parsing results
    */
-  fieldParsingResults: Record<string, FieldParsingResult>;
+  fieldParsingResults: Record<keyof TRequest, FieldParsingResult>;
 
   /**
    * Submit the form via chat
