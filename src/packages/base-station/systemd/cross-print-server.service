@@ -1,0 +1,18 @@
+[Unit]
+Description=Cross-platform Print Server
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/cross-print-server
+ExecStart=/usr/bin/node /opt/cross-print-server/dist/index.js
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=cross-print-server
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

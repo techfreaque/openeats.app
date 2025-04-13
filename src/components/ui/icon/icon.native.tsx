@@ -1,5 +1,6 @@
 import * as LucideIcons from "lucide-react-native";
 import { cn } from "next-vibe/shared/utils/utils";
+import { errorLogger } from "next-vibe/shared/utils/logger";
 import type { ReactElement } from "react";
 import { forwardRef } from "react";
 import type { SvgProps } from "react-native-svg";
@@ -27,13 +28,13 @@ export const Icon = forwardRef<SVGSVGElement, IconProps & SvgProps>(
     >;
 
     if (!IconComponent) {
-      console.warn(`Icon "${name}" not found`);
+      errorLogger(`Icon "${name}" not found`);
       return null;
     }
 
     return (
       <IconComponent
-        ref={ref as any}
+        ref={ref }
         size={size}
         color={color}
         className={cn(className)}

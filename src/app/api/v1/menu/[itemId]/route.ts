@@ -1,119 +1,38 @@
-import type { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "next-vibe/server/endpoints/auth/user";
-import {
-  createErrorResponse,
-  createSuccessResponse,
-  validatePostRequest,
-} from "next-vibe/server/endpoints/core/api-response";
+import "server-only";
 
-import { db } from "@/app/api/db";
+import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
 
-// GET a specific menu item
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { restaurantId: string; itemId: string } },
-): Promise<NextResponse> {
-  try {
-    const menuItem = await db.menuItem.findUnique({
-      where: {
-        id: params.itemId,
-        restaurantId: params.restaurantId,
-      },
-    });
+import definitions from "./definition";
+import { deleteMenuItem, getMenuItem, updateMenuItem } from "./route-handler";
 
-    if (!menuItem) {
-      return createErrorResponse("Menu item not found", 404);
-    }
+/**
+ * Menu Item Detail API route handlers
+ * Provides menu item detail management functionality
+ */
 
-    return createSuccessResponse(menuItem, menuItemResponseSchema);
-  } catch (err) {
-    const error = err as Error;
-    return createErrorResponse(
-      `Error fetching menu item: ${error.message}`,
-      500,
-    );
-  }
-}
+/**
+ * GET handler for retrieving a specific menu item
+ */
+export const GET = apiHandler({
+  endpoint: definitions.GET,
+  handler: getMenuItem,
+  email: {}, // No emails for this endpoint
+});
 
-// PUT update a menu item
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { restaurantId: string; itemId: string } },
-): Promise<NextResponse> {
-  try {
-    const user = await getCurrentUser();
+/**
+ * PUT handler for updating a menu item
+ */
+export const PUT = apiHandler({
+  endpoint: definitions.PUT,
+  handler: updateMenuItem,
+  email: {}, // No emails for this endpoint
+});
 
-    if (!user) {
-      return createErrorResponse("Unauthorized", 401);
-    }
-
-    const restaurant = await db.partner.findUnique({
-      where: { id: params.restaurantId },
-    });
-
-    if (!restaurant || restaurant.userId !== user.id) {
-      return createErrorResponse("Unauthorized to update this menu item", 403);
-    }
-
-    const validatedData = await validatePostRequest(
-      request,
-      menuItemUpdateSchema,
-    );
-
-    const menuItem = await db.menuItem.update({
-      where: {
-        id: params.itemId,
-        restaurantId: params.restaurantId,
-      },
-      data: validatedData,
-    });
-
-    return createSuccessResponse(menuItem, menuItemResponseSchema);
-  } catch (err) {
-    const error = err as Error;
-    return createErrorResponse(
-      `Error updating menu item: ${error.message}`,
-      500,
-    );
-  }
-}
-
-// DELETE a menu item
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { restaurantId: string; itemId: string } },
-): Promise<NextResponse> {
-  try {
-    const user = await getCurrentUser();
-
-    if (!user) {
-      return createErrorResponse("Unauthorized", 401);
-    }
-
-    const restaurant = await db.partner.findUnique({
-      where: { id: params.restaurantId },
-    });
-
-    if (!restaurant || restaurant.userId !== user.id) {
-      return createErrorResponse("Unauthorized to delete this menu item", 403);
-    }
-
-    await db.menuItem.delete({
-      where: {
-        id: params.itemId,
-        restaurantId: params.restaurantId,
-      },
-    });
-
-    return createSuccessResponse(
-      { success: true },
-      z.object({ success: z.boolean() }),
-    );
-  } catch (err) {
-    const error = err as Error;
-    return createErrorResponse(
-      `Error deleting menu item: ${error.message}`,
-      500,
-    );
-  }
-}
+/**
+ * DELETE handler for removing a menu item
+ */
+export const DELETE = apiHandler({
+  endpoint: definitions.DELETE,
+  handler: deleteMenuItem,
+  email: {}, // No emails for this endpoint
+});

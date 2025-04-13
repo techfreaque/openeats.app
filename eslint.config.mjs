@@ -38,16 +38,15 @@ export default [
       "dist",
       ".next",
       "eslint.config.mjs",
-      "./postcss.config.mjs",
-      "./metro.config.js",
-      "./babel.config.js",
+      "postcss.config.mjs",
+      "metro.config.js",
+      "babel.config.js",
       "node_modules",
       ".git",
       "coverage",
       // just until native is stable
       "**/*.native.tsx"
-      // TODO remove
-      , "old"    ],
+    ],
   },
 
   // 2) Base configuration for TypeScript files

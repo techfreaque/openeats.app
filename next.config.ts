@@ -49,7 +49,20 @@ const nextConfig: NextConfig = withExpo({
     parallelServerCompiles: true,
     typedRoutes: true,
   },
-  // TODO remove
+
+  // Support for WebSockets in server components (moved from experimental)
+  serverExternalPackages: ["socket.io", "socket.io-client"],
+
+  // Ensure WebSocket routes are properly handled
+  async rewrites() {
+    return [
+      {
+        source: "/api/ws",
+        destination: "/api/ws",
+      },
+    ];
+  },
+
   eslint: {
     dirs: ["fg"],
     ignoreDuringBuilds: true,

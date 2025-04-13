@@ -4,6 +4,11 @@ import { Methods } from "next-vibe/shared/types/endpoint";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { messageResponseSchema } from "next-vibe/shared/types/response.schema";
 
+/**
+ * Logout API endpoint definition
+ * Provides user logout functionality
+ */
+
 const logoutEndpoint = createEndpoint({
   description: "Logout a user, clear the session and JWT token",
   path: ["v1", "auth", "logout"],
@@ -29,6 +34,16 @@ const logoutEndpoint = createEndpoint({
   examples: {
     urlPathVariables: undefined,
     payloads: undefined,
+    responses: {
+      default: "Successfully signed out!",
+    },
   },
 });
-export default logoutEndpoint;
+/**
+ * Logout API endpoints
+ */
+const definition = {
+  ...logoutEndpoint,
+};
+
+export default definition;

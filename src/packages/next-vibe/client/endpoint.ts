@@ -36,6 +36,9 @@ export class ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey> {
     payloads: TRequest extends undefined
       ? undefined
       : ExamplesList<TRequest, TExampleKey>;
+    responses: TResponse extends undefined
+      ? undefined
+      : ExamplesList<TResponse, TExampleKey>;
   };
 
   constructor({

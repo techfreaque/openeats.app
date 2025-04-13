@@ -1,211 +1,243 @@
-import type { Prisma } from "@prisma/client";
-import type { ApiHandlerCallBackFunctionType } from "next-vibe/server/endpoints/core/api-handler";
-import { hasRole } from "next-vibe/server/endpoints/data";
-import type { UndefinedType } from "next-vibe/shared/types/common.schema";
-import { UserRoleValue } from "next-vibe/shared/types/enums";
+import "server-only";
 
-import { db } from "../../db";
-import type {
-  OrdersGetRequestType,
-  OrdersGetResponseOutputType,
-} from "./schema";
+import type { DbId } from "next-vibe/server/db/types";
+import { hasRole } from "next-vibe/server/endpoints/data";
+import { UserRoleValue } from "next-vibe/shared/types/enums";
+import { debugLogger } from "next-vibe/shared/utils/logger";
+
+import type { User } from "@/app/api/v1/auth/me/db";
+import { userRolesRepository } from "@/app/api/v1/auth/roles/roles.repository";
+import type { Delivery } from "@/app/api/v1/order/delivery.db";
+import type { Order } from "@/app/api/v1/order/order.db";
+import { orderRepository } from "@/app/api/v1/order/order.repository";
+import type { OrderItem } from "@/app/api/v1/order/order-item.db";
 
 /**
- * Gets orders based on search criteria with pagination and filtering
+ * Orders API route handlers
+ * Provides order listing functionality
  */
-export const getOrders: ApiHandlerCallBackFunctionType<
-  OrdersGetRequestType,
-  OrdersGetResponseOutputType,
-  UndefinedType
-> = async ({ user, data }) => {
-  const {
-    restaurantId,
-    customerId,
-    paymentMethod,
-    orderStatus,
-    deliveryStatus,
-    startDate,
-    endDate,
-    page,
-    limit,
-  } = data;
 
-  const userRoles = await db.userRole.findMany({
-    where: { userId: user.id },
-  });
+interface OrdersRequestData {
+  restaurantId?: string;
+  customerId?: string;
+  paymentMethod?: string;
+  orderStatus?: string;
+  deliveryStatus?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
 
-  // Build the where clause based on filters with proper type
-  const where: Prisma.OrderWhereInput = {};
+interface OrdersResponse {
+  success: boolean;
+  data?: unknown[];
+  message?: string;
+  errorCode?: number;
+}
 
-  // Apply filters if provided
-  if (restaurantId) {
-    where.restaurantId = restaurantId;
-  }
-  if (customerId) {
-    where.customerId = customerId;
-  }
-  if (paymentMethod) {
-    where.paymentMethod = paymentMethod;
-  }
-  if (orderStatus) {
-    where.status = orderStatus;
-  }
-  if (deliveryStatus) {
-    where.delivery = {
-      status: deliveryStatus,
+/**
+ * Get orders based on filters
+ * Supports filtering by restaurant, customer, payment method, order status, delivery status, and date range
+ * @param props - API handler props
+ * @returns List of orders matching criteria
+ */
+export const getOrders = async ({
+  user,
+  data,
+}: {
+  user: User;
+  data: OrdersRequestData;
+}): Promise<OrdersResponse> => {
+  try {
+    const {
+      restaurantId,
+      customerId,
+      paymentMethod,
+      orderStatus,
+      deliveryStatus,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+    } = data;
+
+    debugLogger("Getting orders", {
+      userId: user.id,
+      filters: {
+        restaurantId,
+        customerId,
+        paymentMethod,
+        orderStatus,
+        deliveryStatus,
+        startDate,
+        endDate,
+      },
+      pagination: { page, limit },
+    });
+
+    // Get user roles
+    const userRoles = await userRolesRepository.findByUserId(user.id);
+
+    // Pagination is handled by the repository
+
+    // For admin users - can see all orders
+    if (hasRole(userRoles, UserRoleValue.ADMIN)) {
+      debugLogger("User is admin, fetching all orders");
+
+      // Use the repository to get orders with all details
+      const orders = await orderRepository.findAll({
+        restaurantId: restaurantId ? (restaurantId as DbId) : undefined,
+        customerId: customerId ? (customerId as DbId) : undefined,
+        paymentMethod,
+        orderStatus,
+        deliveryStatus,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+        page,
+        limit,
+      });
+
+      debugLogger("Retrieved orders", { count: orders.length });
+
+      return {
+        success: true,
+        data: orders,
+      };
+    }
+    // For partner admins - can see their restaurant orders
+    else if (
+      hasRole(userRoles, UserRoleValue.PARTNER_ADMIN) ||
+      hasRole(userRoles, UserRoleValue.PARTNER_EMPLOYEE)
+    ) {
+      // Get restaurants associated with this partner admin
+      const restaurantIdsWithAccess = userRoles
+        .filter(
+          (role) =>
+            (role.role === UserRoleValue.PARTNER_ADMIN ||
+              role.role === UserRoleValue.PARTNER_EMPLOYEE) &&
+            role.partnerId,
+        )
+        .map((role) => role.partnerId as string);
+
+      debugLogger(
+        "User is partner admin/employee, fetching restaurant orders",
+        {
+          restaurantIds: restaurantIdsWithAccess,
+        },
+      );
+
+      // Use the repository to get orders with all details
+      // If we have multiple restaurant IDs, we need to make multiple queries
+      // and combine the results
+      let orders: Array<
+        Order & {
+          restaurant: { id: string; name: string; imageUrl: string | null };
+          customer: {
+            id: string;
+            firstName: string;
+            lastName: string;
+            email: string;
+            imageUrl: string | null;
+          };
+          delivery: Delivery | null;
+          orderItems: OrderItem[];
+        }
+      > = [];
+
+      if (restaurantIdsWithAccess.length > 0) {
+        // Query for each restaurant ID
+        const restaurantPromises = restaurantIdsWithAccess.map((id) =>
+          orderRepository.findAll({
+            restaurantId: id as DbId,
+            customerId: customerId ? (customerId as DbId) : undefined,
+            paymentMethod,
+            orderStatus,
+            deliveryStatus,
+            startDate: startDate ? new Date(startDate) : undefined,
+            endDate: endDate ? new Date(endDate) : undefined,
+            page,
+            limit,
+          }),
+        );
+
+        // Combine results
+        const restaurantResults = await Promise.all(restaurantPromises);
+        orders = restaurantResults.flat();
+      } else {
+        // No restaurant access
+        orders = [];
+      }
+
+      debugLogger("Retrieved orders", { count: orders.length });
+
+      return {
+        success: true,
+        data: orders,
+      };
+    }
+    // For couriers - can see orders assigned to them
+    else if (hasRole(userRoles, UserRoleValue.COURIER)) {
+      debugLogger("User is courier, fetching assigned orders");
+
+      // Use the repository to get orders with all details
+      // The repository doesn't support driverId filtering directly
+      // We need to get all orders and filter by delivery driver
+      const allOrders = await orderRepository.findAll({
+        restaurantId: restaurantId ? (restaurantId as DbId) : undefined,
+        customerId: customerId ? (customerId as DbId) : undefined,
+        paymentMethod,
+        orderStatus,
+        deliveryStatus,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+        page,
+        limit,
+      });
+
+      // Filter orders where the user is the driver
+      const orders = allOrders.filter(
+        (order) => order.delivery && order.delivery.driverId === user.id,
+      );
+
+      debugLogger("Retrieved orders", { count: orders.length });
+
+      return {
+        success: true,
+        data: orders,
+      };
+    }
+    // For customers - can see only their own orders
+    else {
+      debugLogger("User is customer, fetching their orders");
+
+      // Use the repository to get orders with all details
+      const orders = await orderRepository.findAll({
+        restaurantId: restaurantId ? (restaurantId as DbId) : undefined,
+        customerId: user.id as DbId, // Only show orders for this customer
+        paymentMethod,
+        orderStatus,
+        deliveryStatus,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+        page,
+        limit,
+      });
+
+      debugLogger("Retrieved orders", { count: orders.length });
+
+      return {
+        success: true,
+        data: orders,
+      };
+    }
+  } catch (error) {
+    debugLogger("Error getting orders", error);
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Unknown error getting orders",
+      errorCode: 500,
     };
   }
-  // Date range filters
-  if (startDate || endDate) {
-    where.createdAt = {};
-    if (startDate) {
-      where.createdAt = {
-        ...where.createdAt,
-        gte: new Date(startDate),
-      };
-    }
-    if (endDate) {
-      where.createdAt = {
-        ...where.createdAt,
-        lte: new Date(endDate),
-      };
-    }
-  }
-  // Calculate pagination
-  const skip = (page - 1) * limit;
-
-  // For admin users - can see all orders
-  if (hasRole(userRoles, UserRoleValue.ADMIN)) {
-    const orders = await db.order.findMany({
-      where,
-      select: ordersSelectBase,
-      skip,
-      take: limit,
-      orderBy: { createdAt: "desc" },
-    });
-    return orders;
-  }
-
-  // For partner admins - can see their restaurant orders
-  if (
-    hasRole(userRoles, UserRoleValue.PARTNER_ADMIN) ||
-    hasRole(userRoles, UserRoleValue.PARTNER_EMPLOYEE)
-  ) {
-    // Get restaurants associated with this partner admin
-    const restaurantIdsWithAccess = userRoles
-      .map((role) => {
-        if (
-          (
-            [
-              UserRoleValue.PARTNER_EMPLOYEE,
-              UserRoleValue.PARTNER_ADMIN,
-            ] as UserRoleValue[]
-          ).includes(role.role) &&
-          role.partnerId
-        ) {
-          return role.partnerId;
-        }
-        return undefined;
-      })
-      .filter((id) => id !== undefined);
-
-    where.OR = [
-      { customerId: user.id },
-      { restaurantId: { in: restaurantIdsWithAccess } },
-    ];
-
-    const orders = await db.order.findMany({
-      where,
-      select: ordersSelectBase,
-      skip,
-      take: limit,
-      orderBy: { createdAt: "desc" },
-    });
-    return orders;
-  }
-
-  // For couriers - can see orders assigned to them
-  if (hasRole(userRoles, UserRoleValue.COURIER)) {
-    const orders = await db.order.findMany({
-      where: {
-        delivery: {
-          driver: {
-            userId: user.id,
-          },
-        },
-        ...where,
-      },
-      select: ordersSelectBase,
-      skip,
-      take: limit,
-      orderBy: { createdAt: "desc" },
-    });
-    return orders;
-  }
-
-  // For customers - can see only their own orders
-  where.customerId = user.id;
-  const orders = await db.order.findMany({
-    where,
-    select: ordersSelectBase,
-    skip,
-    take: limit,
-    orderBy: { createdAt: "desc" },
-  });
-  return orders;
-};
-
-const ordersSelectBase = {
-  id: true,
-  customerId: true,
-  createdAt: true,
-  updatedAt: true,
-  message: true,
-  status: true,
-  tax: true,
-  total: true,
-  projectTip: true,
-  paymentMethod: true,
-  restaurantTip: true,
-  driverTip: true,
-  deliveryFee: true,
-  delivery: {
-    select: {
-      id: true,
-      zip: true,
-      city: true,
-      countryId: true,
-      distance: true,
-      latitude: true,
-      longitude: true,
-      street: true,
-      type: true,
-      updatedAt: true,
-      phone: true,
-      estimatedDeliveryTime: true,
-      streetNumber: true,
-      status: true,
-      createdAt: true,
-      estimatedPreparationTime: true,
-      message: true,
-      driver: {
-        select: {
-          id: true,
-          vehicle: true,
-          rating: true,
-          ratingCount: true,
-          phone: true,
-          imageUrl: true,
-          licensePlate: true,
-        },
-      },
-    },
-  },
-  restaurant: {
-    select: {
-      id: true,
-      name: true,
-      image: true,
-    },
-  },
 };

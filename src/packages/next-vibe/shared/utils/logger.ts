@@ -21,6 +21,7 @@ export function errorLogger(
     console.error(`[${APP_NAME}][ERROR] ${message}`, typedError, ...other);
   } else {
     // TODO
+
     // eslint-disable-next-line no-console
     console.error(`[${APP_NAME}][ERROR] ${message}`, typedError, ...other);
   }

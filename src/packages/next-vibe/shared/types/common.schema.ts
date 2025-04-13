@@ -13,6 +13,17 @@ export const idSchema = z.object({
 });
 export type IdType = z.infer<typeof idSchema>;
 
+export const stringToIntSchema = (
+  errorMessage: string,
+): z.ZodEffects<z.ZodString, number, string> =>
+  z.string().transform((val: string): number => {
+    const parsed = parseInt(val, 10);
+    if (isNaN(parsed)) {
+      throw new Error(errorMessage);
+    }
+    return parsed;
+  });
+
 export const paginationSchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(10),

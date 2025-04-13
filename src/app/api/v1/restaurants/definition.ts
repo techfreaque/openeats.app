@@ -3,6 +3,9 @@ import { undefinedSchema } from "next-vibe/shared/types/common.schema";
 import { Methods } from "next-vibe/shared/types/endpoint";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 
+import { Countries } from "@/translations";
+
+import { DeliveryType } from "../order/delivery.schema";
 import { restaurantsResponseSchema, restaurantsSearchSchema } from "./schema";
 
 const restaurantsEndpoint = createEndpoint({
@@ -35,7 +38,7 @@ const restaurantsEndpoint = createEndpoint({
     payloads: {
       default: {
         search: "pizza",
-        countryCode: "DE",
+        countryCode: Countries.DE,
         zip: "12345",
         street: "Example street",
         streetNumber: "123",
@@ -45,13 +48,24 @@ const restaurantsEndpoint = createEndpoint({
         page: 1,
         limit: 30,
         category: "Italian",
-        deliveryType: "delivery",
+        deliveryType: DeliveryType.DELIVERY,
         priceRange: ["$", "$$"],
         dietary: ["vegetarian", "vegan"],
         sortBy: "rating",
       },
     },
     urlPathVariables: undefined,
+    responses: {
+      default: {
+        restaurants: [],
+        pagination: {
+          total: 0,
+          page: 1,
+          limit: 10,
+          pages: 0,
+        },
+      },
+    },
   },
   allowedRoles: [
     UserRoleValue.PUBLIC,

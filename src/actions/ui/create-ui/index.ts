@@ -1,8 +1,9 @@
 "use server";
 
-import type { UiType } from "@prisma/client";
+import { uiRepository } from "@/app/api/v1/website-editor/website-editor.repository";
+import { userRepository } from "@/app/api/v1/auth/me/users.repository";
 
-import { db } from "@/app/api/db";
+// Removed db import
 import type { FullUI, UiType as _UiType } from "@/lib/website-editor/types";
 
 export const createUI = async (
@@ -10,59 +11,32 @@ export const createUI = async (
   userId: string,
   uiType: _UiType,
 ): Promise<FullUI> => {
-  const user = await db.user.findUnique({
-    where: {
-      id: userId,
-    },
-  });
+  const user = await userRepository.findById(userId);
   if (!user) {
     throw new Error("User not found");
   }
 
-  const data = await db.uI.create({
-    data: {
-      userId: userId,
-      prompt: prompt,
-      uiType: uiType as unknown as UiType,
-      updatedAt: new Date(),
-      img: "",
-    },
-
-    select: {
-      id: true,
-      uiType: true,
-      user: {
-        select: {
-          id: true,
-          firstName: true,
-          imageUrl: true,
-        },
-      },
-      prompt: true,
-      public: true,
-      img: true,
-      viewCount: true,
-      likesCount: true,
-      forkedFrom: true,
-      createdAt: true,
-      updatedAt: true,
-      subPrompts: {
-        select: {
-          id: true,
-          UIId: true,
-          SUBId: true,
-          createdAt: true,
-          subPrompt: true,
-          modelId: true,
-          code: {
-            select: {
-              id: true,
-              code: true,
-            },
-          },
-        },
-      },
-    },
+  const data = await uiRepository.create({
+    userId: userId,
+    prompt: prompt,
+    uiType: uiType,
+    updatedAt: new Date(),
+    img: "",
+    public: true,
+    likesCount: 0,
+    viewCount: 0,
   });
-  return data;
+
+  // Convert to FullUI type
+  const fullUI: FullUI = {
+    ...data,
+    user: {
+      id: user.id,
+      firstName: user.firstName,
+      imageUrl: user.imageUrl,
+    },
+    subPrompts: [],
+  };
+
+  return fullUI;
 };

@@ -1,52 +1,116 @@
 import "server-only";
 
 import type {
-  ApiHandlerCallBackProps,
-  SafeReturnType,
+  ApiHandlerProps,
+  ApiHandlerResult,
 } from "next-vibe/server/endpoints/core/api-handler";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
-
-import { db } from "@/app/api/db";
+import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
 import { createSessionAndGetUser } from "../../public/login/route-handler";
 import type { LoginResponseInputType } from "../../public/login/schema";
+import { userRolesRepository } from "../../roles/roles.repository";
 import type { UserResponseType } from "../schema";
+import { userRepository } from "../users.repository";
 
-export async function getUser({
-  user,
-}: ApiHandlerCallBackProps<UndefinedType, UndefinedType>): Promise<
-  SafeReturnType<LoginResponseInputType>
-> {
-  return await createSessionAndGetUser(user.id);
+/**
+ * User API handlers
+ * Provides user profile management functionality
+ */
+
+/**
+ * Full user type with roles
+ */
+interface FullUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  imageUrl?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  userRoles: Array<{
+    id: string;
+    role: string;
+    partnerId?: string | null;
+  }>;
 }
 
+/**
+ * Get current user information
+ * @param props - API handler props
+ * @returns User information with session
+ */
+export async function getUser({
+  user,
+}: ApiHandlerProps<UndefinedType, UndefinedType>): Promise<
+  ApiHandlerResult<LoginResponseInputType>
+> {
+  try {
+    debugLogger("Getting user information", { userId: user.id });
+    return await createSessionAndGetUser(user.id);
+  } catch (error) {
+    errorLogger("Error getting user information", error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error",
+      errorCode: 500,
+    };
+  }
+}
+
+/**
+ * Full user information including password
+ */
 export interface FullUser extends UserResponseType {
   password: string;
 }
 
+/**
+ * Get full user information including password
+ * @param userId - User ID
+ * @returns Full user information
+ */
 export async function getFullUser(userId: string): Promise<FullUser> {
-  const user = await db.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      password: true,
-      imageUrl: true,
-      userRoles: {
-        select: {
-          role: true,
-          id: true,
-          partnerId: true,
-        },
-      },
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-  if (!user) {
-    throw new Error("User not found");
+  try {
+    debugLogger("Getting full user information", { userId });
+
+    // Get the user
+    const user = await userRepository.findById(userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Get the user roles
+    const roles = await userRolesRepository.findByUserId(userId);
+
+    // Define the role type for type safety
+    interface UserRoleType {
+      id: string;
+      role: string;
+      partnerId?: string | null;
+    }
+
+    // Type assertion for roles array
+    const typedRoles = roles as UserRoleType[];
+
+    // Create a properly typed user object
+    const typedUser = user as Record<string, unknown>;
+
+    // Combine the results
+    const result: Record<string, unknown> = {
+      ...typedUser,
+      userRoles: typedRoles.map((role) => ({
+        id: role.id,
+        role: role.role,
+        partnerId: role.partnerId,
+      })),
+    };
+
+    return result as FullUser;
+  } catch (error) {
+    debugLogger("Error getting full user information", error);
+    throw error;
   }
-  return user;
 }

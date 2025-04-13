@@ -34,8 +34,9 @@ export interface ApiQueryOptions<
   TQueryKey extends QueryKey = QueryKey,
 > extends Omit<
     UseQueryOptions<TData, TError, TData, TQueryKey>,
-    "queryFn" | "initialData"
+    "queryFn" | "initialData" | "queryKey"
   > {
+  queryKey?: QueryKey;
   enabled?: boolean;
   staleTime?: number;
   cacheTime?: number;

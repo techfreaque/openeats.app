@@ -1,4 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
+
+import { db } from "@/app/api/db";
 
 import { convertPrismaRole } from "../../../shared/types/enums";
 import type { UserRoleResponseType } from "../../../shared/types/user-roles.schema";
@@ -8,17 +10,11 @@ import type { DataProvider } from "./data-provider";
  * Prisma implementation of the DataProvider interface
  */
 export class PrismaDataProvider implements DataProvider {
-  private prisma: PrismaClient;
-
-  constructor(prismaClient?: PrismaClient) {
-    this.prisma = prismaClient ?? new PrismaClient();
-  }
-
   /**
    * Get all roles for a user using Prisma
    */
   async getUserRoles(userId: string): Promise<UserRoleResponseType[]> {
-    const roles = await this.prisma.userRole.findMany({
+    const roles = await db.userRole.findMany({
       where: { userId },
       select: { role: true, partnerId: true, id: true },
     });
@@ -35,7 +31,7 @@ export class PrismaDataProvider implements DataProvider {
    * Check if a user exists
    */
   async userExists(userId: string): Promise<boolean> {
-    const count = await this.prisma.user.count({
+    const count = await db.user.count({
       where: { id: userId },
     });
     return count > 0;
@@ -46,7 +42,7 @@ export class PrismaDataProvider implements DataProvider {
    * (For direct access when needed)
    */
   getPrismaClient(): PrismaClient {
-    return this.prisma;
+    return db;
   }
 }
 

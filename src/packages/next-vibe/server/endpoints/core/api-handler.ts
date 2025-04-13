@@ -3,6 +3,7 @@ import { Methods } from "next-vibe/shared/types/endpoint";
 
 import type { ApiEndpoint } from "../../../client/endpoint";
 import type { ResponseType } from "../../../shared/types/response.schema";
+import { debugLogger } from "../../../shared/utils/logger";
 import { validateData } from "../../../shared/utils/validation";
 import {
   type EmailFunctionType,
@@ -17,89 +18,149 @@ import {
   validatePostRequest,
 } from "./api-response";
 
-export function apiHandler<TRequest, TResponse, TUrlVariables, TExampleKey>({
-  handler,
-  endpoint,
-  email,
-}: ApiHandlerProps<
+/**
+ * Create an API route handler
+ * @param options - API handler options
+ * @returns Next.js route handler
+ */
+export function apiHandler<
   TRequest,
   TResponse,
   TUrlVariables,
-  TExampleKey
->): ApiHandlerReturnType<TResponse, TUrlVariables> {
+  TExampleKey = string,
+>(
+  options: ApiHandlerOptions<TRequest, TResponse, TUrlVariables, TExampleKey>,
+): ApiHandlerReturnType<TResponse, TUrlVariables> {
+  const { endpoint, handler, email } = options;
+
   return async (
     request: Request,
     { params }: { params: Promise<TUrlVariables> },
   ) => {
-    const user = await getVerifiedUser(endpoint.allowedRoles);
-    if (!user) {
-      return createErrorResponse(endpoint, "Not signed in", 401);
+    try {
+      debugLogger(`API request: ${endpoint.method} ${endpoint.path.join("/")}`);
+
+      // Authenticate user
+      const user = await getVerifiedUser(endpoint.allowedRoles);
+      if (!user) {
+        return createErrorResponse(endpoint, "Authentication required", 401);
+      }
+
+      // Validate URL parameters
+      const {
+        data: urlVariables,
+        message: urlSchemaError,
+        success: urlSchemaSuccess,
+      } = validateData(await params, endpoint.requestUrlSchema);
+
+      if (!urlSchemaSuccess) {
+        return createErrorResponse(
+          endpoint,
+          `URL validation error: ${urlSchemaError}`,
+          400,
+        );
+      }
+
+      // Parse and validate request data
+      const {
+        data: requestData,
+        success: requestDataSuccess,
+        message: requestDataMessage,
+      } = await validateRequest<
+        TRequest,
+        TResponse,
+        TUrlVariables,
+        TExampleKey
+      >(endpoint, request);
+
+      if (!requestDataSuccess) {
+        return createErrorResponse(
+          endpoint,
+          `Request validation error: ${requestDataMessage}`,
+          400,
+        );
+      }
+
+      // Execute the handler
+      const result = await safeExecute<TRequest, TResponse, TUrlVariables>(
+        handler,
+        user,
+        requestData,
+        urlVariables,
+      );
+
+      if (!result.success) {
+        return createErrorResponse(
+          endpoint,
+          result.message,
+          result.errorCode || 500,
+        );
+      }
+
+      // Create success response with email handling
+      return await createSuccessResponse<
+        TRequest,
+        TResponse,
+        TUrlVariables,
+        TExampleKey
+      >({
+        endpoint,
+        data: result.data,
+        schema: endpoint.responseSchema,
+        status: result.status ?? 200,
+        onSuccess: (data) =>
+          handleEmails<TRequest, TResponse, TUrlVariables>({
+            email,
+            user,
+            responseData: data,
+            urlVariables,
+            requestData,
+          }),
+      });
+    } catch (error) {
+      // Handle unexpected errors
+      debugLogger(
+        `API error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+      return createErrorResponse(
+        endpoint,
+        `Internal server error: ${error instanceof Error ? error.message : "Unknown error"}`,
+        500,
+      );
     }
-    const {
-      data: urlVariables,
-      message: urlSchemaError,
-      success: urlSchemaSuccess,
-    } = validateData(await params, endpoint.requestUrlSchema);
-    if (!urlSchemaSuccess) {
-      return createErrorResponse(endpoint, urlSchemaError, 400);
-    }
-    const {
-      data: requestData,
-      success: requestDataSuccess,
-      message: requestDataMessage,
-    } = await validateRequest<TRequest, TResponse, TUrlVariables, TExampleKey>(
-      endpoint,
-      request,
-    );
-    if (!requestDataSuccess) {
-      return createErrorResponse(endpoint, requestDataMessage, 400);
-    }
-    const response = await safeExecute<TRequest, TResponse, TUrlVariables>(
-      handler,
-      user,
-      requestData,
-      urlVariables,
-    );
-    if (!response.success) {
-      return createErrorResponse(endpoint, response.message, 500);
-    }
-    return await createSuccessResponse<
-      TRequest,
-      TResponse,
-      TUrlVariables,
-      TExampleKey
-    >({
-      endpoint,
-      data: response.data,
-      schema: endpoint.responseSchema,
-      onSuccess: (data) =>
-        handleEmails<TRequest, TResponse, TUrlVariables>({
-          email,
-          user,
-          responseData: data,
-          urlVariables,
-          requestData,
-        }),
-    });
   };
 }
 
+/**
+ * Validate request data based on HTTP method
+ * @param endpoint - API endpoint
+ * @param request - HTTP request
+ * @returns Validated request data or error
+ */
 async function validateRequest<TRequest, TResponse, TUrlVariables, TExampleKey>(
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   request: Request,
-): Promise<SafeReturnType<TRequest>> {
+): Promise<ApiHandlerResult<TRequest>> {
   if (endpoint.method === Methods.GET) {
     return await validateGetRequest<TRequest>(request, endpoint.requestSchema);
   }
   return await validatePostRequest<TRequest>(request, endpoint.requestSchema);
 }
 
+/**
+ * Safely execute the handler function with error handling
+ * @param handler - API handler function
+ * @param user - Authenticated user
+ * @param validatedData - Validated request data
+ * @param urlVariables - Validated URL parameters
+ * @returns Handler result or error
+ */
 async function safeExecute<TRequest, TResponse, TUrlVariables>(
-  handler: ApiHandlerCallBackFunctionType<TRequest, TResponse, TUrlVariables>,
+  handler: ApiHandlerFunction<TRequest, TResponse, TUrlVariables>,
   user: JwtPayloadType,
   validatedData: TRequest,
   urlVariables: TUrlVariables,
-): Promise<SafeReturnType<TResponse>> {
+): Promise<ApiHandlerResult<TResponse>> {
   try {
     return await handler({
       data: validatedData,
@@ -112,48 +173,72 @@ async function safeExecute<TRequest, TResponse, TUrlVariables>(
   }
 }
 
-export type ApiHandlerCallBackFunctionType<TRequest, TResponse, TUrlVariables> =
-  ({
-    data,
-    urlVariables,
-    user,
-  }: ApiHandlerCallBackProps<TRequest, TUrlVariables>) =>
-    | Promise<SafeReturnType<TResponse>>
-    | SafeReturnType<TResponse>;
+/**
+ * API handler result type
+ */
+export type ApiHandlerResult<T> =
+  | { success: true; data: T; status?: number }
+  | { success: false; message: string; errorCode: number };
 
-export interface ApiHandlerCallBackProps<TRequest, TUrlVariables> {
+/**
+ * API handler props
+ */
+export interface ApiHandlerProps<TRequest, TUrlVariables> {
+  /** Request data */
   data: TRequest;
+
+  /** URL variables */
   urlVariables: TUrlVariables;
+
+  /** Authenticated user */
   user: JwtPayloadType;
 }
 
-export type SafeReturnType<TResponse> =
-  | { data: TResponse; success: true; message?: never; errorCode?: never }
-  | { success: false; message: string; errorCode: number; data?: never };
+/**
+ * API handler function type
+ */
+export type ApiHandlerFunction<TRequest, TResponse, TUrlVariables> = (
+  props: ApiHandlerProps<TRequest, TUrlVariables>,
+) => Promise<ApiHandlerResult<TResponse>> | ApiHandlerResult<TResponse>;
 
-export interface ApiHandlerProps<
+/**
+ * Email handler configuration
+ */
+export interface EmailHandler<TRequest, TResponse, TUrlVariables> {
+  /** Email rendering function */
+  render: EmailFunctionType<TRequest, TResponse, TUrlVariables>;
+
+  /** Whether to ignore errors during email sending */
+  ignoreErrors?: boolean;
+}
+
+/**
+ * API handler options
+ */
+export interface ApiHandlerOptions<
   TRequest,
   TResponse,
   TUrlVariables,
-  TExampleKey,
+  TExampleKey = string,
 > {
-  handler: ApiHandlerCallBackFunctionType<TRequest, TResponse, TUrlVariables>;
-  email:
+  /** API endpoint definition */
+  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>;
+
+  /** Handler function */
+  handler: ApiHandlerFunction<TRequest, TResponse, TUrlVariables>;
+
+  /** Email handlers (optional) */
+  email?:
     | {
-        afterHandlerEmails?: {
-          ignoreErrors?: boolean;
-          render: EmailFunctionType<TRequest, TResponse, TUrlVariables>;
-        }[];
+        afterHandlerEmails?: EmailHandler<TRequest, TResponse, TUrlVariables>[];
       }
     | undefined;
-  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>;
 }
 
+/**
+ * API handler return type
+ */
 export type ApiHandlerReturnType<TResponse, TUrlVariables> = (
   request: Request,
-  {
-    params,
-  }: {
-    params: Promise<TUrlVariables>;
-  },
+  { params }: { params: Promise<TUrlVariables> },
 ) => Promise<NextResponse<ResponseType<TResponse>>>;

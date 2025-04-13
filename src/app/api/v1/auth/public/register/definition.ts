@@ -1,13 +1,17 @@
+import { createEndpoint } from "next-vibe/client/endpoint";
 import { undefinedSchema } from "next-vibe/shared/types/common.schema";
 import type { ExamplesList } from "next-vibe/shared/types/endpoint";
 import { Methods } from "next-vibe/shared/types/endpoint";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 
-import { createEndpoint } from "@/packages/next-vibe/client/endpoint";
-
 import { loginResponseSchema } from "../login/schema";
 import type { RegisterType } from "./schema";
 import { registerSchema } from "./schema";
+
+/**
+ * Register API endpoint definition
+ * Provides user registration functionality
+ */
 
 export const userExamples: ExamplesList<
   RegisterType,
@@ -60,6 +64,9 @@ export const userExamples: ExamplesList<
   },
 };
 
+/**
+ * Register endpoint definition
+ */
 const registerEndpoint = createEndpoint({
   description: "Register a new user account",
   method: Methods.POST,
@@ -69,6 +76,8 @@ const registerEndpoint = createEndpoint({
   path: ["v1", "auth", "public", "register"],
   apiQueryOptions: {
     queryKey: ["register"],
+    // Don't cache registration requests
+    staleTime: 0,
   },
   fieldDescriptions: {
     firstName: "User's first name",
@@ -78,7 +87,6 @@ const registerEndpoint = createEndpoint({
     confirmPassword: "Confirm password (must match password)",
     imageUrl: "User's profile image URL",
   },
-
   allowedRoles: [UserRoleValue.PUBLIC],
   errorCodes: {
     400: "Invalid request data",
@@ -88,6 +96,81 @@ const registerEndpoint = createEndpoint({
   examples: {
     payloads: userExamples,
     urlPathVariables: undefined,
+    responses: {
+      default: {
+        user: {
+          id: "user-123",
+          firstName: "John",
+          lastName: "Doe",
+          email: "john@example.com",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          userRoles: [{ id: "role-123", role: "CUSTOMER" }],
+        },
+        token: "jwt-token-example",
+        expiresAt: new Date(Date.now() + 3600000).toISOString(),
+      },
+      customer: {
+        user: {
+          id: "user-456",
+          firstName: "Customer",
+          lastName: "User",
+          email: "customer@example.com",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          userRoles: [{ id: "role-456", role: "CUSTOMER" }],
+        },
+        token: "jwt-token-example",
+        expiresAt: new Date(Date.now() + 3600000).toISOString(),
+      },
+      restaurantAdmin: {
+        user: {
+          id: "user-789",
+          firstName: "Restaurant",
+          lastName: "Owner",
+          email: "restaurant@example.com",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          userRoles: [{ id: "role-789", role: "PARTNER_ADMIN" }],
+        },
+        token: "jwt-token-example",
+        expiresAt: new Date(Date.now() + 3600000).toISOString(),
+      },
+      restaurantEmployee: {
+        user: {
+          id: "user-101",
+          firstName: "Restaurant",
+          lastName: "Employee",
+          email: "employee@example.com",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          userRoles: [{ id: "role-101", role: "PARTNER_EMPLOYEE" }],
+        },
+        token: "jwt-token-example",
+        expiresAt: new Date(Date.now() + 3600000).toISOString(),
+      },
+      driver: {
+        user: {
+          id: "user-202",
+          firstName: "Delivery",
+          lastName: "Driver",
+          email: "driver@example.com",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          userRoles: [{ id: "role-202", role: "COURIER" }],
+        },
+        token: "jwt-token-example",
+        expiresAt: new Date(Date.now() + 3600000).toISOString(),
+      },
+    },
   },
 });
-export default registerEndpoint;
+
+/**
+ * Register API endpoints
+ */
+const definition = {
+  ...registerEndpoint,
+};
+
+export default definition;

@@ -1,18 +1,25 @@
 import type { z, ZodError } from "zod";
 
-import type { SafeReturnType } from "../../server/endpoints/core/api-handler";
+import {
+  ErrorResponseTypes,
+  type ResponseType,
+} from "../types/response.schema";
 
 export function validateData<TSchema extends z.ZodType>(
   data: z.input<TSchema>,
   schema: TSchema,
-): SafeReturnType<z.infer<TSchema>> {
+): ResponseType<z.infer<TSchema>> {
   try {
     // Validate the data against the schema
     const result = schema.safeParse(data);
 
     if (!result.success) {
       const errorMessage = formatZodErrors(result.error);
-      return { message: errorMessage, success: false, errorCode: 400 };
+      return {
+        message: errorMessage,
+        success: false,
+        errorType: ErrorResponseTypes.VALIDATION_ERROR,
+      };
     }
 
     // For API responses, don't wrap the response in a success object, return the data directly
@@ -22,7 +29,11 @@ export function validateData<TSchema extends z.ZodType>(
       error instanceof Error
         ? error.message
         : "Unknown error validating response";
-    return { message, success: false, errorCode: 400 };
+    return {
+      message,
+      success: false,
+      errorType: ErrorResponseTypes.VALIDATION_ERROR,
+    };
   }
 }
 

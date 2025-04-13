@@ -11,7 +11,15 @@ import type {
 export type UseOrdersFilters = Partial<OrdersGetRequestType>;
 
 // Hook for fetching orders with filters
-export function useOrders(filters: UseOrdersFilters = {}) {
+export function useOrders(
+  filters: UseOrdersFilters = {},
+): ReturnType<
+  typeof useApiQuery<
+    OrdersGetRequestType,
+    OrdersGetResponseOutputType,
+    UndefinedType
+  >
+> {
   const defaultFilters: OrdersGetRequestType = {
     page: 1,
     limit: 20,
@@ -29,7 +37,17 @@ export function useOrders(filters: UseOrdersFilters = {}) {
 }
 
 // Hook for paginated orders
-export function usePaginatedOrders(initialFilters: UseOrdersFilters = {}) {
+export function usePaginatedOrders(initialFilters: UseOrdersFilters = {}): {
+  changePage: (page: number) => void;
+  updateFilters: (newFilters: UseOrdersFilters) => void;
+  filters: OrdersGetRequestType;
+} & ReturnType<
+  typeof useApiQuery<
+    OrdersGetRequestType,
+    OrdersGetResponseOutputType,
+    UndefinedType
+  >
+> {
   const [filters, setFilters] = useState<OrdersGetRequestType>({
     page: 1,
     limit: 20,
@@ -39,12 +57,12 @@ export function usePaginatedOrders(initialFilters: UseOrdersFilters = {}) {
   const result = useOrders(filters);
 
   // Function to change page
-  const changePage = (page: number) => {
+  const changePage = (page: number): void => {
     setFilters((prev) => ({ ...prev, page }));
   };
 
   // Function to change filters
-  const updateFilters = (newFilters: UseOrdersFilters) => {
+  const updateFilters = (newFilters: UseOrdersFilters): void => {
     // Reset to page 1 when filters change
     setFilters({ ...newFilters, page: 1, limit: filters.limit });
   };
@@ -67,14 +85,18 @@ interface OrderGetRequestType {
 type OrderGetResponseType = OrdersGetResponseOutputType[0];
 
 // Hook for getting a single order by ID
-export function useOrder(orderId: string | undefined) {
+export function useOrder(
+  orderId: string | undefined,
+): ReturnType<
+  typeof useApiQuery<OrderGetRequestType, OrderGetResponseType, UndefinedType>
+> {
   return useApiQuery<OrderGetRequestType, OrderGetResponseType, UndefinedType>(
     // This assumes there's a GET endpoint for a single order
     {
       ...ordersEndpoint.GET,
-      path: ["v1", "order", orderId || ""],
+      path: ["v1", "order", orderId ?? ""],
     },
-    { orderId: orderId || "" },
+    { orderId: orderId ?? "" },
     undefined,
     {
       enabled: !!orderId,

@@ -1,8 +1,9 @@
 /* global NodeJS */
-/* eslint-disable no-console */
+
 import type { Server } from "http";
 import { createServer } from "http";
 import next from "next";
+import { debugLogger, errorLogger } from "next-vibe/shared";
 import { cwd } from "process";
 import { parse } from "url";
 
@@ -22,7 +23,7 @@ export async function startServer(): Promise<void> {
   }
 
   try {
-    console.log(`Starting test server on ${env.TEST_SERVER_URL}:4000`);
+    debugLogger(`Starting test server on ${env.TEST_SERVER_URL}:4000`);
 
     app = next({
       dev: true,
@@ -42,11 +43,11 @@ export async function startServer(): Promise<void> {
       });
 
       server.once("error", (err: NodeJS.ErrnoException) => {
-        console.error("Server startup error:", err);
+        errorLogger("Server startup error:", err);
 
         // If the port is in use, try again with a random port
         if (err.code === "EADDRINUSE") {
-          console.log(
+          debugLogger(
             `Port ${env.TEST_SERVER_URL} is in use, not starting again...`,
           );
           return;
@@ -55,12 +56,12 @@ export async function startServer(): Promise<void> {
         reject(err);
       });
       server.listen(4000, () => {
-        console.log(`> E2E test server started on ${env.TEST_SERVER_URL}:4000`);
+        debugLogger(`> E2E test server started on ${env.TEST_SERVER_URL}:4000`);
         resolve();
       });
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
+    errorLogger("Failed to start server:", error);
     throw error;
   }
 }
@@ -72,19 +73,19 @@ export async function startServer(): Promise<void> {
 export async function stopServer(): Promise<void> {
   return await new Promise((resolve) => {
     if (!server) {
-      console.log("Server is not running, nothing to stop");
+      debugLogger("Server is not running, nothing to stop");
       resolve();
       return;
     }
 
-    console.log("Attempting to close test server...");
+    debugLogger("Attempting to close test server...");
     server.close((err) => {
       if (err) {
-        console.error("Error closing server:", err);
+        errorLogger("Error closing server:", err);
         // Resolve anyway since we're shutting down
       }
 
-      console.log("> E2E test server closed");
+      debugLogger("> E2E test server closed");
       server = undefined;
       app = undefined;
 

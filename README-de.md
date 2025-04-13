@@ -71,17 +71,13 @@ Eine gerechtere Gastronomiebranche durch:
 - Mehr Geld in der lokalen Wirtschaft 
 - Transparente Prozesse ohne versteckte Kosten
 
-**Schließen Sie sich der Bewegung an und gestalten Sie mit uns die Zukunft des Gastgewerbes!**
+**Schließe dich der Bewegung an und gestalten mit uns die Zukunft des Gastgewerbes!**
 
 ---
 
 ## Vorschau / Demo
 
-### Backend Server
-https://eats-backend.a42.ch
-
-### Frontend Server
-https://eats.a42.ch
+[www.openeats.app](www.openeats.app)
 
 ### Demo-Konten
 
@@ -94,8 +90,10 @@ https://eats.a42.ch
 
 ## Projektstruktur
 
-### Backend
-APIs für alles und ein Admin-Dashboard
+### Framework
+
+Das Backend und die Web-Version nutzen next.js mit [unserem eigenen Framework next vibe](nextvibe.dev). Next vibe hat das Ziel, eine Entwicklungserfahrung wie in next.js zu bieten, aber mit der zusätzlichen Funktion, zu nativen Apps mit expo zu kompilieren. Wir verwenden shadcn für das Web und etwas Ähnliches für React Native.
+Das bedeutet: einmal kompilieren, überall debuggen, aber wir kommen auch mit dem next.js Dev-Server sehr weit.
 
 ### App
 Eine React Native App für alle Plattformen (Web, Windows, Android, iOS, Mac) für:

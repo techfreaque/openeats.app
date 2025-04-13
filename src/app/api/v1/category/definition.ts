@@ -5,6 +5,10 @@ import { Methods } from "next-vibe/shared/types/endpoint";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { v4 as uuidv4 } from "uuid";
 
+/**
+ * Category API endpoint definitions
+ * Provides category management functionality
+ */
 import type { CategoryUpdateType } from "./schema";
 import {
   categoriesResponseSchema,
@@ -56,6 +60,24 @@ const categoriesGetEndpoint = createEndpoint({
   examples: {
     payloads: undefined,
     urlPathVariables: undefined,
+    responses: {
+      default: [
+        {
+          id: "category-id-1",
+          name: "Pizza",
+          image: "/placeholder.svg",
+          parentCategoryId: null,
+          published: true,
+        },
+        {
+          id: "category-id-2",
+          name: "Burgers",
+          image: "/placeholder.svg",
+          parentCategoryId: "category-id-1",
+          published: true,
+        },
+      ],
+    },
   },
   allowedRoles: [
     UserRoleValue.ADMIN,
@@ -92,6 +114,29 @@ const categoryCreateEndpoint = createEndpoint({
   examples: {
     payloads: categoryExamples,
     urlPathVariables: undefined,
+    responses: {
+      default: {
+        id: "category-id-1",
+        name: "Pizza",
+        image: "/placeholder.svg",
+        parentCategoryId: null,
+        published: true,
+      },
+      example1: {
+        id: "category-id-2",
+        name: "Burgers",
+        image: "/placeholder.svg",
+        parentCategoryId: "category-id-1",
+        published: true,
+      },
+      example2: {
+        id: "category-id-3",
+        name: "Kebap",
+        image: "/placeholder.svg",
+        parentCategoryId: null,
+        published: false,
+      },
+    },
   },
   allowedRoles: [
     UserRoleValue.CUSTOMER,
@@ -128,6 +173,29 @@ const categoryUpdateEndpoint = createEndpoint({
   examples: {
     payloads: categoryExamples,
     urlPathVariables: undefined,
+    responses: {
+      default: {
+        id: "category-id-1",
+        name: "Pizza",
+        image: "/placeholder.svg",
+        parentCategoryId: null,
+        published: true,
+      },
+      example1: {
+        id: "category-id-2",
+        name: "Burgers",
+        image: "/placeholder.svg",
+        parentCategoryId: "category-id-1",
+        published: true,
+      },
+      example2: {
+        id: "category-id-3",
+        name: "Kebap",
+        image: "/placeholder.svg",
+        parentCategoryId: null,
+        published: false,
+      },
+    },
   },
   allowedRoles: [
     UserRoleValue.CUSTOMER,

@@ -1,44 +1,26 @@
-import type { Prisma } from "@prisma/client";
+import type { Ui } from "@/app/api/v1/website-editor/db";
 
 export enum UiType {
   SHADCN_REACT = "shadcn_react",
   NEXTUI_REACT = "nextui_react",
 }
 
-export type FullUI = Prisma.UIGetPayload<{
-  select: {
-    id: true;
-    uiType: true;
-    user: {
-      select: {
-        id: true;
-        firstName: true;
-        imageUrl: true;
-      };
-    };
-    prompt: true;
-    public: true;
-    img: true;
-    viewCount: true;
-    likesCount: true;
-    forkedFrom: true;
-    createdAt: true;
-    updatedAt: true;
-    subPrompts: {
-      select: {
-        id: true;
-        UIId: true;
-        SUBId: true;
-        createdAt: true;
-        subPrompt: true;
-        modelId: true;
-        code: {
-          select: {
-            id: true;
-            code: true;
-          };
-        };
-      };
-    };
+export interface FullUI extends Ui {
+  user: {
+    id: string;
+    firstName: string;
+    imageUrl?: string | null;
   };
-}>;
+  subPrompts: Array<{
+    id: string;
+    uiId: string;
+    subId: string;
+    createdAt: Date;
+    subPrompt: string;
+    modelId?: string | null;
+    code?: {
+      id: string;
+      code: string;
+    };
+  }>;
+}

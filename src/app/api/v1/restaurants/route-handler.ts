@@ -1,6 +1,9 @@
-import type { Day } from "@prisma/client";
-import type { ApiHandlerCallBackFunctionType } from "next-vibe/server/endpoints/core/api-handler";
+import "server-only";
+
+import { dayEnum } from "@/app/api/v1/restaurant/opening-times/db";
+import type { ApiHandlerFunction } from "next-vibe/server/endpoints/core/api-handler";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
+import { debugLogger } from "next-vibe/shared/utils/logger";
 import { getDayEnumFromDate } from "next-vibe/shared/utils/time";
 
 import {
@@ -23,13 +26,17 @@ import type {
 
 /**
  * Gets restaurants based on search criteria with pagination and filtering
+ * @param props - API handler props
+ * @returns List of restaurants matching search criteria with pagination
  */
-export const getRestaurants: ApiHandlerCallBackFunctionType<
+export const getRestaurants: ApiHandlerFunction<
   RestaurantsSearchOutputType,
   RestaurantsResponseType,
   UndefinedType
-> = async ({ user, data }) => {
+> = async ({ data }) => {
   try {
+    debugLogger("Getting restaurants with search criteria", { data });
+
     const {
       search,
       countryCode,
@@ -142,7 +149,7 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
     }
 
     // Add rating filter if provided
-    if (rating !== undefined && rating !== null) {
+    if (rating !== null && rating !== undefined) {
       where.rating = { gte: rating };
     }
 
@@ -194,10 +201,14 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
     }
 
     // Add delivery type filter
-    if (deliveryType === "delivery") {
-      andCondition.delivery = true;
-    } else if (deliveryType === "pickup") {
-      andCondition.pickup = true;
+    if (deliveryType) {
+      // Use type-safe comparison
+      const deliveryTypeStr = String(deliveryType);
+      if (deliveryTypeStr === "delivery") {
+        andCondition.delivery = true;
+      } else if (deliveryTypeStr === "pickup") {
+        andCondition.pickup = true;
+      }
     }
 
     // Add category filter if provided
@@ -221,7 +232,6 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
     // Get all restaurants that match the base criteria
     const allRestaurants = await db.partner.findMany({
       where,
-
       select: restaurantQuery,
       orderBy:
         sortBy === "rating"
@@ -233,66 +243,86 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
               : { rating: "desc" }, // Default to rating for relevance
     });
 
-    // Apply distance filtering only if we have coordinates
-    let restaurantsWithDistance: RestaurantResponseType[] = [];
+    debugLogger("Retrieved restaurants from database", {
+      count: allRestaurants.length,
+    });
 
-    if (
-      doLocationFiltering &&
-      latitude !== undefined &&
-      longitude !== undefined
-    ) {
-      // Calculate distance for each restaurant and filter by radius
-      restaurantsWithDistance = allRestaurants
-        .map((restaurant) => {
-          // Calculate distance in km between search location and restaurant
-          const distance = calculateDistance(
-            latitude,
-            longitude,
-            restaurant.latitude,
-            restaurant.longitude,
-          );
-          return { ...restaurant, distance };
-        })
-        .filter((restaurant) => restaurant.distance <= radius)
-        .sort((a, b) => a.distance - b.distance); // Sort by distance
-    } else {
-      // Skip distance filtering if no coordinates
-      restaurantsWithDistance = allRestaurants.map((restaurant) => ({
-        ...restaurant,
-        distance: 0, // Set a default distance
-      }));
-    }
+    // Apply distance filtering only if we have coordinates
+    let restaurantsWithDistanceAndFilters =
+      doLocationFiltering && latitude !== undefined && longitude !== undefined
+        ? allRestaurants
+            .map((restaurant) => {
+              // Calculate distance in km between search location and restaurant
+              const distance = calculateDistance(
+                latitude,
+                longitude,
+                restaurant.latitude,
+                restaurant.longitude,
+              );
+              return { ...restaurant, distance };
+            })
+            .filter((restaurant) => restaurant.distance <= (radius ?? 10))
+            .sort((a, b) => a.distance - b.distance) // Sort by distance
+        : allRestaurants.map((restaurant) => ({
+            ...restaurant,
+            distance: 0, // Set a default distance
+          }));
 
     // Additional filtering based on dietary preferences
     if (dietary && dietary.length > 0) {
-      restaurantsWithDistance = restaurantsWithDistance.filter(
-        (restaurant) =>
-          restaurant.dietaryOptions &&
-          dietary.some((diet) => restaurant.dietaryOptions.includes(diet)),
-      );
+      restaurantsWithDistanceAndFilters =
+        restaurantsWithDistanceAndFilters.filter((restaurant) => {
+          // Type-safe check for dietaryOptions
+          // @ts-expect-error - dietaryOptions might not be defined in the type but exists in the database
+          const dietaryOpts = restaurant.dietaryOptions;
+          if (!dietaryOpts) {
+            return false;
+          }
+
+          // Ensure dietaryOptions is an array
+          const dietaryOptions = Array.isArray(dietaryOpts) ? dietaryOpts : [];
+
+          // Check if any of the dietary preferences match
+          return dietary.some((diet) => {
+            const dietStr = String(diet);
+            return dietaryOptions.includes(dietStr);
+          });
+        });
     }
 
     // Additional filtering based on price range
     if (priceRange && priceRange.length > 0) {
-      restaurantsWithDistance = restaurantsWithDistance.filter(
-        (restaurant) =>
-          restaurant.priceLevel && priceRange.includes(restaurant.priceLevel),
-      );
+      restaurantsWithDistanceAndFilters =
+        restaurantsWithDistanceAndFilters.filter((restaurant) => {
+          if (!restaurant.priceLevel) {
+            return false;
+          }
+          const priceLevelStr = String(restaurant.priceLevel);
+          return priceRange.includes(priceLevelStr);
+        });
     }
 
     // Apply pagination
     const skip = (page - 1) * limit;
-    const paginatedRestaurants = restaurantsWithDistance.slice(
+    const paginatedRestaurants = restaurantsWithDistanceAndFilters.slice(
       skip,
       skip + limit,
     );
 
     // Filter out private data, unpublished opening times, and unpublished menu items
     const filteredRestaurants = paginatedRestaurants.map((restaurant) => {
-      let filtered = filterPrivateData(restaurant);
-      filtered = filterOpeningTimes(filtered);
-      filtered = filterMenuItems(filtered);
-      return filtered;
+      // Cast to RestaurantResponseType to ensure type safety
+      const typedRestaurant = restaurant as unknown as RestaurantResponseType;
+      return filterMenuItems(
+        filterOpeningTimes(filterPrivateData(typedRestaurant)),
+      );
+    });
+
+    debugLogger("Returning filtered restaurants", {
+      count: filteredRestaurants.length,
+      totalCount: restaurantsWithDistanceAndFilters.length,
+      page,
+      limit,
     });
 
     return {
@@ -300,15 +330,16 @@ export const getRestaurants: ApiHandlerCallBackFunctionType<
       data: {
         restaurants: filteredRestaurants,
         pagination: {
-          total: restaurantsWithDistance.length,
+          total: restaurantsWithDistanceAndFilters.length,
           page,
           limit,
-          pages: Math.ceil(restaurantsWithDistance.length / limit),
+          pages: Math.ceil(restaurantsWithDistanceAndFilters.length / limit),
         },
       },
     };
   } catch (err) {
     const error = err as Error;
+    debugLogger("Error fetching restaurants", { error: error.message });
     return {
       success: false,
       message: `Error fetching restaurants: ${error.message}`,

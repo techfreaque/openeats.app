@@ -23,7 +23,7 @@ export const Icon = forwardRef<
     ref,
   ) => {
     // Get the icon component from lucide-react
-    // eslint-disable-next-line import/namespace
+
     const IconComponent = LucideIcons[name] as FC<
       SVGProps<SVGSVGElement> & {
         size?: number;

@@ -166,7 +166,7 @@ export default function RestaurantsPage(): React.JSX.Element {
   };
 
   const handleSortChange = (value: string): void => {
-    form.setValue("sortBy", value as any);
+    form.setValue("sortBy", value);
     submitForm(undefined, { urlParamVariables: undefined });
   };
 

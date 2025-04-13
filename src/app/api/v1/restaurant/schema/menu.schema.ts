@@ -1,6 +1,8 @@
 import { dateSchema } from "next-vibe/shared/types/common.schema";
 import { z } from "zod";
 
+import { Currencies } from "@/translations";
+
 import { categoryResponseSchema } from "./category.schema";
 
 const menuItemBaseSchema = z.object({
@@ -10,6 +12,7 @@ const menuItemBaseSchema = z.object({
   price: z.number().min(0, "Price must be positive"),
   image: z.string().nullable(),
   taxPercent: z.number().min(0),
+  currency: z.nativeEnum(Currencies),
   availableFrom: dateSchema.nullable(),
   availableTo: dateSchema.nullable(),
   isAvailable: z.boolean().default(true),

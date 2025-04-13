@@ -2,7 +2,7 @@ import { Button, Section, Text } from "@react-email/components";
 import type { EmailFunctionType } from "next-vibe/server/email/handle-emails";
 import { APP_DOMAIN, APP_NAME } from "next-vibe/shared/constants";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
-import type { MessageResponseType } from "next-vibe/shared/types/response.schema";
+import { ErrorResponseTypes } from "next-vibe/shared/types/response.schema";
 
 import { EmailTemplate } from "../../../../../../config/email.template";
 import { db } from "../../../../db";
@@ -11,7 +11,7 @@ import { generatePasswordResetToken } from "./utils";
 
 export const renderResetPasswordMail: EmailFunctionType<
   ResetPasswordRequestType,
-  MessageResponseType,
+  string,
   UndefinedType
 > = async ({ requestData }) => {
   const existingUser = await db.user.findUnique({
@@ -19,11 +19,11 @@ export const renderResetPasswordMail: EmailFunctionType<
   });
   if (!existingUser) {
     // will not get sent to the user as ignoreError is true
-    return { success: false, message: "Email not found", errorCode: 404 } as {
-      success: false;
-      message: string;
-      errorCode: number;
-      data?: never;
+    return {
+      success: false,
+      message: "Email not found",
+      errorType: ErrorResponseTypes.NOT_FOUND,
+      errorCode: 404,
     };
   }
   const token = await generatePasswordResetToken(

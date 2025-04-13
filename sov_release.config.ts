@@ -12,6 +12,16 @@ const releaseConfig: ReleaseConfig = {
         version: "1.0.0",
       },
     },
+    {
+      directory: "./src/packages/base-station",
+      updateDeps: true,
+      test: false,
+      lint: false,
+      build: true,
+      release: {
+        version: "1.0.0",
+      },
+    },
   ],
 };
 export default releaseConfig;

@@ -29,8 +29,30 @@ const meEndpoint = createEndpoint({
     500: "Internal server error",
   },
   examples: {
-    urlPathVariables: undefined,
     payloads: undefined,
+    urlPathVariables: undefined,
+    responses: {
+      default: {
+        user: {
+          id: "user-id",
+          email: "user@example.com",
+          firstName: "John",
+          lastName: "Doe",
+          imageUrl: "https://example.com/avatar.jpg",
+          userRoles: [
+            {
+              id: "role-id",
+              role: "CUSTOMER",
+              partnerId: null,
+            },
+          ],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        token: "jwt-token-example",
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      },
+    },
   },
 });
 
@@ -71,9 +93,30 @@ const meUpdateEndpoint = createEndpoint({
         imageUrl: "/placeholder.svg",
       },
     },
+    responses: {
+      default: {
+        id: "user-id",
+        email: "user@example.com",
+        firstName: "John",
+        lastName: "Doe",
+        imageUrl: "https://example.com/avatar.jpg",
+        userRoles: [
+          {
+            id: "role-id",
+            role: "CUSTOMER",
+            partnerId: null,
+          },
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    },
   },
 });
 
+/**
+ * Auth API endpoints
+ */
 const definition = {
   ...meEndpoint,
   ...meUpdateEndpoint,

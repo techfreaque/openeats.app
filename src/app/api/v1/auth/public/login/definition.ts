@@ -5,6 +5,11 @@ import { UserRoleValue } from "next-vibe/shared/types/enums";
 
 import { loginResponseSchema, loginSchema } from "./schema";
 
+/**
+ * Login API endpoint definition
+ * Provides user authentication functionality
+ */
+
 const loginEndpoint = createEndpoint({
   description: "Authenticate a user and generate a JWT token",
   path: ["v1", "auth", "public", "login"],
@@ -28,13 +33,41 @@ const loginEndpoint = createEndpoint({
   examples: {
     payloads: {
       default: {
-        id: "1",
         email: "customer@example.com",
         password: "password",
       },
     },
     urlPathVariables: undefined,
+    responses: {
+      default: {
+        user: {
+          id: "user-id",
+          email: "user@example.com",
+          firstName: "John",
+          lastName: "Doe",
+          imageUrl: "/placeholder.svg",
+          userRoles: [
+            {
+              id: "role-id",
+              role: "CUSTOMER",
+              partnerId: null,
+            },
+          ],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        token: "jwt-token-example",
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      },
+    },
   },
 });
 
-export default loginEndpoint;
+/**
+ * Login API endpoints
+ */
+const definition = {
+  ...loginEndpoint,
+};
+
+export default definition;

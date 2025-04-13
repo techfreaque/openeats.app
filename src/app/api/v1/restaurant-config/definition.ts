@@ -4,6 +4,7 @@ import type { ExamplesList } from "next-vibe/shared/types/endpoint";
 import { Methods } from "next-vibe/shared/types/endpoint";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 
 import type { CategoryUpdateType } from "./schema";
 import {
@@ -60,6 +61,7 @@ const categoryCreateEndpoint = createEndpoint({
   examples: {
     payloads: categoryExamples,
     urlPathVariables: undefined,
+    responses: categoryExamples,
   },
   allowedRoles: [
     UserRoleValue.CUSTOMER,
@@ -96,8 +98,59 @@ const categoryUpdateEndpoint = createEndpoint({
   examples: {
     payloads: categoryExamples,
     urlPathVariables: undefined,
+    responses: categoryExamples,
   },
   allowedRoles: [
+    UserRoleValue.CUSTOMER,
+    UserRoleValue.COURIER,
+    UserRoleValue.ADMIN,
+    UserRoleValue.PARTNER_ADMIN,
+    UserRoleValue.PARTNER_EMPLOYEE,
+  ],
+  errorCodes: {
+    400: "Invalid request data",
+    401: "Not authenticated",
+    403: "Not authorized",
+    500: "Internal server error",
+  },
+});
+
+const categoryGetEndpoint = createEndpoint({
+  description: "Get all categories",
+  requestSchema: undefinedSchema,
+  responseSchema: z.array(categoryResponseSchema),
+  requestUrlSchema: undefinedSchema,
+  path: ["v1", "restaurant-config"],
+  method: Methods.GET,
+  apiQueryOptions: {
+    queryKey: ["category-get"],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  },
+  fieldDescriptions: undefined,
+  examples: {
+    payloads: undefined,
+    urlPathVariables: undefined,
+    responses: {
+      default: [
+        {
+          id: "category-id-1",
+          name: "Pizza",
+          image: "/placeholder.svg",
+          parentCategoryId: null,
+          published: true,
+        },
+        {
+          id: "category-id-2",
+          name: "Burgers",
+          image: "/placeholder.svg",
+          parentCategoryId: "category-id-1",
+          published: true,
+        },
+      ],
+    },
+  },
+  allowedRoles: [
+    UserRoleValue.ADMIN,
     UserRoleValue.CUSTOMER,
     UserRoleValue.COURIER,
     UserRoleValue.ADMIN,
@@ -115,5 +168,6 @@ const categoryUpdateEndpoint = createEndpoint({
 const categoryEndpoints = {
   ...categoryUpdateEndpoint,
   ...categoryCreateEndpoint,
+  ...categoryGetEndpoint,
 };
 export default categoryEndpoints;

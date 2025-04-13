@@ -1,64 +1,34 @@
-import type { NextRequest, NextResponse } from "next/server";
-import { menuItemCreateSchema } from "../restaurant/schema/menu.schema";
+import "server-only";
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
-  try {
-    const user = await getCurrentUser();
-    if (!user?.roles.includes("RESTAURANT")) {
-      return createErrorResponse("Unauthorized", 401);
-    }
+import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
 
-    const validatedData = await validatePostRequest(
-      request,
-      menuItemCreateSchema,
-    );
+import definitions from "./definition";
+import { createMenuItem, getMenuItems } from "./route-handler";
 
-    // Verify restaurant ownership
-    const restaurant = await db.restaurant.findUnique({
-      where: {
-        id: validatedData.restaurantId,
-        userId: user.id,
-      },
-    });
+/**
+ * Menu Items API route handlers
+ * Provides menu items management functionality
+ */
 
-    if (!restaurant) {
-      return createErrorResponse(
-        "Restaurant not found or you don't have permission",
-        404,
-      );
-    }
+/**
+ * GET handler for retrieving all menu items
+ */
+export const GET = apiHandler({
+  endpoint: definitions.GET,
+  handler: getMenuItems,
+  email: {}, // No emails for this endpoint
+});
 
-    // Create menu item
-    const menuItem = await db.menuItem.create({
-      data: {
-        restaurantId: validatedData.restaurantId,
-        name: validatedData.name,
-        description: validatedData.description,
-        price: validatedData.price,
-        category: validatedData.category,
-        image: validatedData.image || "/food-placeholder.jpg",
-      },
-    });
+/**
+ * POST handler for creating a new menu item
+ */
+export const POST = apiHandler({
+  endpoint: definitions.POST,
+  handler: createMenuItem,
+  email: {}, // No emails for this endpoint
+});
 
-    return createSuccessResponse(menuItem, menuItemResponseSchema);
-  } catch (err) {
-    const error = err as Error;
-    return createErrorResponse(
-      `Failed to create menu item: ${error.message}`,
-      500,
-    );
-  }
-}
-
-export async function GET(): Promise<NextResponse> {
-  try {
-    const menuItems = await db.menuItem.findMany();
-    return createSuccessResponse(menuItems, menuItemResponseSchema.array());
-  } catch (err) {
-    const error = err as Error;
-    return createErrorResponse(
-      `Could not fetch menu items: ${error.message}`,
-      500,
-    );
-  }
-}
+/**
+ * POST handler for searching menu items
+ * This is implemented as a separate endpoint at /api/v1/menu-items/search
+ */

@@ -1,6 +1,17 @@
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
-export function middleware(): NextResponse {
+export function middleware(request: NextRequest) {
+  // Handle WebSocket upgrade requests
+  if (
+    request.nextUrl.pathname === "/api/ws" &&
+    (request.headers.get("connection")?.toLowerCase().includes("upgrade") ||
+      request.headers.get("upgrade")?.toLowerCase() === "websocket")
+  ) {
+    // Let the WebSocket route handler manage this request
+    return NextResponse.next();
+  }
+
+  // Continue with other requests
   const response = NextResponse.next();
 
   // Add CORS headers for API routes
@@ -16,8 +27,10 @@ export function middleware(): NextResponse {
   return response;
 }
 
+// Only run middleware on the WebSocket route
 export const config = {
   matcher: [
+    "/api/ws",
     /*
      * Match all request paths except for:
      * - _next/static (static files)

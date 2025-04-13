@@ -1,23 +1,39 @@
-import type { ApiHandlerCallBackFunctionType } from "next-vibe/server/endpoints/core/api-handler";
+import "server-only";
+
+import type { ApiHandlerFunction } from "next-vibe/server/endpoints/core/api-handler";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
+import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
-import { db } from "../../db";
-import {
-  type OrderCreateType,
-  type OrderResponseType,
-  OrderStatus,
-} from "./schema";
+import { restaurantRepository } from "../restaurant/restaurant.repository";
+import { orderRepository } from "./order.repository";
+import type { OrderCreateType, OrderResponseType, OrderStatus } from "./schema";
 
-export const createOrder: ApiHandlerCallBackFunctionType<
+/**
+ * Order API route handlers
+ * Provides order management functionality
+ */
+
+/**
+ * Create a new order
+ * @param props - API handler props
+ * @returns Created order
+ */
+export const createOrder: ApiHandlerFunction<
   OrderCreateType,
   OrderResponseType,
   UndefinedType
-> = async ({ data }, orderId?: string) => {
-  // Check if restaurant exists
-  const restaurant = await db.partner.findUnique({
-    where: { id: data.restaurantId },
+> = async ({ data, user }, orderId?: string) => {
+  debugLogger("Creating order", {
+    userId: user.id,
+    restaurantId: data.restaurantId,
+    items: data.orderItems.length,
   });
+
+  // Check if restaurant exists
+  const restaurant = await restaurantRepository.findById(data.restaurantId);
+
   if (!restaurant) {
+    debugLogger("Restaurant not found", { restaurantId: data.restaurantId });
     return {
       success: false,
       message: `Restaurant ${data.restaurantId} not found`,
@@ -26,23 +42,37 @@ export const createOrder: ApiHandlerCallBackFunctionType<
   }
 
   try {
-    // Create order with delivery
-    const menuItems = await db.menuItem.findMany({
-      where: {
-        id: { in: data.orderItems.map((item) => item.menuItemId) },
-      },
-    });
+    // Get menu item IDs from order items
+    const menuItemIds = data.orderItems.map((item) => item.menuItemId);
+
+    // Fetch menu items
+    const menuItems = await orderRepository.getMenuItemsByIds(menuItemIds);
+
+    // Check if all menu items were found
+    if (menuItems.length !== data.orderItems.length) {
+      debugLogger("Some menu items not found or not available", {
+        requested: data.orderItems.length,
+        found: menuItems.length,
+      });
+      return {
+        success: false,
+        message: "Some menu items not found or not available",
+        errorCode: 404,
+      };
+    }
+
     let total = 0;
     let totalTax = 0;
-    const orderItems = data.orderItems.map((item) => {
-      const menuItem = Object.values(menuItems).find(
-        (mi) => mi.id === item.menuItemId,
-      );
+    const orderItems = data.orderItems.map((item: any) => {
+      const menuItem = menuItems.find((mi: any) => mi.id === item.menuItemId);
       if (!menuItem) {
         throw new Error(`Menu item ${item.menuItemId} not found`);
       }
-      total += menuItem.price * item.quantity;
-      totalTax += (menuItem.price * item.quantity * menuItem.taxPercent) / 100;
+
+      const itemPrice = menuItem.price * item.quantity;
+      total += itemPrice;
+      totalTax += (itemPrice * menuItem.taxPercent) / 100;
+
       return {
         quantity: item.quantity,
         message: item.message,
@@ -55,7 +85,14 @@ export const createOrder: ApiHandlerCallBackFunctionType<
         },
       };
     });
-    const order: OrderResponseType = (await db.order.create({
+
+    debugLogger("Calculated order totals", {
+      total,
+      tax: totalTax,
+      items: orderItems.length,
+    });
+
+    const createdOrder = await db.order.create({
       data: {
         ...(orderId ? { id: orderId } : {}),
         status: OrderStatus.NEW,
@@ -64,13 +101,13 @@ export const createOrder: ApiHandlerCallBackFunctionType<
         tax: totalTax,
         customer: {
           connect: {
-            id: data.customerId,
+            id: user.id, // Use authenticated user ID instead of passed customerId
           },
         },
         orderItems: {
           create: orderItems,
         },
-        deliveryFee: data.deliveryFee,
+        deliveryFee: data.deliveryFee || 2.99, // Default delivery fee
         paymentMethod: data.paymentMethod,
         driverTip: data.driverTip,
         restaurantTip: data.restaurantTip,
@@ -80,6 +117,7 @@ export const createOrder: ApiHandlerCallBackFunctionType<
             id: data.restaurantId,
           },
         },
+        currency: "EUR", // Default currency
         delivery: {
           create: {
             type: data.delivery.type,
@@ -95,6 +133,8 @@ export const createOrder: ApiHandlerCallBackFunctionType<
             latitude: data.delivery.latitude,
             longitude: data.delivery.longitude,
             countryId: data.delivery.countryId,
+            driverId: data.delivery.driverId,
+            message: data.delivery.message,
           },
         },
       },
@@ -111,6 +151,7 @@ export const createOrder: ApiHandlerCallBackFunctionType<
         updatedAt: true,
         paymentMethod: true,
         tax: true,
+        customerId: true,
         orderItems: {
           select: {
             id: true,
@@ -140,12 +181,10 @@ export const createOrder: ApiHandlerCallBackFunctionType<
                 id: true,
                 vehicle: true,
                 licensePlate: true,
-                createdAt: true,
-                user: {
-                  select: {
-                    firstName: true,
-                  },
-                },
+                rating: true,
+                ratingCount: true,
+                phone: true,
+                // imageUrl: true, // This field doesn't exist in the schema
               },
             },
             city: true,
@@ -165,21 +204,27 @@ export const createOrder: ApiHandlerCallBackFunctionType<
         customer: {
           select: {
             id: true,
-            lastName: true,
             firstName: true,
+            lastName: true,
+            email: true,
+            // imageUrl: true, // This field doesn't exist in the schema
           },
         },
       },
-    })) as OrderResponseType;
+    });
+
+    debugLogger("Order created successfully", { orderId: createdOrder.id });
+
     return {
-      data: order,
+      data: createdOrder,
       success: true,
     };
   } catch (err) {
     const error = err as Error;
+    errorLogger("Error creating order", error);
     return {
       success: false,
-      message: `Error creating order: ${error.message}`,
+      message: `Error creating order: ${error instanceof Error ? error.message : "Unknown error"}`,
       errorCode: 500,
     };
   }

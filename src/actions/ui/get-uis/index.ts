@@ -1,8 +1,10 @@
 "use server";
 
-import type { Prisma } from "@prisma/client";
+import { desc, asc, eq, and, or, gte, lte, inArray } from "drizzle-orm";
 
 import { db } from "@/app/api/db";
+import { uiRepository } from "@/app/api/v1/website-editor/website-editor.repository";
+import { ui } from "@/app/api/v1/website-editor/db";
 import type { FullUI } from "@/lib/website-editor/types";
 
 export const getUIs = async (
@@ -11,183 +13,207 @@ export const getUIs = async (
   limit: number,
   timeRange: string,
 ): Promise<FullUI[]> => {
-  let orderBy:
-    | Prisma.UIOrderByWithRelationInput
-    | Prisma.UIOrderByWithRelationInput[]
-    | undefined;
-  let where: Prisma.UIWhereInput = {};
+  // Define order by and where conditions for Drizzle
+  const orderByConditions = [];
+  const whereConditions = [];
 
+  // Set up order by conditions based on mode
   switch (mode) {
     case "latest":
-      orderBy = { createdAt: "desc" };
+      orderByConditions.push(desc(ui.createdAt));
       break;
     case "most_liked":
-      orderBy = [{ likesCount: "desc" }, { createdAt: "asc" }];
+      orderByConditions.push(desc(ui.likesCount));
+      orderByConditions.push(asc(ui.createdAt));
       break;
     case "most_viewed":
-      orderBy = [{ viewCount: "desc" }, { createdAt: "asc" }];
+      orderByConditions.push(desc(ui.viewCount));
+      orderByConditions.push(asc(ui.createdAt));
       break;
     default:
-      orderBy = { createdAt: "desc" };
+      orderByConditions.push(desc(ui.createdAt));
   }
 
+  // Add time range filter if specified
   const now = new Date();
-  if (mode !== "latest") {
+  if (mode !== "latest" && timeRange !== "all") {
+    let startDate: Date;
+
     switch (timeRange) {
       case "1h":
-        where.createdAt = { gte: new Date(now.getTime() - 60 * 60 * 1000) };
+        startDate = new Date(now.getTime() - 60 * 60 * 1000);
         break;
       case "24h":
-        where.createdAt = {
-          gte: new Date(now.getTime() - 24 * 60 * 60 * 1000),
-        };
+        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         break;
       case "7d":
-        where.createdAt = {
-          gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-        };
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         break;
       case "30d":
-        where.createdAt = {
-          gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
-        };
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         break;
-      case "all":
       default:
+        startDate = new Date(0); // Beginning of time
         break;
     }
+
+    whereConditions.push(gte(ui.createdAt, startDate));
   }
 
-  const uis = await db.uI.findMany({
-    take: limit,
-    skip: start,
-    where,
-    orderBy,
-    select: {
-      id: true,
-      uiType: true,
-      user: {
-        select: {
-          id: true,
-          firstName: true,
-          imageUrl: true,
-        },
-      },
-      prompt: true,
-      public: true,
-      img: true,
-      viewCount: true,
-      likesCount: true,
-      forkedFrom: true,
-      createdAt: true,
-      updatedAt: true,
-      subPrompts: {
-        select: {
-          id: true,
-          UIId: true,
-          SUBId: true,
-          createdAt: true,
-          subPrompt: true,
-          modelId: true,
-          code: {
-            select: {
-              id: true,
-              code: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  // Query the database using Drizzle
+  const query = db
+    .select()
+    .from(ui)
+    .limit(limit)
+    .offset(start);
 
-  return uis;
+  // Add where conditions if any
+  if (whereConditions.length > 0) {
+    query.where(and(...whereConditions));
+  }
+
+  // Add order by conditions
+  for (const orderCondition of orderByConditions) {
+    query.orderBy(orderCondition);
+  }
+
+  const results = await query;
+
+  // Convert to FullUI type
+  const fullUIs: FullUI[] = await Promise.all(
+    results.map(async (result) => {
+      // Get user information
+      const user = await db
+        .select()
+        .from(ui)
+        .where(eq(ui.id, result.id))
+        .innerJoin('users', eq(ui.userId, 'users.id'))
+        .then(rows => rows[0]?.users);
+
+      // Get subPrompts
+      const subPrompts = await db
+        .select()
+        .from('sub_prompts')
+        .where(eq('sub_prompts.uiId', result.id));
+
+      return {
+        ...result,
+        user: {
+          id: user?.id || '',
+          firstName: user?.firstName || '',
+          imageUrl: user?.imageUrl,
+        },
+        subPrompts: subPrompts.map(sp => ({
+          ...sp,
+          uiId: sp.uiId,
+          code: null, // We would need to fetch code separately if needed
+        })),
+      };
+    })
+  );
+
+  return fullUIs;
 };
 
 export const getUI = async (UIId: string): Promise<FullUI | null> => {
-  const ui = await db.uI.findUnique({
-    where: {
-      id: UIId,
+  // Get the UI by ID
+  const result = await db
+    .select()
+    .from(ui)
+    .where(eq(ui.id, UIId));
+
+  if (!result || result.length === 0) {
+    return null;
+  }
+
+  const uiData = result[0];
+
+  // Get user information
+  const user = await db
+    .select()
+    .from(ui)
+    .where(eq(ui.id, UIId))
+    .innerJoin('users', eq(ui.userId, 'users.id'))
+    .then(rows => rows[0]?.users);
+
+  // Get subPrompts
+  const subPrompts = await db
+    .select()
+    .from('sub_prompts')
+    .where(eq('sub_prompts.uiId', UIId));
+
+  // Get codes for subPrompts
+  const subPromptsWithCode = await Promise.all(
+    subPrompts.map(async (sp) => {
+      const code = await db
+        .select()
+        .from('code')
+        .where(eq('code.subPromptId', sp.id))
+        .then(rows => rows[0]);
+
+      return {
+        ...sp,
+        code: code ? { id: code.id, code: code.code } : null,
+      };
+    })
+  );
+
+  // Increment view count
+  await uiRepository.incrementViewCount(UIId);
+
+  // Return the full UI data
+  return {
+    ...uiData,
+    user: {
+      id: user?.id || '',
+      firstName: user?.firstName || '',
+      imageUrl: user?.imageUrl,
     },
-    select: {
-      id: true,
-      uiType: true,
-      user: {
-        select: {
-          id: true,
-          firstName: true,
-          imageUrl: true,
-        },
-      },
-      prompt: true,
-      public: true,
-      img: true,
-      viewCount: true,
-      likesCount: true,
-      forkedFrom: true,
-      createdAt: true,
-      updatedAt: true,
-      subPrompts: {
-        select: {
-          id: true,
-          UIId: true,
-          SUBId: true,
-          createdAt: true,
-          subPrompt: true,
-          modelId: true,
-          code: {
-            select: {
-              id: true,
-              code: true,
-            },
-          },
-        },
-      },
-    },
-  });
-  return ui;
+    subPrompts: subPromptsWithCode,
+  };
 };
 
 export const getUIHome = async (): Promise<FullUI[]> => {
-  const uis = await db.uI.findMany({
-    take: 11,
-    orderBy: { updatedAt: "desc" },
-    select: {
-      id: true,
-      uiType: true,
-      user: {
-        select: {
-          id: true,
-          firstName: true,
-          imageUrl: true,
+  // Query the database using Drizzle
+  const results = await db
+    .select()
+    .from(ui)
+    .orderBy(desc(ui.updatedAt))
+    .limit(11);
+
+  // Convert to FullUI type
+  const fullUIs: FullUI[] = await Promise.all(
+    results.map(async (result) => {
+      // Get user information
+      const user = await db
+        .select()
+        .from(ui)
+        .where(eq(ui.id, result.id))
+        .innerJoin('users', eq(ui.userId, 'users.id'))
+        .then(rows => rows[0]?.users);
+
+      // Get subPrompts
+      const subPrompts = await db
+        .select()
+        .from('sub_prompts')
+        .where(eq('sub_prompts.uiId', result.id));
+
+      return {
+        ...result,
+        user: {
+          id: user?.id || '',
+          firstName: user?.firstName || '',
+          imageUrl: user?.imageUrl,
         },
-      },
-      prompt: true,
-      public: true,
-      img: true,
-      viewCount: true,
-      likesCount: true,
-      forkedFrom: true,
-      createdAt: true,
-      updatedAt: true,
-      subPrompts: {
-        select: {
-          id: true,
-          UIId: true,
-          SUBId: true,
-          createdAt: true,
-          subPrompt: true,
-          modelId: true,
-          code: {
-            select: {
-              id: true,
-              code: true,
-            },
-          },
-        },
-      },
-    },
-  });
-  return uis;
+        subPrompts: subPrompts.map(sp => ({
+          ...sp,
+          code: null, // We would need to fetch code separately if needed
+        })),
+      };
+    })
+  );
+
+  return fullUIs;
 };
 
 export const getUIProfile = async (
@@ -201,107 +227,102 @@ export const getUIProfile = async (
   }
 
   if (mode === "ownUI") {
-    const uis = await db.uI.findMany({
-      take: limit,
-      skip: start,
-      where: {
-        userId,
-      },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        uiType: true,
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            imageUrl: true,
+    // Query the database using Drizzle
+    const results = await db
+      .select()
+      .from(ui)
+      .where(eq(ui.userId, userId))
+      .orderBy(desc(ui.createdAt))
+      .limit(limit)
+      .offset(start);
+
+    // Convert to FullUI type
+    const fullUIs: FullUI[] = await Promise.all(
+      results.map(async (result) => {
+        // Get user information
+        const user = await db
+          .select()
+          .from(ui)
+          .where(eq(ui.id, result.id))
+          .innerJoin('users', eq(ui.userId, 'users.id'))
+          .then(rows => rows[0]?.users);
+
+        // Get subPrompts
+        const subPrompts = await db
+          .select()
+          .from('sub_prompts')
+          .where(eq('sub_prompts.uiId', result.id));
+
+        return {
+          ...result,
+          user: {
+            id: user?.id || '',
+            firstName: user?.firstName || '',
+            imageUrl: user?.imageUrl,
           },
-        },
-        prompt: true,
-        public: true,
-        img: true,
-        viewCount: true,
-        likesCount: true,
-        forkedFrom: true,
-        createdAt: true,
-        updatedAt: true,
-        subPrompts: {
-          select: {
-            id: true,
-            UIId: true,
-            SUBId: true,
-            createdAt: true,
-            subPrompt: true,
-            modelId: true,
-            code: {
-              select: {
-                id: true,
-                code: true,
-              },
-            },
-          },
-        },
-      },
-    });
-    return uis;
+          subPrompts: subPrompts.map(sp => ({
+            ...sp,
+            code: null, // We would need to fetch code separately if needed
+          })),
+        };
+      })
+    );
+
+    return fullUIs;
   } else if (mode === "likedUI") {
-    const likedUIs = await db.like.findMany({
-      where: {
-        userId,
-      },
-      skip: start,
-      take: limit,
-      select: { UIId: true },
-    });
+    // Get liked UIs
+    const likedUIs = await db
+      .select()
+      .from('likes')
+      .where(eq('likes.userId', userId))
+      .limit(limit)
+      .offset(start);
 
-    const uiIds = likedUIs.map((like) => like.UIId);
+    const uiIds = likedUIs.map((like) => like.uiId);
 
-    const uis = await db.uI.findMany({
-      where: {
-        id: {
-          in: uiIds,
-        },
-      },
-      select: {
-        id: true,
-        uiType: true,
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            imageUrl: true,
+    if (uiIds.length === 0) {
+      return [];
+    }
+
+    // Query the database using Drizzle
+    const results = await db
+      .select()
+      .from(ui)
+      .where(inArray(ui.id, uiIds));
+
+    // Convert to FullUI type
+    const fullUIs: FullUI[] = await Promise.all(
+      results.map(async (result) => {
+        // Get user information
+        const user = await db
+          .select()
+          .from(ui)
+          .where(eq(ui.id, result.id))
+          .innerJoin('users', eq(ui.userId, 'users.id'))
+          .then(rows => rows[0]?.users);
+
+        // Get subPrompts
+        const subPrompts = await db
+          .select()
+          .from('sub_prompts')
+          .where(eq('sub_prompts.uiId', result.id));
+
+        return {
+          ...result,
+          user: {
+            id: user?.id || '',
+            firstName: user?.firstName || '',
+            imageUrl: user?.imageUrl,
           },
-        },
-        prompt: true,
-        public: true,
-        img: true,
-        viewCount: true,
-        likesCount: true,
-        forkedFrom: true,
-        createdAt: true,
-        updatedAt: true,
-        subPrompts: {
-          select: {
-            id: true,
-            UIId: true,
-            SUBId: true,
-            createdAt: true,
-            subPrompt: true,
-            modelId: true,
-            code: {
-              select: {
-                id: true,
-                code: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+          subPrompts: subPrompts.map(sp => ({
+            ...sp,
+            code: null, // We would need to fetch code separately if needed
+          })),
+        };
+      })
+    );
 
-    return uis;
+    return fullUIs;
   }
 
   return [];

@@ -8,6 +8,7 @@ import type { JSX } from "react";
 
 import { ThemeProvider } from "@/components/theme-provider";
 
+import { initializeApi } from "../lib/init-api";
 import { TranslationProvider } from "../packages/next-vibe/i18n";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -16,6 +17,9 @@ export const metadata: Metadata = {
   title: `${APP_NAME} Partner Portal`,
   description: "Partner portal for restaurants, drivers, and administrators",
 };
+
+// Initialize API on server side
+initializeApi();
 
 export default function RootLayout({
   children,

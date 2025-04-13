@@ -9,7 +9,10 @@ export const UserRoleValue = {
 
 export type UserRoleValue = (typeof UserRoleValue)[keyof typeof UserRoleValue];
 
-// Export a helper to convert Prisma role types to our internal enum
+// Export a helper to convert database role types to our internal enum
 export const convertPrismaRole = (role: string): UserRoleValue => {
   return role as UserRoleValue;
 };
+
+// Alias for convertPrismaRole for better naming with Drizzle
+export const convertRole = convertPrismaRole;

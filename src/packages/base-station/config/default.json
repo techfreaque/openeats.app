@@ -1,0 +1,50 @@
+{
+  "server": {
+    "port": 3000,
+    "host": "0.0.0.0"
+  },
+  "websocket": {
+    "url": "ws://localhost:8080",
+    "reconnectInterval": 5000,
+    "maxReconnectAttempts": 10
+  },
+  "security": {
+    "apiKey": "default-api-key-change-me",
+    "defaultApiKey": "default-api-key-change-me"
+  },
+  "printing": {
+    "defaultPrinter": "",
+    "tempDirectory": "/tmp",
+    "receiptWidth": 40,
+    "autoRetry": true,
+    "maxRetries": 3,
+    "retryDelay": 2000,
+    "bluetooth": {
+      "enabled": false,
+      "name": "Receipt Printer",
+      "address": "",
+      "channel": 1,
+      "discoverable": true,
+      "discoveryTimeout": 30000
+    }
+  },
+  "notifications": {
+    "enabled": true,
+    "sounds": {
+      "newOrder": "sounds/new-order.mp3",
+      "printSuccess": "sounds/print-success.mp3",
+      "printError": "sounds/print-error.mp3"
+    },
+    "volume": 80
+  },
+  "gpio": {
+    "enabled": false,
+    "resetPin": 17
+  },
+  "logging": {
+    "level": "info",
+    "file": "logs/print-server.log",
+    "maxSize": 5242880,
+    "maxFiles": 5
+  }
+}

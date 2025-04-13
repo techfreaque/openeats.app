@@ -1,31 +1,38 @@
-import { NextResponse } from "next/server";
+import "server-only";
 
-// GET available drivers (for admin or restaurant)
-export async function GET(): Promise<NextResponse> {
-  try {
-    const drivers = await db.user.findMany({
-      where: {
-        userRoles: {
-          some: {
-            role: "DRIVER",
-          },
-        },
-      },
-    });
+import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
 
-    return NextResponse.json(drivers);
-  } catch (error) {
-    // Avoid console.error in production
-    return new NextResponse(
-      JSON.stringify({ message: "Could not fetch drivers" }),
-      { status: 500 },
-    );
-  }
-}
+import definitions from "./definition";
+import { createDriver, getDrivers, updateDriver } from "./route-handler";
 
-// POST create or update driver profile
-export async function POST(): Promise<NextResponse> {
-  // Adding await to satisfy the linter
-  await Promise.resolve();
-  return NextResponse.json({ message: "Created/updated driver" });
-}
+/**
+ * Driver API route handlers
+ * Provides driver management functionality
+ */
+
+/**
+ * GET handler for retrieving all drivers
+ */
+export const GET = apiHandler({
+  endpoint: definitions.GET,
+  handler: getDrivers,
+  email: undefined,
+});
+
+/**
+ * POST handler for creating a new driver
+ */
+export const POST = apiHandler({
+  endpoint: definitions.POST,
+  handler: createDriver,
+  email: undefined,
+});
+
+/**
+ * PUT handler for updating a driver
+ */
+export const PUT = apiHandler({
+  endpoint: definitions.PUT,
+  handler: updateDriver,
+  email: undefined,
+});

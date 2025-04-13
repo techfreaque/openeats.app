@@ -162,7 +162,7 @@ export const commitChanges: Version[] = [
         description: "Updated CardDescription text in maintenance page",
       },
       { type: "other", description: "Implemented maintenance mode" },
-      { type: "other", description: "Removed console.log statements" },
+      { type: "other", description: "Removed debugLogger statements" },
     ],
   },
   {

@@ -1,9 +1,8 @@
 "use client";
 
 import { type QueryKey } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
-// Add this import if not already available
 import type { ApiEndpoint } from "../../endpoint";
 import type { ApiStore, QueryStoreType } from "../store";
 import { useApiStore } from "../store";
@@ -12,7 +11,9 @@ import type { EnhancedQueryResult } from "../types";
 /**
  * React Query hook for GET requests with local storage caching
  * @param endpoint - The endpoint to call
- * @param options - Query options including data and URL params
+ * @param requestData - Request data for the API call
+ * @param urlParams - URL parameters for the API call
+ * @param options - Query options
  * @returns Enhanced query result with extra loading state information
  */
 export function useApiQuery<
@@ -33,81 +34,127 @@ export function useApiQuery<
     onError?: (error: Error) => void;
     disableLocalCache?: boolean;
     refreshDelay?: number;
+    /**
+     * Whether to skip initial fetch when component mounts
+     * @default false
+     */
+    skipInitialFetch?: boolean;
+    /**
+     * Whether to refetch when dependencies change
+     * @default true
+     */
+    refetchOnDependencyChange?: boolean;
   } = {},
 ): EnhancedQueryResult<TResponse> {
-  const { queryKey: customQueryKey, ...queryOptions } = options;
+  const {
+    queryKey: customQueryKey,
+    skipInitialFetch = false,
+    refetchOnDependencyChange = true,
+    ...queryOptions
+  } = options;
 
-  const queryKey: QueryKey = customQueryKey ?? [
-    endpoint.path,
-    endpoint.method,
-    requestData,
-    urlParams,
-  ];
-
-  const { executeQuery, getQueryId } = useApiStore();
-  const queryId = getQueryId(queryKey);
-  const defaultState: QueryStoreType<TResponse> = options.enabled
-    ? {
-        data: undefined,
-        error: null,
-        isLoading: true,
-        isFetching: true,
-        isError: false,
-        isSuccess: false,
-        isLoadingFresh: true,
-        isCachedData: false,
-        statusMessage: "Loading...",
-        lastFetchTime: null,
-      }
-    : {
-        data: undefined,
-        error: null,
-        isLoading: false,
-        isFetching: false,
-        isError: false,
-        isSuccess: false,
-        isLoadingFresh: false,
-        isCachedData: false,
-        statusMessage: "Query disabled",
-        lastFetchTime: null,
-      };
-  const selector = useMemo(
+  // Create a stable query key
+  const queryKey: QueryKey = useMemo(
     () =>
-      (state: ApiStore): QueryStoreType<TResponse> =>
-        (state.queries[queryId] as unknown as
-          | undefined
-          | QueryStoreType<TResponse>) ?? defaultState,
-    // eslint-disable-next-line react-compiler/react-compiler
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queryId, options.enabled],
+      customQueryKey ?? [
+        endpoint.path,
+        endpoint.method,
+        requestData,
+        urlParams,
+      ],
+    [customQueryKey, endpoint.path, endpoint.method, requestData, urlParams],
+  );
+
+  // Get API store methods
+  const { executeQuery, getQueryId } = useApiStore();
+
+  // Get query ID
+  const queryId = useMemo(() => getQueryId(queryKey), [getQueryId, queryKey]);
+
+  // Track if this is the initial mount
+  const isInitialMount = useRef(true);
+
+  // Create default state based on enabled option
+  const defaultState: QueryStoreType<TResponse> = useMemo(() => {
+    return options.enabled === false
+      ? {
+          data: undefined,
+          error: null,
+          isLoading: false,
+          isFetching: false,
+          isError: false,
+          isSuccess: false,
+          isLoadingFresh: false,
+          isCachedData: false,
+          statusMessage: "Query disabled",
+          lastFetchTime: null,
+        }
+      : {
+          data: undefined,
+          error: null,
+          isLoading: true,
+          isFetching: true,
+          isError: false,
+          isSuccess: false,
+          isLoadingFresh: true,
+          isCachedData: false,
+          statusMessage: "Loading...",
+          lastFetchTime: null,
+        };
+  }, [options.enabled]);
+
+  // Create a selector function for the store
+  const selector = useCallback(
+    (state: ApiStore): QueryStoreType<TResponse> =>
+      (state.queries[queryId] as undefined | QueryStoreType<TResponse>) ??
+      defaultState,
+    [queryId, defaultState],
   );
 
   // Get query state from store with shallow comparison
   const queryState = useApiStore(selector);
 
-  // const [isInitialized, setIsInitialized] = useState(false);
-
   // Execute query when component mounts or dependencies change
   useEffect(() => {
+    // Skip if query is disabled
     if (options.enabled === false) {
-      //   setIsInitialized(true);
-    } else {
-      void executeQuery(endpoint, requestData, urlParams, {
-        ...queryOptions,
-        queryKey,
-      });
-      // .catch(() => {
-      //   // Errors are already handled in the store
-      // })
-      // .finally(() => {
-      //   setIsInitialized(true);
-      // });
+      return;
     }
-    // eslint-disable-next-line react-compiler/react-compiler
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryId, options.enabled]);
 
-  const refetch = async (): Promise<TResponse> => {
+    // Skip initial fetch if requested
+    if (isInitialMount.current && skipInitialFetch) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // Skip dependency-based refetch if requested
+    if (!isInitialMount.current && !refetchOnDependencyChange) {
+      return;
+    }
+
+    // Execute the query
+    void executeQuery(endpoint, requestData, urlParams, {
+      ...queryOptions,
+      queryKey,
+    });
+
+    // Update initial mount ref
+    isInitialMount.current = false;
+  }, [
+    queryId,
+    options.enabled,
+    executeQuery,
+    endpoint,
+    requestData,
+    urlParams,
+    queryOptions,
+    queryKey,
+    skipInitialFetch,
+    refetchOnDependencyChange,
+  ]);
+
+  // Refetch function
+  const refetch = useCallback(async (): Promise<TResponse> => {
     return await executeQuery<TRequest, TResponse, TUrlVariables, TExampleKey>(
       endpoint,
       requestData,
@@ -118,39 +165,44 @@ export function useApiQuery<
         disableLocalCache: true, // Force refetch
       },
     );
-  };
+  }, [executeQuery, endpoint, requestData, urlParams, queryOptions, queryKey]);
+
+  // Remove function
+  const remove = useCallback(() => {
+    // Clear from in-memory state
+    useApiStore.setState((state) => {
+      const queries = { ...state.queries };
+      delete queries[queryId];
+      return { queries };
+    });
+  }, [queryId]);
 
   // Create a result object that matches React Query's API
-  const result: EnhancedQueryResult<TResponse> = {
-    data: queryState.data ?? undefined,
-    error: queryState.error ?? undefined,
-    isLoading: queryState.isLoading || queryState.isFetching,
-    isFetching: queryState.isFetching,
-    isError: queryState.isError,
-    isSuccess: queryState.isSuccess,
-    isLoadingFresh: queryState.isLoadingFresh,
-    isCachedData: queryState.isCachedData,
-    statusMessage: queryState.statusMessage,
+  return useMemo(() => {
+    const result: EnhancedQueryResult<TResponse> = {
+      data: queryState.data,
+      error: queryState.error ?? undefined,
+      isLoading: queryState.isLoading || queryState.isFetching,
+      isFetching: queryState.isFetching,
+      isError: queryState.isError,
+      isSuccess: queryState.isSuccess,
+      isLoadingFresh: queryState.isLoadingFresh,
+      isCachedData: queryState.isCachedData,
+      statusMessage: queryState.statusMessage,
 
-    // Add additional methods/properties to match React Query's API
-    status:
-      queryState.isLoading || queryState.isFetching
-        ? "loading"
-        : queryState.isError
-          ? "error"
-          : queryState.isSuccess
-            ? "success"
-            : "idle",
-    refetch,
-    remove: () => {
-      // Clear from in-memory state
-      useApiStore.setState((state) => {
-        const queries = { ...state.queries };
-        delete queries[queryId];
-        return { queries };
-      });
-    },
-  };
+      // Add additional methods/properties to match React Query's API
+      status:
+        queryState.isLoading || queryState.isFetching
+          ? "loading"
+          : queryState.isError
+            ? "error"
+            : queryState.isSuccess
+              ? "success"
+              : "idle",
+      refetch,
+      remove,
+    };
 
-  return result;
+    return result;
+  }, [queryState, refetch, remove]);
 }

@@ -1,152 +1,195 @@
 import { createEndpoint } from "next-vibe/client/endpoint";
 import { undefinedSchema } from "next-vibe/shared/types/common.schema";
-import type { ExamplesList } from "next-vibe/shared/types/endpoint";
 import { Methods } from "next-vibe/shared/types/endpoint";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 
-import type { CategoryUpdateType } from "./schema";
-import {
-  categoriesResponseSchema,
-  categoryCreateSchema,
-  categoryResponseSchema,
-  categoryUpdateSchema,
-} from "./schema";
+// Define cart item schemas
+const cartItemCreateSchema = z.object({
+  menuItemId: z.string().uuid({ message: "Valid menu item ID is required" }),
+  restaurantId: z.string().uuid({ message: "Valid restaurant ID is required" }),
+  quantity: z.number().min(1, { message: "Quantity must be at least 1" }),
+});
+export type CartItemCreateType = z.infer<typeof cartItemCreateSchema>;
 
-const defaultCategoryExampleId = uuidv4();
+const cartItemUpdateSchema = z.object({
+  id: z.string().uuid({ message: "Valid cart item ID is required" }),
+  quantity: z.number().min(1, { message: "Quantity must be at least 1" }),
+});
+export type CartItemUpdateType = z.infer<typeof cartItemUpdateSchema>;
 
-export const categoryExamples: ExamplesList<
-  CategoryUpdateType,
-  "example1" | "example2" | "default"
-> = {
-  default: {
-    id: defaultCategoryExampleId,
-    name: "Pizza",
-    image: "/placeholder.svg",
-    parentCategoryId: null,
-    published: true,
-  },
-  example1: {
-    id: uuidv4(),
-    name: "Burgers",
-    image: "/placeholder.svg",
-    parentCategoryId: defaultCategoryExampleId,
-    published: true,
-  },
-  example2: {
-    id: defaultCategoryExampleId,
-    name: "Kebap",
-    image: "/placeholder.svg",
-    parentCategoryId: null,
-    published: false,
-  },
+const cartItemResponseSchema = z.object({
+  id: z.string().uuid(),
+  menuItemId: z.string().uuid(),
+  restaurantId: z.string().uuid(),
+  userId: z.string().uuid(),
+  quantity: z.number(),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+});
+export type CartItemResponseType = z.infer<typeof cartItemResponseSchema>;
+
+// Example data
+const exampleCartItem = {
+  id: uuidv4(),
+  menuItemId: "menu-item-id-1",
+  restaurantId: "restaurant-id-1",
+  userId: "user-id-1",
+  quantity: 2,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 };
 
-const categoriesGetEndpoint = createEndpoint({
-  description: "Get all categories",
-  requestSchema: undefinedSchema,
-  responseSchema: categoriesResponseSchema,
-  requestUrlSchema: undefinedSchema,
-  path: ["v1", "category"],
+// GET endpoint for retrieving cart items
+const cartGetEndpoint = createEndpoint({
+  description: "Get all cart items for the current user",
   method: Methods.GET,
+  requestSchema: undefinedSchema,
+  responseSchema: z.array(cartItemResponseSchema),
+  requestUrlSchema: undefinedSchema,
+  path: ["v1", "cart"],
   apiQueryOptions: {
-    queryKey: ["category-get"],
+    queryKey: ["cart-items"],
   },
   fieldDescriptions: undefined,
+  allowedRoles: [UserRoleValue.CUSTOMER],
+  errorCodes: {
+    401: "Not authenticated",
+    403: "Not authorized",
+    500: "Internal server error",
+  },
   examples: {
     payloads: undefined,
     urlPathVariables: undefined,
-  },
-  allowedRoles: [
-    UserRoleValue.ADMIN,
-    UserRoleValue.CUSTOMER,
-    UserRoleValue.COURIER,
-    UserRoleValue.ADMIN,
-    UserRoleValue.PARTNER_ADMIN,
-    UserRoleValue.PARTNER_EMPLOYEE,
-  ],
-  errorCodes: {
-    400: "Invalid request data",
-    401: "Not authenticated",
-    403: "Not authorized",
-    500: "Internal server error",
+    responses: {
+      default: [exampleCartItem],
+    },
   },
 });
 
-const categoryCreateEndpoint = createEndpoint({
-  description: "Create a new category",
-  requestSchema: categoryCreateSchema,
-  responseSchema: categoryResponseSchema,
-  requestUrlSchema: undefinedSchema,
-  path: ["v1", "category"],
+// POST endpoint for adding items to cart
+const cartAddEndpoint = createEndpoint({
+  description: "Add an item to the cart",
   method: Methods.POST,
-  apiQueryOptions: {
-    queryKey: ["category-create"],
-  },
-  fieldDescriptions: {
-    name: "Category name",
-    image: "Image URL",
-    parentCategoryId: "Parent category ID",
-    published: "Published status",
-  },
-  examples: {
-    payloads: categoryExamples,
-    urlPathVariables: undefined,
-  },
-  allowedRoles: [
-    UserRoleValue.CUSTOMER,
-    UserRoleValue.COURIER,
-    UserRoleValue.ADMIN,
-    UserRoleValue.PARTNER_ADMIN,
-    UserRoleValue.PARTNER_EMPLOYEE,
-  ],
-  errorCodes: {
-    400: "Invalid request data",
-    401: "Not authenticated",
-    403: "Not authorized",
-    500: "Internal server error",
-  },
-});
-
-const categoryUpdateEndpoint = createEndpoint({
-  description: "Update a category",
-  requestSchema: categoryUpdateSchema,
-  responseSchema: categoryResponseSchema,
+  requestSchema: cartItemCreateSchema,
+  responseSchema: cartItemResponseSchema,
   requestUrlSchema: undefinedSchema,
-  path: ["v1", "category"],
-  method: Methods.PUT,
+  path: ["v1", "cart"],
   apiQueryOptions: {
-    queryKey: ["category-update"],
+    queryKey: ["cart-add"],
   },
   fieldDescriptions: {
-    id: "Category ID",
-    name: "Category name",
-    image: "Image URL",
-    parentCategoryId: "Parent category ID",
-    published: "Published status",
+    menuItemId: "ID of the menu item to add",
+    restaurantId: "ID of the restaurant the menu item belongs to",
+    quantity: "Quantity of the menu item to add",
   },
-  examples: {
-    payloads: categoryExamples,
-    urlPathVariables: undefined,
-  },
-  allowedRoles: [
-    UserRoleValue.CUSTOMER,
-    UserRoleValue.COURIER,
-    UserRoleValue.ADMIN,
-    UserRoleValue.PARTNER_ADMIN,
-    UserRoleValue.PARTNER_EMPLOYEE,
-  ],
+  allowedRoles: [UserRoleValue.CUSTOMER],
   errorCodes: {
     400: "Invalid request data",
     401: "Not authenticated",
     403: "Not authorized",
+    404: "Menu item not found",
     500: "Internal server error",
+  },
+  examples: {
+    payloads: {
+      default: {
+        menuItemId: "menu-item-id-1",
+        restaurantId: "restaurant-id-1",
+        quantity: 2,
+      },
+    },
+    urlPathVariables: undefined,
+    responses: {
+      default: exampleCartItem,
+    },
   },
 });
 
-const categoryEndpoints = {
-  ...categoryUpdateEndpoint,
-  ...categoryCreateEndpoint,
-  ...categoriesGetEndpoint,
+// PUT endpoint for updating cart items
+const cartUpdateEndpoint = createEndpoint({
+  description: "Update a cart item",
+  method: Methods.PUT,
+  requestSchema: cartItemUpdateSchema,
+  responseSchema: cartItemResponseSchema,
+  requestUrlSchema: undefinedSchema,
+  path: ["v1", "cart"],
+  apiQueryOptions: {
+    queryKey: ["cart-update"],
+  },
+  fieldDescriptions: {
+    id: "ID of the cart item to update",
+    quantity: "New quantity for the cart item",
+  },
+  allowedRoles: [UserRoleValue.CUSTOMER],
+  errorCodes: {
+    400: "Invalid request data",
+    401: "Not authenticated",
+    403: "Not authorized",
+    404: "Cart item not found",
+    500: "Internal server error",
+  },
+  examples: {
+    payloads: {
+      default: {
+        id: "cart-item-id-1",
+        quantity: 3,
+      },
+    },
+    urlPathVariables: undefined,
+    responses: {
+      default: {
+        ...exampleCartItem,
+        quantity: 3,
+      },
+    },
+  },
+});
+
+// DELETE endpoint for removing cart items
+const cartDeleteEndpoint = createEndpoint({
+  description: "Remove a cart item",
+  method: Methods.DELETE,
+  requestSchema: z.object({
+    id: z.string().uuid({ message: "Valid cart item ID is required" }),
+  }),
+  responseSchema: undefinedSchema,
+  requestUrlSchema: undefinedSchema,
+  path: ["v1", "cart"],
+  apiQueryOptions: {
+    queryKey: ["cart-delete"],
+  },
+  fieldDescriptions: {
+    id: "ID of the cart item to remove",
+  },
+  allowedRoles: [UserRoleValue.CUSTOMER],
+  errorCodes: {
+    400: "Invalid request data",
+    401: "Not authenticated",
+    403: "Not authorized",
+    404: "Cart item not found",
+    500: "Internal server error",
+  },
+  examples: {
+    payloads: {
+      default: {
+        id: "cart-item-id-1",
+      },
+    },
+    urlPathVariables: undefined,
+    responses: undefined,
+  },
+});
+
+/**
+ * Cart API endpoints
+ */
+const cartEndpoints = {
+  ...cartGetEndpoint,
+  ...cartAddEndpoint,
+  ...cartUpdateEndpoint,
+  ...cartDeleteEndpoint,
 };
-export default categoryEndpoints;
+
+export default cartEndpoints;

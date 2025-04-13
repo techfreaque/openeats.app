@@ -1,53 +1,65 @@
+import { createEndpoint } from "next-vibe/client/endpoint";
 import { undefinedSchema } from "next-vibe/shared/types/common.schema";
 import { Methods } from "next-vibe/shared/types/endpoint";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { messageResponseSchema } from "next-vibe/shared/types/response.schema";
 
-import { createEndpoint } from "@/packages/next-vibe/client/endpoint";
-
-import registerEndpoint from "../register/definition";
 import { resetPasswordConfirmSchema } from "./schema";
 
+/**
+ * Reset Password Confirm API endpoint definition
+ * Provides password reset confirmation functionality
+ */
+
+/**
+ * Reset Password Confirm endpoint definition
+ */
 const resetPasswordConfirmEndpoint = createEndpoint({
   description: "Confirm a password reset request",
   method: Methods.POST,
   path: ["v1", "auth", "public", "reset-password-confirm"],
   requestSchema: resetPasswordConfirmSchema,
   responseSchema: messageResponseSchema,
+  requestUrlSchema: undefinedSchema,
   apiQueryOptions: {
-    queryKey: ["resetPasswordConfirm"],
+    queryKey: ["reset-password-confirm"],
+    // Don't cache password reset confirmation requests
+    staleTime: 0,
   },
+  fieldDescriptions: {
+    token: "Password reset token received via email",
+    email: "Email address associated with the account",
+    password: "New password (min 8 characters)",
+    confirmPassword: "Confirm new password (must match password)",
+  },
+  errorCodes: {
+    400: "Invalid request data or token",
+    404: "User not found or token already used",
+    500: "Internal server error",
+  },
+  allowedRoles: [UserRoleValue.PUBLIC],
   examples: {
     payloads: {
       default: {
-        id: "9bfb43b8-c361-4f3e-b512-ec2ced9bf013",
-        email: registerEndpoint.POST.examples.payloads.default.email,
-        token: "COPY_FROM_EMAIL",
-        password: "newpassword",
-        confirmPassword: "newpassword",
-      },
-      example1: {
-        id: "9bfb43b8-c361-4f3e-b512-ec2ced9bf011",
-        email: registerEndpoint.POST.examples.payloads.customer.email,
-        token: "COPY_FROM_EMAIL",
-        password: "newpassword",
-        confirmPassword: "newpassword",
+        email: "user@example.com",
+        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        password: "newpassword123",
+        confirmPassword: "newpassword123",
       },
     },
     urlPathVariables: undefined,
+    responses: {
+      default:
+        "Password has been reset successfully. You can now log in with your new password.",
+    },
   },
-  fieldDescriptions: {
-    token: "Password reset token",
-    email: "Email address",
-    password: "New password",
-    confirmPassword: "Confirm new password",
-  },
-  errorCodes: {
-    500: "Internal server error",
-    400: "Invalid request data",
-  },
-  allowedRoles: [UserRoleValue.PUBLIC],
-  requestUrlSchema: undefinedSchema,
 });
 
-export default resetPasswordConfirmEndpoint;
+/**
+ * Reset Password Confirm API endpoints
+ */
+const definition = {
+  POST: resetPasswordConfirmEndpoint,
+};
+
+export default definition;

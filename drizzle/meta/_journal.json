@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1744533393561,
+      "tag": "20250413083633_easy_mercury",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1744533661855,
+      "tag": "20250413084101_premium_betty_ross",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1744533662000,
+      "tag": "20250413084102_notification_tables",
+      "breakpoints": true
+    }
+  ]
+}

@@ -106,3 +106,11 @@ export const restaurantProfileMinimalSchema = z.object({
 export type RestaurantProfileMinimalType = z.infer<
   typeof restaurantProfileMinimalSchema
 >;
+
+export const restaurantSearchSchema = z.object({
+  name: z.string().optional(),
+  city: z.string().optional(),
+  countryId: z.nativeEnum(Countries).optional(),
+  published: z.boolean().optional(),
+});
+export type RestaurantSearchType = z.infer<typeof restaurantSearchSchema>;

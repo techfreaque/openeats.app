@@ -84,7 +84,7 @@ export const createSubPrompt = async (
     } else {
       const lastSUBId = existingSubPrompts[0]!.SUBId;
       const parts = lastSUBId.split("-");
-      const lastNumber = parseInt(parts[parts.length - 1]!, 10);
+      const lastNumber = parseInt(parts[parts.length - 1], 10);
       parts[parts.length - 1] = (lastNumber + 1).toString();
       newSUBId = parts.join("-");
     }

@@ -1,0 +1,488 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { ZodType } from "zod";
+
+import { parseError } from "../../../shared/utils/parse-error";
+import type { ApiEndpoint } from "../../endpoint";
+import type { ApiStore } from "../store";
+import { useApiStore } from "../store";
+import type {
+  ApiFormOptions,
+  ApiMutationOptions,
+  SubmitFormFunction,
+} from "../types";
+import { mockLlmApi } from "./mock-api";
+import type {
+  AiFormOptions,
+  AiFormReturn,
+  ChatMessage,
+  ChatMessageContent,
+  FieldParsingResult,
+} from "./types";
+import { ChatMessageRole, FieldParsingStatus } from "./types";
+
+/**
+ * Creates a form with AI assistance for filling out fields
+ * Extends the standard form hook with chat capabilities
+ */
+export function useAiForm<TRequest, TResponse, TUrlVariables, TExampleKey>(
+  endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
+  options: AiFormOptions<TRequest> = {},
+  mutationOptions: ApiMutationOptions<TRequest, TResponse, TUrlVariables> = {},
+): AiFormReturn<TRequest, TResponse, TUrlVariables> {
+  // Extract AI-specific options with defaults
+  const {
+    systemPrompt = "I'm an AI assistant that will help you fill out this form. I'll ask you questions about the required information and help you complete the form step by step.",
+    autoStart = false,
+    maxRetries = 3,
+    retryDelayMs = 1000,
+    includeFieldDescriptions = true,
+    fieldParsers,
+    ...formOptions
+  } = options;
+
+  // Get Zustand store methods
+  const { executeMutation, getMutationId, getFormId } = useApiStore();
+  const formId = getFormId(endpoint);
+  const mutationId = getMutationId(endpoint);
+
+  // Create memoized selectors to prevent re-renders
+  const mutationSelector = useMemo(
+    () =>
+      (
+        state: ApiStore,
+      ):
+        | {
+            isPending: boolean;
+            isError: boolean;
+            error: Error | null;
+            isSuccess: boolean;
+            data: unknown;
+          }
+        | undefined =>
+        state.mutations[mutationId],
+    [mutationId],
+  );
+
+  const formSelector = useMemo(
+    () =>
+      (
+        state: ApiStore,
+      ):
+        | {
+            formError: Error | null;
+            isSubmitting: boolean;
+          }
+        | undefined =>
+        state.forms[formId],
+    [formId],
+  );
+
+  // Extract state from the Zustand store with shallow comparison
+  const mutationState = useApiStore(mutationSelector) ?? {
+    isPending: false,
+    isError: false,
+    error: null,
+    isSuccess: false,
+    data: undefined,
+  };
+
+  const formState = useApiStore(formSelector) ?? {
+    formError: null,
+    isSubmitting: false,
+  };
+
+  // Extract store methods for error handling
+  const setFormErrorStore = useApiStore((state) => state.setFormError);
+  const clearFormErrorStore = useApiStore((state) => state.clearFormError);
+
+  // Create base configuration without resolver
+  const formConfig: ApiFormOptions<ZodType<TRequest>> = {
+    ...formOptions,
+    // We force our form types with this
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    resolver: zodResolver(endpoint.requestSchema),
+  };
+
+  // Initialize form with the proper configuration
+  // We force our form types with this
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const formMethods = useForm<TRequest>(formConfig);
+
+  // Error management functions
+  const clearFormError = useCallback(
+    () => clearFormErrorStore(formId),
+    [clearFormErrorStore, formId],
+  );
+
+  const setError = useCallback(
+    (error: Error | null) => setFormErrorStore(formId, error),
+    [setFormErrorStore, formId],
+  );
+
+  // AI-specific state
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    {
+      role: ChatMessageRole.SYSTEM,
+      content: systemPrompt,
+      timestamp: new Date(),
+    },
+  ]);
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
+  const [fieldParsingResults, setFieldParsingResults] = useState<
+    Record<string, FieldParsingResult>
+  >({});
+
+  // Extract field descriptions from the endpoint if available
+  const fieldDescriptions = useMemo(() => {
+    if (!includeFieldDescriptions) {
+      return undefined;
+    }
+    return endpoint.fieldDescriptions || undefined;
+  }, [endpoint.fieldDescriptions, includeFieldDescriptions]);
+
+  // Function to send a user message and get AI response
+  const sendUserMessage = useCallback(
+    async (message: ChatMessageContent) => {
+      // Add user message to chat
+      const userMessage: ChatMessage = {
+        role: ChatMessageRole.USER,
+        content: message,
+        timestamp: new Date(),
+      };
+
+      setChatMessages((prev) => [...prev, userMessage]);
+      setIsAiProcessing(true);
+
+      try {
+        // In a real implementation, this would call the LLM API
+        // For now, we'll use our mock implementation
+        const updatedMessages = [...chatMessages, userMessage];
+
+        const response = await mockLlmApi({
+          messages: updatedMessages,
+          formSchema: endpoint.requestSchema,
+          fieldDescriptions,
+          retryDelayMs,
+        });
+
+        // Add assistant message to chat
+        const assistantMessage: ChatMessage = {
+          role: ChatMessageRole.ASSISTANT,
+          content: response.message.content,
+          timestamp: new Date(),
+          metadata: { parsedFields: response.parsedFields },
+        };
+
+        setChatMessages((prev) => [...prev, assistantMessage]);
+
+        // Update form fields with parsed values
+        if (response.parsedFields) {
+          const newParsingResults: Record<string, FieldParsingResult> = {};
+
+          for (const [field, value] of Object.entries(response.parsedFields)) {
+            try {
+              // Use custom field parser if available
+              const parsedValue = fieldParsers?.[field]
+                ? fieldParsers[field](String(value))
+                : value;
+
+              // Validate the field value using the form's validation
+              formMethods.setValue(field, parsedValue);
+              const fieldError = formMethods.getFieldState(field).error;
+
+              // Create field parsing result
+              newParsingResults[field] = {
+                fieldName: field,
+                status: fieldError
+                  ? FieldParsingStatus.ERROR
+                  : FieldParsingStatus.SUCCESS,
+                value: parsedValue,
+                ...(fieldError && { error: fieldError.message }),
+                retryCount:
+                  (fieldParsingResults[field]?.retryCount ?? 0) +
+                  (fieldError ? 1 : 0),
+              };
+            } catch (error) {
+              newParsingResults[field] = {
+                fieldName: field,
+                status: FieldParsingStatus.ERROR,
+                value,
+                error: error instanceof Error ? error.message : String(error),
+                retryCount: (fieldParsingResults[field]?.retryCount ?? 0) + 1,
+              };
+            }
+          }
+
+          setFieldParsingResults((prev) => ({
+            ...prev,
+            ...newParsingResults,
+          }));
+        }
+      } catch (error) {
+        // Handle API error
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+
+        // Add error message to chat
+        const errorAssistantMessage: ChatMessage = {
+          role: ChatMessageRole.ASSISTANT,
+          content: `Sorry, I encountered an error: ${errorMessage}`,
+          timestamp: new Date(),
+        };
+
+        setChatMessages((prev) => [...prev, errorAssistantMessage]);
+        setError(error instanceof Error ? error : new Error(String(error)));
+      } finally {
+        setIsAiProcessing(false);
+      }
+    },
+    [
+      chatMessages,
+      endpoint.requestSchema,
+      fieldDescriptions,
+      fieldParsers,
+      fieldParsingResults,
+      formMethods,
+      retryDelayMs,
+      setError,
+    ],
+  );
+
+  // Function to start the AI form filling process
+  const startAiFormFilling = useCallback(async () => {
+    // Clear any previous errors
+    clearFormError();
+
+    // Reset field parsing results
+    setFieldParsingResults({});
+
+    // Generate initial prompt based on form schema
+    let initialPrompt =
+      "I need to fill out a form with the following fields:\n\n";
+
+    // Extract field information from the schema
+    const schemaShape = endpoint.requestSchema.shape || {};
+
+    for (const [field, validator] of Object.entries(schemaShape)) {
+      const description = fieldDescriptions?.[field] || field;
+      initialPrompt += `- ${description}\n`;
+    }
+
+    initialPrompt += "\nCan you help me fill this out step by step?";
+
+    // Send the initial prompt
+    await sendUserMessage(initialPrompt);
+  }, [
+    clearFormError,
+    endpoint.requestSchema,
+    fieldDescriptions,
+    sendUserMessage,
+  ]);
+
+  // Function to reset the chat
+  const resetChat = useCallback(() => {
+    setChatMessages([
+      {
+        role: ChatMessageRole.SYSTEM,
+        content: systemPrompt,
+        timestamp: new Date(),
+      },
+    ]);
+    setFieldParsingResults({});
+  }, [systemPrompt]);
+
+  // Auto-start AI form filling if enabled
+  useEffect(() => {
+    if (autoStart) {
+      void startAiFormFilling();
+    }
+  }, [autoStart, startAiFormFilling]);
+
+  // Create a submit handler that validates and submits the form
+  const submitForm: SubmitFormFunction<TRequest, TResponse, TUrlVariables> = (
+    event,
+    options,
+  ): void => {
+    const _submitForm = async (): Promise<void> => {
+      try {
+        // Get form data
+        const formData = formMethods.getValues();
+
+        // Clear any previous errors
+        clearFormError();
+
+        // Call the API with the form data
+        const result = await executeMutation(
+          endpoint,
+          formData,
+          options.urlParamVariables,
+          mutationOptions,
+        );
+
+        if (result === undefined) {
+          return undefined;
+        }
+
+        options.onSuccess?.({
+          responseData: result,
+          pathParams: options.urlParamVariables,
+          requestData: formData,
+        });
+
+        // Add success message to chat if we have chat messages
+        if (chatMessages.length > 1) {
+          const successMessage: ChatMessage = {
+            role: ChatMessageRole.ASSISTANT,
+            content: "Great! The form has been submitted successfully.",
+            timestamp: new Date(),
+          };
+
+          setChatMessages((prev) => [...prev, successMessage]);
+        }
+      } catch (error) {
+        // Handle any errors that occur during submission
+        const parsedError = parseError(error);
+        setError(parsedError);
+        options.onError?.(parsedError);
+
+        // Add error message to chat if we have chat messages
+        if (chatMessages.length > 1) {
+          const errorMessage: ChatMessage = {
+            role: ChatMessageRole.ASSISTANT,
+            content: `Sorry, there was an error submitting the form: ${parsedError.message}`,
+            timestamp: new Date(),
+          };
+
+          setChatMessages((prev) => [...prev, errorMessage]);
+        }
+      }
+    };
+
+    void formMethods.handleSubmit(_submitForm, (errors) =>
+      options.onError?.(parseError(errors)),
+    )(event);
+  };
+
+  // Function to submit the form via chat
+  const submitViaChat = useCallback(async () => {
+    // Add user message indicating submission intent
+    const userMessage: ChatMessage = {
+      role: ChatMessageRole.USER,
+      content: "Submit the form",
+      timestamp: new Date(),
+    };
+
+    setChatMessages((prev) => [...prev, userMessage]);
+
+    // Validate the form
+    const isValid = await formMethods.trigger();
+
+    if (!isValid) {
+      // Get validation errors
+      const errors = formMethods.formState.errors;
+      let errorMessage = "There are some validation errors in the form:\n\n";
+
+      for (const [field, error] of Object.entries(errors)) {
+        const description = fieldDescriptions?.[field] || field;
+        errorMessage += `- ${description}: ${error.message}\n`;
+      }
+
+      // Add error message to chat
+      const validationErrorMessage: ChatMessage = {
+        role: ChatMessageRole.ASSISTANT,
+        content: errorMessage,
+        timestamp: new Date(),
+      };
+
+      setChatMessages((prev) => [...prev, validationErrorMessage]);
+      return;
+    }
+
+    // Submit the form
+    submitForm(undefined, {
+      urlParamVariables: {} as TUrlVariables,
+      onSuccess: (data) => {
+        // Add success message to chat
+        const successMessage: ChatMessage = {
+          role: ChatMessageRole.ASSISTANT,
+          content: "Great! The form has been submitted successfully.",
+          timestamp: new Date(),
+        };
+
+        setChatMessages((prev) => [...prev, successMessage]);
+      },
+      onError: (error) => {
+        // Add error message to chat
+        const errorMessage: ChatMessage = {
+          role: ChatMessageRole.ASSISTANT,
+          content: `Sorry, there was an error submitting the form: ${error.message}`,
+          timestamp: new Date(),
+        };
+
+        setChatMessages((prev) => [...prev, errorMessage]);
+      },
+    });
+  }, [fieldDescriptions, formMethods, submitForm]);
+
+  // Function to get a summary of the current form state
+  const getFormSummary = useCallback((): string => {
+    const formValues = formMethods.getValues();
+    const formErrors = formMethods.formState.errors;
+
+    let summary = "Current form state:\n\n";
+
+    // Add form values
+    for (const [field, value] of Object.entries(formValues)) {
+      const description = fieldDescriptions?.[field] || field;
+      const fieldError = formErrors[field];
+
+      if (value !== undefined && value !== "") {
+        summary += `- ${description}: ${value}`;
+        if (fieldError) {
+          summary += ` (Error: ${fieldError.message})`;
+        }
+        summary += "\n";
+      }
+    }
+
+    return summary;
+  }, [fieldDescriptions, formMethods]);
+
+  // Function to get missing fields
+  const getMissingFields = useCallback((): string[] => {
+    const formValues = formMethods.getValues();
+    const schemaShape = endpoint.requestSchema.shape || {};
+
+    return Object.keys(schemaShape).filter((field) => {
+      const value = formValues[field as keyof typeof formValues];
+      return value === undefined || value === "" || value === null;
+    });
+  }, [endpoint.requestSchema, formMethods]);
+
+  return {
+    form: formMethods,
+    submitForm,
+    isSubmitting: mutationState.isPending,
+    isSubmitSuccessful: mutationState.isSuccess,
+    submitError: mutationState.error ?? formState.formError ?? undefined,
+    errorMessage:
+      mutationState.error?.message ?? formState.formError?.message ?? undefined,
+
+    // AI-specific properties
+    chatMessages,
+    sendUserMessage,
+    startAiFormFilling,
+    resetChat,
+    isAiProcessing,
+    fieldParsingResults,
+    submitViaChat,
+    getFormSummary,
+    getMissingFields,
+  };
+}

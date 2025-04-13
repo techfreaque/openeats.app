@@ -1,4 +1,4 @@
-import { Day } from "@prisma/client";
+import { Day } from "@/app/api/v1/restaurant/schema/opening-times.schema";
 
 /**
  * Converts a time string in HH:MM format to seconds since midnight

@@ -90,8 +90,10 @@ A fairer restaurant industry through:
 
 ## Project Structure
 
-### Backend
-APIs for everything and an admin dashboard
+### Framework
+
+The backend and web version use next.js with [our own framework next vibe](nextvibe.dev) on top. Next vibe's goal is to provide a dev experience like in next.js, but with an additional feature to compile to native using expo. We're using shadcn for web and something similar for react native.
+This means compile once debug everywhere, but we'll get pretty far with just the next.js dev server.
 
 ### App
 A React Native app for all platforms (Web, Windows, Android, iOS, Mac) handling:

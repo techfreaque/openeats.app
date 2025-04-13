@@ -81,7 +81,6 @@
   "exclude": [
     "node_modules",
     "./**/*.native.tsx",
-    ".next",
-    "old"
+    ".next"
   ]
 }

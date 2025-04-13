@@ -1,4 +1,6 @@
-import { apiHandler } from "@/packages/next-vibe/server/endpoints/core/api-handler";
+import "server-only";
+
+import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
 
 import definitions from "./definition";
 import {
@@ -7,16 +9,27 @@ import {
 } from "./email";
 import {
   createRestaurant,
-  getRestaurant,
+  getRestaurants,
   updateRestaurant,
 } from "./route-handler";
 
+/**
+ * Restaurant API route handlers
+ * Provides restaurant management functionality
+ */
+
+/**
+ * GET handler for retrieving all restaurants
+ */
 export const GET = apiHandler({
   endpoint: definitions.GET,
-  handler: getRestaurant,
-  email: undefined,
+  handler: getRestaurants,
+  email: {}, // No emails for this endpoint
 });
 
+/**
+ * POST handler for creating a new restaurant
+ */
 export const POST = apiHandler({
   endpoint: definitions.POST,
   handler: createRestaurant,
@@ -29,6 +42,9 @@ export const POST = apiHandler({
   },
 });
 
+/**
+ * PUT handler for updating a restaurant
+ */
 export const PUT = apiHandler({
   endpoint: definitions.PUT,
   handler: updateRestaurant,

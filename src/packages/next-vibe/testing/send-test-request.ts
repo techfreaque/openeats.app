@@ -1,8 +1,10 @@
 import type { ApiEndpoint } from "next-vibe/client/endpoint";
 import type { JwtPayloadType } from "next-vibe/server/endpoints/auth/jwt";
-import type { SafeReturnType } from "next-vibe/server/endpoints/core/api-handler";
 import { env } from "next-vibe/server/env";
-import type { ResponseType } from "next-vibe/shared/types/response.schema";
+import {
+  ErrorResponseTypes,
+  type ResponseType,
+} from "next-vibe/shared/types/response.schema";
 import request from "supertest";
 
 import { db } from "@/app/api/db";
@@ -28,7 +30,7 @@ export async function sendTestRequest<
   urlParams: TUrlVariables;
   user: JwtPayloadType | undefined;
 }): Promise<
-  SafeReturnType<TResponse> & {
+  ResponseType<TResponse> & {
     status: number;
   }
 > {
@@ -47,7 +49,7 @@ export async function sendTestRequest<
         return {
           success: false,
           message: `Not able to create session for user ${user.id}, error message: ${userData.message}`,
-          errorCode: 500,
+          errorType: ErrorResponseTypes.INTERNAL_ERROR,
           status: noResponseCode,
         };
       }
@@ -72,7 +74,7 @@ export async function sendTestRequest<
       return {
         success: false,
         message: "No response body received from server",
-        errorCode: noResponseCode,
+        errorType: ErrorResponseTypes.NO_RESPONSE_DATA,
         status: response.status,
       };
     }
@@ -81,6 +83,7 @@ export async function sendTestRequest<
         ...(responseData.data ? { data: responseData.data } : {}),
         success: false,
         message: responseData.message,
+        errorType: ErrorResponseTypes.HTTP_ERROR,
         errorCode: response.status,
         status: response.status,
       };

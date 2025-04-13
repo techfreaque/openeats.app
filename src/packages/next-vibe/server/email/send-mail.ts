@@ -1,11 +1,11 @@
 import "server-only";
 
 import { render } from "@react-email/render";
+import { ErrorResponseTypes, type ResponseType } from "next-vibe/shared";
 import { createTransport } from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
 import type { JSX } from "react";
 
-import type { SafeReturnType } from "../endpoints/core/api-handler";
 import { env } from "../env";
 
 /**
@@ -35,7 +35,7 @@ export async function sendEmail({
   toName,
   replyToEmail,
   replyToName,
-}: SendEmailParams): Promise<SafeReturnType<SMTPTransport.SentMessageInfo>> {
+}: SendEmailParams): Promise<ResponseType<SMTPTransport.SentMessageInfo>> {
   // 1) Render the React component to raw HTML
   const rawHtml: string = await render(jsx);
 
@@ -65,7 +65,7 @@ export async function sendEmail({
   if (response.accepted.length === 0) {
     return {
       success: false,
-      errorCode: 500,
+      errorType: ErrorResponseTypes.EMAIL_ERROR,
       message: "Failed to send email",
     };
   }

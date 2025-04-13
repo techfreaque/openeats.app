@@ -8,7 +8,7 @@ import { errorLogger } from "../shared/utils/logger";
  */
 export function getEndpoints(): ApiSection {
   try {
-    return endpoints as ApiSection;
+    return endpoints;
   } catch (err) {
     errorLogger("Error loading API endpoints:", err);
     return {};

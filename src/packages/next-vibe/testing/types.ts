@@ -1,6 +1,6 @@
 import type { ApiEndpoint } from "next-vibe/client/endpoint";
 import type { JwtPayloadType } from "next-vibe/server/endpoints/auth/jwt";
-import type { SafeReturnType } from "next-vibe/server/endpoints/core/api-handler";
+import type { ResponseType } from "next-vibe/shared";
 
 /**
  * Options for testing an API endpoint
@@ -38,7 +38,7 @@ export interface TestRunner<TRequest, TResponse, TUrlVariables, TExampleKey> {
     data: TRequest;
     urlParams: TUrlVariables;
     user?: JwtPayloadType;
-  }) => Promise<SafeReturnType<TResponse> & { status?: number }>;
+  }) => Promise<ResponseType<TResponse> & { status?: number }>;
 
   /**
    * The endpoint being tested
