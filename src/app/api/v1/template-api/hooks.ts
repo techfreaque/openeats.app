@@ -1,13 +1,10 @@
-import { useApiQuery } from "next-vibe/client/hooks/query";
-import { useApiQueryForm } from "next-vibe/client/hooks/query-form";
-
-import endpoints from "./definition";
 import type {
-  TemplateCreateType,
-  TemplatePostRequestUrlParamsType,
-  TemplateResponseType,
-  TemplateUpdateType,
-} from "./schema";
+  UseApiMutationReturn,
+  UseApiQueryReturn,
+} from "next-vibe/client/hooks/query";
+import { useApiMutation, useApiQuery } from "next-vibe/client/hooks/query";
+
+import definitions from "./definition";
 
 /**
  * Template API hooks
@@ -16,57 +13,46 @@ import type {
 
 /**
  * Hook for fetching template resources
+ * @param params - Optional parameters for the query
  * @returns Query result with template data
  */
-export function useTemplate(): ReturnType<
-  typeof useApiQuery<
-    TemplateCreateType,
-    TemplateResponseType,
-    TemplatePostRequestUrlParamsType
-  >
-> {
-  return useApiQuery<
-    TemplateCreateType,
-    TemplateResponseType,
-    TemplatePostRequestUrlParamsType
-  >(endpoints.GET, { someInputValue: "" }, { someValueFromTheRouteUrl: "" });
+export function useTemplates(params?: {
+  someInputValue?: string;
+  enabled?: boolean;
+}): UseApiQueryReturn {
+  return useApiQuery({
+    endpoint: definitions.GET,
+    payload: params?.someInputValue
+      ? { someInputValue: params.someInputValue }
+      : undefined,
+    urlParams: { someValueFromTheRouteUrl: "" },
+    options: {
+      enabled: params?.enabled,
+    },
+  }) as UseApiQueryReturn;
 }
-export type UseTemplateReturn = ReturnType<typeof useTemplate>;
+export type UseTemplatesReturn = ReturnType<typeof useTemplates>;
 
 /**
  * Hook for creating template resources
- * @returns Form mutation for creating templates
+ * @returns Mutation for creating templates
  */
-export function useCreateTemplate(): ReturnType<
-  typeof useApiQueryForm<
-    TemplateCreateType,
-    TemplateResponseType,
-    TemplatePostRequestUrlParamsType
-  >
-> {
-  return useApiQueryForm<
-    TemplateCreateType,
-    TemplateResponseType,
-    TemplatePostRequestUrlParamsType
-  >(endpoints.POST, { someValueFromTheRouteUrl: "" });
+export function useCreateTemplate(): UseApiMutationReturn {
+  return useApiMutation({
+    endpoint: definitions.POST,
+    urlParams: { someValueFromTheRouteUrl: "" },
+  }) as UseApiMutationReturn;
 }
 export type UseCreateTemplateReturn = ReturnType<typeof useCreateTemplate>;
 
 /**
  * Hook for updating template resources
- * @returns Form mutation for updating templates
+ * @returns Mutation for updating templates
  */
-export function useUpdateTemplate(): ReturnType<
-  typeof useApiQueryForm<
-    TemplateUpdateType,
-    TemplateResponseType,
-    TemplatePostRequestUrlParamsType
-  >
-> {
-  return useApiQueryForm<
-    TemplateUpdateType,
-    TemplateResponseType,
-    TemplatePostRequestUrlParamsType
-  >(endpoints.PUT, { someValueFromTheRouteUrl: "" });
+export function useUpdateTemplate(): UseApiMutationReturn {
+  return useApiMutation({
+    endpoint: definitions.PUT,
+    urlParams: { someValueFromTheRouteUrl: "" },
+  }) as UseApiMutationReturn;
 }
 export type UseUpdateTemplateReturn = ReturnType<typeof useUpdateTemplate>;

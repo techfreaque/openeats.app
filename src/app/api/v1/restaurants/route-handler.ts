@@ -1,6 +1,5 @@
 import "server-only";
 
-import { dayEnum } from "@/app/api/v1/restaurant/opening-times/db";
 import type { ApiHandlerFunction } from "next-vibe/server/endpoints/core/api-handler";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { debugLogger } from "next-vibe/shared/utils/logger";

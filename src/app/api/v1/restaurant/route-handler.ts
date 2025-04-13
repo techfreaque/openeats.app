@@ -1,11 +1,11 @@
 import "server-only";
 
+import type { DbId } from "next-vibe/server/db/types";
 import type {
   ApiHandlerFunction,
   ApiHandlerResult,
 } from "next-vibe/server/endpoints/core/api-handler";
 import { hasRole } from "next-vibe/server/endpoints/data";
-import type { DbId } from "next-vibe/server/db/types";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 import type { UserRoleResponseType } from "next-vibe/shared/types/user-roles.schema";
@@ -155,13 +155,14 @@ export const createRestaurant: ApiHandlerFunction<
       mainCategoryId: data.mainCategoryId,
     };
 
-    const restaurant = await restaurantRepository.createRestaurant(restaurantData);
+    const restaurant =
+      await restaurantRepository.createRestaurant(restaurantData);
 
     debugLogger("Restaurant created", { restaurantId: restaurant.id });
 
     // Create user role for creator
     await userRolesRepository.create({
-      userId: user.id as DbId,
+      userId: user.id,
       partnerId: restaurant.id,
       role: UserRoleValue.PARTNER_ADMIN,
     });
@@ -280,8 +281,8 @@ export const updateRestaurant: ApiHandlerFunction<
     };
 
     const updatedRestaurant = await restaurantRepository.updateRestaurant(
-      requestData.id as DbId,
-      restaurantData
+      requestData.id,
+      restaurantData,
     );
 
     debugLogger("Restaurant updated", { restaurantId: updatedRestaurant.id });
@@ -671,14 +672,20 @@ export const searchRestaurants: ApiHandlerFunction<
     const allRestaurants = await restaurantRepository.findAll();
 
     // Filter restaurants based on search criteria
-    const restaurants = allRestaurants.filter(restaurant => {
+    const restaurants = allRestaurants.filter((restaurant) => {
       // Apply name filter
-      if (data.name && !restaurant.name.toLowerCase().includes(data.name.toLowerCase())) {
+      if (
+        data.name &&
+        !restaurant.name.toLowerCase().includes(data.name.toLowerCase())
+      ) {
         return false;
       }
 
       // Apply city filter
-      if (data.city && !restaurant.city.toLowerCase().includes(data.city.toLowerCase())) {
+      if (
+        data.city &&
+        !restaurant.city.toLowerCase().includes(data.city.toLowerCase())
+      ) {
         return false;
       }
 
@@ -690,7 +697,10 @@ export const searchRestaurants: ApiHandlerFunction<
       // Apply published filter
       if (!canGetUnpublished && !restaurant.published) {
         return false;
-      } else if (data.published != null && restaurant.published !== data.published) {
+      } else if (
+        data.published != null &&
+        restaurant.published !== data.published
+      ) {
         return false;
       }
 

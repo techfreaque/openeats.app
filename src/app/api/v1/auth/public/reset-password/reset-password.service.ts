@@ -5,7 +5,6 @@
 
 import { hash } from "bcrypt";
 import { randomBytes } from "crypto";
-
 import type { DbId } from "next-vibe/server/db/types";
 
 import { userRepository } from "../../me/users.repository";

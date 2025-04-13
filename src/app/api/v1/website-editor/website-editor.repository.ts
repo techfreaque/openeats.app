@@ -88,10 +88,7 @@ export class UiRepositoryImpl
    * @param id - The UI ID
    */
   override async findById(id: DbId): Promise<Ui | undefined> {
-    const results = await db
-      .select()
-      .from(ui)
-      .where(eq(ui.id, id as string));
+    const results = await db.select().from(ui).where(eq(ui.id, id));
 
     return results.length > 0 ? results[0] : undefined;
   }
@@ -101,10 +98,7 @@ export class UiRepositoryImpl
    * @param userId - The user ID
    */
   async findByUserId(userId: DbId): Promise<Ui[]> {
-    return await db
-      .select()
-      .from(ui)
-      .where(eq(ui.userId, userId as string));
+    return await db.select().from(ui).where(eq(ui.userId, userId));
   }
 
   /**
@@ -117,7 +111,7 @@ export class UiRepositoryImpl
       await db
         .update(ui)
         .set({ likesCount: (uiRecord.likesCount || 0) + 1 })
-        .where(eq(ui.id, id as string));
+        .where(eq(ui.id, id));
     }
   }
 
@@ -131,7 +125,7 @@ export class UiRepositoryImpl
       await db
         .update(ui)
         .set({ viewCount: (uiRecord.viewCount || 0) + 1 })
-        .where(eq(ui.id, id as string));
+        .where(eq(ui.id, id));
     }
   }
 }
@@ -181,7 +175,7 @@ export class SubPromptRepositoryImpl
     const results = await db
       .select()
       .from(subPrompts)
-      .where(eq(subPrompts.id, id as string));
+      .where(eq(subPrompts.id, id));
 
     return results.length > 0 ? results[0] : undefined;
   }
@@ -191,10 +185,7 @@ export class SubPromptRepositoryImpl
    * @param uiId - The UI ID
    */
   async findByUiId(uiId: DbId): Promise<SubPrompt[]> {
-    return await db
-      .select()
-      .from(subPrompts)
-      .where(eq(subPrompts.uiId, uiId as string));
+    return await db.select().from(subPrompts).where(eq(subPrompts.uiId, uiId));
   }
 }
 
@@ -240,10 +231,7 @@ export class CodeRepositoryImpl
    * @param id - The Code ID
    */
   override async findById(id: DbId): Promise<Code | undefined> {
-    const results = await db
-      .select()
-      .from(code)
-      .where(eq(code.id, id as string));
+    const results = await db.select().from(code).where(eq(code.id, id));
 
     return results.length > 0 ? results[0] : undefined;
   }
@@ -256,7 +244,7 @@ export class CodeRepositoryImpl
     const results = await db
       .select()
       .from(code)
-      .where(eq(code.subPromptId, subPromptId as string));
+      .where(eq(code.subPromptId, subPromptId));
 
     return results.length > 0 ? results[0] : undefined;
   }
@@ -311,10 +299,7 @@ export class LikeRepositoryImpl
    * @param id - The Like ID
    */
   override async findById(id: DbId): Promise<Like | undefined> {
-    const results = await db
-      .select()
-      .from(likes)
-      .where(eq(likes.id, id as string));
+    const results = await db.select().from(likes).where(eq(likes.id, id));
 
     return results.length > 0 ? results[0] : undefined;
   }
@@ -324,10 +309,7 @@ export class LikeRepositoryImpl
    * @param uiId - The UI ID
    */
   async findByUiId(uiId: DbId): Promise<Like[]> {
-    return await db
-      .select()
-      .from(likes)
-      .where(eq(likes.uiId, uiId as string));
+    return await db.select().from(likes).where(eq(likes.uiId, uiId));
   }
 
   /**
@@ -342,9 +324,7 @@ export class LikeRepositoryImpl
     const results = await db
       .select()
       .from(likes)
-      .where(
-        and(eq(likes.userId, userId as string), eq(likes.uiId, uiId as string)),
-      );
+      .where(and(eq(likes.userId, userId), eq(likes.uiId, uiId)));
 
     return results.length > 0 ? results[0] : undefined;
   }
@@ -407,7 +387,7 @@ export class RestaurantSiteContentRepositoryImpl
     const results = await db
       .select()
       .from(restaurantSiteContent)
-      .where(eq(restaurantSiteContent.id, id as string));
+      .where(eq(restaurantSiteContent.id, id));
 
     return results.length > 0 ? results[0] : undefined;
   }
@@ -422,7 +402,7 @@ export class RestaurantSiteContentRepositoryImpl
     return await db
       .select()
       .from(restaurantSiteContent)
-      .where(eq(restaurantSiteContent.restaurantId, restaurantId as string));
+      .where(eq(restaurantSiteContent.restaurantId, restaurantId));
   }
 
   /**
@@ -439,7 +419,7 @@ export class RestaurantSiteContentRepositoryImpl
       .from(restaurantSiteContent)
       .where(
         and(
-          eq(restaurantSiteContent.restaurantId, restaurantId as string),
+          eq(restaurantSiteContent.restaurantId, restaurantId),
           eq(restaurantSiteContent.key, key),
         ),
       );

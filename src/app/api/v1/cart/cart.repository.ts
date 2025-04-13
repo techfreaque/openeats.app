@@ -212,7 +212,7 @@ export class CartRepositoryImpl
       .leftJoin(menuItems, eq(cartItems.menuItemId, menuItems.id))
       .leftJoin(categories, eq(menuItems.categoryId, categoriesTyped.id))
       .leftJoin(partners, eq(cartItems.partnerId, partners.id))
-      .where(eq(cartItems.userId, userId as string));
+      .where(eq(cartItems.userId, userId));
 
     return results;
   }

@@ -1,13 +1,12 @@
 import "server-only";
 
-import { currencyEnum } from "@/app/api/v1/restaurant/db";
 import type { ApiHandlerFunction } from "next-vibe/server/endpoints/core/api-handler";
 import { hasRole } from "next-vibe/server/endpoints/data";
-import type { DbId } from "next-vibe/server/db/types";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
+import { currencyEnum } from "@/app/api/v1/restaurant/db";
 import type { Currencies } from "@/translations";
 
 import { userRolesRepository } from "../auth/roles/roles.repository";
@@ -49,7 +48,7 @@ export const getMenuItems: ApiHandlerFunction<
     // Filter menu items based on user permissions
     const menuItems = canGetUnpublished
       ? allMenuItems
-      : allMenuItems.filter(item => item.published && item.isAvailable);
+      : allMenuItems.filter((item) => item.published && item.isAvailable);
 
     debugLogger("Retrieved menu items", { count: menuItems.length });
 
@@ -99,7 +98,7 @@ export const createMenuItem: ApiHandlerFunction<
     // Check if restaurant exists and user has permission
     const userRoles = await userRolesRepository.findByUserIdAndPartnerId(
       user.id,
-      data.restaurantId as DbId
+      data.restaurantId,
     );
 
     const isAdmin = hasRole(userRoles, UserRoleValue.ADMIN);
@@ -122,7 +121,7 @@ export const createMenuItem: ApiHandlerFunction<
     }
 
     // Check if restaurant exists
-    const restaurant = await restaurantRepository.findById(data.restaurantId as DbId);
+    const restaurant = await restaurantRepository.findById(data.restaurantId);
 
     if (!restaurant) {
       debugLogger("Restaurant not found", { restaurantId: data.restaurantId });
@@ -134,7 +133,7 @@ export const createMenuItem: ApiHandlerFunction<
     }
 
     // Check if category exists
-    const category = await categoryRepository.findById(data.categoryId as DbId);
+    const category = await categoryRepository.findById(data.categoryId);
 
     if (!category) {
       debugLogger("Category not found", { categoryId: data.categoryId });
@@ -157,8 +156,8 @@ export const createMenuItem: ApiHandlerFunction<
       isAvailable: data.isAvailable,
       availableFrom: data.availableFrom,
       availableTo: data.availableTo,
-      categoryId: data.categoryId as DbId,
-      restaurantId: data.restaurantId as DbId,
+      categoryId: data.categoryId,
+      restaurantId: data.restaurantId,
     };
 
     const menuItem = await menuRepository.create(menuItemData);
@@ -226,7 +225,7 @@ export const searchMenuItems: ApiHandlerFunction<
     const allMenuItems = await menuRepository.findAll();
 
     // Filter menu items based on search criteria
-    const menuItems = allMenuItems.filter(item => {
+    const menuItems = allMenuItems.filter((item) => {
       // Apply category filter
       if (data.categoryId && item.categoryId !== data.categoryId) {
         return false;

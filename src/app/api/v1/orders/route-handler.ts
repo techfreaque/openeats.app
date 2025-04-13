@@ -1,6 +1,5 @@
 import "server-only";
 
-import type { DbId } from "next-vibe/server/db/types";
 import { hasRole } from "next-vibe/server/endpoints/data";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { debugLogger } from "next-vibe/shared/utils/logger";
@@ -87,8 +86,8 @@ export const getOrders = async ({
 
       // Use the repository to get orders with all details
       const orders = await orderRepository.findAll({
-        restaurantId: restaurantId ? (restaurantId as DbId) : undefined,
-        customerId: customerId ? (customerId as DbId) : undefined,
+        restaurantId: restaurantId ? restaurantId : undefined,
+        customerId: customerId ? customerId : undefined,
         paymentMethod,
         orderStatus,
         deliveryStatus,
@@ -149,8 +148,8 @@ export const getOrders = async ({
         // Query for each restaurant ID
         const restaurantPromises = restaurantIdsWithAccess.map((id) =>
           orderRepository.findAll({
-            restaurantId: id as DbId,
-            customerId: customerId ? (customerId as DbId) : undefined,
+            restaurantId: id,
+            customerId: customerId ? customerId : undefined,
             paymentMethod,
             orderStatus,
             deliveryStatus,
@@ -184,8 +183,8 @@ export const getOrders = async ({
       // The repository doesn't support driverId filtering directly
       // We need to get all orders and filter by delivery driver
       const allOrders = await orderRepository.findAll({
-        restaurantId: restaurantId ? (restaurantId as DbId) : undefined,
-        customerId: customerId ? (customerId as DbId) : undefined,
+        restaurantId: restaurantId ? restaurantId : undefined,
+        customerId: customerId ? customerId : undefined,
         paymentMethod,
         orderStatus,
         deliveryStatus,
@@ -213,8 +212,8 @@ export const getOrders = async ({
 
       // Use the repository to get orders with all details
       const orders = await orderRepository.findAll({
-        restaurantId: restaurantId ? (restaurantId as DbId) : undefined,
-        customerId: user.id as DbId, // Only show orders for this customer
+        restaurantId: restaurantId ? restaurantId : undefined,
+        customerId: user.id, // Only show orders for this customer
         paymentMethod,
         orderStatus,
         deliveryStatus,

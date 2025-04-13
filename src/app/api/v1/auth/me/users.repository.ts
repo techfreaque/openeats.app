@@ -97,7 +97,7 @@ export class UserRepositoryImpl
    * @param offset - The number of results to skip
    */
   async search(query: string, limit = 10, offset = 0): Promise<User[]> {
-    return db
+    return await db
       .select()
       .from(users)
       .where(

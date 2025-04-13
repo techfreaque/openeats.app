@@ -3,6 +3,7 @@
  * This file re-exports the repository pattern from next-vibe
  */
 
+import type { PgTable } from "drizzle-orm/pg-core";
 import type { BaseRepository } from "next-vibe/server/db/repository";
 import { BaseRepositoryImpl } from "next-vibe/server/db/repository";
 import type {
@@ -11,14 +12,16 @@ import type {
   TableModel,
   ZodInfer,
 } from "next-vibe/server/db/types";
+import type { ZodType, ZodTypeDef } from "zod";
 
 import { db } from "./index";
 
 // Re-export types
 export type { DbId, InsertModel, TableModel, ZodInfer };
 
-// Re-export interfaces
+// Re-export interfaces and classes
 export type { BaseRepository };
+export { BaseRepositoryImpl };
 
 /**
  * API-specific repository implementation
@@ -26,16 +29,12 @@ export type { BaseRepository };
  * and provides the database client
  */
 export abstract class ApiRepositoryImpl<
-  T,
+  T extends PgTable,
   TSelect,
   TInsert,
-  TSchema,
+  TSchema extends ZodType<unknown, ZodTypeDef, unknown>,
 > extends BaseRepositoryImpl<T, TSelect, TInsert, TSchema> {
-  constructor(
-    protected override readonly table: T,
-    protected override readonly schema: TSchema,
-    protected override readonly idField = "id",
-  ) {
+  constructor(table: T, schema: TSchema, idField = "id") {
     super(db, table, schema, idField);
   }
 }
