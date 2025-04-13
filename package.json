@@ -6,7 +6,7 @@
     "type": "module",
     "scripts": {
         "dev": "yarn dev:db-setup && next dev",
-        "dev:debug": "DEBUG=next*,turbo* RUST_LOG=debug tsx src/server.ts",
+        "dev:debug": "DEBUG=next*,turbo* RUST_LOG=debug next dev",
         "dev:db-setup": "yarn db:dev && yarn build:pre && yarn db:migrate && yarn db:seed-dev",
         "build": "yarn build:pre && next build",
         "build:package": "sovendus-builder build",
