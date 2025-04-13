@@ -54,16 +54,17 @@ export default function RestaurantHomePage(): JSX.Element {
     }
   }, [error, t, toast]);
 
-  const galleryImages = restaurant?.menuItems?.slice(0, 8)
-    .filter(item => item.image)
-    .map((item, i) => ({
-      src: item.image || `/placeholder.svg?height=400&width=600&text=Menu+Item+${i + 1}`,
-      alt: item.name || `Menu item ${i + 1}`,
-    })) || 
-    Array(3).fill(0).map((_, i) => ({
-      src: `/placeholder.svg?height=400&width=600&text=Restaurant+Photo+${i + 1}`,
-      alt: `Restaurant photo ${i + 1}`,
-    }));
+  const galleryImages = restaurant?.menuItems && Array.isArray(restaurant.menuItems) 
+    ? restaurant.menuItems.slice(0, 8)
+      .filter(item => item && item.image)
+      .map((item, i) => ({
+        src: item.image || `/placeholder.svg?height=400&width=600&text=Menu+Item+${i + 1}`,
+        alt: item.name || `Menu item ${i + 1}`,
+      }))
+    : Array(3).fill(0).map((_, i) => ({
+        src: `/placeholder.svg?height=400&width=600&text=Restaurant+Photo+${i + 1}`,
+        alt: `Restaurant photo ${i + 1}`,
+      }));
 
   /**
    * Handle favorite button click
@@ -127,22 +128,31 @@ export default function RestaurantHomePage(): JSX.Element {
     );
   }
 
-  const openingHours = restaurant.openingTimes && Array.isArray(restaurant.openingTimes) && restaurant.openingTimes.length > 0
-    ? restaurant.openingTimes
-    : [
-        { day: 1, open: 660, close: 1320 }, // Monday 11:00 - 22:00
-        { day: 2, open: 660, close: 1320 }, // Tuesday 11:00 - 22:00
-        { day: 3, open: 660, close: 1320 }, // Wednesday 11:00 - 22:00
-        { day: 4, open: 660, close: 1320 }, // Thursday 11:00 - 22:00
-        { day: 5, open: 660, close: 1320 }, // Friday 11:00 - 22:00
-        { day: 6, open: 600, close: 1380 }, // Saturday 10:00 - 23:00
-        { day: 0, open: 600, close: 1380 }, // Sunday 10:00 - 23:00
-      ];
+  const defaultOpeningHours = [
+    { day: 0, open: 600, close: 1380 }, // Sunday 10:00 - 23:00
+    { day: 1, open: 660, close: 1320 }, // Monday 11:00 - 22:00
+    { day: 2, open: 660, close: 1320 }, // Tuesday 11:00 - 22:00
+    { day: 3, open: 660, close: 1320 }, // Wednesday 11:00 - 22:00
+    { day: 4, open: 660, close: 1320 }, // Thursday 11:00 - 22:00
+    { day: 5, open: 660, close: 1320 }, // Friday 11:00 - 22:00
+    { day: 6, open: 600, close: 1380 }, // Saturday 10:00 - 23:00
+  ];
+  
+  const openingHours = restaurant.openingTimes && 
+    Array.isArray(restaurant.openingTimes) && 
+    restaurant.openingTimes.length > 0
+      ? restaurant.openingTimes
+      : defaultOpeningHours;
 
   /**
    * Format minutes to time string (e.g. 660 -> "11:00")
+   * @param minutes - Minutes since midnight
+   * @returns Formatted time string (HH:MM)
    */
-  const formatTime = (minutes: number): string => {
+  const formatTime = (minutes: number | undefined | null): string => {
+    if (minutes === undefined || minutes === null || typeof minutes !== 'number' || isNaN(minutes)) {
+      return "00:00";
+    }
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
@@ -151,10 +161,10 @@ export default function RestaurantHomePage(): JSX.Element {
   return (
     <>
       {/* Hero Section */}
-      {config.hero.showHero && (
+      {config.hero && config.hero.showHero && (
         <RestaurantHero
           restaurantName={restaurant.name}
-          restaurantImage={restaurant.image}
+          restaurantImage={restaurant.image || ''}
           additionalImages={galleryImages.slice(0, 3).map((img) => img.src)}
         />
       )}
@@ -190,14 +200,17 @@ export default function RestaurantHomePage(): JSX.Element {
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                   <span>
-                    {restaurant.rating || "0"} ({restaurant.orderCount || 0} {t("restaurant.orders")})
+                    {typeof restaurant.rating === 'number' ? restaurant.rating.toFixed(1) : "0"} 
+                    ({typeof restaurant.orderCount === 'number' ? restaurant.orderCount : 0} {t("restaurant.orders")})
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-muted-foreground">{t("restaurant.categories")}:</span>
-                  <span>{restaurant.mainCategory?.name || t("restaurant.uncategorized")}</span>
+                  <span>{restaurant.mainCategory && typeof restaurant.mainCategory === 'object' && 'name' in restaurant.mainCategory 
+                    ? restaurant.mainCategory.name 
+                    : t("restaurant.uncategorized")}</span>
                 </div>
-                {restaurant.deliveryTime && (
+                {typeof restaurant.deliveryTime === 'number' && (
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
                     <span>{restaurant.deliveryTime} {t("restaurant.minutes")}</span>
@@ -211,10 +224,10 @@ export default function RestaurantHomePage(): JSX.Element {
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    {restaurant.street} {restaurant.streetNumber}, {restaurant.zip} {restaurant.city}
+                    {restaurant.street || ''} {restaurant.streetNumber || ''}, {restaurant.zip || ''} {restaurant.city || ''}
                   </span>
                 </div>
-                {restaurant.phone && (
+                {typeof restaurant.phone === 'string' && restaurant.phone.length > 0 && (
                   <div className="flex items-center gap-2 text-sm">
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <span>{restaurant.phone}</span>
@@ -243,11 +256,14 @@ export default function RestaurantHomePage(): JSX.Element {
               <OrderTypeSelector
                 value={orderType}
                 onChange={setOrderType}
-                options={config.orderOptions.filter(option => 
-                  (option.value === "delivery" && restaurant.delivery) || 
-                  (option.value === "pickup" && restaurant.pickup) ||
-                  (option.value === "dineIn" && restaurant.dineIn)
-                )}
+                options={config.orderOptions && Array.isArray(config.orderOptions) 
+                  ? config.orderOptions.filter(option => 
+                      (option.value === "delivery" && restaurant.delivery === true) || 
+                      (option.value === "pickup" && restaurant.pickup === true) ||
+                      (option.value === "dineIn" && restaurant.dineIn === true)
+                    )
+                  : []
+                }
               />
             </div>
           </div>
@@ -255,17 +271,18 @@ export default function RestaurantHomePage(): JSX.Element {
       </div>
 
       {/* Special Offers Section */}
-      {config.specialOffers && config.specialOffers.length > 0 && (
+      {config.specialOffers && Array.isArray(config.specialOffers) && config.specialOffers.length > 0 && (
         <SpecialOffers restaurantId={restaurant.id} />
       )}
 
       {/* Restaurant Story Section */}
-      {config.showStory && config.story && (
-        <RestaurantStory restaurantName={restaurant.name} />
+      {config.showStory === true && config.story && typeof config.story === 'object' && (
+        <RestaurantStory restaurantName={restaurant.name || ''} />
       )}
 
       {/* Featured Collections */}
-      {restaurant.menuItems && restaurant.menuItems.length > 0 && config.featuredCollections && config.featuredCollections.length > 0 && (
+      {restaurant.menuItems && Array.isArray(restaurant.menuItems) && restaurant.menuItems.length > 0 && 
+       config.featuredCollections && Array.isArray(config.featuredCollections) && config.featuredCollections.length > 0 && (
         <div className="py-12">
           <div className="container px-4 md:px-6">
             <div className="space-y-12">
@@ -287,13 +304,13 @@ export default function RestaurantHomePage(): JSX.Element {
       <div className="py-12 bg-muted">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center text-center">
-            <h2 className="text-3xl font-bold mb-4">{t("restaurant.readyToOrder")}</h2>
+            <h2 className="text-3xl font-bold mb-4">{t("restaurant.menu.readyToOrder")}</h2>
             <p className="text-muted-foreground max-w-2xl mb-6">
-              {t("restaurant.exploreMenu")}
+              {t("restaurant.menu.exploreMenu")}
             </p>
             <Button size="lg" asChild>
               <Link href={`/restaurant/${restaurant.id}/menu`}>
-                {t("restaurant.viewFullMenu")}
+                {t("restaurant.menu.viewFullMenu")}
               </Link>
             </Button>
           </div>
