@@ -1,9 +1,9 @@
 import "server-only";
 
-import type { ApiHandlerFunction } from "next-vibe/server/endpoints/core/api-handler";
-import type { UndefinedType } from "next-vibe/shared/types/common.schema";
+import { and, asc, desc, sql } from "drizzle-orm";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 import { getDayEnumFromDate } from "next-vibe/shared/utils/time";
+import { DeliveryType } from "../order/delivery.schema";
 
 import {
   calculateDistance,
@@ -11,15 +11,14 @@ import {
 } from "@/lib/geo/distance";
 
 import { db } from "../../../../packages/next-vibe/server/db";
+import { partners } from "../restaurant/db";
 import {
   filterMenuItems,
   filterOpeningTimes,
   filterPrivateData,
-  restaurantQuery,
 } from "../restaurant/route-handler";
 import type { RestaurantResponseType } from "../restaurant/schema/restaurant.schema";
 import type {
-  RestaurantsResponseType,
   RestaurantsSearchOutputType,
 } from "./schema";
 
@@ -28,11 +27,9 @@ import type {
  * @param props - API handler props
  * @returns List of restaurants matching search criteria with pagination
  */
-export const getRestaurants: ApiHandlerFunction<
-  RestaurantsSearchOutputType,
-  RestaurantsResponseType,
-  UndefinedType
-> = async ({ data }) => {
+export const getRestaurants = async ({ data }: {
+  data: RestaurantsSearchOutputType;
+}) => {
   try {
     debugLogger("Getting restaurants with search criteria", { data });
 
@@ -157,7 +154,7 @@ export const getRestaurants: ApiHandlerFunction<
       openingTimes?: {
         some: {
           published: boolean;
-          day: Day;
+          day: number;
           open: {
             lte: number;
           };
@@ -186,7 +183,7 @@ export const getRestaurants: ApiHandlerFunction<
       andCondition.openingTimes = {
         some: {
           published: true,
-          day: dayOfWeek,
+          day: Number(dayOfWeek),
           open: { lte: currentTime },
           close: { gte: currentTime },
           validFrom: {
@@ -228,19 +225,44 @@ export const getRestaurants: ApiHandlerFunction<
       where.AND = [andCondition];
     }
 
-    // Get all restaurants that match the base criteria
-    const allRestaurants = await db.partner.findMany({
-      where,
-      select: restaurantQuery,
-      orderBy:
-        sortBy === "rating"
-          ? { rating: "desc" }
+    const whereConditions = [];
+    
+    whereConditions.push(sql`${partners.isActive} = true`);
+    whereConditions.push(sql`${partners.country} = ${countryCode}`);
+    
+    if (search) {
+      whereConditions.push(
+        sql`(${partners.name} ILIKE ${`%${search}%`} OR 
+             (${partners.description} IS NOT NULL AND 
+              ${partners.description} ILIKE ${`%${search}%`}))`
+      );
+    }
+    
+    // Add rating filter if provided
+    if (rating !== null && rating !== undefined) {
+      whereConditions.push(sql`${partners.rating} >= ${rating}`);
+    }
+    
+    // Add delivery type filter
+    if (deliveryType === DeliveryType.DELIVERY) {
+      whereConditions.push(sql`${partners.isActive} = true`); // Placeholder
+    } else if (deliveryType === DeliveryType.PICKUP) {
+      whereConditions.push(sql`${partners.isActive} = true`); // Placeholder
+    }
+    
+    const allRestaurants = await db
+      .select()
+      .from(partners)
+      .where(and(...whereConditions))
+      .orderBy(
+        sortBy === "rating" 
+          ? desc(partners.rating)
           : sortBy === "price-low"
-            ? { priceLevel: "asc" }
+            ? asc(partners.minimumOrderAmount)
             : sortBy === "price-high"
-              ? { priceLevel: "desc" }
-              : { rating: "desc" }, // Default to rating for relevance
-    });
+              ? desc(partners.minimumOrderAmount)
+              : desc(partners.rating)
+      );
 
     debugLogger("Retrieved restaurants from database", {
       count: allRestaurants.length,
@@ -255,8 +277,8 @@ export const getRestaurants: ApiHandlerFunction<
               const distance = calculateDistance(
                 latitude,
                 longitude,
-                restaurant.latitude,
-                restaurant.longitude,
+                Number(restaurant.latitude),
+                Number(restaurant.longitude),
               );
               return { ...restaurant, distance };
             })
@@ -292,12 +314,20 @@ export const getRestaurants: ApiHandlerFunction<
     // Additional filtering based on price range
     if (priceRange && priceRange.length > 0) {
       restaurantsWithDistanceAndFilters =
-        restaurantsWithDistanceAndFilters.filter((restaurant) => {
-          if (!restaurant.priceLevel) {
+        restaurantsWithDistanceAndFilters.filter((restaurant: any) => {
+          const minimumOrderAmount = Number(restaurant.minimumOrderAmount);
+          if (isNaN(minimumOrderAmount)) {
             return false;
           }
-          const priceLevelStr = String(restaurant.priceLevel);
-          return priceRange.includes(priceLevelStr);
+          
+          let priceLevel = "1";
+          if (minimumOrderAmount > 20) {
+            priceLevel = "3";
+          } else if (minimumOrderAmount > 10) {
+            priceLevel = "2";
+          }
+          
+          return priceRange.includes(priceLevel);
         });
     }
 
