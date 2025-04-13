@@ -22,7 +22,7 @@ export async function processChat(
         role: ChatMessageRole.ASSISTANT,
         content:
           "Hello! I'm here to help you fill out this form. What information would you like to provide?",
-        timestamp: Date.now(),
+        timestamp: Math.floor(new Date().getTime()),
       },
       parsedFields: {},
     };
@@ -118,7 +118,7 @@ export async function processChat(
     message: {
       role: ChatMessageRole.ASSISTANT,
       content: responseContent,
-      timestamp: Date.now(),
+      timestamp: Math.floor(new Date().getTime()),
     },
     parsedFields,
   };
