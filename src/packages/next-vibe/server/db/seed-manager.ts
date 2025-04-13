@@ -71,7 +71,7 @@ function findSeedFiles(dir: string): string[] {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
 
   for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
+    const fullPath = path.join(dir, entry.name, "src", "app", "api");
 
     if (entry.isDirectory()) {
       // Recursively search subdirectories
