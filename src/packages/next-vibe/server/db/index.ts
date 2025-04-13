@@ -38,6 +38,4 @@ export async function closeDatabase(): Promise<void> {
   await pool.end();
 }
 
-export * from "./repository";
-export * from "./repository-postgres";
 export * from "./types";
