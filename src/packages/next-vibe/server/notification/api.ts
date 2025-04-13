@@ -57,7 +57,7 @@ export function sendNotification(
     const deliveredCount = sendNotificationToChannel(channel, {
       title: validatedData.title,
       message: validatedData.message,
-      data: validatedData.data || {},
+      data: validatedData.data ?? {},
       sender,
     });
 
@@ -252,7 +252,7 @@ export function sendUserNotification(
     return sendNotificationToUser(userId, {
       title,
       message,
-      data: data || {},
+      data: data ?? {},
       sender: sender ?? { id: "system", role: "ADMIN" },
     });
   } catch (error) {
@@ -286,7 +286,7 @@ export function broadcastSystemNotification(
     return broadcastNotification({
       title,
       message,
-      data: data || {},
+      data: data ?? {},
       sender: sender ?? { id: "system", role: "ADMIN" },
     });
   } catch (error) {

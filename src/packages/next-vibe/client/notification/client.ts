@@ -129,7 +129,7 @@ export class NotificationClient {
 
     // Auto-connect if specified
     if (this.options.autoConnect) {
-      this.connect();
+      void this.connect();
     }
   }
 
@@ -524,8 +524,6 @@ let notificationClient: NotificationClient | null = null;
 export function getNotificationClient(
   options: NotificationOptions = {},
 ): NotificationClient {
-  if (!notificationClient) {
-    notificationClient = new NotificationClient(options);
-  }
+  notificationClient ??= new NotificationClient(options);
   return notificationClient;
 }

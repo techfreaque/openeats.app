@@ -17,11 +17,11 @@ interface ConnectionStore {
   addConnection(
     connectionId: string,
     connection: ActiveConnection,
-  ): Promise<void>;
-  removeConnection(connectionId: string): Promise<void>;
-  getConnection(connectionId: string): Promise<ActiveConnection | null>;
-  getAllConnections(): Promise<ConnectionInfo[]>;
-  getUserConnections(userId: string): Promise<ConnectionInfo[]>;
+  ): Promise<void> | void;
+  removeConnection(connectionId: string): Promise<void> | void;
+  getConnection(connectionId: string): Promise<ActiveConnection | null> | ActiveConnection | null;
+  getAllConnections(): Promise<ConnectionInfo[]> | ConnectionInfo[];
+  getUserConnections(userId: string): Promise<ConnectionInfo[]> | ConnectionInfo[];
 }
 
 // In-memory implementation of connection store
@@ -33,38 +33,21 @@ class MemoryConnectionStore implements ConnectionStore {
     connection: ActiveConnection,
   ): Promise<void> {
     this.connections[connectionId] = connection;
+    return Promise.resolve();
   }
 
   async removeConnection(connectionId: string): Promise<void> {
     delete this.connections[connectionId];
+    return Promise.resolve();
   }
 
   async getConnection(connectionId: string): Promise<ActiveConnection | null> {
-    return this.connections[connectionId] || null;
+    return Promise.resolve(this.connections[connectionId] ?? null);
   }
 
   async getAllConnections(): Promise<ConnectionInfo[]> {
-    return Object.values(this.connections).map(
-      ({
-        connectionId,
-        userId,
-        deviceId,
-        subscribedChannels,
-        connectedAt,
-      }) => ({
-        connectionId,
-        userId,
-        deviceId,
-        subscribedChannels,
-        connectedAt,
-      }),
-    );
-  }
-
-  async getUserConnections(userId: string): Promise<ConnectionInfo[]> {
-    return Object.values(this.connections)
-      .filter((conn) => conn.userId === userId)
-      .map(
+    return Promise.resolve(
+      Object.values(this.connections).map(
         ({
           connectionId,
           userId,
@@ -78,7 +61,30 @@ class MemoryConnectionStore implements ConnectionStore {
           subscribedChannels,
           connectedAt,
         }),
-      );
+      )
+    );
+  }
+
+  async getUserConnections(userId: string): Promise<ConnectionInfo[]> {
+    return Promise.resolve(
+      Object.values(this.connections)
+        .filter((conn) => conn.userId === userId)
+        .map(
+          ({
+            connectionId,
+            userId,
+            deviceId,
+            subscribedChannels,
+            connectedAt,
+          }) => ({
+            connectionId,
+            userId,
+            deviceId,
+            subscribedChannels,
+            connectedAt,
+          }),
+        )
+    );
   }
 }
 
@@ -253,7 +259,7 @@ export function initializeSocketServer(
       const connection: ActiveConnection = {
         connectionId,
         userId,
-        deviceId: (socket.handshake.query.deviceId as string) || "unknown",
+        deviceId: (socket.handshake.query["deviceId"] as string) ?? "unknown",
         subscribedChannels: [],
         connectedAt: Date.now(),
         socket,

@@ -18,6 +18,16 @@ export interface UseNotificationsOptions extends NotificationOptions {
    * @default true
    */
   storeNotifications?: boolean;
+
+  /**
+   * User ID for authenticated connections
+   */
+  userId?: string;
+
+  /**
+   * Authentication token
+   */
+  token?: string;
 }
 
 /**
@@ -115,7 +125,15 @@ export function useNotifications(
   const client = getNotificationClient(options);
 
   // Default options
-  const defaultOptions: Required<UseNotificationsOptions> = {
+  type DefaultOptionsType = Omit<
+    Required<UseNotificationsOptions>,
+    "userId" | "token"
+  > & {
+    userId: string | undefined;
+    token: string | undefined;
+  };
+
+  const defaultOptions: DefaultOptionsType = {
     url:
       options.url ??
       (typeof window !== "undefined"
@@ -246,13 +264,13 @@ export function useNotifications(
    * Handle connection status changes
    */
   useEffect(() => {
-    const handleConnection = () => {
+    const handleConnection = (): void => {
       setIsConnected(true);
     };
 
     client.onConnection(handleConnection);
 
-    return () => {
+    return (): void => {
       client.offConnection(handleConnection);
     };
   }, [client]);
@@ -265,7 +283,7 @@ export function useNotifications(
       return;
     }
 
-    const handleNotification = (notification: NotificationData) => {
+    const handleNotification = (notification: NotificationData): void => {
       setNotifications((prev) => [...prev, notification]);
     };
 
@@ -275,7 +293,7 @@ export function useNotifications(
       client.onNotification(channel, handleNotification);
     });
 
-    return () => {
+    return (): void => {
       // Unsubscribe from channels
       channels.forEach((channel) => {
         client.offNotification(channel, handleNotification);
@@ -296,7 +314,7 @@ export function useNotifications(
       });
     }
 
-    return () => {
+    return (): void => {
       // Don't disconnect on unmount, as other components might be using the connection
     };
   }, [connect, isConnected, defaultOptions.autoConnect]);

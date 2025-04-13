@@ -121,9 +121,9 @@ export function useNotifications(
   const [error, setError] = useState<Error | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
-  const [reconnectTimer, setReconnectTimer] = useState<NodeJS.Timeout | null>(
-    null,
-  );
+  const [reconnectTimer, setReconnectTimer] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   // Connect to the notification server
   const connect = useCallback(async () => {
@@ -247,7 +247,7 @@ export function useNotifications(
             if (response.success) {
               resolve();
             } else {
-              reject(new Error(response.error || "Failed to subscribe"));
+              reject(new Error(response.error ?? "Failed to subscribe"));
             }
           },
         );
@@ -271,7 +271,7 @@ export function useNotifications(
             if (response.success) {
               resolve();
             } else {
-              reject(new Error(response.error || "Failed to unsubscribe"));
+              reject(new Error(response.error ?? "Failed to unsubscribe"));
             }
           },
         );
@@ -303,7 +303,7 @@ export function useNotifications(
     }
 
     // Clean up on unmount
-    return () => {
+    return (): void => {
       disconnect();
     };
   }, [autoConnect, connect, disconnect]);
