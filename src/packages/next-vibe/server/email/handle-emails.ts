@@ -1,4 +1,3 @@
-import { ErrorResponseTypes, type ResponseType } from "next-vibe/shared";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import type { JSX } from "react";
 
@@ -9,8 +8,8 @@ import { sendEmail, type SendEmailParams } from "./send-mail";
 export type EmailFunctionType<TRequest, TResponse, TUrlVariables> = ({
   requestData,
 }: EmailRenderProps<TRequest, TResponse, TUrlVariables>) =>
-  | Promise<ResponseType<EmailTemplateReturnType>>
-  | ResponseType<EmailTemplateReturnType>;
+  | Promise<{ success: true; data: EmailTemplateReturnType; status?: number } | { success: false; message: string; errorCode: number }>
+  | { success: true; data: EmailTemplateReturnType; status?: number } | { success: false; message: string; errorCode: number };
 
 export interface EmailRenderProps<TRequest, TResponse, TUrlVariables> {
   requestData: TRequest;
@@ -48,7 +47,7 @@ export async function handleEmails<TRequest, TResponse, TUrlVariables>({
   responseData: TResponse;
   urlVariables: TUrlVariables;
   requestData: TRequest;
-}): Promise<ResponseType<UndefinedType>> {
+}): Promise<{ success: true; data: UndefinedType; status?: number } | { success: false; message: string; errorCode: number }> {
   const errors: string[] = [];
   if (email?.afterHandlerEmails) {
     try {
@@ -87,8 +86,8 @@ export async function handleEmails<TRequest, TResponse, TUrlVariables>({
     return {
       success: false,
       message: errors.join(", "),
-      errorType: ErrorResponseTypes.EMAIL_ERROR,
+      errorCode: 500,
     };
   }
-  return { success: true, data: undefined };
+  return { success: true, data: undefined, status: 200 };
 }
