@@ -45,7 +45,9 @@ export interface ApiRequestOptions {
 /**
  * Default API request options
  */
-const defaultOptions: Required<ApiRequestOptions> = {
+const defaultOptions: Omit<Required<ApiRequestOptions>, 'onError'> & {
+  onError: ((error: Error) => void) | undefined;
+} = {
   includeCredentials: true,
   headers: {},
   timeout: 30000,
@@ -75,10 +77,15 @@ export async function apiRequest<
   const mergedOptions = { ...defaultOptions, ...options };
 
   // Get request data and URL
-  const requestInfo = endpoint.getRequestData({
-    requestData,
-    pathParams: urlParams,
-  });
+  const requestParams = {
+    ...(requestData !== undefined ? { requestData } : {}),
+    ...(urlParams !== undefined ? { pathParams: urlParams } : {}),
+  } as {
+    requestData?: TRequest;
+    pathParams?: TUrlVariables;
+  };
+  
+  const requestInfo = endpoint.getRequestData(requestParams);
 
   if (!requestInfo.success) {
     throw new Error(requestInfo.message);
@@ -100,13 +107,15 @@ export async function apiRequest<
     };
 
     // Make the request
-    const response = await fetch(endpointUrl, {
+    const fetchOptions: RequestInit = {
       method: endpoint.method,
       headers,
-      body: postBody,
+      ...(postBody ? { body: postBody } : {}),
       credentials: mergedOptions.includeCredentials ? "include" : "same-origin",
       signal: controller.signal,
-    });
+    };
+    
+    const response = await fetch(endpointUrl, fetchOptions);
 
     // Clear timeout
     clearTimeout(timeoutId);
