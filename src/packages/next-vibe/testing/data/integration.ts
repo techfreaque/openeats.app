@@ -73,7 +73,7 @@ export function registerEndpointExamples<
     if (example.request) {
       dataRepository.register(`${entityName}_${key}_request`, {
         create: () => example.request as TRequest,
-        createMany: (count) => Array(count).fill(example.request as TRequest),
+        createMany: (count) => Array.from({ length: count }, () => example.request as TRequest),
         getById: () => example.request as TRequest,
       });
     }
@@ -81,7 +81,7 @@ export function registerEndpointExamples<
     if (example.response) {
       dataRepository.register(`${entityName}_${key}_response`, {
         create: () => example.response as TResponse,
-        createMany: (count) => Array(count).fill(example.response as TResponse),
+        createMany: (count) => Array.from({ length: count }, () => example.response as TResponse),
         getById: () => example.response as TResponse,
       });
     }
@@ -90,7 +90,7 @@ export function registerEndpointExamples<
       dataRepository.register(`${entityName}_${key}_urlParams`, {
         create: () => example.urlParams as TUrlVariables,
         createMany: (count) =>
-          Array(count).fill(example.urlParams as TUrlVariables),
+          Array.from({ length: count }, () => example.urlParams as TUrlVariables),
         getById: () => example.urlParams as TUrlVariables,
       });
     }
@@ -131,8 +131,8 @@ export function getEndpointExample<
   }
 
   return {
-    request: payloads?.[exampleKey] as TRequest,
-    response: responses?.[exampleKey] as TResponse,
-    urlParams: urlPathVariables?.[exampleKey] as TUrlVariables,
+    request: payloads?.[exampleKey] ?? ({} as TRequest),
+    response: responses?.[exampleKey] ?? ({} as TResponse),
+    urlParams: urlPathVariables?.[exampleKey] ?? ({} as TUrlVariables),
   };
 }
