@@ -534,7 +534,7 @@ export function useAiForm<
     startAiFormFilling,
     resetChat,
     isAiProcessing,
-    fieldParsingResults: fieldParsingResults as unknown as Record<keyof TRequest, FieldParsingResult>,
+    fieldParsingResults,
     submitViaChat,
     getFormSummary,
     getMissingFields,

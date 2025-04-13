@@ -124,7 +124,7 @@ export interface AiFormReturn<
   /**
    * Field parsing results
    */
-  fieldParsingResults: Record<keyof TRequest, FieldParsingResult>;
+  fieldParsingResults: Record<string, FieldParsingResult>;
 
   /**
    * Submit the form via chat
