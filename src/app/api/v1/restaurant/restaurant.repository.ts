@@ -3,12 +3,13 @@
  * Provides database access for restaurant-related operations
  */
 
-import { and, eq, ilike, or } from "drizzle-orm";
+import { and, eq, ilike, or, sql } from "drizzle-orm";
 import type { DbId } from "next-vibe/server/db";
-import { BaseRepositoryImpl, db } from "next-vibe/server/db";
+import { db } from "next-vibe/server/db";
+import { BaseRepositoryImpl } from "next-vibe/server/db/repository";
 
-import type { NewPartner, Partner, selectPartnerSchema } from "./db";
-import { insertPartnerSchema, partners } from "./db";
+import type { NewPartner, Partner } from "./db";
+import { partners, selectPartnerSchema } from "./db";
 
 /**
  * Restaurant repository interface
@@ -97,7 +98,7 @@ export interface RestaurantRepository {
 /**
  * Restaurant repository implementation
  */
-export class RestaurantRepositoryImpl
+export class RestaurantRepositoryImpl 
   extends BaseRepositoryImpl<
     typeof partners,
     Partner,
@@ -110,7 +111,7 @@ export class RestaurantRepositoryImpl
    * Constructor
    */
   constructor() {
-    super(partners, insertPartnerSchema);
+    super(db, partners, selectPartnerSchema, "id");
   }
 
   /**
@@ -134,7 +135,7 @@ export class RestaurantRepositoryImpl
         and(
           or(
             ilike(partners.name, `%${query}%`),
-            ilike(partners.description || "", `%${query}%`),
+            sql`CASE WHEN ${partners.description} IS NOT NULL THEN ${ilike(partners.description, `%${query}%`)} ELSE FALSE END`,
             ilike(partners.city, `%${query}%`),
           ),
           eq(partners.isActive, true),
@@ -185,6 +186,47 @@ export class RestaurantRepositoryImpl
    * Create a new restaurant
    * @param data - The restaurant data
    */
+  /**
+   * Validate data against the schema
+   * @param data - The data to validate
+   */
+  override validate(data: unknown): Partner {
+    return this.schema.parse(data) as Partner;
+  }
+
+  /**
+   * Find a record by ID
+   * @param id - The record ID
+   */
+  override async findById(id: DbId): Promise<Partner | undefined> {
+    return await super.findById(id);
+  }
+
+  /**
+   * Create a new record
+   * @param data - The record data
+   */
+  override async create(data: NewPartner): Promise<Partner> {
+    return await super.create(data);
+  }
+
+  /**
+   * Update a record
+   * @param id - The record ID
+   * @param data - The record data
+   */
+  override async update(id: DbId, data: Partial<NewPartner>): Promise<Partner | undefined> {
+    return await super.update(id, data);
+  }
+
+  /**
+   * Delete a record
+   * @param id - The record ID
+   */
+  override async delete(id: DbId): Promise<boolean> {
+    return await super.delete(id);
+  }
+
   async createRestaurant(data: NewPartner): Promise<Partner> {
     return await this.create(data);
   }
