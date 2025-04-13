@@ -85,7 +85,7 @@ export const llmApiEndpoint = createEndpoint<
   examples: {
     urlPathVariables: undefined,
     payloads: {
-      default: llmApiRequestSchema.parse({
+      default: {
         messages: [
           {
             role: ChatMessageRole.USER,
@@ -97,10 +97,10 @@ export const llmApiEndpoint = createEndpoint<
           name: "Your full name",
           email: "Your email address",
         },
-      }),
+      },
     },
     responses: {
-      default: llmApiResponseSchema.parse({
+      default: {
         message: {
           role: ChatMessageRole.ASSISTANT,
           content: "I'll help you fill out the form. What's your name?",
@@ -109,7 +109,7 @@ export const llmApiEndpoint = createEndpoint<
         parsedFields: {
           name: "John Doe",
         },
-      }),
+      },
     },
   },
 });
