@@ -80,7 +80,7 @@ export interface ApiStore {
   ) => string;
 
   setFormQueryParams: (formId: string, params: Record<string, unknown>) => void;
-  getFormQueryParams: <T>(formId: string) => T | undefined;
+  getFormQueryParams: <T extends Record<string, unknown>>(formId: string) => T | undefined;
 }
 
 export interface QueryStoreType<TResponse> {
@@ -318,7 +318,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
     // Register the in-flight request
     inFlightRequests.set(requestKey, fetchPromise);
 
-    return await fetchPromise;
+    return await fetchPromise as TResponse;
   },
 
   executeMutation: async <TRequest, TResponse, TUrlVariables, TExampleKey>(
@@ -465,7 +465,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
 
     // For now, just invalidate to force a refetch on next access
     await get().invalidateQueries(queryKey);
-    return query.data as TResponse;
+    return query.data as TResponse | undefined;
   },
 
   setFormError: (formId: string, error: Error | null): void => {
@@ -507,7 +507,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
     }));
   },
 
-  getFormQueryParams: <T>(formId: string): T | undefined => {
+  getFormQueryParams: <T extends Record<string, unknown>>(formId: string): T | undefined => {
     const form = get().forms[formId];
     return form?.queryParams as T | undefined;
   },
