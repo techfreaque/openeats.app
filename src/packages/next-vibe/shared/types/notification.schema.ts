@@ -17,7 +17,7 @@ export const notificationDataSchema = z.object({
   channel: z.string(),
   title: z.string(),
   message: z.string(),
-  data: z.record(z.unknown()).optional(),
+  data: z.record(z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
   timestamp: z.number().default(() => Date.now()),
   sender: notificationSenderSchema,
 });
