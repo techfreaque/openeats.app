@@ -1,7 +1,5 @@
 import "server-only";
 
-import type { NextRequest } from "next/server";
-
 import type { LlmApiRequestType, LlmApiResponseType } from "../schema";
 import { ChatMessageRole } from "../schema";
 
@@ -127,11 +125,15 @@ export async function processChat(
 /**
  * Handle POST request for AI chat
  */
-export async function postChat(
-  _req: NextRequest,
-  _context: { params: Record<string, string> },
-  requestData: LlmApiRequestType,
-  _user?: { id: string },
-): Promise<LlmApiResponseType> {
-  return await processChat(requestData);
+export async function postChat({
+  data: requestData,
+  urlVariables: _urlVariables,
+  user: _user,
+}: {
+  data: LlmApiRequestType;
+  urlVariables: undefined;
+  user: { id: string };
+}): Promise<{ success: true; data: LlmApiResponseType }> {
+  const response = await processChat(requestData);
+  return { success: true, data: response };
 }
