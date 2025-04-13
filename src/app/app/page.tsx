@@ -7,6 +7,8 @@ import { errorLogger } from "next-vibe/shared/utils/logger";
 import type { JSX } from "react";
 import { useEffect, useMemo, useState } from "react";
 
+import type { RestaurantResponseType } from "@/app/api/v1/restaurant/schema/restaurant.schema";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,7 +41,7 @@ const CATEGORY_ICONS = {
 
 export default function Home(): JSX.Element {
   const { form, data, isLoading, submitForm } = useRestaurants();
-  const restaurants = data?.restaurants || [];
+  const restaurants: RestaurantResponseType[] = data?.restaurants || [];
 
   const [activeCategory, setActiveCategory] = useState("all");
   const [deliveryType, setDeliveryType] = useState<DeliveryType>(
@@ -200,17 +202,17 @@ export default function Home(): JSX.Element {
   // Filter by delivery type (need to do this client-side since we're not resubmitting the form)
   const displayedRestaurants =
     deliveryType === DeliveryType.PICKUP
-      ? restaurants.filter((r) => r.pickup)
+      ? restaurants.filter((r) => (r as any).pickup === true)
       : restaurants;
 
   // Features restaurants - top 4 by rating
   const featuredRestaurants = [...restaurants]
-    .sort((a, b) => b.rating - a.rating)
+    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
     .slice(0, 4);
 
   // Popular restaurants - top 4 by rating
   const popularRestaurants = [...restaurants]
-    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
     .slice(0, 4);
 
   return (

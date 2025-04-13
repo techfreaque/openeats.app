@@ -227,6 +227,11 @@ const translations: TranslationSchema = {
   // Restaurant page
   restaurant: {
     promoted: "Promoted",
+    verified: "Verified",
+    uncategorized: "Uncategorized",
+    orders: "orders",
+    delivery: "Delivery",
+    pickup: "Pickup",
     addToFavorites: "Add to favorites",
     removeFromFavorites: "Remove from favorites",
     categories: "Categories:",

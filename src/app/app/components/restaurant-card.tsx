@@ -49,12 +49,13 @@ export function RestaurantCard({
             fill
             className="object-cover transition-all hover:scale-105"
           />
-          {restaurant.promoted && (
+          {/* Only show promoted badge if the property exists */}
+          {restaurant.verified && (
             <Badge
               variant="secondary"
               className="absolute left-2 top-2 bg-primary text-primary-foreground"
             >
-              {t("restaurant.promoted")}
+              {t("restaurant.verified")}
             </Badge>
           )}
           {user && (
@@ -82,7 +83,7 @@ export function RestaurantCard({
           <div className="space-y-1">
             <h3 className="font-semibold">{restaurant.name}</h3>
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              {restaurant.mainCategory.name}
+              {restaurant.mainCategory?.name || t("restaurant.uncategorized")}
             </div>
           </div>
         </CardContent>
@@ -90,14 +91,14 @@ export function RestaurantCard({
           <div className="flex items-center gap-1">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
             <span>
-              {restaurant.rating} ({restaurant.reviews}{" "}
-              {t("restaurant.reviews")})
+              {restaurant.rating || "0"} ({(restaurant as any).orderCount || 0}{" "}
+              {t("restaurant.orders")})
             </span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
             <span>
-              {restaurant.deliveryTime} {t("restaurant.minutes")}
+              {(restaurant as any).delivery ? t("restaurant.delivery") : t("restaurant.pickup")}
             </span>
           </div>
         </CardFooter>

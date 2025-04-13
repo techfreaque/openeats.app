@@ -227,6 +227,11 @@ const translations = {
   // Restaurant page
   restaurant: {
     promoted: "Beworben",
+    verified: "Verifiziert",
+    uncategorized: "Nicht kategorisiert",
+    orders: "Bestellungen",
+    delivery: "Lieferung",
+    pickup: "Abholung",
     addToFavorites: "Zu Favoriten hinzufügen",
     removeFromFavorites: "Aus Favoriten entfernen",
     categories: "Kategorien:",

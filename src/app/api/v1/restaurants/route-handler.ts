@@ -277,13 +277,13 @@ export const getRestaurants = async ({ data }: {
               const distance = calculateDistance(
                 latitude,
                 longitude,
-                Number(restaurant.latitude),
-                Number(restaurant.longitude),
+                Number(restaurant.latitude || 0),
+                Number(restaurant.longitude || 0),
               );
               return { ...restaurant, distance };
             })
-            .filter((restaurant) => restaurant.distance <= (radius ?? 10))
-            .sort((a, b) => a.distance - b.distance) // Sort by distance
+            .filter((restaurant) => (restaurant.distance || 0) <= (radius ?? 10))
+            .sort((a, b) => (a.distance || 0) - (b.distance || 0)) // Sort by distance
         : allRestaurants.map((restaurant) => ({
             ...restaurant,
             distance: 0, // Set a default distance
@@ -293,13 +293,9 @@ export const getRestaurants = async ({ data }: {
     if (dietary && dietary.length > 0) {
       restaurantsWithDistanceAndFilters =
         restaurantsWithDistanceAndFilters.filter((restaurant) => {
-          // Type-safe check for dietaryOptions
-          // @ts-expect-error - dietaryOptions might not be defined in the type but exists in the database
-          const dietaryOpts = restaurant.dietaryOptions;
-          if (!dietaryOpts) {
-            return false;
-          }
-
+          const restaurantAny = restaurant as any;
+          const dietaryOpts = restaurantAny.dietaryOptions || [];
+          
           // Ensure dietaryOptions is an array
           const dietaryOptions = Array.isArray(dietaryOpts) ? dietaryOpts : [];
 
@@ -314,8 +310,9 @@ export const getRestaurants = async ({ data }: {
     // Additional filtering based on price range
     if (priceRange && priceRange.length > 0) {
       restaurantsWithDistanceAndFilters =
-        restaurantsWithDistanceAndFilters.filter((restaurant: any) => {
-          const minimumOrderAmount = Number(restaurant.minimumOrderAmount);
+        restaurantsWithDistanceAndFilters.filter((restaurant) => {
+          const restaurantAny = restaurant as any;
+          const minimumOrderAmount = Number(restaurantAny.minimumOrderAmount || 0);
           if (isNaN(minimumOrderAmount)) {
             return false;
           }
