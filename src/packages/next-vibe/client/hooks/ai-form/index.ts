@@ -228,7 +228,7 @@ export function useAiForm<
               // Validate the field value using the form's validation
               formMethods.setValue(
                 field as unknown as Path<TRequest>,
-                parsedValue as unknown as any,
+                parsedValue,
               );
               const fieldError = formMethods.getFieldState(
                 field as unknown as Path<TRequest>,
