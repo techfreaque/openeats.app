@@ -7,29 +7,69 @@ import restaurantEndpoint from "./definition";
 import type {
   RestaurantGetType,
   RestaurantResponseType,
+  RestaurantUpdateType,
 } from "./schema/restaurant.schema";
 
-export type UseRestaurantReturn = ReturnType<typeof useRestaurant>;
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+/**
+ * Hook to fetch restaurant data by ID
+ * @param restaurantId - The ID of the restaurant to fetch
+ * @returns Query result with restaurant data
+ */
 export function useRestaurant(restaurantId: string) {
-  // Use useApiQuery for ME endpoint with proper dependencies
-  return useApiQuery<RestaurantGetType, RestaurantResponseType, UndefinedType>(
-    restaurantEndpoint.GET,
+  const typedEndpoint = restaurantEndpoint.GET as unknown as typeof restaurantEndpoint.GET;
+  
+  return useApiQuery<
+    RestaurantGetType, 
+    RestaurantResponseType, 
+    UndefinedType, 
+    "default"
+  >(
+    typedEndpoint,
     {
       restaurantId,
     },
     undefined,
+    {
+      enabled: Boolean(restaurantId),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    }
   );
 }
 
-export type UseAuthReturn = ReturnType<typeof useRestaurant>;
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export type UseRestaurantReturn = ReturnType<typeof useRestaurant>;
+
+/**
+ * Hook to create a form pre-filled with restaurant data
+ * @param restaurantId - The ID of the restaurant to edit
+ * @returns Form methods and state for editing a restaurant
+ */
 export function useRestaurantForm(restaurantId: string) {
   const restaurant = useRestaurant(restaurantId);
-  const formData = useApiForm(restaurantEndpoint.POST);
+  
+  const typedEndpoint = restaurantEndpoint.POST as unknown as typeof restaurantEndpoint.POST;
+  
+  const formData = useApiForm<
+    RestaurantUpdateType, 
+    RestaurantResponseType, 
+    UndefinedType, 
+    "default"
+  >(
+    typedEndpoint,
+    {
+      defaultValues: restaurant.data ? {
+        ...restaurant.data,
+        mainCategoryId: restaurant.data.mainCategory?.id,
+      } : undefined
+    }
+  );
+  
   useEffect(() => {
     if (restaurant.data) {
-      formData.form.reset(restaurant.data);
+      const formValues = {
+        ...restaurant.data,
+        mainCategoryId: restaurant.data.mainCategory?.id,
+      };
+      formData.form.reset(formValues as RestaurantUpdateType);
     }
   }, [formData.form, restaurant.data]);
 
