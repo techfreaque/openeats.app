@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { SuccessResponseType } from "next-vibe/shared";
 import type { LlmApiRequestType, LlmApiResponseType } from "../schema";
 import { ChatMessageRole } from "../schema";
 
@@ -133,11 +134,7 @@ export async function postChat({
   data: LlmApiRequestType;
   urlVariables: undefined;
   user: { id: string };
-}): Promise<{
-  success: true;
-  data: LlmApiResponseType;
-  status?: number;
-}> {
+}): Promise<SuccessResponseType<LlmApiResponseType>> {
   const response = await processChat(requestData);
-  return { success: true, data: response, status: 200 };
+  return { success: true, data: response };
 }
