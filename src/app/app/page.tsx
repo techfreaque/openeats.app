@@ -8,13 +8,12 @@ import type { JSX } from "react";
 import { useEffect, useMemo, useState } from "react";
 
 import type { RestaurantResponseType } from "@/app/api/v1/restaurant/schema/restaurant.schema";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-
 import { Countries } from "@/translations";
+
 import { DeliveryType } from "../api/v1/order/delivery.schema";
 import { useRestaurants } from "../api/v1/restaurants/hooks";
 import { CategoryPill } from "./components/category-pill";
@@ -62,11 +61,14 @@ export default function Home(): JSX.Element {
     }
 
     // Extract unique categories from restaurants
-    const uniqueCategories: Record<string, {
+    const uniqueCategories: Record<
+      string,
+      {
         name: string;
         image?: string;
         id: string;
-      }> = {};
+      }
+    > = {};
     restaurants.forEach((restaurant) => {
       if (restaurant.mainCategory && restaurant.mainCategory.id) {
         uniqueCategories[restaurant.mainCategory.id] = restaurant.mainCategory;
@@ -77,7 +79,9 @@ export default function Home(): JSX.Element {
     const categoryList = Object.values(uniqueCategories).map((category) => ({
       name: category.name.charAt(0).toUpperCase() + category.name.slice(1),
       icon:
-        CATEGORY_ICONS[category.name.toLowerCase() as keyof typeof CATEGORY_ICONS] ?? CATEGORY_ICONS.default,
+        CATEGORY_ICONS[
+          category.name.toLowerCase() as keyof typeof CATEGORY_ICONS
+        ] ?? CATEGORY_ICONS.default,
       value: category.id,
     }));
 

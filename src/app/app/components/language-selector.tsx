@@ -32,7 +32,7 @@ export function LanguageSelector(): JSX.Element {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="flex items-center gap-1">
           <Globe className="h-4 w-4" />
-          <span className="hidden md:inline-block">
+          <span className="hidden md:inline-block" suppressHydrationWarning>
             {languages.find((l) => l.code === language)?.name}
           </span>
           <ChevronDown className="h-3 w-3 opacity-50" />
