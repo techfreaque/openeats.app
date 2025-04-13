@@ -48,9 +48,7 @@ async function discoverSeedFiles(): Promise<void> {
         .replace(/\.(ts|js)$/, "");
 
       // Dynamic import of the seed file
-      // We use a relative path from the current directory to the project root
-      const relativePath = path.relative(__dirname, projectRoot);
-      const fullPath = path.join(relativePath, modulePath);
+      const fullPath = path.join(projectRoot, modulePath);
 
       debugLogger(`Importing seed file: ${fullPath}`);
 
