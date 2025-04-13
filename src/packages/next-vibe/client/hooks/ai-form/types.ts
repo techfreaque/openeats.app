@@ -43,7 +43,7 @@ export enum FieldParsingStatus {
 export interface FieldParsingResult {
   fieldName: string;
   status: FieldParsingStatus;
-  value: unknown; // Using unknown for better type safety, consumers must explicitly type-check
+  value: string | number | boolean | null; // More specific type than unknown
   error?: string;
   retryCount?: number;
 }
@@ -85,7 +85,7 @@ export interface AiFormOptions<TRequest extends FieldValues>
   /**
    * Custom field parsers for specific field types
    */
-  fieldParsers?: Record<string, (value: string) => unknown>;
+  fieldParsers?: Record<string, (value: string) => string | number | boolean | null>;
 }
 
 /**

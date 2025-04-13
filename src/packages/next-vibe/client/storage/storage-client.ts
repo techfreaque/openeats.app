@@ -40,7 +40,7 @@ if (typeof window !== "undefined") {
 }
 
 /**
- * Generate a consistent storage key from any query key
+ * Generate a consistent storage key from a query key
  * @param key - The query key to generate a storage key from
  * @returns A consistent string key for storage
  */
@@ -106,7 +106,7 @@ export async function getStorageItem<T>(key: string): Promise<T | null> {
       return storedItem.data;
     }
 
-    return parsed as unknown as T;
+    return parsed as T;
   } catch (e) {
     errorLogger("Error retrieving from storage:", e);
     return null;

@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Path, UseFormReturn } from "react-hook-form";
+import type { FieldPathValue, Path, UseFormReturn } from "react-hook-form";
 import { useForm } from "react-hook-form";
 
 import { llmApiEndpoint } from "../../../shared/endpoints/ai-chat";
@@ -64,10 +64,18 @@ export function useAiForm<
             isError: boolean;
             error: Error | null;
             isSuccess: boolean;
-            data: unknown;
+            data: TResponse | undefined;
           }
-        | undefined =>
-        state.mutations[mutationId],
+        | undefined => {
+          const mutation = state.mutations[mutationId];
+          return mutation ? (mutation as { 
+            isPending: boolean;
+            isError: boolean;
+            error: Error | null;
+            isSuccess: boolean;
+            data: TResponse | undefined;
+          }) : undefined;
+        },
     [mutationId],
   );
 
@@ -167,10 +175,10 @@ export function useAiForm<
         const formValues = formMethods.getValues();
         const formSchemaObj = Object.keys(formValues).reduce(
           (acc, key) => {
-            acc[key] = "unknown";
+            acc[key] = "string";
             return acc;
           },
-          {} as Record<string, unknown>,
+          {} as Record<string, string>,
         );
 
         const requestData = {
@@ -228,7 +236,7 @@ export function useAiForm<
               // Validate the field value using the form's validation
               formMethods.setValue(
                 field as unknown as Path<TRequest>,
-                parsedValue,
+                parsedValue as unknown as FieldPathValue<TRequest, Path<TRequest>>,
               );
               const fieldError = formMethods.getFieldState(
                 field as unknown as Path<TRequest>,

@@ -87,7 +87,10 @@ export class NotificationClient {
     new Map();
   private connectionCallbacks: ConnectionCallback[] = [];
   private errorCallbacks: ErrorCallback[] = [];
-  private options: Required<NotificationOptions>;
+  private options: Required<Omit<NotificationOptions, 'userId' | 'token'>> & {
+    userId: string | undefined;
+    token: string | undefined;
+  };
   private isConnected = false;
   private isConnecting = false;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -168,7 +171,7 @@ export class NotificationClient {
         void this.socket.on("notification", this.handleNotification.bind(this));
         void this.socket.on(
           "connection-established",
-          (data: { userId: string; userName: string; userRole: string }) => {
+          (_data: { userId: string; userName: string; userRole: string }) => {
             this.connectionId = this.socket?.id;
             this.isConnected = true;
             this.isConnecting = false;
@@ -196,7 +199,7 @@ export class NotificationClient {
         const errorResponse: WebSocketErrorResponse = {
           message:
             error instanceof Error ? error.message : "Unknown connection error",
-          code: "CONNECTION_ERROR",
+          code: "SERVER_ERROR",
         };
         this.handleError(errorResponse);
         reject(new Error(errorResponse.message));
