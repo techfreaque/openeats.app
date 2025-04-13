@@ -1,8 +1,9 @@
+import { z } from "zod";
+
 import { createEndpoint } from "../../client/endpoint";
 import { undefinedSchema } from "../types/common.schema";
 import { Methods } from "../types/endpoint";
 import { UserRoleValue } from "../types/enums";
-import { z } from "zod";
 
 /**
  * Chat message role enum
@@ -48,7 +49,13 @@ export type LlmApiResponseType = z.infer<typeof llmApiResponseSchema>;
 /**
  * AI Chat API endpoint definition
  */
-export const llmApiEndpoint = createEndpoint({
+export const llmApiEndpoint = createEndpoint<
+  LlmApiRequestType,
+  LlmApiResponseType,
+  undefined,
+  Methods.POST,
+  "default"
+>({
   description: "Chat with an AI assistant to fill a form",
   path: ["v1", "ai", "chat"],
   method: Methods.POST,
@@ -74,5 +81,38 @@ export const llmApiEndpoint = createEndpoint({
     401: "Not authenticated",
     403: "Insufficient permissions",
     500: "Server error",
+  },
+  examples: {
+    urlPathVariables: undefined,
+    payloads: {
+      default: {
+        messages: [
+          {
+            role: ChatMessageRole.USER,
+            content: "I'd like to provide my name and email",
+          },
+        ],
+        formSchema: {
+          name: "string",
+          email: "string",
+        },
+        fieldDescriptions: {
+          name: "Your full name",
+          email: "Your email address",
+        },
+      },
+    },
+    responses: {
+      default: {
+        message: {
+          role: ChatMessageRole.ASSISTANT,
+          content: "I'll help you fill out the form. What's your name?",
+          timestamp: 1617235200000, // Fixed timestamp for example
+        },
+        parsedFields: {
+          name: "John Doe",
+        },
+      },
+    },
   },
 });
