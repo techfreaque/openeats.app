@@ -10,14 +10,13 @@ export function parseError(error: unknown): Error {
   }
 }
 
-export function format<T = Record<string, string>>(
-  strings: string[],
-  values: T,
-): string[] {
+export function format<
+  T extends Record<string, string | number | boolean | null>,
+>(strings: string[], values: T): string[] {
   return strings.map((part) =>
-    part.replace(
-      /{(\w+)}/g,
-      (_, key: string) => (values as Record<string, string>)[key] ?? "",
-    ),
+    part.replace(/{(\w+)}/g, (_, key: string) => {
+      const value = values[key];
+      return value !== undefined && value !== null ? String(value) : "";
+    }),
   );
 }
