@@ -159,9 +159,23 @@ export function useAiForm<
       try {
         const updatedMessages = [...chatMessages, userMessage];
 
+        const apiMessages = updatedMessages.map(msg => ({
+          role: msg.role,
+          content: msg.content,
+        }));
+        
+        const formValues = formMethods.getValues();
+        const formSchemaObj = Object.keys(formValues).reduce(
+          (acc, key) => {
+            acc[key] = "unknown";
+            return acc;
+          },
+          {} as Record<string, unknown>
+        );
+        
         const requestData = {
-          messages: updatedMessages,
-          formSchema: endpoint.requestSchema,
+          messages: apiMessages,
+          formSchema: formSchemaObj,
           fieldDescriptions,
         };
 
