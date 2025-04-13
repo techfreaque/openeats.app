@@ -475,7 +475,7 @@ export function useAiForm<
     // Add form values
     for (const [field, value] of Object.entries(formValues)) {
       const description = fieldDescriptions?.[field] ?? field;
-      const fieldError = formErrors[field as keyof typeof formErrors];
+      const fieldError = formErrors[field as string];
 
       if (value !== undefined && value !== "") {
         const valueStr =
