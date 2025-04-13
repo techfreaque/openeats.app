@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import type { NotificationDataType } from "../../../app/api/notification-api/schema";
+import type { NotificationDataType } from "../../shared/types/notification.schema";
 import { debugLogger } from "../../shared/utils/logger";
 import { useWebSocket, WebSocketStatus } from "./useWebSocket";
 
@@ -132,7 +132,6 @@ export function useNotifications(
     subscribe,
     unsubscribe,
     send,
-    connectionId,
     subscribedChannels,
     error,
   } = useWebSocket({

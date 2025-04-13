@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 
-import type { NotificationDataType } from "../../../app/api/notification-api/schema";
+import type { NotificationDataType } from "../../shared/types/notification.schema";
 import { debugLogger, errorLogger } from "../../shared/utils/logger";
 
 /**
