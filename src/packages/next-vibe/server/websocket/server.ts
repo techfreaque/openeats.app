@@ -19,9 +19,13 @@ interface ConnectionStore {
     connection: ActiveConnection,
   ): Promise<void> | void;
   removeConnection(connectionId: string): Promise<void> | void;
-  getConnection(connectionId: string): Promise<ActiveConnection | null> | ActiveConnection | null;
+  getConnection(
+    connectionId: string,
+  ): Promise<ActiveConnection | null> | ActiveConnection | null;
   getAllConnections(): Promise<ConnectionInfo[]> | ConnectionInfo[];
-  getUserConnections(userId: string): Promise<ConnectionInfo[]> | ConnectionInfo[];
+  getUserConnections(
+    userId: string,
+  ): Promise<ConnectionInfo[]> | ConnectionInfo[];
 }
 
 // In-memory implementation of connection store
@@ -33,20 +37,20 @@ class MemoryConnectionStore implements ConnectionStore {
     connection: ActiveConnection,
   ): Promise<void> {
     this.connections[connectionId] = connection;
-    return Promise.resolve();
+    return await Promise.resolve();
   }
 
   async removeConnection(connectionId: string): Promise<void> {
     delete this.connections[connectionId];
-    return Promise.resolve();
+    return await Promise.resolve();
   }
 
   async getConnection(connectionId: string): Promise<ActiveConnection | null> {
-    return Promise.resolve(this.connections[connectionId] ?? null);
+    return await Promise.resolve(this.connections[connectionId] ?? null);
   }
 
   async getAllConnections(): Promise<ConnectionInfo[]> {
-    return Promise.resolve(
+    return await Promise.resolve(
       Object.values(this.connections).map(
         ({
           connectionId,
@@ -61,12 +65,12 @@ class MemoryConnectionStore implements ConnectionStore {
           subscribedChannels,
           connectedAt,
         }),
-      )
+      ),
     );
   }
 
   async getUserConnections(userId: string): Promise<ConnectionInfo[]> {
-    return Promise.resolve(
+    return await Promise.resolve(
       Object.values(this.connections)
         .filter((conn) => conn.userId === userId)
         .map(
@@ -83,7 +87,7 @@ class MemoryConnectionStore implements ConnectionStore {
             subscribedChannels,
             connectedAt,
           }),
-        )
+        ),
     );
   }
 }
