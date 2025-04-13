@@ -269,25 +269,28 @@ export const getRestaurants = async ({ data }: {
     // Apply distance filtering only if we have coordinates
     let restaurantsWithDistanceAndFilters: Array<Record<string, unknown>> = [];
     
-    if (doLocationFiltering && latitude !== undefined && longitude !== undefined) {
-      restaurantsWithDistanceAndFilters = allRestaurants
-        .map((restaurant) => {
-          // Calculate distance in km between search location and restaurant
-          const distance = calculateDistance(
-            latitude,
-            longitude,
-            Number(restaurant.latitude || 0),
-            Number(restaurant.longitude || 0),
-          );
-          return { ...restaurant, distance };
-        })
-        .filter((restaurant) => (restaurant.distance || 0) <= (radius ?? 10))
-        .sort((a, b) => (a.distance || 0) - (b.distance || 0)); // Sort by distance
-    } else {
-      restaurantsWithDistanceAndFilters = allRestaurants.map((restaurant) => ({
-        ...restaurant,
-        distance: 0, // Set a default distance
-      }));
+    if (allRestaurants && Array.isArray(allRestaurants)) {
+      if (doLocationFiltering && latitude !== undefined && longitude !== undefined) {
+        restaurantsWithDistanceAndFilters = allRestaurants
+          .map((restaurant) => {
+            if (!restaurant) return { distance: Infinity };
+            
+            // Calculate distance in km between search location and restaurant
+            const distance = calculateDistance(
+              latitude,
+              longitude,
+              Number(restaurant.latitude || 0),
+              Number(restaurant.longitude || 0),
+            );
+            return { ...restaurant, distance };
+          })
+          .filter((restaurant) => restaurant && (restaurant.distance || 0) <= (radius ?? 10))
+          .sort((a, b) => (a.distance || 0) - (b.distance || 0)); // Sort by distance
+      } else {
+        restaurantsWithDistanceAndFilters = allRestaurants.map((restaurant) => 
+          restaurant ? { ...restaurant, distance: 0 } : { distance: 0 }
+        );
+      }
     }
 
     // Additional filtering based on dietary preferences
