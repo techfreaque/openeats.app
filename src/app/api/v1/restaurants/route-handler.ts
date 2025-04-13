@@ -291,47 +291,47 @@ export const getRestaurants = async ({ data }: {
     }
 
     // Additional filtering based on dietary preferences
-    if (dietary && Array.isArray(dietary) && dietary.length > 0) {
-      if (Array.isArray(restaurantsWithDistanceAndFilters)) {
-        restaurantsWithDistanceAndFilters = restaurantsWithDistanceAndFilters.filter((restaurant) => {
-          if (!restaurant) return false;
-          
-          const dietaryOpts = restaurant['dietaryOptions'] || [];
-          
-          // Ensure dietaryOptions is an array
-          const dietaryOptions = Array.isArray(dietaryOpts) ? dietaryOpts : [];
+    if (dietary && Array.isArray(dietary) && dietary.length > 0 && 
+        restaurantsWithDistanceAndFilters && Array.isArray(restaurantsWithDistanceAndFilters)) {
+      restaurantsWithDistanceAndFilters = restaurantsWithDistanceAndFilters.filter((restaurant) => {
+        if (!restaurant) return false;
+        
+        const dietaryOpts = restaurant['dietaryOptions'];
+        
+        // Ensure dietaryOptions is an array
+        const dietaryOptions = dietaryOpts && Array.isArray(dietaryOpts) ? dietaryOpts : [];
 
-          // Check if any of the dietary preferences match
-          return dietary.some((diet) => {
-            if (diet === null || diet === undefined) return false;
-            const dietStr = String(diet);
-            return dietaryOptions.includes(dietStr);
-          });
+        // Check if any of the dietary preferences match
+        return dietary.some((diet) => {
+          if (diet === null || diet === undefined) return false;
+          const dietStr = String(diet);
+          return dietaryOptions.includes(dietStr);
         });
-      }
+      });
     }
 
     // Additional filtering based on price range
-    if (priceRange && Array.isArray(priceRange) && priceRange.length > 0) {
-      if (Array.isArray(restaurantsWithDistanceAndFilters)) {
-        restaurantsWithDistanceAndFilters = restaurantsWithDistanceAndFilters.filter((restaurant) => {
-          if (!restaurant) return false;
-          
-          const minimumOrderAmount = Number(restaurant['minimumOrderAmount'] || 0);
-          if (isNaN(minimumOrderAmount)) {
-            return false;
-          }
-          
-          let priceLevel = "1";
-          if (minimumOrderAmount > 20) {
-            priceLevel = "3";
-          } else if (minimumOrderAmount > 10) {
-            priceLevel = "2";
-          }
-          
-          return priceRange.includes(priceLevel);
-        });
-      }
+    if (priceRange && Array.isArray(priceRange) && priceRange.length > 0 && 
+        restaurantsWithDistanceAndFilters && Array.isArray(restaurantsWithDistanceAndFilters)) {
+      restaurantsWithDistanceAndFilters = restaurantsWithDistanceAndFilters.filter((restaurant) => {
+        if (!restaurant) return false;
+        
+        const minimumOrderAmountStr = restaurant['minimumOrderAmount'];
+        const minimumOrderAmount = minimumOrderAmountStr ? Number(minimumOrderAmountStr) : 0;
+        
+        if (isNaN(minimumOrderAmount)) {
+          return false;
+        }
+        
+        let priceLevel = "1";
+        if (minimumOrderAmount > 20) {
+          priceLevel = "3";
+        } else if (minimumOrderAmount > 10) {
+          priceLevel = "2";
+        }
+        
+        return priceRange.includes(priceLevel);
+      });
     }
 
     // Apply pagination
