@@ -5,16 +5,16 @@ import { DataVariation } from "./types";
  * Generic data factory implementation
  * Creates consistent test data for examples, seeds, and tests
  */
-export class GenericDataFactory<T> implements DataFactory<T> {
-  private examples: Record<string, T>;
+export class GenericDataFactory<TData> implements DataFactory<TData> {
+  private examples: Record<string, TData>;
   private defaultVariation: DataVariation;
-  private variations: Partial<Record<DataVariation, (index?: number) => T>>;
+  private variations: Partial<Record<DataVariation, (index?: number) => TData>>;
 
   /**
    * Create a new data factory
    * @param options - Factory configuration options
    */
-  constructor(options: DataFactoryOptions<T>) {
+  constructor(options: DataFactoryOptions<TData>) {
     this.examples = options.examples ?? {};
     this.defaultVariation = options.defaultVariation ?? DataVariation.DEFAULT;
     this.variations = options.variations ?? {};
@@ -34,8 +34,8 @@ export class GenericDataFactory<T> implements DataFactory<T> {
    */
   create(
     variation: DataVariation = this.defaultVariation,
-    overrides: Partial<T> = {},
-  ): T {
+    overrides: Partial<TData> = {},
+  ): TData {
     const factory =
       this.variations[variation] ?? this.variations[this.defaultVariation];
 
@@ -56,8 +56,8 @@ export class GenericDataFactory<T> implements DataFactory<T> {
   createMany(
     count: number,
     variation: DataVariation = this.defaultVariation,
-    overrides: Partial<T> = {},
-  ): T[] {
+    overrides: Partial<TData> = {},
+  ): TData[] {
     return Array.from({ length: count }, (_, index) => {
       const factory =
         this.variations[variation] ?? this.variations[this.defaultVariation];
@@ -75,7 +75,7 @@ export class GenericDataFactory<T> implements DataFactory<T> {
    * Get a specific example by ID
    * @param id - Unique identifier for the example
    */
-  getById(id: string): T | undefined {
+  getById(id: string): TData | undefined {
     return this.examples[id];
   }
 }
@@ -84,8 +84,8 @@ export class GenericDataFactory<T> implements DataFactory<T> {
  * Create a new data factory
  * @param options - Factory configuration options
  */
-export function createFactory<T>(
-  options: DataFactoryOptions<T>,
-): DataFactory<T> {
-  return new GenericDataFactory<T>(options);
+export function createFactory<TData>(
+  options: DataFactoryOptions<TData>,
+): DataFactory<TData> {
+  return new GenericDataFactory<TData>(options);
 }
