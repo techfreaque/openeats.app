@@ -22,7 +22,7 @@ function isSuccessResponse<T>(
   );
 }
 
-function isErrorResponse(response: unknown): response is ErrorResponseType {
+function isErrorResponse<TData>(response: unknown): response is ErrorResponseType<TData> {
   return (
     typeof response === "object" &&
     response !== null &&
@@ -55,7 +55,8 @@ export async function callApi<TRequest, TResponse, TUrlVariables, TExampleKey>(
         return {
           success: false,
           message: "Authentication required but no token available",
-        };
+          errorType: "AUTH_ERROR",
+        } as ErrorResponseType<TResponse>;
       }
       headers["Authorization"] = `Bearer ${token}`;
     }
@@ -78,13 +79,15 @@ export async function callApi<TRequest, TResponse, TUrlVariables, TExampleKey>(
 
     // Handle API response
     if (!response.ok) {
-      const errorMessage = isErrorResponse(json)
+      const errorMessage = isErrorResponse<TResponse>(json)
         ? json.message
         : `API error: ${response.status} ${response.statusText}`;
       return {
         success: false,
         message: errorMessage,
-      };
+        errorType: "HTTP_ERROR",
+        errorCode: response.status,
+      } as ErrorResponseType<TResponse>;
     }
 
     // Validate successful response against schema
@@ -97,25 +100,28 @@ export async function callApi<TRequest, TResponse, TUrlVariables, TExampleKey>(
         return {
           success: false,
           message: `Response validation error: ${validationResponse.message}`,
-        };
+          errorType: "VALIDATION_ERROR",
+        } as ErrorResponseType<TResponse>;
       }
       return {
         success: true,
         data: validationResponse.data,
       };
     } else {
-      const errorMessage = isErrorResponse(json)
+      const errorMessage = isErrorResponse<TResponse>(json)
         ? json.message
         : "Unknown error";
       return {
         success: false,
         message: errorMessage,
-      } as ErrorResponseType;
+        errorType: "INTERNAL_ERROR",
+      } as ErrorResponseType<TResponse>;
     }
   } catch (error) {
     return {
       success: false,
       message: `API request failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-    };
+      errorType: "INTERNAL_ERROR",
+    } as ErrorResponseType<TResponse>;
   }
 }
