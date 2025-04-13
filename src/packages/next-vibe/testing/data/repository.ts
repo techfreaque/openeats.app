@@ -5,7 +5,7 @@ import type { DataFactory, DataRepository, DataVariation } from "./types";
  * Manages multiple data factories and provides a unified interface
  */
 export class DataRepositoryImpl implements DataRepository {
-  private factories: Record<string, DataFactory<any>> = {};
+  private factories: Record<string, DataFactory<unknown>> = {};
 
   /**
    * Register a factory for a specific entity type
