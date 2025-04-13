@@ -29,12 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          forcedTheme="light"
-          enableSystem={false}
-        >
+        <ThemeProvider>
           <TranslationProvider>{children}</TranslationProvider>
         </ThemeProvider>
       </body>
