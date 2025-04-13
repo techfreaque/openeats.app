@@ -26,11 +26,12 @@ export function RestaurantHero({
   const [isScrolling, setIsScrolling] = useState(false);
 
   // Combine main image with additional images for carousel
-  const allImages = [restaurantImage, ...additionalImages].filter(Boolean);
+  const allImages = [restaurantImage, ...(Array.isArray(additionalImages) ? additionalImages : [])].filter((img): img is string => 
+    typeof img === 'string' && img.length > 0);
 
   // Auto-advance carousel if style is carousel
   useEffect(() => {
-    if (config.heroStyle !== "carousel" || allImages.length <= 1) {
+    if (!config || config.heroStyle !== "carousel" || allImages.length <= 1) {
       return;
     }
 
@@ -45,9 +46,9 @@ export function RestaurantHero({
 
   // Determine hero height based on config
   const heroHeightClass =
-    config.heroHeight === "small"
+    config && config.heroHeight === "small"
       ? "h-[150px] md:h-[200px] lg:h-[250px]"
-      : config.heroHeight === "large"
+      : config && config.heroHeight === "large"
         ? "h-[250px] md:h-[400px] lg:h-[500px]"
         : "h-[200px] md:h-[300px] lg:h-[400px]"; // medium (default)
 
@@ -67,7 +68,7 @@ export function RestaurantHero({
   };
 
   // Render based on hero style
-  if (config.heroStyle === "carousel" && allImages.length > 1) {
+  if (config && config.heroStyle === "carousel" && allImages.length > 1) {
     return (
       <div className={cn("relative w-full overflow-hidden", heroHeightClass)}>
         <div
@@ -157,7 +158,7 @@ export function RestaurantHero({
     );
   }
 
-  if (config.heroStyle === "parallax") {
+  if (config && config.heroStyle === "parallax") {
     return (
       <div className={cn("relative w-full overflow-hidden", heroHeightClass)}>
         <div
@@ -175,31 +176,31 @@ export function RestaurantHero({
         <div className="absolute inset-0 bg-black/40" />
 
         {/* Hero content */}
-        {config.heroContent && (
+        {config && config.heroContent && (
           <div className="absolute inset-0 flex items-center justify-center text-white">
             <div className="text-center p-4 max-w-3xl">
-              {config.heroContent.showLogo && (
+              {config.heroContent?.showLogo && (
                 <div
-                  className={`flex justify-${config.heroContent.logoPosition || "center"} mb-4`}
+                  className={`flex justify-${config.heroContent?.logoPosition || "center"} mb-4`}
                 >
                   <div className="bg-white rounded-full p-2 w-24 h-24 flex items-center justify-center">
                     <span className="text-4xl">🍔</span>
                   </div>
                 </div>
               )}
-              {config.heroContent.title && (
+              {config.heroContent?.title && (
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">
                   {config.heroContent.title}
                 </h1>
               )}
-              {config.heroContent.subtitle && (
+              {config.heroContent?.subtitle && (
                 <p className="text-lg md:text-xl opacity-90 mb-4">
                   {config.heroContent.subtitle}
                 </p>
               )}
-              {config.heroContent.ctaText && (
+              {config.heroContent?.ctaText && (
                 <Button size="lg" asChild>
-                  <a href={config.heroContent.ctaLink || "#menu"}>
+                  <a href={config.heroContent?.ctaLink || "#menu"}>
                     {config.heroContent.ctaText}
                   </a>
                 </Button>
@@ -211,7 +212,7 @@ export function RestaurantHero({
     );
   }
 
-  if (config.heroStyle === "split") {
+  if (config && config.heroStyle === "split") {
     return (
       <div
         className={cn("relative w-full grid md:grid-cols-2", heroHeightClass)}
@@ -270,31 +271,31 @@ export function RestaurantHero({
       />
 
       {/* Hero content overlay */}
-      {config.heroContent && (
+      {config && config.heroContent && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white">
           <div className="text-center p-4 max-w-3xl">
-            {config.heroContent.showLogo && (
+            {config.heroContent?.showLogo && (
               <div
-                className={`flex justify-${config.heroContent.logoPosition || "center"} mb-4`}
+                className={`flex justify-${config.heroContent?.logoPosition || "center"} mb-4`}
               >
                 <div className="bg-white rounded-full p-2 w-24 h-24 flex items-center justify-center">
                   <span className="text-4xl">🍔</span>
                 </div>
               </div>
             )}
-            {config.heroContent.title && (
+            {config.heroContent?.title && (
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">
                 {config.heroContent.title}
               </h1>
             )}
-            {config.heroContent.subtitle && (
+            {config.heroContent?.subtitle && (
               <p className="text-lg md:text-xl opacity-90 mb-4">
                 {config.heroContent.subtitle}
               </p>
             )}
-            {config.heroContent.ctaText && (
+            {config.heroContent?.ctaText && (
               <Button size="lg" asChild>
-                <a href={config.heroContent.ctaLink || "#menu"}>
+                <a href={config.heroContent?.ctaLink || "#menu"}>
                   {config.heroContent.ctaText}
                 </a>
               </Button>
