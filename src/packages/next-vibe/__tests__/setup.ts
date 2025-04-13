@@ -9,12 +9,12 @@ afterEach(() => {
 });
 
 // Mock window.setTimeout and window.clearTimeout
-global.setTimeout = vi.fn((fn) => {
+global.setTimeout = vi.fn((fn: () => void) => {
   fn();
   return 1;
-});
+}) as unknown as typeof setTimeout;
 
-global.clearTimeout = vi.fn();
+global.clearTimeout = vi.fn() as unknown as typeof clearTimeout;
 
 // Mock fetch for API calls
 global.fetch = vi.fn();
@@ -23,7 +23,7 @@ global.fetch = vi.fn();
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
-    getItem: vi.fn((key: string) => store[key] || null),
+    getItem: vi.fn((key: string): string | null => store[key] ?? null),
     setItem: vi.fn((key: string, value: string) => {
       store[key] = value.toString();
     }),
@@ -33,7 +33,9 @@ const localStorageMock = (() => {
     clear: vi.fn(() => {
       store = {};
     }),
-  };
+    length: 0,
+    key: vi.fn((_index: number): string | null => null),
+  } as Storage;
 })();
 
 Object.defineProperty(window, "localStorage", {

@@ -1,8 +1,7 @@
 import "dotenv/config";
 
-import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
-
 import { closeDatabase } from "next-vibe/server/db";
+import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
 /**
  * Seed script for test database

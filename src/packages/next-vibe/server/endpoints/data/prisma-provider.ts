@@ -1,5 +1,4 @@
 import type { PrismaClient } from "@prisma/client";
-
 import { db } from "next-vibe/server/db";
 
 import { convertPrismaRole } from "../../../shared/types/enums";

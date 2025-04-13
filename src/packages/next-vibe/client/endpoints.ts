@@ -1,5 +1,3 @@
-import { endpoints } from "@/app/api/generated/endpoints";
-
 import type { ApiSection } from "../shared/types/endpoint";
 import { errorLogger } from "../shared/utils/logger";
 
@@ -8,7 +6,9 @@ import { errorLogger } from "../shared/utils/logger";
  */
 export function getEndpoints(): ApiSection {
   try {
-    return endpoints;
+    const endpoints = require("@/app/api/generated/endpoints")
+      ?.endpoints as ApiSection;
+    return endpoints || {};
   } catch (err) {
     errorLogger("Error loading API endpoints:", err);
     return {};

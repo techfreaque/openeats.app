@@ -1,4 +1,5 @@
 import type { ApiEndpoint } from "next-vibe/client/endpoint";
+import { db } from "next-vibe/server/db";
 import type { JwtPayloadType } from "next-vibe/server/endpoints/auth/jwt";
 import { env } from "next-vibe/server/env";
 import {
@@ -7,7 +8,6 @@ import {
 } from "next-vibe/shared/types/response.schema";
 import request from "supertest";
 
-import { db } from "next-vibe/server/db";
 import { createSessionAndGetUser } from "@/app/api/v1/auth/public/login/route-handler";
 
 /**

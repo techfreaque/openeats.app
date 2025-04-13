@@ -4,10 +4,9 @@
  */
 
 import { and, eq } from "drizzle-orm";
-import type { DbId } from "next-vibe/server/db/types";
-
 import { db } from "next-vibe/server/db";
 import { ApiRepositoryImpl } from "next-vibe/server/db/repository-postgres";
+import type { DbId } from "next-vibe/server/db/types";
 
 import type { NewUserRole, selectUserRoleSchema, UserRole } from "./roles.db";
 import { insertUserRoleSchema, userRoles } from "./roles.db";

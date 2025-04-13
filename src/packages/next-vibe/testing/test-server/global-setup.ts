@@ -3,10 +3,9 @@
  * This runs once before all test files
  */
 
+import { closeDatabase } from "next-vibe/server/db";
 import seedTestDatabase from "next-vibe/server/db/scripts/seed-dev-db";
 import { debugLogger, errorLogger } from "next-vibe/shared";
-
-import { closeDatabase } from "next-vibe/server/db";
 
 import teardown from "./global-teardown";
 import { startServer } from "./test-server";

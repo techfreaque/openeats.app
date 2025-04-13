@@ -1,9 +1,8 @@
 "use server";
 
+import { db } from "next-vibe/server/db";
 import { errorLogger } from "next-vibe/shared/utils/logger";
 import { z } from "zod";
-
-import { db } from "next-vibe/server/db";
 
 const bugReportSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),

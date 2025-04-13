@@ -1,8 +1,8 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { db } from "next-vibe/server/db";
 import { z } from "zod";
 
-import { db } from "next-vibe/server/db";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 const inputSchema = z.object({

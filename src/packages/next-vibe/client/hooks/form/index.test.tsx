@@ -6,9 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 import { useApiForm } from "../mutation-form";
+import { useApiStore } from "../store";
 
 // Mock the useApiStore hook
-vi.mock("../../../../client/hooks/store", () => ({
+vi.mock("../store", () => ({
   useApiStore: vi.fn().mockImplementation(() => ({
     executeMutation: vi.fn().mockResolvedValue({ success: true }),
     getMutationId: vi.fn().mockReturnValue("test-mutation-id"),
@@ -25,11 +26,24 @@ describe("useApiForm", () => {
   const testSchema = z.object({
     name: z.string().min(1, "Name is required"),
     email: z.string().email("Invalid email format"),
-    role: z.enum([UserRoleValue.USER, UserRoleValue.ADMIN]),
+    role: z.enum([UserRoleValue.CUSTOMER, UserRoleValue.ADMIN]),
     bio: z.string().optional(),
   });
 
-  const testEndpoint = createEndpoint({
+  type TestRequest = z.infer<typeof testSchema>;
+  interface TestResponse {
+    id: string;
+    success: boolean;
+  }
+  type TestUrlParams = Record<string, never>;
+
+  const testEndpoint = createEndpoint<
+    TestRequest,
+    TestResponse,
+    TestUrlParams,
+    Methods.POST,
+    "default"
+  >({
     description: "Test endpoint",
     method: Methods.POST,
     path: ["test"],
@@ -39,10 +53,41 @@ describe("useApiForm", () => {
       success: z.boolean(),
     }),
     requestUrlSchema: z.object({}),
-    allowedRoles: [UserRoleValue.USER, UserRoleValue.ADMIN],
+    allowedRoles: [UserRoleValue.CUSTOMER, UserRoleValue.ADMIN],
     errorCodes: {
       400: "Bad request",
       401: "Unauthorized",
+      500: "Server error", // Required by type definition
+    },
+    apiQueryOptions: {
+      staleTime: 0,
+      cacheTime: 0,
+      refetchOnWindowFocus: false,
+    },
+    examples: {
+      payloads: {
+        default: {
+          name: "John Doe",
+          email: "john@example.com",
+          role: UserRoleValue.CUSTOMER,
+          bio: "Test bio",
+        },
+      },
+      responses: {
+        default: {
+          id: "123",
+          success: true,
+        },
+      },
+      urlPathVariables: {
+        default: {},
+      },
+    },
+    fieldDescriptions: {
+      name: "User's full name",
+      email: "User's email address",
+      role: "User's role in the system",
+      bio: "User's biography",
     },
   });
 
@@ -53,32 +98,38 @@ describe("useApiForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Update the mock implementation for executeMutation
-    useApiStore.mockImplementation(() => ({
-      executeMutation: mockExecuteMutation,
-      getMutationId: vi.fn().mockReturnValue("test-mutation-id"),
-      getFormId: vi.fn().mockReturnValue("test-form-id"),
-      setFormError: vi.fn(),
-      clearFormError: vi.fn(),
-      mutations: {
-        "test-mutation-id": {
-          isPending: false,
-          isError: false,
-          error: null,
-          isSuccess: false,
-          data: undefined,
+    (useApiStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      () => ({
+        executeMutation: mockExecuteMutation,
+        getMutationId: vi.fn().mockReturnValue("test-mutation-id"),
+        getFormId: vi.fn().mockReturnValue("test-form-id"),
+        setFormError: vi.fn(),
+        clearFormError: vi.fn(),
+        mutations: {
+          "test-mutation-id": {
+            isPending: false,
+            isError: false,
+            error: null,
+            isSuccess: false,
+            data: undefined,
+          },
         },
-      },
-      forms: {
-        "test-form-id": {
-          formError: null,
-          isSubmitting: false,
+        forms: {
+          "test-form-id": {
+            formError: null,
+            isSubmitting: false,
+          },
         },
-      },
-    }));
+      }),
+    );
   });
 
   it("should initialize with default options", () => {
-    const { result } = renderHook(() => useApiForm(testEndpoint));
+    const { result } = renderHook(() =>
+      useApiForm<TestRequest, TestResponse, TestUrlParams, "default">(
+        testEndpoint.POST,
+      ),
+    );
 
     expect(result.current).toHaveProperty("form");
     expect(result.current).toHaveProperty("submitForm");
@@ -92,24 +143,31 @@ describe("useApiForm", () => {
     const defaultValues = {
       name: "John Doe",
       email: "john@example.com",
-      role: UserRoleValue.USER,
+      role: UserRoleValue.CUSTOMER,
     };
 
     const { result } = renderHook(() =>
-      useApiForm(testEndpoint, { defaultValues }),
+      useApiForm<TestRequest, TestResponse, TestUrlParams, "default">(
+        testEndpoint.POST,
+        { defaultValues },
+      ),
     );
 
     expect(result.current.form.getValues()).toEqual(defaultValues);
   });
 
   it("should submit form with valid data", async () => {
-    const { result } = renderHook(() => useApiForm(testEndpoint));
+    const { result } = renderHook(() =>
+      useApiForm<TestRequest, TestResponse, TestUrlParams, "default">(
+        testEndpoint.POST,
+      ),
+    );
 
     // Set valid form values
     act(() => {
       result.current.form.setValue("name", "John Doe");
       result.current.form.setValue("email", "john@example.com");
-      result.current.form.setValue("role", UserRoleValue.USER);
+      result.current.form.setValue("role", UserRoleValue.CUSTOMER);
     });
 
     // Mock form event
@@ -121,20 +179,21 @@ describe("useApiForm", () => {
     const onSuccess = vi.fn();
 
     // Submit form
-    await act(async () => {
+    await act(() => {
       result.current.submitForm(mockEvent, {
         urlParamVariables: {},
         onSuccess,
       });
+      return Promise.resolve(); // Return a promise for act
     });
 
     // Check that executeMutation was called with correct data
     expect(mockExecuteMutation).toHaveBeenCalledWith(
-      testEndpoint,
+      testEndpoint.POST,
       {
         name: "John Doe",
         email: "john@example.com",
-        role: UserRoleValue.USER,
+        role: UserRoleValue.CUSTOMER,
       },
       {},
       {},
@@ -145,7 +204,11 @@ describe("useApiForm", () => {
   });
 
   it("should handle validation errors", async () => {
-    const { result } = renderHook(() => useApiForm(testEndpoint));
+    const { result } = renderHook(() =>
+      useApiForm<TestRequest, TestResponse, TestUrlParams, "default">(
+        testEndpoint.POST,
+      ),
+    );
 
     // Set invalid form values
     act(() => {
@@ -163,11 +226,12 @@ describe("useApiForm", () => {
     const onError = vi.fn();
 
     // Submit form
-    await act(async () => {
+    await act(() => {
       result.current.submitForm(mockEvent, {
         urlParamVariables: {},
         onError,
       });
+      return Promise.resolve(); // Return a promise for act
     });
 
     // Check that executeMutation was NOT called
@@ -175,7 +239,7 @@ describe("useApiForm", () => {
 
     // Check that onError was called with validation errors
     expect(onError).toHaveBeenCalled();
-    const errorArg = onError.mock.calls[0][0];
+    const errorArg = onError.mock.calls?.[0]?.[0] as Error;
     expect(errorArg).toHaveProperty("message");
     expect(errorArg.message).toContain("validation");
   });
@@ -185,13 +249,17 @@ describe("useApiForm", () => {
     const apiError = new Error("API error");
     mockExecuteMutation.mockRejectedValueOnce(apiError);
 
-    const { result } = renderHook(() => useApiForm(testEndpoint));
+    const { result } = renderHook(() =>
+      useApiForm<TestRequest, TestResponse, TestUrlParams, "default">(
+        testEndpoint.POST,
+      ),
+    );
 
     // Set valid form values
     act(() => {
       result.current.form.setValue("name", "John Doe");
       result.current.form.setValue("email", "john@example.com");
-      result.current.form.setValue("role", UserRoleValue.USER);
+      result.current.form.setValue("role", UserRoleValue.CUSTOMER);
     });
 
     // Mock form event
@@ -203,11 +271,12 @@ describe("useApiForm", () => {
     const onError = vi.fn();
 
     // Submit form
-    await act(async () => {
+    await act(() => {
       result.current.submitForm(mockEvent, {
         urlParamVariables: {},
         onError,
       });
+      return Promise.resolve(); // Return a promise for act
     });
 
     // Check that executeMutation was called
@@ -219,30 +288,36 @@ describe("useApiForm", () => {
 
   it("should update form state based on mutation state", () => {
     // Mock mutation state
-    useApiStore.mockImplementation(() => ({
-      executeMutation: mockExecuteMutation,
-      getMutationId: vi.fn().mockReturnValue("test-mutation-id"),
-      getFormId: vi.fn().mockReturnValue("test-form-id"),
-      setFormError: vi.fn(),
-      clearFormError: vi.fn(),
-      mutations: {
-        "test-mutation-id": {
-          isPending: true,
-          isError: false,
-          error: null,
-          isSuccess: false,
-          data: undefined,
+    (useApiStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      () => ({
+        executeMutation: mockExecuteMutation,
+        getMutationId: vi.fn().mockReturnValue("test-mutation-id"),
+        getFormId: vi.fn().mockReturnValue("test-form-id"),
+        setFormError: vi.fn(),
+        clearFormError: vi.fn(),
+        mutations: {
+          "test-mutation-id": {
+            isPending: true,
+            isError: false,
+            error: null,
+            isSuccess: false,
+            data: undefined,
+          },
         },
-      },
-      forms: {
-        "test-form-id": {
-          formError: null,
-          isSubmitting: true,
+        forms: {
+          "test-form-id": {
+            formError: null,
+            isSubmitting: true,
+          },
         },
-      },
-    }));
+      }),
+    );
 
-    const { result } = renderHook(() => useApiForm(testEndpoint));
+    const { result } = renderHook(() =>
+      useApiForm<TestRequest, TestResponse, TestUrlParams, "default">(
+        testEndpoint.POST,
+      ),
+    );
 
     // Check form state
     expect(result.current.isSubmitting).toBe(true);
@@ -254,30 +329,36 @@ describe("useApiForm", () => {
     const formError = new Error("Form error");
 
     // Mock form error state
-    useApiStore.mockImplementation(() => ({
-      executeMutation: mockExecuteMutation,
-      getMutationId: vi.fn().mockReturnValue("test-mutation-id"),
-      getFormId: vi.fn().mockReturnValue("test-form-id"),
-      setFormError: vi.fn(),
-      clearFormError: vi.fn(),
-      mutations: {
-        "test-mutation-id": {
-          isPending: false,
-          isError: false,
-          error: null,
-          isSuccess: false,
-          data: undefined,
+    (useApiStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      () => ({
+        executeMutation: mockExecuteMutation,
+        getMutationId: vi.fn().mockReturnValue("test-mutation-id"),
+        getFormId: vi.fn().mockReturnValue("test-form-id"),
+        setFormError: vi.fn(),
+        clearFormError: vi.fn(),
+        mutations: {
+          "test-mutation-id": {
+            isPending: false,
+            isError: false,
+            error: null,
+            isSuccess: false,
+            data: undefined,
+          },
         },
-      },
-      forms: {
-        "test-form-id": {
-          formError: formError,
-          isSubmitting: false,
+        forms: {
+          "test-form-id": {
+            formError: formError,
+            isSubmitting: false,
+          },
         },
-      },
-    }));
+      }),
+    );
 
-    const { result } = renderHook(() => useApiForm(testEndpoint));
+    const { result } = renderHook(() =>
+      useApiForm<TestRequest, TestResponse, TestUrlParams, "default">(
+        testEndpoint.POST,
+      ),
+    );
 
     // Check form state
     expect(result.current.submitError).toBe(formError);

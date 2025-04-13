@@ -3,9 +3,8 @@
  * This runs once after all tests complete
  */
 
-import { debugLogger, errorLogger } from "next-vibe/shared";
-
 import { closeDatabase } from "next-vibe/server/db";
+import { debugLogger, errorLogger } from "next-vibe/shared";
 
 import { stopServer } from "./test-server";
 

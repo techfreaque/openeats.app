@@ -1,8 +1,7 @@
 "use server";
 
-import { errorLogger } from "next-vibe/shared/utils/logger";
-
 import { db } from "next-vibe/server/db";
+import { errorLogger } from "next-vibe/shared/utils/logger";
 
 import {
   type CreateSubPromptReturn,
