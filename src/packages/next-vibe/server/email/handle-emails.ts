@@ -1,5 +1,5 @@
 import { ErrorResponseTypes } from "next-vibe/shared";
-import type { ErrorResponseType, SuccessResponseType } from "next-vibe/shared";
+import type { ErrorResponseType, ResponseType, SuccessResponseType } from "next-vibe/shared";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import type { JSX } from "react";
 
@@ -49,7 +49,7 @@ export async function handleEmails<TRequest, TResponse, TUrlVariables>({
   responseData: TResponse;
   urlVariables: TUrlVariables;
   requestData: TRequest;
-}): Promise<SuccessResponseType<UndefinedType> | ErrorResponseType<unknown>> {
+}): Promise<ResponseType<UndefinedType>> {
   const errors: string[] = [];
   if (email?.afterHandlerEmails) {
     try {

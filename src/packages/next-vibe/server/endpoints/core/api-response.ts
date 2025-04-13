@@ -57,7 +57,7 @@ export async function createSuccessResponse<
   status?: number;
 
   /** Success callback */
-  onSuccess?: (data: TResponse) => Promise<ApiHandlerResult<UndefinedType>>;
+  onSuccess?: (data: TResponse) => Promise<ResponseType<UndefinedType>>;
 }): Promise<NextResponse<ResponseType<TResponse>>> {
   // Validate response data against schema
   const { message, data: validatedData, success } = validateData(data, schema);
@@ -185,7 +185,11 @@ export async function validatePostRequest<T>(
 
     // Validate against schema
     const validatedData = schema.parse(body);
-    return { success: true, data: validatedData, message: "Validation successful" };
+    return {
+      success: true,
+      data: validatedData,
+      message: "Validation successful",
+    };
   } catch (error) {
     // Handle Zod validation errors
     if (error instanceof ZodError) {
@@ -260,13 +264,13 @@ export async function validateGetRequest<T>(
       return {
         success: true,
         data: validation.data as T,
-        message: "Validation successful"
+        message: "Validation successful",
       };
     } else {
       return {
         success: false,
-        message: validation.message || "Validation failed",
-        data: {} as T
+        message: validation.message ?? "Validation failed",
+        data: {} as T,
       };
     }
   } catch (error) {
