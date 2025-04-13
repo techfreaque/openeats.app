@@ -140,7 +140,11 @@ export function apiHandler<
 async function validateRequest<TRequest, TResponse, TUrlVariables, TExampleKey>(
   endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
   request: Request,
-): Promise<ApiHandlerResult<TRequest>> {
+): Promise<{
+  data: TRequest;
+  success: boolean;
+  message: string;
+}> {
   if (endpoint.method === Methods.GET) {
     return await validateGetRequest<TRequest>(request, endpoint.requestSchema);
   }
