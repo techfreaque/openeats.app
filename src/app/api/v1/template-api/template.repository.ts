@@ -4,10 +4,10 @@
  */
 
 import { eq } from "drizzle-orm";
+import type { DbId } from "next-vibe/server/db/types";
 
-import { db } from "../../../../db";
-import { ApiRepositoryImpl } from "../../../../db/repository";
-import type { DbId } from "../../../../db/types";
+import { db } from "../../../api/db";
+import { ApiRepositoryImpl } from "../../../api/db/repository";
 import type { NewTemplate, selectTemplateSchema, Template } from "./db";
 import { insertTemplateSchema, templates } from "./db";
 
@@ -77,11 +77,10 @@ export class TemplateRepositoryImpl
    * @param someValue - The value to search for
    */
   async findBySomeValue(someValue: string): Promise<Template[]> {
-    const results = await db
+    return await (db
       .select()
       .from(templates)
-      .where(eq(templates.someValue, someValue));
-    return results;
+      .where(eq(templates.someValue, someValue)) as Promise<Template[]>);
   }
 }
 

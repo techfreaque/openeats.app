@@ -38,10 +38,13 @@ export type UseTemplatesReturn = ReturnType<typeof useTemplates>;
  * @returns Mutation for creating templates
  */
 export function useCreateTemplate(): UseApiMutationReturn {
-  return useApiMutation({
+  // Using type assertion to handle the error
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  const mutation = useApiMutation({
     endpoint: definitions.POST,
     urlParams: { someValueFromTheRouteUrl: "" },
-  }) as UseApiMutationReturn;
+  });
+  return mutation as UseApiMutationReturn;
 }
 export type UseCreateTemplateReturn = ReturnType<typeof useCreateTemplate>;
 
@@ -50,9 +53,12 @@ export type UseCreateTemplateReturn = ReturnType<typeof useCreateTemplate>;
  * @returns Mutation for updating templates
  */
 export function useUpdateTemplate(): UseApiMutationReturn {
-  return useApiMutation({
+  // Using type assertion to handle the error
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  const mutation = useApiMutation({
     endpoint: definitions.PUT,
     urlParams: { someValueFromTheRouteUrl: "" },
-  }) as UseApiMutationReturn;
+  });
+  return mutation as UseApiMutationReturn;
 }
 export type UseUpdateTemplateReturn = ReturnType<typeof useUpdateTemplate>;
