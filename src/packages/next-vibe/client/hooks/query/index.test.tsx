@@ -1,33 +1,35 @@
 import { act, renderHook } from "@testing-library/react";
 import { createEndpoint } from "next-vibe/client/endpoint";
-import { Methods, UserRoleValue } from "next-vibe/shared";
+import { Methods, undefinedSchema, UserRoleValue } from "next-vibe/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 import { useApiQuery } from ".";
 
 // Mock the useApiStore hook
-vi.mock("../../../../client/hooks/store", () => ({
-  useApiStore: vi.fn().mockImplementation(() => ({
-    executeQuery: vi
-      .fn()
-      .mockResolvedValue({ success: true, data: [{ id: "1", name: "Test" }] }),
-    getQueryId: vi.fn().mockReturnValue("test-query-id"),
-    queries: {
-      "test-query-id": {
-        data: [{ id: "1", name: "Test" }],
-        error: null,
-        isLoading: false,
-        isFetching: false,
-        isError: false,
-        isSuccess: true,
-        isLoadingFresh: false,
-        isCachedData: true,
-        statusMessage: "Success",
-        lastFetchTime: Date.now(),
-      },
+const mockUseApiStore = vi.fn().mockImplementation(() => ({
+  executeQuery: vi
+    .fn()
+    .mockResolvedValue({ success: true, data: [{ id: "1", name: "Test" }] }),
+  getQueryId: vi.fn().mockReturnValue("test-query-id"),
+  queries: {
+    "test-query-id": {
+      data: [{ id: "1", name: "Test" }],
+      error: null,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      isSuccess: true,
+      isLoadingFresh: false,
+      isCachedData: true,
+      statusMessage: "Success",
+      lastFetchTime: Date.now(),
     },
-  })),
+  },
+}));
+
+vi.mock("../../../../client/hooks/store", () => ({
+  useApiStore: mockUseApiStore,
 }));
 
 describe("useApiQuery", () => {
@@ -50,12 +52,22 @@ describe("useApiQuery", () => {
     path: ["test", "query"],
     requestSchema: testSchema,
     responseSchema: testResponseSchema,
-    requestUrlSchema: z.object({}),
-    allowedRoles: [UserRoleValue.USER],
+    requestUrlSchema: undefinedSchema,
+    allowedRoles: [UserRoleValue.PUBLIC, UserRoleValue.CUSTOMER],
     errorCodes: {
       400: "Bad request",
+      500: "Server error",
     },
-  });
+    examples: {
+      payloads: {
+        default: { search: "test", limit: 10 }
+      },
+      urlPathVariables: undefined,
+      responses: {
+        default: [{ id: "1", name: "Test" }]
+      }
+    }
+  }).GET;
 
   const mockExecuteQuery = vi
     .fn()
@@ -64,7 +76,7 @@ describe("useApiQuery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Update the mock implementation for executeQuery
-    useApiStore.mockImplementation(() => ({
+    mockUseApiStore.mockImplementation(() => ({
       executeQuery: mockExecuteQuery,
       getQueryId: vi.fn().mockReturnValue("test-query-id"),
       queries: {
@@ -175,7 +187,7 @@ describe("useApiQuery", () => {
     const onError = vi.fn();
 
     // Mock error state
-    useApiStore.mockImplementation(() => ({
+    mockUseApiStore.mockImplementation(() => ({
       executeQuery: mockExecuteQuery,
       getQueryId: vi.fn().mockReturnValue("test-query-id"),
       queries: {
@@ -226,7 +238,7 @@ describe("useApiQuery", () => {
 
   it("should handle loading states", () => {
     // Mock loading state
-    useApiStore.mockImplementation(() => ({
+    mockUseApiStore.mockImplementation(() => ({
       executeQuery: mockExecuteQuery,
       getQueryId: vi.fn().mockReturnValue("test-query-id"),
       queries: {
@@ -258,7 +270,7 @@ describe("useApiQuery", () => {
 
   it("should handle cached data", () => {
     // Mock cached data state
-    useApiStore.mockImplementation(() => ({
+    mockUseApiStore.mockImplementation(() => ({
       executeQuery: mockExecuteQuery,
       getQueryId: vi.fn().mockReturnValue("test-query-id"),
       queries: {
