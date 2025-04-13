@@ -1,8 +1,9 @@
 import type { NextResponse } from "next/server";
+import type { ResponseType } from "next-vibe/shared";
+import { ErrorResponseTypes } from "next-vibe/shared";
 import { Methods } from "next-vibe/shared/types/endpoint";
 
 import type { ApiEndpoint } from "../../../client/endpoint";
-import type { ResponseType } from "../../../shared/types/response.schema";
 import { debugLogger } from "../../../shared/utils/logger";
 import { validateData } from "../../../shared/utils/validation";
 import {
@@ -93,7 +94,10 @@ export function apiHandler<
         return createErrorResponse(
           endpoint,
           result.message,
-          result.errorCode || 500,
+          result.errorType === ErrorResponseTypes.HTTP_ERROR &&
+            "errorCode" in result
+            ? result.errorCode
+            : 500,
         );
       }
 
@@ -107,7 +111,7 @@ export function apiHandler<
         endpoint,
         data: result.data,
         schema: endpoint.responseSchema,
-        status: result.status ?? 200,
+        status: 200,
         onSuccess: (data) =>
           handleEmails<TRequest, TResponse, TUrlVariables>({
             email,
@@ -173,16 +177,18 @@ async function safeExecute<TRequest, TResponse, TUrlVariables>(
     });
   } catch (err) {
     const error = err as Error;
-    return { success: false, message: error.message, errorCode: 500 };
+    return {
+      success: false,
+      message: error.message,
+      errorType: ErrorResponseTypes.INTERNAL_ERROR,
+    };
   }
 }
 
 /**
  * API handler result type
  */
-export type ApiHandlerResult<T> =
-  | { success: true; data: T; status?: number }
-  | { success: false; message: string; errorCode: number };
+export type ApiHandlerResult<T> = ResponseType<T>;
 
 /**
  * API handler props
