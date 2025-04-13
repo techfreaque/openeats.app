@@ -5,7 +5,7 @@
 
 import { debugLogger, errorLogger } from "next-vibe/shared";
 
-import { closeDatabase } from "@/app/api/db";
+import { closeDatabase } from "next-vibe/server/db";
 
 import { stopServer } from "./test-server";
 

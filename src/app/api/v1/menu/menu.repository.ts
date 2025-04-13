@@ -4,10 +4,9 @@
  */
 
 import { and, eq, ilike, or } from "drizzle-orm";
+import type { DbId } from "next-vibe/server/db";
+import { BaseRepositoryImpl, db } from "next-vibe/server/db";
 
-import { db } from "@/app/api/db";
-import { BaseRepositoryImpl } from "@/app/api/db/repository";
-import type { DbId } from "@/app/api/db/types";
 import { categories } from "@/app/api/v1/category/db";
 
 import type { MenuItem, NewMenuItem, selectMenuItemSchema } from "./db";

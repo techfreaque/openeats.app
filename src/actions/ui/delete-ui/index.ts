@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "@/app/api/db";
+import { db } from "next-vibe/server/db";
 
 export const deleteUI = async (uiid: string, userId: string): Promise<void> => {
   const ui = await db.uI.findUnique({

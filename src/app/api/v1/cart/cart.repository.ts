@@ -4,10 +4,10 @@
  */
 
 import { and, eq } from "drizzle-orm";
+import { db } from "next-vibe/server/db";
+import { ApiRepositoryImpl } from "next-vibe/server/db/repository-postgres";
 import type { DbId } from "next-vibe/server/db/types";
 
-import { db } from "@/app/api/db";
-import { ApiRepositoryImpl } from "@/app/api/db/repository";
 import { categories } from "@/app/api/v1/category/db";
 import { menuItems } from "@/app/api/v1/menu/db";
 import { partners } from "@/app/api/v1/restaurant/db";

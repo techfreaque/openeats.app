@@ -7,7 +7,7 @@ import {
 } from "next-vibe/shared/types/response.schema";
 import request from "supertest";
 
-import { db } from "@/app/api/db";
+import { db } from "next-vibe/server/db";
 import { createSessionAndGetUser } from "@/app/api/v1/auth/public/login/route-handler";
 
 /**

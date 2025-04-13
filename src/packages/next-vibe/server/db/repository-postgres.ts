@@ -4,24 +4,10 @@
  */
 
 import type { PgTable } from "drizzle-orm/pg-core";
-import type { BaseRepository } from "next-vibe/server/db/repository";
 import { BaseRepositoryImpl } from "next-vibe/server/db/repository";
-import type {
-  DbId,
-  InsertModel,
-  TableModel,
-  ZodInfer,
-} from "next-vibe/server/db/types";
 import type { ZodType, ZodTypeDef } from "zod";
 
 import { db } from "./index";
-
-// Re-export types
-export type { DbId, InsertModel, TableModel, ZodInfer };
-
-// Re-export interfaces and classes
-export type { BaseRepository };
-export { BaseRepositoryImpl };
 
 /**
  * API-specific repository implementation

@@ -2,7 +2,7 @@
 
 import { errorLogger } from "next-vibe/shared/utils/logger";
 
-import { db } from "@/app/api/db";
+import { db } from "next-vibe/server/db";
 
 export interface WebsiteEditorUser {
   uiCount: number;

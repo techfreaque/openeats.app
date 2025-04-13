@@ -4,10 +4,8 @@
  */
 
 import { and, eq, ilike, or } from "drizzle-orm";
-
-import { db } from "@/app/api/db";
-import { BaseRepositoryImpl } from "@/app/api/db/repository";
-import type { DbId } from "@/app/api/db/types";
+import type { DbId } from "next-vibe/server/db";
+import { BaseRepositoryImpl, db } from "next-vibe/server/db";
 
 import type { NewPartner, Partner, selectPartnerSchema } from "./db";
 import { insertPartnerSchema, partners } from "./db";

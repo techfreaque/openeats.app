@@ -7,7 +7,7 @@ import { and, between, desc, eq, gte, lte, or } from "drizzle-orm";
 import { BaseRepositoryImpl } from "next-vibe/server/db/repository";
 import type { DbId } from "next-vibe/server/db/types";
 
-import { db } from "@/app/api/db";
+import { db } from "next-vibe/server/db";
 import { users } from "@/app/api/v1/auth/me/users.db";
 import { partners } from "@/app/api/v1/restaurant/db";
 

@@ -5,7 +5,7 @@
 
 import { eq } from "drizzle-orm";
 
-import { db } from "../../../../db";
+import { db } from "../../../../../../packages/next-vibe/server/db";
 import { users } from "../../me/users.db";
 
 /**

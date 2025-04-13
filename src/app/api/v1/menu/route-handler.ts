@@ -2,7 +2,7 @@ import "server-only";
 
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
-import { db } from "../../db";
+import { db } from "../../../../packages/next-vibe/server/db";
 import type { MenuItemRequestUrlParamsType, MenuItemType } from "./definition";
 
 /**

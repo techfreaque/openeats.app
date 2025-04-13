@@ -10,7 +10,7 @@ import { debugLogger } from "next-vibe/shared/utils/logger";
  * Category API route handlers
  * Provides category management functionality
  */
-import { db } from "../../db";
+import { db } from "../../../../packages/next-vibe/server/db";
 import type {
   CategoriesResponseType,
   CategoryCreateType,

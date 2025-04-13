@@ -1,6 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 
-import { db } from "@/app/api/db";
+import { db } from "next-vibe/server/db";
 
 import { convertPrismaRole } from "../../../shared/types/enums";
 import type { UserRoleResponseType } from "../../../shared/types/user-roles.schema";

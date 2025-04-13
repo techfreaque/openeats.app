@@ -2,7 +2,7 @@ import "dotenv/config";
 
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
-import { closeDatabase } from "@/app/api/db";
+import { closeDatabase } from "next-vibe/server/db";
 
 /**
  * Seed script for test database

@@ -6,8 +6,8 @@
 import { and, eq, gt } from "drizzle-orm";
 import type { DbId } from "next-vibe/server/db/types";
 
-import { db } from "@/app/api/db";
-import { ApiRepositoryImpl } from "@/app/api/db/repository";
+import { db } from "next-vibe/server/db";
+import { ApiRepositoryImpl } from "next-vibe/server/db/repository-postgres";
 
 import type { NewSession, selectSessionSchema, Session } from "./sessions.db";
 import { insertSessionSchema, sessions } from "./sessions.db";

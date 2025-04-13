@@ -4,10 +4,9 @@
  */
 
 import { and, eq } from "drizzle-orm";
+import type { DbId } from "next-vibe/server/db";
+import { db } from "next-vibe/server/db";
 import { BaseRepositoryImpl } from "next-vibe/server/db/repository";
-
-import { db } from "@/app/api/db";
-import type { DbId } from "@/app/api/db/types";
 
 import type {
   Code,

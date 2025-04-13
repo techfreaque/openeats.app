@@ -4,7 +4,7 @@ import { jwtVerify, SignJWT } from "jose";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
 import { env } from "../../../../../../config/env";
-import { db } from "../../../../db";
+import { db } from "../../../../../../packages/next-vibe/server/db";
 import { passwordResets } from "./reset-password.db";
 
 const SECRET_KEY = new TextEncoder().encode(env.JWT_SECRET_KEY);

@@ -3,12 +3,9 @@ import "dotenv/config";
 import { debugLogger, errorLogger } from "next-vibe/shared";
 
 import { closeDatabase } from "..";
-import { createAdminUser } from "./utils";
 
 async function seedDatabase(): Promise<void> {
   debugLogger("🌱 Seeding database...");
-
-  await createAdminUser();
 
   debugLogger("✅ Database seeded successfully!");
 }

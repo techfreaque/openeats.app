@@ -6,8 +6,8 @@
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import type { DbId } from "next-vibe/server/db/types";
 
-import { db } from "@/app/api/db";
-import { ApiRepositoryImpl } from "@/app/api/db/repository";
+import { db } from "next-vibe/server/db";
+import { ApiRepositoryImpl } from "next-vibe/server/db/repository-postgres";
 
 import type {
   NewNotification,

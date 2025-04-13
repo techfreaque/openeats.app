@@ -8,7 +8,7 @@ import { debugLogger } from "next-vibe/shared/utils/logger";
 
 import type { Currencies } from "@/translations";
 
-import { db } from "../../../db";
+import { db } from "../../../../../packages/next-vibe/server/db";
 import type {
   MenuItemResponseType,
   MenuItemUpdateType,

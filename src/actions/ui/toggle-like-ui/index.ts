@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "@/app/api/db";
+import { db } from "next-vibe/server/db";
 
 export const toggleLike = async (
   userId: string,

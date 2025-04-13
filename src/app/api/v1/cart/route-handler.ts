@@ -4,7 +4,7 @@ import { formatResponse } from "next-vibe/server/endpoints/core/api-response";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
-import { db } from "../../db";
+import { db } from "../../../../packages/next-vibe/server/db";
 import { menuItems } from "../menu/db";
 import { cartRepository } from "./cart.repository";
 import type {

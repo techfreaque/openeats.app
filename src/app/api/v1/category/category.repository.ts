@@ -6,8 +6,8 @@
 import { eq, isNull } from "drizzle-orm";
 import type { DbId } from "next-vibe/server/db/types";
 
-import { db } from "../../../api/db";
-import { ApiRepositoryImpl } from "../../../api/db/repository";
+import { db } from "../../../../packages/next-vibe/server/db";
+import { ApiRepositoryImpl } from "../../../../packages/next-vibe/server/db/repository-postgres";
 import type { Category, NewCategory, selectCategorySchema } from "./db";
 import { categories, insertCategorySchema } from "./db";
 

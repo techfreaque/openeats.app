@@ -1,4 +1,4 @@
-import { db } from "@/app/api/db";
+import { db } from "next-vibe/server/db";
 import { userRepository } from "@/app/api/v1/auth/me/users.repository";
 import { userRolesRepository } from "@/app/api/v1/auth/roles/roles.repository";
 

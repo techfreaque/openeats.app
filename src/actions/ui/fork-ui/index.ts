@@ -1,7 +1,7 @@
 "use server";
 import { errorLogger } from "next-vibe/shared/utils/logger";
 
-import { db } from "@/app/api/db";
+import { db } from "next-vibe/server/db";
 import type { FullUI } from "@/lib/website-editor/types";
 
 export async function forkUI(uiId: string, userId: string): Promise<FullUI> {

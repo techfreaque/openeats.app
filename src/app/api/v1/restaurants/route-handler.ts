@@ -10,7 +10,7 @@ import {
   getCoordinatesFromAddress,
 } from "@/lib/geo/distance";
 
-import { db } from "../../db";
+import { db } from "../../../../packages/next-vibe/server/db";
 import {
   filterMenuItems,
   filterOpeningTimes,

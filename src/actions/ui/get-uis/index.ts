@@ -2,7 +2,7 @@
 
 import { and, asc, desc, eq, gte, inArray } from "drizzle-orm";
 
-import { db } from "@/app/api/db";
+import { db } from "next-vibe/server/db";
 import { ui } from "@/app/api/v1/website-editor/db";
 import { uiRepository } from "@/app/api/v1/website-editor/website-editor.repository";
 import type { FullUI } from "@/lib/website-editor/types";

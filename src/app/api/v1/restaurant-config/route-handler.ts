@@ -6,7 +6,7 @@ import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
-import { db } from "../../db";
+import { db } from "../../../../packages/next-vibe/server/db";
 import type {
   CategoryCreateType,
   CategoryResponseType,

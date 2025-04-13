@@ -4,11 +4,10 @@
  */
 
 import type { Server } from "http";
+import type { DbId } from "next-vibe/server/db";
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 import type { Socket } from "socket.io";
 import { Server as SocketIOServer } from "socket.io";
-
-import type { DbId } from "@/app/api/db/types";
 
 import {
   notificationConnectionRepository,

@@ -1,4 +1,4 @@
-import { db } from "@/app/api/db";
+import { db } from "next-vibe/server/db";
 import { debugLogger } from "@/packages/next-vibe/shared/utils/logger";
 
 export const updateUpdatedAtFields = async (): Promise<void> => {

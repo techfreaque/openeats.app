@@ -4,10 +4,9 @@
  */
 
 import { eq } from "drizzle-orm";
+import type { DbId } from "next-vibe/server/db";
+import { BaseRepositoryImpl, db } from "next-vibe/server/db";
 
-import { db } from "@/app/api/db";
-import { BaseRepositoryImpl } from "@/app/api/db/repository";
-import type { DbId } from "@/app/api/db/types";
 import { users } from "@/app/api/v1/auth/me/users.db";
 
 import type { Driver, NewDriver, selectDriverSchema } from "./drivers.db";
