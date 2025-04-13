@@ -42,7 +42,6 @@ export function useAiForm<
   const {
     systemPrompt = "I'm an AI assistant that will help you fill out this form. I'll ask you questions about the required information and help you complete the form step by step.",
     autoStart = false,
-    retryDelayMs = 1000,
     includeFieldDescriptions = true,
     fieldParsers,
     ...formOptions
@@ -56,19 +55,19 @@ export function useAiForm<
   // Create memoized selectors to prevent re-renders
   const mutationSelector = useMemo(
     () =>
-      (
-        state: ApiStore,
-      ): MutationStoreType<TResponse> | undefined => {
-          const mutation = state.mutations[mutationId];
-          return mutation ? (mutation as MutationStoreType<TResponse>) : undefined;
-        },
+      (state: ApiStore): MutationStoreType<TResponse> | undefined => {
+        const mutation = state.mutations[mutationId];
+        return mutation
+          ? (mutation as MutationStoreType<TResponse>)
+          : undefined;
+      },
     [mutationId],
   );
 
-  type FormStateType = {
+  interface FormStateType {
     formError: Error | null;
     isSubmitting: boolean;
-  };
+  }
 
   const formSelector = useMemo(
     () =>
@@ -139,7 +138,7 @@ export function useAiForm<
 
   // Function to send a user message and get AI response
   const sendUserMessage = useCallback(
-    async (message: ChatMessageContent) => {
+    async (message: ChatMessageContent): Promise<void> => {
       // Add user message to chat
       const userMessage: ChatMessage = {
         role: ChatMessageRole.USER,
@@ -194,25 +193,55 @@ export function useAiForm<
           throw new Error(`API call failed: ${response.statusText}`);
         }
 
-        const responseData = await response.json();
+        const responseData = (await response.json()) as {
+          message?: {
+            content?: string;
+          };
+          parsedFields?: Record<string, unknown>;
+        };
 
         // Add assistant message to chat
         const assistantMessage: ChatMessage = {
           role: ChatMessageRole.ASSISTANT,
-          content: responseData.message.content,
+          content: (function (): string {
+            // Type guard for responseData
+            if (responseData?.message?.content !== undefined) {
+              return String(responseData.message.content);
+            }
+            return "Response received";
+          })(),
           timestamp: Date.now(),
-          metadata: { parsedFields: responseData.parsedFields },
         };
+
+        // Type guard for parsedFields
+        if (
+          typeof responseData === "object" &&
+          responseData !== null &&
+          "parsedFields" in responseData &&
+          responseData.parsedFields !== null
+        ) {
+          // Safe to access parsedFields after type guard
+          const typedParsedFields = responseData.parsedFields;
+          assistantMessage.metadata = {
+            parsedFields: typedParsedFields,
+          };
+        }
 
         setChatMessages((prev) => [...prev, assistantMessage]);
 
         // Update form fields with parsed values
-        if (responseData.parsedFields) {
+        if (
+          typeof responseData === "object" &&
+          responseData !== null &&
+          "parsedFields" in responseData &&
+          responseData.parsedFields !== null &&
+          typeof responseData.parsedFields === "object"
+        ) {
           const newParsingResults: Record<string, FieldParsingResult> = {};
 
-          for (const [field, value] of Object.entries(
-            responseData.parsedFields,
-          )) {
+          const parsedFields = responseData.parsedFields;
+
+          for (const [field, value] of Object.entries(parsedFields)) {
             try {
               // Use custom field parser if available
               const parsedValue = fieldParsers?.[field]
@@ -222,7 +251,7 @@ export function useAiForm<
               // Validate the field value using the form's validation
               formMethods.setValue(
                 field as unknown as Path<TRequest>,
-                parsedValue as unknown as FieldPathValue<TRequest, Path<TRequest>>,
+                parsedValue as FieldPathValue<TRequest, Path<TRequest>>,
               );
               const fieldError = formMethods.getFieldState(
                 field as unknown as Path<TRequest>,
@@ -234,9 +263,10 @@ export function useAiForm<
                 status: fieldError
                   ? FieldParsingStatus.ERROR
                   : FieldParsingStatus.SUCCESS,
-                value: typeof parsedValue === 'object' && parsedValue !== null 
-                  ? JSON.stringify(parsedValue) 
-                  : parsedValue as string | number | boolean | null,
+                value:
+                  typeof parsedValue === "object" && parsedValue !== null
+                    ? JSON.stringify(parsedValue)
+                    : (parsedValue as string | number | boolean | null),
                 ...(fieldError && { error: fieldError.message }),
                 retryCount:
                   (fieldParsingResults[field]?.retryCount ?? 0) +
@@ -246,9 +276,10 @@ export function useAiForm<
               newParsingResults[field] = {
                 fieldName: field,
                 status: FieldParsingStatus.ERROR,
-                value: typeof value === 'object' && value !== null 
-                  ? JSON.stringify(value) 
-                  : String(value),
+                value:
+                  typeof value === "object" && value !== null
+                    ? JSON.stringify(value)
+                    : String(value),
                 error: error instanceof Error ? error.message : String(error),
                 retryCount: (fieldParsingResults[field]?.retryCount ?? 0) + 1,
               };
@@ -280,7 +311,6 @@ export function useAiForm<
     },
     [
       chatMessages,
-      endpoint.requestSchema,
       fieldDescriptions,
       fieldParsers,
       fieldParsingResults,
@@ -290,7 +320,7 @@ export function useAiForm<
   );
 
   // Function to start the AI form filling process
-  const startAiFormFilling = useCallback(async () => {
+  const startAiFormFilling = useCallback(async (): Promise<void> => {
     // Clear any previous errors
     clearFormError();
 
@@ -313,15 +343,10 @@ export function useAiForm<
 
     // Send the initial prompt
     await sendUserMessage(initialPrompt);
-  }, [
-    clearFormError,
-    endpoint.requestSchema,
-    fieldDescriptions,
-    sendUserMessage,
-  ]);
+  }, [clearFormError, fieldDescriptions, formMethods, sendUserMessage]);
 
   // Function to reset the chat
-  const resetChat = useCallback(() => {
+  const resetChat = useCallback((): void => {
     setChatMessages([
       {
         role: ChatMessageRole.SYSTEM,
@@ -340,72 +365,84 @@ export function useAiForm<
   }, [autoStart, startAiFormFilling]);
 
   // Create a submit handler that validates and submits the form
-  const submitForm: SubmitFormFunction<TRequest, TResponse, TUrlVariables> = (
-    event,
-    options,
-  ): void => {
-    const _submitForm = async (): Promise<void> => {
-      try {
-        // Get form data
-        const formData = formMethods.getValues();
+  const submitForm: SubmitFormFunction<TRequest, TResponse, TUrlVariables> =
+    useCallback(
+      (event, options): void => {
+        const _submitForm = async (): Promise<void> => {
+          try {
+            // Get form data
+            const formData = formMethods.getValues();
 
-        // Clear any previous errors
-        clearFormError();
+            // Clear any previous errors
+            clearFormError();
 
-        // Call the API with the form data
-        const result = await executeMutation(
-          endpoint,
-          formData,
-          options.urlParamVariables,
-          mutationOptions,
-        );
+            // Call the API with the form data
+            const result = await executeMutation(
+              endpoint,
+              formData,
+              options.urlParamVariables,
+              mutationOptions,
+            );
 
-        if (result === undefined) {
-          return undefined;
-        }
+            if (result === undefined) {
+              return;
+            }
 
-        options.onSuccess?.({
-          responseData: result,
-          pathParams: options.urlParamVariables,
-          requestData: formData,
-        });
+            options.onSuccess?.({
+              responseData: result,
+              pathParams: options.urlParamVariables,
+              requestData: formData,
+            });
 
-        // Add success message to chat if we have chat messages
-        if (chatMessages.length > 1) {
-          const successMessage: ChatMessage = {
-            role: ChatMessageRole.ASSISTANT,
-            content: "Great! The form has been submitted successfully.",
-            timestamp: Date.now(),
-          };
+            // Add success message to chat if we have chat messages
+            if (chatMessages.length > 1) {
+              const successMessage: ChatMessage = {
+                role: ChatMessageRole.ASSISTANT,
+                content: "Great! The form has been submitted successfully.",
+                timestamp: Date.now(),
+              };
 
-          setChatMessages((prev) => [...prev, successMessage]);
-        }
-      } catch (error) {
-        // Handle any errors that occur during submission
-        const parsedError = parseError(error);
-        setError(parsedError);
-        options.onError?.(parsedError);
+              setChatMessages((prev) => [...prev, successMessage]);
+            }
+          } catch (error) {
+            // Handle any errors that occur during submission
+            const parsedError = parseError(error);
+            setError(parsedError);
+            options.onError?.(parsedError);
 
-        // Add error message to chat if we have chat messages
-        if (chatMessages.length > 1) {
-          const errorMessage: ChatMessage = {
-            role: ChatMessageRole.ASSISTANT,
-            content: `Sorry, there was an error submitting the form: ${parsedError.message}`,
-            timestamp: Date.now(),
-          };
+            // Add error message to chat if we have chat messages
+            if (chatMessages.length > 1) {
+              const errorMessage: ChatMessage = {
+                role: ChatMessageRole.ASSISTANT,
+                content: `Sorry, there was an error submitting the form: ${parsedError.message}`,
+                timestamp: Date.now(),
+              };
 
-          setChatMessages((prev) => [...prev, errorMessage]);
-        }
-      }
-    };
+              setChatMessages((prev) => [...prev, errorMessage]);
+            }
+          }
+        };
 
-    void formMethods.handleSubmit(_submitForm, (errors) =>
-      options.onError?.(parseError(errors)),
-    )(event);
-  };
+        void formMethods.handleSubmit(_submitForm, (errors) =>
+          options.onError?.(parseError(errors)),
+        )(event);
+      },
+      [
+        chatMessages.length,
+        clearFormError,
+        endpoint,
+        executeMutation,
+        formMethods,
+        mutationOptions,
+        setChatMessages,
+        setError,
+      ],
+    );
 
   // Function to submit the form via chat
-  const submitViaChat = useCallback(async () => {
+  const submitViaChat = useCallback(async (): Promise<void> => {
+    const currentChatLength = chatMessages.length;
+
     // Add user message indicating submission intent
     const userMessage: ChatMessage = {
       role: ChatMessageRole.USER,
@@ -453,17 +490,24 @@ export function useAiForm<
         setChatMessages((prev) => [...prev, successMessage]);
       },
       onError: (error) => {
-        // Add error message to chat
-        const errorMessage: ChatMessage = {
-          role: ChatMessageRole.ASSISTANT,
-          content: `Sorry, there was an error submitting the form: ${error.message}`,
-          timestamp: Date.now(),
-        };
+        if (currentChatLength > 1) {
+          const errorMessage: ChatMessage = {
+            role: ChatMessageRole.ASSISTANT,
+            content: `Sorry, there was an error submitting the form: ${error.message}`,
+            timestamp: Date.now(),
+          };
 
-        setChatMessages((prev) => [...prev, errorMessage]);
+          setChatMessages((prev) => [...prev, errorMessage]);
+        }
       },
     });
-  }, [fieldDescriptions, formMethods, submitForm]);
+  }, [
+    chatMessages.length,
+    fieldDescriptions,
+    formMethods,
+    setChatMessages,
+    submitForm,
+  ]);
 
   // Function to get a summary of the current form state
   const getFormSummary = useCallback((): string => {
@@ -475,13 +519,30 @@ export function useAiForm<
     // Add form values
     for (const [field, value] of Object.entries(formValues)) {
       const description = fieldDescriptions?.[field] ?? field;
-      const fieldError = formErrors[field as string];
+      const fieldError = formErrors[field];
 
       if (value !== undefined && value !== "") {
-        const valueStr =
-          typeof value === "object" && value !== null
-            ? JSON.stringify(value)
-            : String(value);
+        let valueStr = "";
+        if (typeof value === "object" && value !== null) {
+          try {
+            valueStr = JSON.stringify(value);
+          } catch {
+            // Catch error when trying to stringify circular references
+            valueStr = "[Complex Object]";
+          }
+        } else {
+          // Explicitly handle different primitive types
+          valueStr =
+            value === null
+              ? "null"
+              : value === undefined
+                ? "undefined"
+                : typeof value === "string"
+                  ? value
+                  : typeof value === "number" || typeof value === "boolean"
+                    ? String(value)
+                    : "[Unknown Type]";
+        }
 
         summary += `- ${description}: ${valueStr}`;
         if (fieldError) {

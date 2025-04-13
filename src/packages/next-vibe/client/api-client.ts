@@ -45,7 +45,7 @@ export interface ApiRequestOptions {
 /**
  * Default API request options
  */
-const defaultOptions: Omit<Required<ApiRequestOptions>, 'onError'> & {
+const defaultOptions: Omit<Required<ApiRequestOptions>, "onError"> & {
   onError: ((error: Error) => void) | undefined;
 } = {
   includeCredentials: true,
@@ -84,7 +84,7 @@ export async function apiRequest<
     requestData?: TRequest;
     pathParams?: TUrlVariables;
   };
-  
+
   const requestInfo = endpoint.getRequestData(requestParams);
 
   if (!requestInfo.success) {
@@ -114,7 +114,7 @@ export async function apiRequest<
       credentials: mergedOptions.includeCredentials ? "include" : "same-origin",
       signal: controller.signal,
     };
-    
+
     const response = await fetch(endpointUrl, fetchOptions);
 
     // Clear timeout
@@ -134,7 +134,7 @@ export async function apiRequest<
         endpoint: endpoint.path.join("/"),
         method: endpoint.method,
         responseData,
-        errorType: responseData.errorType || 'UNKNOWN_ERROR',
+        errorType: responseData.errorType || "UNKNOWN_ERROR",
         errorCode: response.status,
       });
 

@@ -181,8 +181,8 @@ export function useApiQuery<
   // Create a result object that matches React Query's API
   return useMemo(() => {
     type QueryStatus = "loading" | "error" | "success" | "idle";
-    
-    const status: QueryStatus = 
+
+    const status: QueryStatus =
       queryState.isLoading || queryState.isFetching
         ? "loading"
         : queryState.isError
@@ -190,7 +190,7 @@ export function useApiQuery<
           : queryState.isSuccess
             ? "success"
             : "idle";
-    
+
     const result: EnhancedQueryResult<TResponse> = {
       data: queryState.data,
       error: queryState.error ?? undefined,

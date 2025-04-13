@@ -106,7 +106,7 @@ export async function getStorageItem<T>(key: string): Promise<T | null> {
       return storedItem.data;
     }
 
-    return parsed as T;
+    return parsed;
   } catch (e) {
     errorLogger("Error retrieving from storage:", e);
     return null;

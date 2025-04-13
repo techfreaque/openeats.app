@@ -87,7 +87,7 @@ export class NotificationClient {
     new Map();
   private connectionCallbacks: ConnectionCallback[] = [];
   private errorCallbacks: ErrorCallback[] = [];
-  private options: Required<Omit<NotificationOptions, 'userId' | 'token'>> & {
+  private options: Required<Omit<NotificationOptions, "userId" | "token">> & {
     userId: string | undefined;
     token: string | undefined;
   };

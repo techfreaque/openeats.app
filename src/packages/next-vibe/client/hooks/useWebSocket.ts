@@ -143,7 +143,7 @@ export function useWebSocket(
   // Refs
   const socketRef = useRef<Socket | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Update status and call onStatusChange callback
   const updateStatus = useCallback(
@@ -200,7 +200,10 @@ export function useWebSocket(
         // Authenticate
         socket.emit("authenticate", {
           deviceId: `browser-${Math.random().toString(36).substring(2, 15)}`,
-          userId: typeof localStorage !== 'undefined' ? localStorage.getItem("userId") : null,
+          userId:
+            typeof localStorage !== "undefined"
+              ? localStorage.getItem("userId")
+              : null,
         });
       });
 
@@ -341,7 +344,7 @@ export function useWebSocket(
     }
 
     // Cleanup on unmount
-    return () => {
+    return (): void => {
       disconnect();
     };
   }, [autoConnect, connect, disconnect]);

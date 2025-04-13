@@ -22,7 +22,9 @@ function isSuccessResponse<T>(
   );
 }
 
-function isErrorResponse<TData>(response: unknown): response is ErrorResponseType<TData> {
+function isErrorResponse<TData>(
+  response: unknown,
+): response is ErrorResponseType<TData> {
   return (
     typeof response === "object" &&
     response !== null &&

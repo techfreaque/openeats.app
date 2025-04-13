@@ -138,10 +138,18 @@ export function testEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>(
           // Create a user with no roles
           const unauthorizedUser: JwtPayloadType = { id: "unauthorized-user" };
 
-          const exampleKey = payloads ? (Object.keys(payloads)[0] as keyof typeof payloads) : undefined;
+          const exampleKey = payloads
+            ? (Object.keys(payloads)[0] as keyof typeof payloads)
+            : undefined;
           const response = await testRunner.executeWith({
-            data: exampleKey && payloads ? payloads[exampleKey] as TRequest : undefined as unknown as TRequest,
-            urlParams: exampleKey && urlPathVariables ? urlPathVariables[exampleKey] as TUrlVariables : undefined as unknown as TUrlVariables,
+            data:
+              exampleKey && payloads
+                ? (payloads[exampleKey] as TRequest)
+                : (undefined as unknown as TRequest),
+            urlParams:
+              exampleKey && urlPathVariables
+                ? (urlPathVariables[exampleKey] as TUrlVariables)
+                : (undefined as unknown as TUrlVariables),
             user: unauthorizedUser,
           });
 
@@ -160,10 +168,18 @@ export function testEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>(
 
             if (validRoles.length > 0) {
               // Test is only relevant if there are non-public roles
-              const exampleKey = payloads ? (Object.keys(payloads)[0] as keyof typeof payloads) : undefined;
+              const exampleKey = payloads
+                ? (Object.keys(payloads)[0] as keyof typeof payloads)
+                : undefined;
               const response = await testRunner.executeWith({
-                data: exampleKey && payloads ? payloads[exampleKey] as TRequest : undefined as unknown as TRequest,
-                urlParams: exampleKey && urlPathVariables ? urlPathVariables[exampleKey] as TUrlVariables : undefined as unknown as TUrlVariables,
+                data:
+                  exampleKey && payloads
+                    ? (payloads[exampleKey] as TRequest)
+                    : (undefined as unknown as TRequest),
+                urlParams:
+                  exampleKey && urlPathVariables
+                    ? (urlPathVariables[exampleKey] as TUrlVariables)
+                    : (undefined as unknown as TUrlVariables),
               });
 
               // Should succeed with proper authorization
