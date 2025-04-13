@@ -141,7 +141,7 @@ export function useAiForm<
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [fieldParsingResults, setFieldParsingResults] = useState<
     Record<string, FieldParsingResult>
-  >({} as Record<string, FieldParsingResult>);
+  >({});
 
   // Extract field descriptions from the endpoint if available
   const fieldDescriptions = useMemo(() => {
@@ -248,7 +248,9 @@ export function useAiForm<
                 status: fieldError
                   ? FieldParsingStatus.ERROR
                   : FieldParsingStatus.SUCCESS,
-                value: parsedValue,
+                value: typeof parsedValue === 'object' && parsedValue !== null 
+                  ? JSON.stringify(parsedValue) 
+                  : parsedValue as string | number | boolean | null,
                 ...(fieldError && { error: fieldError.message }),
                 retryCount:
                   (fieldParsingResults[field]?.retryCount ?? 0) +
@@ -258,7 +260,9 @@ export function useAiForm<
               newParsingResults[field] = {
                 fieldName: field,
                 status: FieldParsingStatus.ERROR,
-                value,
+                value: typeof value === 'object' && value !== null 
+                  ? JSON.stringify(value) 
+                  : String(value),
                 error: error instanceof Error ? error.message : String(error),
                 retryCount: (fieldParsingResults[field]?.retryCount ?? 0) + 1,
               };
@@ -530,7 +534,7 @@ export function useAiForm<
     startAiFormFilling,
     resetChat,
     isAiProcessing,
-    fieldParsingResults,
+    fieldParsingResults: fieldParsingResults as unknown as Record<keyof TRequest, FieldParsingResult>,
     submitViaChat,
     getFormSummary,
     getMissingFields,
