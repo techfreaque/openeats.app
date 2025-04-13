@@ -133,7 +133,7 @@ export function useAiForm<
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [fieldParsingResults, setFieldParsingResults] = useState<
     Record<string, FieldParsingResult>
-  >({});
+  >({} as Record<string, FieldParsingResult>);
 
   // Extract field descriptions from the endpoint if available
   const fieldDescriptions = useMemo(() => {
@@ -214,7 +214,7 @@ export function useAiForm<
               // Validate the field value using the form's validation
               formMethods.setValue(
                 field as unknown as Path<TRequest>,
-                parsedValue as any,
+                parsedValue as unknown as any,
               );
               const fieldError = formMethods.getFieldState(
                 field as unknown as Path<TRequest>,
@@ -463,10 +463,14 @@ export function useAiForm<
     // Add form values
     for (const [field, value] of Object.entries(formValues)) {
       const description = fieldDescriptions?.[field] ?? field;
-      const fieldError = formErrors[field];
+      const fieldError = formErrors[field as keyof typeof formErrors];
 
       if (value !== undefined && value !== "") {
-        summary += `- ${description}: ${String(value)}`;
+        const valueStr = typeof value === 'object' && value !== null 
+          ? JSON.stringify(value) 
+          : String(value);
+          
+        summary += `- ${description}: ${valueStr}`;
         if (fieldError) {
           summary += ` (Error: ${fieldError.message})`;
         }
