@@ -7,6 +7,8 @@ CREATE TYPE "public"."delivery_status" AS ENUM('ASSIGNED', 'PICKED_UP', 'DELIVER
 CREATE TYPE "public"."delivery_type" AS ENUM('PICKUP', 'DELIVERY', 'DINE_IN', 'ALL');--> statement-breakpoint
 CREATE TYPE "public"."currency" AS ENUM('EUR', 'CHF');--> statement-breakpoint
 CREATE TYPE "public"."day" AS ENUM('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY');--> statement-breakpoint
+CREATE TYPE "public"."notification_status" AS ENUM('UNREAD', 'READ', 'ARCHIVED');--> statement-breakpoint
+CREATE TYPE "public"."notification_type" AS ENUM('ORDER', 'DELIVERY', 'PAYMENT', 'SYSTEM', 'MARKETING');--> statement-breakpoint
 CREATE TABLE "addresses" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -281,6 +283,88 @@ CREATE TABLE "templates" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "code" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"code" text NOT NULL,
+	"sub_prompt_id" uuid NOT NULL,
+	CONSTRAINT "code_sub_prompt_id_unique" UNIQUE("sub_prompt_id")
+);
+--> statement-breakpoint
+CREATE TABLE "likes" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"ui_id" uuid NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "restaurant_site_content" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"title" text NOT NULL,
+	"key" text NOT NULL,
+	"icon" text NOT NULL,
+	"code" text NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"restaurant_id" uuid NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "sub_prompts" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"ui_id" uuid NOT NULL,
+	"sub_id" uuid NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"sub_prompt" text NOT NULL,
+	"model_id" text,
+	CONSTRAINT "sub_prompts_sub_id_unique" UNIQUE("sub_id")
+);
+--> statement-breakpoint
+CREATE TABLE "ui" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"public" boolean DEFAULT true NOT NULL,
+	"prompt" text NOT NULL,
+	"img" text NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"ui_type" text NOT NULL,
+	"likes_count" integer DEFAULT 0 NOT NULL,
+	"view_count" integer DEFAULT 0 NOT NULL,
+	"forked_from" uuid
+);
+--> statement-breakpoint
+CREATE TABLE "notification_connections" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"connection_id" text NOT NULL,
+	"user_id" uuid,
+	"device_id" text NOT NULL,
+	"user_agent" text,
+	"ip_address" text,
+	"connected_at" timestamp DEFAULT now() NOT NULL,
+	"last_activity" timestamp DEFAULT now() NOT NULL,
+	"disconnected_at" timestamp,
+	CONSTRAINT "notification_connections_connection_id_unique" UNIQUE("connection_id")
+);
+--> statement-breakpoint
+CREATE TABLE "notification_subscriptions" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"connection_id" text NOT NULL,
+	"channel" text NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "notifications" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"type" "notification_type" NOT NULL,
+	"channel" text NOT NULL,
+	"title" text NOT NULL,
+	"message" text NOT NULL,
+	"data" jsonb,
+	"status" "notification_status" DEFAULT 'UNREAD' NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"read_at" timestamp
+);
+--> statement-breakpoint
 ALTER TABLE "addresses" ADD CONSTRAINT "addresses_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "password_resets" ADD CONSTRAINT "password_resets_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -289,7 +373,7 @@ ALTER TABLE "bug_reports" ADD CONSTRAINT "bug_reports_user_id_users_id_fk" FOREI
 ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_menu_item_id_menu_items_id_fk" FOREIGN KEY ("menu_item_id") REFERENCES "public"."menu_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_partner_id_partners_id_fk" FOREIGN KEY ("partner_id") REFERENCES "public"."partners"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "categories" ADD CONSTRAINT "categories_parent_category_id_categories_id_fk" FOREIGN KEY ("parent_category_id") REFERENCES "public"."categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "categories" ADD CONSTRAINT "categories_parent_category_id_categories_id_fk" FOREIGN KEY ("parent_category_id") REFERENCES "public"."categories"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "drivers" ADD CONSTRAINT "drivers_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "driver_ratings" ADD CONSTRAINT "driver_ratings_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "driver_ratings" ADD CONSTRAINT "driver_ratings_driver_id_drivers_id_fk" FOREIGN KEY ("driver_id") REFERENCES "public"."drivers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -314,4 +398,13 @@ ALTER TABLE "order_items" ADD CONSTRAINT "order_items_menu_item_id_menu_items_id
 ALTER TABLE "opening_times" ADD CONSTRAINT "opening_times_partner_id_partners_id_fk" FOREIGN KEY ("partner_id") REFERENCES "public"."partners"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "restaurant_ratings" ADD CONSTRAINT "restaurant_ratings_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "restaurant_ratings" ADD CONSTRAINT "restaurant_ratings_restaurant_id_partners_id_fk" FOREIGN KEY ("restaurant_id") REFERENCES "public"."partners"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "restaurant_ratings" ADD CONSTRAINT "restaurant_ratings_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "public"."orders"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "restaurant_ratings" ADD CONSTRAINT "restaurant_ratings_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "public"."orders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "code" ADD CONSTRAINT "code_sub_prompt_id_sub_prompts_id_fk" FOREIGN KEY ("sub_prompt_id") REFERENCES "public"."sub_prompts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "likes" ADD CONSTRAINT "likes_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "likes" ADD CONSTRAINT "likes_ui_id_ui_id_fk" FOREIGN KEY ("ui_id") REFERENCES "public"."ui"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "restaurant_site_content" ADD CONSTRAINT "restaurant_site_content_restaurant_id_partners_id_fk" FOREIGN KEY ("restaurant_id") REFERENCES "public"."partners"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "sub_prompts" ADD CONSTRAINT "sub_prompts_ui_id_ui_id_fk" FOREIGN KEY ("ui_id") REFERENCES "public"."ui"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "ui" ADD CONSTRAINT "ui_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "notification_connections" ADD CONSTRAINT "notification_connections_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "notification_subscriptions" ADD CONSTRAINT "notification_subscriptions_connection_id_notification_connections_connection_id_fk" FOREIGN KEY ("connection_id") REFERENCES "public"."notification_connections"("connection_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
