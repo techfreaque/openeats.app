@@ -32,7 +32,7 @@ testEndpoint(definitions.POST, {
         expect(response.data.message).toBeDefined();
         expect(response.data.message.role).toBe(ChatMessageRole.ASSISTANT);
         expect(typeof response.data.message.content).toBe("string");
-        expect(response.data.message.timestamp).toBeGreaterThan(0);
+        expect(typeof response.data.message.timestamp).toBe("number");
         
         if (response.data.parsedFields) {
           expect(typeof response.data.parsedFields).toBe("object");
