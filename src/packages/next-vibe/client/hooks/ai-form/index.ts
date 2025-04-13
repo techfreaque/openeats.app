@@ -140,7 +140,7 @@ export function useAiForm<
     if (!includeFieldDescriptions) {
       return undefined;
     }
-    return endpoint.fieldDescriptions || undefined;
+    return endpoint.fieldDescriptions ?? undefined;
   }, [endpoint.fieldDescriptions, includeFieldDescriptions]);
 
   // Function to send a user message and get AI response
@@ -228,7 +228,7 @@ export function useAiForm<
               // Validate the field value using the form's validation
               formMethods.setValue(
                 field as unknown as Path<TRequest>,
-                parsedValue as any,
+                parsedValue as unknown as any,
               );
               const fieldError = formMethods.getFieldState(
                 field as unknown as Path<TRequest>,
@@ -307,7 +307,7 @@ export function useAiForm<
     const fieldNames = Object.keys(formMethods.getValues());
 
     for (const field of fieldNames) {
-      const description = fieldDescriptions?.[field] || field;
+      const description = fieldDescriptions?.[field] ?? field;
       initialPrompt += `- ${description}\n`;
     }
 
@@ -426,8 +426,8 @@ export function useAiForm<
       let errorMessage = "There are some validation errors in the form:\n\n";
 
       for (const [field, error] of Object.entries(errors)) {
-        const description = fieldDescriptions?.[field] || field;
-        errorMessage += `- ${description}: ${error?.message || "Invalid value"}\n`;
+        const description = fieldDescriptions?.[field] ?? field;
+        errorMessage += `- ${description}: ${error?.message ?? "Invalid value"}\n`;
       }
 
       // Add error message to chat
