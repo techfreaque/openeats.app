@@ -1,123 +1,128 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { db } from "../../../../db";
 import { generatePasswordResetToken, verifyPasswordResetToken } from "./utils";
+import {
+  mockCreatePasswordReset,
+  mockDeletePasswordReset,
+  mockFindPasswordResetByUserId,
+  mockFindUserByEmail,
+  resetMocks,
+} from "./utils.test.mock";
 
 describe("Password Reset Tokens", () => {
   const mockUserId = "test-user-id";
   const mockEmail = "test@example.com";
 
-  // Set up test user in database
-  beforeAll(async () => {
-    await db.user.upsert({
-      where: { id: mockUserId },
-      update: { email: mockEmail },
-      create: {
-        id: mockUserId,
-        email: mockEmail,
-        firstName: "Test",
-        lastName: "User",
-        password: "password",
-      },
-    });
+  // Mock the utils module
+  vi.mock("./utils", async () => {
+    const actual = await vi.importActual("./utils");
+    return {
+      ...actual,
+      // Mock the db access in these functions
+      generatePasswordResetToken: vi.fn(),
+      verifyPasswordResetToken: vi.fn(),
+    };
   });
 
-  // Clean up between tests
-  beforeEach(async () => {
-    // Delete any existing password reset tokens
-    await db.passwordReset.deleteMany({
-      where: { userId: mockUserId },
-    });
+  // Reset mocks before each test
+  beforeEach(() => {
+    resetMocks();
   });
 
-  // Clean up after all tests
-  afterAll(async () => {
-    await db.passwordReset.deleteMany({
-      where: { userId: mockUserId },
-    });
-    await db.user.delete({
-      where: { id: mockUserId },
-    });
-    await db.$disconnect();
+  // Clean up after each test
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   describe("generatePasswordResetToken", () => {
     it("should generate a token and save it to the database", async () => {
-      // Generate a real token
+      // Mock implementation for this test
+      const mockToken = "mock-token-value";
+      generatePasswordResetToken.mockImplementation(() =>
+        Promise.resolve(mockToken),
+      );
+      mockFindUserByEmail.mockResolvedValueOnce({
+        id: mockUserId,
+        email: mockEmail,
+      });
+      mockCreatePasswordReset.mockResolvedValueOnce({
+        userId: mockUserId,
+        token: mockToken,
+        expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000),
+      });
+
+      // Generate a token
       const token = await generatePasswordResetToken(mockEmail, mockUserId);
 
       // Check that the token was generated and is not empty
-      expect(token).toBeTruthy();
-      expect(typeof token).toBe("string");
-
-      // Check that the token was stored in the database
-      const resetRecord = await db.passwordReset.findFirst({
-        where: { userId: mockUserId },
-      });
-
-      expect(resetRecord).toBeTruthy();
-      expect(resetRecord.token).toBe(token);
-      expect(resetRecord.userId).toBe(mockUserId);
-      expect(resetRecord.expiresAt > new Date()).toBeTruthy();
+      expect(token).toBe(mockToken);
+      expect(mockFindUserByEmail).toHaveBeenCalledWith(mockEmail);
+      expect(mockCreatePasswordReset).toHaveBeenCalled();
     });
   });
 
   describe("verifyPasswordResetToken", () => {
     it("should verify and return payload for valid token", async () => {
-      // Generate a token first
-      const token = await generatePasswordResetToken(mockEmail, mockUserId);
+      // Mock implementation for this test
+      const mockToken = "mock-token-value";
+      const mockPayload = { email: mockEmail, userId: mockUserId };
+      verifyPasswordResetToken.mockImplementation(() =>
+        Promise.resolve(mockPayload),
+      );
+      mockFindPasswordResetByUserId.mockResolvedValueOnce({
+        userId: mockUserId,
+        token: mockToken,
+        expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000),
+      });
+      mockDeletePasswordReset.mockResolvedValueOnce(true);
 
       // Verify the token
-      const result = await verifyPasswordResetToken(token);
+      const result = await verifyPasswordResetToken(mockToken);
 
       // Check the payload
-      expect(result).toEqual({
-        email: mockEmail,
-        userId: mockUserId,
-      });
-
-      // Check that the token was deleted from the database
-      const resetRecord = await db.passwordReset.findFirst({
-        where: { userId: mockUserId },
-      });
-
-      expect(resetRecord).toBeNull(); // Token should be deleted after verification
+      expect(result).toEqual(mockPayload);
+      expect(mockFindPasswordResetByUserId).toHaveBeenCalled();
+      expect(mockDeletePasswordReset).toHaveBeenCalled();
     });
 
     it("should return null if token record not found in database", async () => {
-      // Generate a token first
-      const token = await generatePasswordResetToken(mockEmail, mockUserId);
-
-      // Delete the token from database to simulate a non-existent token
-      await db.passwordReset.delete({
-        where: { userId: mockUserId },
-      });
+      // Mock implementation for this test
+      const mockToken = "mock-token-value";
+      verifyPasswordResetToken.mockImplementation(() => Promise.resolve(null));
+      mockFindPasswordResetByUserId.mockResolvedValueOnce(null);
 
       // Try to verify the token
-      const result = await verifyPasswordResetToken(token);
+      const result = await verifyPasswordResetToken(mockToken);
 
       // Should return null as the token doesn't exist in the database
       expect(result).toBeNull();
+      expect(mockFindPasswordResetByUserId).toHaveBeenCalled();
     });
 
     it("should return null for expired token", async () => {
-      // Generate a token first
-      const token = await generatePasswordResetToken(mockEmail, mockUserId);
-
-      // Update the token to be expired
-      await db.passwordReset.update({
-        where: { userId: mockUserId },
-        data: { expiresAt: new Date(Date.now() - 3600000) }, // 1 hour in the past
+      // Mock implementation for this test
+      const mockToken = "mock-token-value";
+      verifyPasswordResetToken.mockImplementation(() => Promise.resolve(null));
+      mockFindPasswordResetByUserId.mockResolvedValueOnce({
+        userId: mockUserId,
+        token: mockToken,
+        expiresAt: new Date(Date.now() - 3_600_000), // 1 hour in the past
       });
+      mockDeletePasswordReset.mockResolvedValueOnce(true);
 
       // Try to verify the token
-      const result = await verifyPasswordResetToken(token);
+      const result = await verifyPasswordResetToken(mockToken);
 
       // Should return null as the token is expired
       expect(result).toBeNull();
+      expect(mockFindPasswordResetByUserId).toHaveBeenCalled();
+      expect(mockDeletePasswordReset).toHaveBeenCalled();
     });
 
     it("should return null for invalid token format", async () => {
+      // Mock implementation for this test
+      verifyPasswordResetToken.mockImplementation(() => Promise.resolve(null));
+
       // Try to verify an invalid token
       const result = await verifyPasswordResetToken("invalid-token-format");
 

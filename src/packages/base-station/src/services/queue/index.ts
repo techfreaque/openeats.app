@@ -186,27 +186,32 @@ class PrintQueueService {
   async pauseJob(jobId: string): Promise<void> {
     try {
       const database = await db;
-      
+
       // First check if the job exists
-      const job = await database.get("SELECT * FROM print_jobs WHERE id = ?", [jobId]);
-      
+      const job = await database.get("SELECT * FROM print_jobs WHERE id = ?", [
+        jobId,
+      ]);
+
       if (!job) {
         throw new Error(`Job ${jobId} not found`);
       }
-      
+
       // Only pause pending or printing jobs
       if (job.status === "pending" || job.status === "printing") {
         logger.info(`Pausing job ${jobId}, current status: ${job.status}`);
-        
+
         await database.run(
           "UPDATE print_jobs SET status = ?, updated_at = ? WHERE id = ?",
-          ["paused", new Date().toISOString(), jobId]
+          ["paused", new Date().toISOString(), jobId],
         );
-        
+
         // Verify update was successful
-        const updated = await database.get("SELECT status FROM print_jobs WHERE id = ?", [jobId]);
+        const updated = await database.get(
+          "SELECT status FROM print_jobs WHERE id = ?",
+          [jobId],
+        );
         logger.debug(`After update, job ${jobId} status: ${updated?.status}`);
-        
+
         // Emit WebSocket events
         this.emitJobStatusChanged(jobId, "paused");
         this.emitQueueUpdated();
@@ -221,27 +226,32 @@ class PrintQueueService {
   async resumeJob(jobId: string): Promise<void> {
     try {
       const database = await db;
-      
+
       // First check if the job exists
-      const job = await database.get("SELECT * FROM print_jobs WHERE id = ?", [jobId]);
-      
+      const job = await database.get("SELECT * FROM print_jobs WHERE id = ?", [
+        jobId,
+      ]);
+
       if (!job) {
         throw new Error(`Job ${jobId} not found`);
       }
-      
+
       // Only resume paused jobs
       if (job.status === "paused") {
         logger.info(`Resuming job ${jobId}, current status: ${job.status}`);
-        
+
         await database.run(
           "UPDATE print_jobs SET status = ?, updated_at = ? WHERE id = ?",
-          ["pending", new Date().toISOString(), jobId]
+          ["pending", new Date().toISOString(), jobId],
         );
-        
+
         // Verify update was successful
-        const updated = await database.get("SELECT status FROM print_jobs WHERE id = ?", [jobId]);
+        const updated = await database.get(
+          "SELECT status FROM print_jobs WHERE id = ?",
+          [jobId],
+        );
         logger.debug(`After update, job ${jobId} status: ${updated?.status}`);
-        
+
         // Emit events and maybe process queue
         this.emitJobStatusChanged(jobId, "pending");
         this.emitQueueUpdated();
@@ -312,7 +322,7 @@ class PrintQueueService {
         `UPDATE print_jobs
          SET status = 'paused', updated_at = ?
          WHERE status IN ('pending', 'printing')`,
-        [now]
+        [now],
       );
 
       logger.info(`Paused ${result.changes || 0} jobs`);
@@ -336,7 +346,7 @@ class PrintQueueService {
         `UPDATE print_jobs
          SET status = 'pending', updated_at = ?
          WHERE status = 'paused'`,
-        [now]
+        [now],
       );
 
       logger.info(`Resumed ${result.changes || 0} jobs`);

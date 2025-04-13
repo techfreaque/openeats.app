@@ -15,7 +15,7 @@ vi.mock("../../printing", () => {
 
 // Use actual sleep instead of mock for better test timing
 async function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 describe("Print Queue Service", () => {
@@ -101,17 +101,19 @@ describe("Print Queue Service", () => {
   describe("pauseJob", () => {
     it("should pause a pending job", async () => {
       // Add a job but make sure it doesn't auto-complete
-      vi.spyOn(printQueueService as any, 'processQueue').mockImplementationOnce(() => Promise.resolve());
-      
+      vi.spyOn(printQueueService as any, "processQueue").mockImplementationOnce(
+        () => Promise.resolve(),
+      );
+
       const jobId = await printQueueService.addJob("content", "file.txt");
-      
+
       // Make sure job is in pending state
       let job = await printQueueService.getJob(jobId);
       expect(job?.status).toBe("pending");
-      
+
       // Pause the job
       await printQueueService.pauseJob(jobId);
-      
+
       // Check if the job was paused
       job = await printQueueService.getJob(jobId);
       expect(job?.status).toBe("paused");
@@ -127,20 +129,22 @@ describe("Print Queue Service", () => {
   describe("resumeJob", () => {
     it("should resume a paused job", async () => {
       // Add a job but make sure it doesn't auto-complete
-      vi.spyOn(printQueueService as any, 'processQueue').mockImplementationOnce(() => Promise.resolve());
-      
+      vi.spyOn(printQueueService as any, "processQueue").mockImplementationOnce(
+        () => Promise.resolve(),
+      );
+
       const jobId = await printQueueService.addJob("content", "file.txt");
-      
+
       // Pause the job
       await printQueueService.pauseJob(jobId);
-      
+
       // Make sure job is in paused state
       let job = await printQueueService.getJob(jobId);
       expect(job?.status).toBe("paused");
-      
+
       // Resume the job
       await printQueueService.resumeJob(jobId);
-      
+
       // Check if the job was resumed
       job = await printQueueService.getJob(jobId);
       expect(job?.status).toBe("pending");
@@ -188,8 +192,10 @@ describe("Print Queue Service", () => {
   describe("pauseAllJobs", () => {
     it("should pause all pending and printing jobs", async () => {
       // Add jobs but make sure they don't auto-complete
-      vi.spyOn(printQueueService as any, 'processQueue').mockImplementation(() => Promise.resolve());
-      
+      vi.spyOn(printQueueService as any, "processQueue").mockImplementation(
+        () => Promise.resolve(),
+      );
+
       await printQueueService.addJob("content1", "file1.txt");
       await printQueueService.addJob("content2", "file2.txt");
 
@@ -203,17 +209,19 @@ describe("Print Queue Service", () => {
   describe("resumeAllJobs", () => {
     it("should resume all paused jobs", async () => {
       // Add jobs but make sure they don't auto-complete
-      vi.spyOn(printQueueService as any, 'processQueue').mockImplementation(() => Promise.resolve());
-      
+      vi.spyOn(printQueueService as any, "processQueue").mockImplementation(
+        () => Promise.resolve(),
+      );
+
       await printQueueService.addJob("content1", "file1.txt");
       await printQueueService.addJob("content2", "file2.txt");
-      
+
       // Pause all jobs
       await printQueueService.pauseAllJobs();
-      
+
       // Make sure jobs are paused
       let jobs = await printQueueService.getJobs();
-      expect(jobs.every(job => job.status === "paused")).toBe(true);
+      expect(jobs.every((job) => job.status === "paused")).toBe(true);
 
       // Resume jobs
       await printQueueService.resumeAllJobs();
@@ -227,23 +235,26 @@ describe("Print Queue Service", () => {
     it("should process the next job in the queue", async () => {
       // Add a job
       const jobId = await printQueueService.addJob("content", "file.txt");
-      
+
       // Mock the processQueue to call the real implementation
-      const processQueueSpy = vi.spyOn(printQueueService as any, 'processQueue');
+      const processQueueSpy = vi.spyOn(
+        printQueueService as any,
+        "processQueue",
+      );
       processQueueSpy.mockImplementation(async () => {
         // Directly call printer service to ensure it's registered as called
         await printerService.print("content", "file.txt", {});
-        
+
         // Update job status to completed
         await printQueueService.updateJobStatus(jobId, "completed");
       });
-      
+
       // Call processQueue directly
       await (printQueueService as any).processQueue();
-      
+
       // Check if the job was processed
       expect(printerService.print).toHaveBeenCalled();
-      
+
       // Check if the job status was updated
       const job = await printQueueService.getJob(jobId);
       expect(job?.status).toBe("completed");
@@ -254,38 +265,39 @@ describe("Print Queue Service", () => {
       // Mock printer service to fail
       vi.mocked(printerService.print).mockResolvedValueOnce({
         success: false,
-        error: "Test error"
+        error: "Test error",
       });
 
       // Add a job
       const jobId = await printQueueService.addJob("content", "file.txt");
-      
+
       // First completely reset the retries count to ensure clean state
       const database = await db;
-      await database.run(
-        "UPDATE print_jobs SET retries = 0 WHERE id = ?",
-        [jobId]
-      );
-      
+      await database.run("UPDATE print_jobs SET retries = 0 WHERE id = ?", [
+        jobId,
+      ]);
+
       // Replace the processQueue method with a mock that explicitly sets retries to 1
-      vi.spyOn(printQueueService as any, 'processQueue').mockImplementationOnce(async () => {
-        // Set retries to EXACTLY 1 (not increment)
-        await database.run(
-          "UPDATE print_jobs SET retries = 1, updated_at = ? WHERE id = ?",
-          [new Date().toISOString(), jobId]
-        );
-      });
-      
+      vi.spyOn(printQueueService as any, "processQueue").mockImplementationOnce(
+        async () => {
+          // Set retries to EXACTLY 1 (not increment)
+          await database.run(
+            "UPDATE print_jobs SET retries = 1, updated_at = ? WHERE id = ?",
+            [new Date().toISOString(), jobId],
+          );
+        },
+      );
+
       // Call processQueue
       await (printQueueService as any).processQueue();
-      
+
       // Wait to ensure database operations complete
       await sleep(100);
-      
+
       // Verify the retries value is exactly 1
       const job = await database.get(
         "SELECT retries FROM print_jobs WHERE id = ?",
-        [jobId]
+        [jobId],
       );
       expect(job.retries).toBe(1);
     });

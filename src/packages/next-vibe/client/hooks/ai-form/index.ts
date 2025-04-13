@@ -159,20 +159,20 @@ export function useAiForm<
       try {
         const updatedMessages = [...chatMessages, userMessage];
 
-        const apiMessages = updatedMessages.map(msg => ({
+        const apiMessages = updatedMessages.map((msg) => ({
           role: msg.role,
           content: msg.content,
         }));
-        
+
         const formValues = formMethods.getValues();
         const formSchemaObj = Object.keys(formValues).reduce(
           (acc, key) => {
             acc[key] = "unknown";
             return acc;
           },
-          {} as Record<string, unknown>
+          {} as Record<string, unknown>,
         );
-        
+
         const requestData = {
           messages: apiMessages,
           formSchema: formSchemaObj,
@@ -228,7 +228,7 @@ export function useAiForm<
               // Validate the field value using the form's validation
               formMethods.setValue(
                 field as unknown as Path<TRequest>,
-                parsedValue as unknown as any,
+                parsedValue as any,
               );
               const fieldError = formMethods.getFieldState(
                 field as unknown as Path<TRequest>,
@@ -480,10 +480,11 @@ export function useAiForm<
       const fieldError = formErrors[field as keyof typeof formErrors];
 
       if (value !== undefined && value !== "") {
-        const valueStr = typeof value === 'object' && value !== null 
-          ? JSON.stringify(value) 
-          : String(value);
-          
+        const valueStr =
+          typeof value === "object" && value !== null
+            ? JSON.stringify(value)
+            : String(value);
+
         summary += `- ${description}: ${valueStr}`;
         if (fieldError) {
           summary += ` (Error: ${fieldError.message})`;

@@ -2,9 +2,8 @@
  * Tests for the repository pattern
  */
 
-import { describe, expect, it, vi } from "vitest";
-import { sql } from "drizzle-orm";
 import { pgTable, serial, text } from "drizzle-orm/pg-core";
+import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 import { BaseRepositoryImpl } from "./repository";
@@ -22,14 +21,14 @@ const mockSchema = z.object({
 });
 
 // Mock types
-type MockSelect = {
+interface MockSelect {
   id: number;
   name: string;
-};
+}
 
-type MockInsert = {
+interface MockInsert {
   name: string;
-};
+}
 
 // Mock DB client
 const mockDb = {

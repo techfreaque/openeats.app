@@ -11,13 +11,21 @@
  * @param lon2 - The longitude of the second point
  * @returns The distance in kilometers
  */
-export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+export function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+): number {
   const R = 6371; // Radius of the Earth in kilometers
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos(deg2rad(lat1)) *
+      Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c; // Distance in kilometers
   return distance;
@@ -40,15 +48,18 @@ export function deg2rad(deg: number): number {
  * @param points - The points to check
  * @returns The points within the radius
  */
-export function findPointsWithinRadius<T extends { latitude: number | string; longitude: number | string }>(
-  centerLat: number,
-  centerLon: number,
-  radius: number,
-  points: T[]
-): T[] {
+export function findPointsWithinRadius<
+  T extends { latitude: number | string; longitude: number | string },
+>(centerLat: number, centerLon: number, radius: number, points: T[]): T[] {
   return points.filter((point) => {
-    const lat = typeof point.latitude === "string" ? parseFloat(point.latitude) : point.latitude;
-    const lon = typeof point.longitude === "string" ? parseFloat(point.longitude) : point.longitude;
+    const lat =
+      typeof point.latitude === "string"
+        ? parseFloat(point.latitude)
+        : point.latitude;
+    const lon =
+      typeof point.longitude === "string"
+        ? parseFloat(point.longitude)
+        : point.longitude;
     const distance = calculateDistance(centerLat, centerLon, lat, lon);
     return distance <= radius;
   });
@@ -64,11 +75,12 @@ export function findPointsWithinRadius<T extends { latitude: number | string; lo
 export function calculateBoundingBox(
   centerLat: number,
   centerLon: number,
-  radius: number
+  radius: number,
 ): [number, number, number, number] {
   const R = 6371; // Radius of the Earth in kilometers
   const latDelta = (radius / R) * (180 / Math.PI);
-  const lonDelta = (radius / R) * (180 / Math.PI) / Math.cos(deg2rad(centerLat));
+  const lonDelta =
+    ((radius / R) * (180 / Math.PI)) / Math.cos(deg2rad(centerLat));
 
   const minLat = centerLat - latDelta;
   const maxLat = centerLat + latDelta;

@@ -230,7 +230,11 @@ export function createRoutes(app: express.Application): void {
       try {
         const { newApiKey } = req.body;
 
-        if (!newApiKey || typeof newApiKey !== "string" || newApiKey.length < 8) {
+        if (
+          !newApiKey ||
+          typeof newApiKey !== "string" ||
+          newApiKey.length < 8
+        ) {
           throw new Error(
             "Invalid API key: must be a string with at least 8 characters",
           );

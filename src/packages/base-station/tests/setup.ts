@@ -232,7 +232,7 @@ vi.mock("../src/notifications", () => {
 });
 
 // Mock the fs module properly to work with both ESM and CommonJS imports
-vi.mock('fs', () => {
+vi.mock("fs", () => {
   const mockMethods = {
     existsSync: vi.fn().mockReturnValue(true),
     mkdirSync: vi.fn(),
@@ -258,13 +258,13 @@ vi.mock('fs', () => {
       unlink: vi.fn().mockResolvedValue(undefined),
       readdir: vi.fn().mockResolvedValue(["test.png"]),
       stat: vi.fn().mockResolvedValue({ mtimeMs: Date.now() }),
-    }
+    },
   };
-  
+
   // Make sure all methods exist on the mock object itself
   const fs = Object.assign(() => {}, mockMethods);
-  fs.default = fs;  // Support `import fs from 'fs'`
-  
+  fs.default = fs; // Support `import fs from 'fs'`
+
   return fs;
 });
 
@@ -324,11 +324,11 @@ vi.mock("child_process", () => {
 });
 
 // Mock the util module properly to work with both ESM and CommonJS imports
-vi.mock('util', () => {
+vi.mock("util", () => {
   const mockPromisify = vi.fn().mockImplementation((fn) => {
     return vi.fn().mockResolvedValue({ stdout: "test", stderr: "" });
   });
-  
+
   // Create a mock util object with all necessary functions
   const util = {
     promisify: mockPromisify,
@@ -339,12 +339,12 @@ vi.mock('util', () => {
     types: {
       isPromise: vi.fn(),
       isDate: vi.fn(),
-    }
+    },
   };
-  
+
   // Make default export work
   util.default = util;
-  
+
   return util;
 });
 
@@ -356,18 +356,18 @@ vi.mock("qrcode", () => {
 });
 
 // Mock the JsBarcode module correctly
-vi.mock('jsbarcode', () => {
+vi.mock("jsbarcode", () => {
   // Create a mock function
   const jsBarcodeFunction = vi.fn();
-  
+
   // Return an object with the default export
-  const mockExports = { 
-    default: jsBarcodeFunction 
+  const mockExports = {
+    default: jsBarcodeFunction,
   };
-  
+
   // Support both ways of importing
   jsBarcodeFunction.default = jsBarcodeFunction;
-  
+
   return mockExports;
 });
 

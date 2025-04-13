@@ -9,9 +9,9 @@ vi.mock("../config", () => {
   // Create a mock configuration
   const mockConfig = {
     server: { port: 3001, host: "localhost" },
-    security: { 
-      apiKey: "test-api-key", 
-      defaultApiKey: "test-default-api-key" 
+    security: {
+      apiKey: "test-api-key",
+      defaultApiKey: "test-default-api-key",
     },
     printing: {
       defaultPrinter: "Test Printer",
@@ -27,7 +27,7 @@ vi.mock("../config", () => {
         channel: 1,
         discoverable: true,
         discoveryTimeout: 1000,
-      }
+      },
     },
     websocket: {
       url: "ws://localhost:3001",
@@ -51,10 +51,10 @@ vi.mock("../config", () => {
       level: "info",
       file: "logs/test.log",
       maxSize: 1000000,
-      maxFiles: 3
-    }
+      maxFiles: 3,
+    },
   };
-  
+
   return {
     config: mockConfig,
     loadConfig: vi.fn().mockReturnValue(mockConfig),
@@ -62,7 +62,7 @@ vi.mock("../config", () => {
     getApiKey: vi.fn().mockReturnValue("test-api-key"),
     updateApiKey: vi.fn(),
     resetApiKey: vi.fn(),
-    saveConfig: vi.fn()
+    saveConfig: vi.fn(),
   };
 });
 
@@ -240,15 +240,15 @@ vi.mock("../notifications", () => {
 });
 
 // Mock the fs module properly to work with both ESM and CommonJS imports
-vi.mock('fs', () => {
+vi.mock("fs", () => {
   const mockMethods = {
     existsSync: vi.fn().mockImplementation((path) => {
       // Ensure config paths always return true
-      if (String(path).includes('config')) {
+      if (String(path).includes("config")) {
         return true;
       }
       // For temp directories that need creation, return false
-      if (String(path).includes('temp')) {
+      if (String(path).includes("temp")) {
         return false;
       }
       return true;
@@ -257,15 +257,24 @@ vi.mock('fs', () => {
     writeFileSync: vi.fn(),
     readFileSync: vi.fn().mockImplementation((path) => {
       // Return valid JSON for config files
-      if (String(path).includes('config') && String(path).includes('.json')) {
+      if (String(path).includes("config") && String(path).includes(".json")) {
         return JSON.stringify({
           server: { port: 3000, host: "localhost" },
-          websocket: { url: "ws://localhost:8080", reconnectInterval: 5000, maxReconnectAttempts: 10 },
+          websocket: {
+            url: "ws://localhost:8080",
+            reconnectInterval: 5000,
+            maxReconnectAttempts: 10,
+          },
           security: { apiKey: "test", defaultApiKey: "test" },
           printing: { defaultPrinter: "", tempDirectory: "/tmp" },
           notifications: { enabled: true, sounds: {} },
           gpio: { enabled: false },
-          logging: { level: "info", file: "logs/test.log", maxSize: 1000000, maxFiles: 3 }
+          logging: {
+            level: "info",
+            file: "logs/test.log",
+            maxSize: 1000000,
+            maxFiles: 3,
+          },
         });
       }
       // Return normal content for other files
@@ -291,22 +300,22 @@ vi.mock('fs', () => {
       unlink: vi.fn().mockResolvedValue(undefined),
       readdir: vi.fn().mockResolvedValue(["test.png"]),
       stat: vi.fn().mockResolvedValue({ mtimeMs: Date.now() }),
-    }
+    },
   };
 
   // Create a proper fs mock that handles both default and named exports
   const fs = Object.assign({}, mockMethods);
   fs.default = fs;
-  
+
   return fs;
 });
 
 // Mock the util module properly to work with both ESM and CommonJS imports
-vi.mock('util', () => {
+vi.mock("util", () => {
   const mockPromisify = vi.fn().mockImplementation((fn) => {
     return vi.fn().mockResolvedValue({ stdout: "test", stderr: "" });
   });
-  
+
   // Create a proper util mock that handles both default and named exports
   const util = {
     promisify: mockPromisify,
@@ -316,12 +325,12 @@ vi.mock('util', () => {
     types: {
       isPromise: vi.fn(),
       isDate: vi.fn(),
-    }
+    },
   };
-  
+
   // Support default export for ESM imports
   util.default = util;
-  
+
   return util;
 });
 
@@ -388,18 +397,18 @@ vi.mock("qrcode", () => {
 });
 
 // Mock the JsBarcode module correctly
-vi.mock('jsbarcode', () => {
+vi.mock("jsbarcode", () => {
   // Create a mock function
   const jsBarcodeFunction = vi.fn();
-  
+
   // Return an object with the default export
-  const mockExports = { 
-    default: jsBarcodeFunction 
+  const mockExports = {
+    default: jsBarcodeFunction,
   };
-  
+
   // Support both ways of importing
   jsBarcodeFunction.default = jsBarcodeFunction;
-  
+
   return mockExports;
 });
 

@@ -45,7 +45,9 @@ export default [
       ".git",
       "coverage",
       // just until native is stable
-      "**/*.native.tsx"
+      "**/*.native.tsx",
+      // tmp
+      "src/packages/base-station" 
     ],
   },
 

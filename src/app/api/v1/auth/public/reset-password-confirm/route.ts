@@ -8,12 +8,12 @@ import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
-import { db } from "../../../../db";
 import { hashPassword } from "../register/route";
 import { verifyPasswordResetToken } from "../reset-password/utils";
 import resetPasswordConfirmEndpoint from "./definition";
 import { renderResetPasswordConfirmMail } from "./email";
 import type { ResetPasswordConfirmType } from "./schema";
+import { findUserByEmailAndId, updateUserPassword } from "./user.repository";
 
 /**
  * Reset Password Confirm API route handler
@@ -77,9 +77,10 @@ async function handleResetPasswordConfirm({
     }
 
     // Find the user
-    const user = await db.user.findUnique({
-      where: { email: resetPayload.email, id: resetPayload.userId },
-    });
+    const user = await findUserByEmailAndId(
+      resetPayload.email,
+      resetPayload.userId,
+    );
 
     if (!user) {
       debugLogger("User not found in password reset confirm", {
@@ -97,10 +98,15 @@ async function handleResetPasswordConfirm({
     const hashedPassword = await hashPassword(data.password);
 
     // Update the user's password
-    await db.user.update({
-      where: { id: user.id },
-      data: { password: hashedPassword },
-    });
+    const updateResult = await updateUserPassword(user.id, hashedPassword);
+
+    if (!updateResult) {
+      return {
+        success: false,
+        message: "Failed to update password",
+        errorCode: 500,
+      };
+    }
 
     debugLogger("Password reset successful", {
       userId: user.id,

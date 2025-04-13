@@ -3,7 +3,6 @@ import WebSocket from "ws";
 
 import { config } from "../config";
 import logger, { logError, logWebSocketConnection } from "../logging";
-import { getPrinterStatus } from "../printing";
 import type {
   WebSocketMessage,
   // ... other type imports as needed
@@ -92,7 +91,7 @@ class WebSocketClient extends EventEmitter {
     try {
       const message = JSON.parse(data.toString()) as WebSocketMessage;
       logger.debug(`Received WebSocket message: ${message.type}`);
-      
+
       // Emit event with message data
       if (message.type) {
         this.emit(message.type, message.data);
@@ -123,7 +122,7 @@ class WebSocketClient extends EventEmitter {
     // Check if exceeded max reconnect attempts
     if (this.reconnectAttempts >= config.websocket.maxReconnectAttempts) {
       logger.error(
-        `Max reconnect attempts (${config.websocket.maxReconnectAttempts}) reached. Giving up.`
+        `Max reconnect attempts (${config.websocket.maxReconnectAttempts}) reached. Giving up.`,
       );
       return;
     }
@@ -134,10 +133,13 @@ class WebSocketClient extends EventEmitter {
     }
 
     // Calculate delay with exponential backoff
-    const delay = config.websocket.reconnectInterval * 
+    const delay =
+      config.websocket.reconnectInterval *
       Math.pow(1.5, Math.min(this.reconnectAttempts, 10));
 
-    logger.info(`Scheduling reconnect attempt in ${delay}ms (attempt ${this.reconnectAttempts + 1})`);
+    logger.info(
+      `Scheduling reconnect attempt in ${delay}ms (attempt ${this.reconnectAttempts + 1})`,
+    );
 
     // Schedule reconnect
     this.reconnectTimer = setTimeout(() => {

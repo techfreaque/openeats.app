@@ -8,7 +8,7 @@
  * @returns Promise that resolves after the time has elapsed
  */
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -23,7 +23,7 @@ export function createChainableMock<T extends object>(base: T = {} as T): T {
         target[prop] = vi.fn().mockReturnValue(target);
       }
       return target[prop];
-    }
+    },
   });
 }
 
@@ -33,7 +33,7 @@ export function createChainableMock<T extends object>(base: T = {} as T): T {
  */
 export function createMockEventEmitter() {
   const listeners: Record<string, Function[]> = {};
-  
+
   return {
     on: vi.fn((event: string, listener: Function) => {
       listeners[event] = listeners[event] || [];
@@ -41,14 +41,14 @@ export function createMockEventEmitter() {
     }),
     emit: vi.fn((event: string, ...args: any[]) => {
       const eventListeners = listeners[event] || [];
-      eventListeners.forEach(listener => listener(...args));
+      eventListeners.forEach((listener) => listener(...args));
     }),
     removeListener: vi.fn((event: string, listener: Function) => {
       if (listeners[event]) {
-        listeners[event] = listeners[event].filter(l => l !== listener);
+        listeners[event] = listeners[event].filter((l) => l !== listener);
       }
     }),
     // For test verification
-    getListeners: (event: string) => listeners[event] || []
+    getListeners: (event: string) => listeners[event] || [],
   };
 }

@@ -78,8 +78,11 @@ export interface ApiQueryFormOptions<TRequest extends FieldValues>
 /**
  * Return type for useApiQueryForm hook combining form and query functionality
  */
-export interface ApiQueryFormReturn<TRequest extends FieldValues, TResponse, TUrlVariables>
-  extends ApiFormReturn<TRequest, TResponse, TUrlVariables> {
+export interface ApiQueryFormReturn<
+  TRequest extends FieldValues,
+  TResponse,
+  TUrlVariables,
+> extends ApiFormReturn<TRequest, TResponse, TUrlVariables> {
   data: TResponse | undefined;
   isLoading: boolean;
   isFetching: boolean;
@@ -93,11 +96,16 @@ export interface ApiQueryFormReturn<TRequest extends FieldValues, TResponse, TUr
 // We force our form types with this
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-export type ApiFormOptions<TRequest extends FieldValues> = UseFormProps<TRequest> & {
-  defaultValues?: Partial<TRequest>;
-};
+export type ApiFormOptions<TRequest extends FieldValues> =
+  UseFormProps<TRequest> & {
+    defaultValues?: Partial<TRequest>;
+  };
 
-export interface ApiFormReturn<TRequest extends FieldValues, TResponse, TUrlVariables> {
+export interface ApiFormReturn<
+  TRequest extends FieldValues,
+  TResponse,
+  TUrlVariables,
+> {
   form: UseFormReturn<TRequest>;
   isSubmitting: boolean;
   isSubmitSuccessful: boolean;

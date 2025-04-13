@@ -1,10 +1,15 @@
 import fs from "fs";
-import path from "path";
-import { createLogger, format, transports } from "winston";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createLogger, transports } from "winston";
 
-import logger, { logApiRequest, logError, logPrintJob, logSystemShutdown, logSystemStartup, logWebSocketConnection } from "./index";
-import { config } from "../config";
+import logger, {
+  logApiRequest,
+  logError,
+  logPrintJob,
+  logSystemShutdown,
+  logSystemStartup,
+  logWebSocketConnection,
+} from "./index";
 
 // Mock winston
 vi.mock("winston", () => ({
@@ -12,7 +17,7 @@ vi.mock("winston", () => ({
     error: vi.fn(),
     warn: vi.fn(),
     info: vi.fn(),
-    debug: vi.fn()
+    debug: vi.fn(),
   }),
   format: {
     combine: vi.fn().mockReturnValue({}),
@@ -21,12 +26,12 @@ vi.mock("winston", () => ({
     splat: vi.fn().mockReturnValue({}),
     json: vi.fn().mockReturnValue({}),
     printf: vi.fn().mockReturnValue({}),
-    colorize: vi.fn().mockReturnValue({})
+    colorize: vi.fn().mockReturnValue({}),
   },
   transports: {
     Console: vi.fn(),
-    File: vi.fn()
-  }
+    File: vi.fn(),
+  },
 }));
 
 // Mock DailyRotateFile
@@ -35,7 +40,7 @@ vi.mock("winston-daily-rotate-file", () => ({}));
 // Mock fs
 vi.mock("fs", () => ({
   existsSync: vi.fn().mockReturnValue(true),
-  mkdirSync: vi.fn()
+  mkdirSync: vi.fn(),
 }));
 
 // Mock config
@@ -45,9 +50,9 @@ vi.mock("../config", () => ({
       level: "info",
       file: "logs/print-server.log",
       maxSize: 10485760,
-      maxFiles: 10
-    }
-  }
+      maxFiles: 10,
+    },
+  },
 }));
 
 describe("Logging Module", () => {
@@ -64,12 +69,14 @@ describe("Logging Module", () => {
 
   it("should create logs directory if it doesn't exist", () => {
     vi.mocked(fs.existsSync).mockReturnValueOnce(false);
-    
+
     // Re-import the module to trigger directory creation
     jest.isolateModules(() => {
       require("./index");
       expect(fs.mkdirSync).toHaveBeenCalled();
-      expect(fs.mkdirSync).toHaveBeenCalledWith(expect.any(String), { recursive: true });
+      expect(fs.mkdirSync).toHaveBeenCalledWith(expect.any(String), {
+        recursive: true,
+      });
     });
   });
 
@@ -77,47 +84,61 @@ describe("Logging Module", () => {
     it("should log errors", () => {
       const error = new Error("Test error");
       logError("Test error message", error);
-      
+
       expect(logger.error).toHaveBeenCalled();
-      expect(logger.error).toHaveBeenCalledWith("Test error message", { error });
+      expect(logger.error).toHaveBeenCalledWith("Test error message", {
+        error,
+      });
     });
 
     it("should log API requests", () => {
       logApiRequest("GET", "/test", "127.0.0.1", 200);
-      
+
       expect(logger.info).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("GET /test"));
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining("GET /test"),
+      );
     });
 
     it("should log print jobs", () => {
       logPrintJob("job-123", "Test Printer", "success");
-      
+
       expect(logger.info).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("job-123"));
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining("job-123"),
+      );
     });
 
     it("should log system startup", () => {
       logSystemStartup();
-      
+
       expect(logger.info).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("System starting"));
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining("System starting"),
+      );
     });
 
     it("should log system shutdown", () => {
       logSystemShutdown();
-      
+
       expect(logger.info).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("System shutting down"));
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining("System shutting down"),
+      );
     });
 
     it("should log WebSocket connections", () => {
       logWebSocketConnection("connected");
-      
+
       expect(logger.info).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("WebSocket connected"));
-      
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining("WebSocket connected"),
+      );
+
       logWebSocketConnection("disconnected");
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("WebSocket disconnected"));
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining("WebSocket disconnected"),
+      );
     });
   });
 });

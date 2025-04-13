@@ -5,8 +5,8 @@ import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { ErrorResponseTypes } from "next-vibe/shared/types/response.schema";
 
 import { EmailTemplate } from "../../../../../../config/email.template";
-import { db } from "../../../../db";
 import type { ResetPasswordRequestType } from "./schema";
+import { findUserByEmail } from "./user.repository";
 import { generatePasswordResetToken } from "./utils";
 
 export const renderResetPasswordMail: EmailFunctionType<
@@ -14,9 +14,7 @@ export const renderResetPasswordMail: EmailFunctionType<
   string,
   UndefinedType
 > = async ({ requestData }) => {
-  const existingUser = await db.user.findUnique({
-    where: { email: requestData.email },
-  });
+  const existingUser = await findUserByEmail(requestData.email);
   if (!existingUser) {
     // will not get sent to the user as ignoreError is true
     return {

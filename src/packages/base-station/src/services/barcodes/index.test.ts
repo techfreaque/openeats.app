@@ -17,10 +17,10 @@ vi.mock("fs", () => {
       mtimeMs: Date.now() - 2 * 60 * 60 * 1000, // 2 hours old
     }),
   };
-  
+
   // Make sure the default export works
   mockFs.default = mockFs;
-  
+
   return mockFs;
 });
 
@@ -33,7 +33,7 @@ vi.mock("canvas", () => {
     fillText: vi.fn(),
     drawImage: vi.fn(),
   };
-  
+
   const mockCanvas = {
     getContext: vi.fn().mockReturnValue(mockContext),
     toDataURL: vi.fn().mockReturnValue("data:image/png;base64,test"),

@@ -48,13 +48,11 @@ export async function generatePasswordResetToken(
       .where(eq(passwordResets.userId, userId));
   } else {
     // Create new record
-    await db
-      .insert(passwordResets)
-      .values({
-        userId,
-        token,
-        expiresAt: expiryDate,
-      });
+    await db.insert(passwordResets).values({
+      userId,
+      token,
+      expiresAt: expiryDate,
+    });
   }
   return token;
 }
@@ -73,9 +71,7 @@ export async function verifyPasswordResetToken(
     const resetRecords = await db
       .select()
       .from(passwordResets)
-      .where(
-        eq(passwordResets.userId, payload.userId)
-      );
+      .where(eq(passwordResets.userId, payload.userId));
 
     const resetRecord = resetRecords.length > 0 ? resetRecords[0] : null;
 

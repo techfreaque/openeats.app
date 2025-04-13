@@ -1,10 +1,10 @@
 "use server";
 
-import { desc, asc, eq, and, or, gte, lte, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray } from "drizzle-orm";
 
 import { db } from "@/app/api/db";
-import { uiRepository } from "@/app/api/v1/website-editor/website-editor.repository";
 import { ui } from "@/app/api/v1/website-editor/db";
+import { uiRepository } from "@/app/api/v1/website-editor/website-editor.repository";
 import type { FullUI } from "@/lib/website-editor/types";
 
 export const getUIs = async (
@@ -61,11 +61,7 @@ export const getUIs = async (
   }
 
   // Query the database using Drizzle
-  const query = db
-    .select()
-    .from(ui)
-    .limit(limit)
-    .offset(start);
+  const query = db.select().from(ui).limit(limit).offset(start);
 
   // Add where conditions if any
   if (whereConditions.length > 0) {
@@ -87,29 +83,29 @@ export const getUIs = async (
         .select()
         .from(ui)
         .where(eq(ui.id, result.id))
-        .innerJoin('users', eq(ui.userId, 'users.id'))
-        .then(rows => rows[0]?.users);
+        .innerJoin("users", eq(ui.userId, "users.id"))
+        .then((rows) => rows[0]?.users);
 
       // Get subPrompts
       const subPrompts = await db
         .select()
-        .from('sub_prompts')
-        .where(eq('sub_prompts.uiId', result.id));
+        .from("sub_prompts")
+        .where(eq("sub_prompts.uiId", result.id));
 
       return {
         ...result,
         user: {
-          id: user?.id || '',
-          firstName: user?.firstName || '',
+          id: user?.id || "",
+          firstName: user?.firstName || "",
           imageUrl: user?.imageUrl,
         },
-        subPrompts: subPrompts.map(sp => ({
+        subPrompts: subPrompts.map((sp) => ({
           ...sp,
           uiId: sp.uiId,
           code: null, // We would need to fetch code separately if needed
         })),
       };
-    })
+    }),
   );
 
   return fullUIs;
@@ -117,10 +113,7 @@ export const getUIs = async (
 
 export const getUI = async (UIId: string): Promise<FullUI | null> => {
   // Get the UI by ID
-  const result = await db
-    .select()
-    .from(ui)
-    .where(eq(ui.id, UIId));
+  const result = await db.select().from(ui).where(eq(ui.id, UIId));
 
   if (!result || result.length === 0) {
     return null;
@@ -133,29 +126,29 @@ export const getUI = async (UIId: string): Promise<FullUI | null> => {
     .select()
     .from(ui)
     .where(eq(ui.id, UIId))
-    .innerJoin('users', eq(ui.userId, 'users.id'))
-    .then(rows => rows[0]?.users);
+    .innerJoin("users", eq(ui.userId, "users.id"))
+    .then((rows) => rows[0]?.users);
 
   // Get subPrompts
   const subPrompts = await db
     .select()
-    .from('sub_prompts')
-    .where(eq('sub_prompts.uiId', UIId));
+    .from("sub_prompts")
+    .where(eq("sub_prompts.uiId", UIId));
 
   // Get codes for subPrompts
   const subPromptsWithCode = await Promise.all(
     subPrompts.map(async (sp) => {
       const code = await db
         .select()
-        .from('code')
-        .where(eq('code.subPromptId', sp.id))
-        .then(rows => rows[0]);
+        .from("code")
+        .where(eq("code.subPromptId", sp.id))
+        .then((rows) => rows[0]);
 
       return {
         ...sp,
         code: code ? { id: code.id, code: code.code } : null,
       };
-    })
+    }),
   );
 
   // Increment view count
@@ -165,8 +158,8 @@ export const getUI = async (UIId: string): Promise<FullUI | null> => {
   return {
     ...uiData,
     user: {
-      id: user?.id || '',
-      firstName: user?.firstName || '',
+      id: user?.id || "",
+      firstName: user?.firstName || "",
       imageUrl: user?.imageUrl,
     },
     subPrompts: subPromptsWithCode,
@@ -189,28 +182,28 @@ export const getUIHome = async (): Promise<FullUI[]> => {
         .select()
         .from(ui)
         .where(eq(ui.id, result.id))
-        .innerJoin('users', eq(ui.userId, 'users.id'))
-        .then(rows => rows[0]?.users);
+        .innerJoin("users", eq(ui.userId, "users.id"))
+        .then((rows) => rows[0]?.users);
 
       // Get subPrompts
       const subPrompts = await db
         .select()
-        .from('sub_prompts')
-        .where(eq('sub_prompts.uiId', result.id));
+        .from("sub_prompts")
+        .where(eq("sub_prompts.uiId", result.id));
 
       return {
         ...result,
         user: {
-          id: user?.id || '',
-          firstName: user?.firstName || '',
+          id: user?.id || "",
+          firstName: user?.firstName || "",
           imageUrl: user?.imageUrl,
         },
-        subPrompts: subPrompts.map(sp => ({
+        subPrompts: subPrompts.map((sp) => ({
           ...sp,
           code: null, // We would need to fetch code separately if needed
         })),
       };
-    })
+    }),
   );
 
   return fullUIs;
@@ -244,28 +237,28 @@ export const getUIProfile = async (
           .select()
           .from(ui)
           .where(eq(ui.id, result.id))
-          .innerJoin('users', eq(ui.userId, 'users.id'))
-          .then(rows => rows[0]?.users);
+          .innerJoin("users", eq(ui.userId, "users.id"))
+          .then((rows) => rows[0]?.users);
 
         // Get subPrompts
         const subPrompts = await db
           .select()
-          .from('sub_prompts')
-          .where(eq('sub_prompts.uiId', result.id));
+          .from("sub_prompts")
+          .where(eq("sub_prompts.uiId", result.id));
 
         return {
           ...result,
           user: {
-            id: user?.id || '',
-            firstName: user?.firstName || '',
+            id: user?.id || "",
+            firstName: user?.firstName || "",
             imageUrl: user?.imageUrl,
           },
-          subPrompts: subPrompts.map(sp => ({
+          subPrompts: subPrompts.map((sp) => ({
             ...sp,
             code: null, // We would need to fetch code separately if needed
           })),
         };
-      })
+      }),
     );
 
     return fullUIs;
@@ -273,8 +266,8 @@ export const getUIProfile = async (
     // Get liked UIs
     const likedUIs = await db
       .select()
-      .from('likes')
-      .where(eq('likes.userId', userId))
+      .from("likes")
+      .where(eq("likes.userId", userId))
       .limit(limit)
       .offset(start);
 
@@ -285,10 +278,7 @@ export const getUIProfile = async (
     }
 
     // Query the database using Drizzle
-    const results = await db
-      .select()
-      .from(ui)
-      .where(inArray(ui.id, uiIds));
+    const results = await db.select().from(ui).where(inArray(ui.id, uiIds));
 
     // Convert to FullUI type
     const fullUIs: FullUI[] = await Promise.all(
@@ -298,28 +288,28 @@ export const getUIProfile = async (
           .select()
           .from(ui)
           .where(eq(ui.id, result.id))
-          .innerJoin('users', eq(ui.userId, 'users.id'))
-          .then(rows => rows[0]?.users);
+          .innerJoin("users", eq(ui.userId, "users.id"))
+          .then((rows) => rows[0]?.users);
 
         // Get subPrompts
         const subPrompts = await db
           .select()
-          .from('sub_prompts')
-          .where(eq('sub_prompts.uiId', result.id));
+          .from("sub_prompts")
+          .where(eq("sub_prompts.uiId", result.id));
 
         return {
           ...result,
           user: {
-            id: user?.id || '',
-            firstName: user?.firstName || '',
+            id: user?.id || "",
+            firstName: user?.firstName || "",
             imageUrl: user?.imageUrl,
           },
-          subPrompts: subPrompts.map(sp => ({
+          subPrompts: subPrompts.map((sp) => ({
             ...sp,
             code: null, // We would need to fetch code separately if needed
           })),
         };
-      })
+      }),
     );
 
     return fullUIs;

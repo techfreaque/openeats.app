@@ -29,7 +29,10 @@ export function loadConfig(configPath: string = CONFIG_PATH): AppConfig {
 }
 
 // Save configuration to file (made more testable by accepting an optional path)
-export function saveConfig(config: AppConfig, configPath: string = CONFIG_PATH): void {
+export function saveConfig(
+  config: AppConfig,
+  configPath: string = CONFIG_PATH,
+): void {
   try {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), "utf8");
     debugLogger("Configuration saved successfully");

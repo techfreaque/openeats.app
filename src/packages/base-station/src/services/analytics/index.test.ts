@@ -8,9 +8,9 @@ import { analyticsService } from "./index";
 // Mock the fs module properly for Vitest
 vi.mock("fs", () => {
   const mockFs = {
-    existsSync: vi.fn().mockImplementation(path => {
+    existsSync: vi.fn().mockImplementation((path) => {
       // Return false for temp directory to ensure mkdirSync is called
-      if (path.includes('temp')) {
+      if (path.includes("temp")) {
         return false;
       }
       return true;
@@ -20,10 +20,10 @@ vi.mock("fs", () => {
     readFileSync: vi.fn().mockReturnValue("test content"),
     unlinkSync: vi.fn(),
   };
-  
+
   // Make sure the default export works
   mockFs.default = mockFs;
-  
+
   return mockFs;
 });
 

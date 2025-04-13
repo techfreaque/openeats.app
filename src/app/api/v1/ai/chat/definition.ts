@@ -3,7 +3,11 @@ import { undefinedSchema } from "next-vibe/shared/types/common.schema";
 import { Methods } from "next-vibe/shared/types/endpoint";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 
-import { ChatMessageRole, llmApiRequestSchema, llmApiResponseSchema } from "./schema";
+import {
+  ChatMessageRole,
+  llmApiRequestSchema,
+  llmApiResponseSchema,
+} from "./schema";
 
 /**
  * AI Chat API endpoint definition

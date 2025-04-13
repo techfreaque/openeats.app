@@ -5,7 +5,7 @@
 
 import { debugLogger, errorLogger } from "next-vibe/shared";
 
-import { db } from "@/app/api/db";
+import { closeDatabase } from "@/app/api/db";
 import seedTestDatabase from "@/app/api/db/scripts/seed-dev-db";
 
 import teardown from "./global-teardown";
@@ -25,7 +25,7 @@ export default async function setup() {
   } catch (error) {
     errorLogger("Error during test setup:", error);
     // Make sure to disconnect Prisma on error
-    await db.$disconnect().catch(errorLogger);
+    await closeDatabase().catch(errorLogger);
     throw error;
   }
 }

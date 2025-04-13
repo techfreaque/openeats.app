@@ -4,11 +4,10 @@
  */
 
 import { eq, isNull } from "drizzle-orm";
+import type { DbId } from "next-vibe/server/db/types";
 
-import { db } from "@/app/api/db";
-import { BaseRepositoryImpl } from "@/app/api/db/repository";
-import type { DbId } from "@/app/api/db/types";
-
+import { db } from "../../../api/db";
+import { ApiRepositoryImpl } from "../../../api/db/repository";
 import type { Category, NewCategory, selectCategorySchema } from "./db";
 import { categories, insertCategorySchema } from "./db";
 
@@ -73,7 +72,7 @@ export interface CategoryRepository {
  * Category repository implementation
  */
 export class CategoryRepositoryImpl
-  extends BaseRepositoryImpl<
+  extends ApiRepositoryImpl<
     typeof categories,
     Category,
     NewCategory,
@@ -92,10 +91,10 @@ export class CategoryRepositoryImpl
    * Find all root categories (categories without a parent)
    */
   async findRootCategories(): Promise<Category[]> {
-    return await db
+    return await (db
       .select()
       .from(categories)
-      .where(isNull(categories.parentCategoryId));
+      .where(isNull(categories.parentCategoryId)) as Promise<Category[]>);
   }
 
   /**
@@ -103,10 +102,12 @@ export class CategoryRepositoryImpl
    * @param parentCategoryId - The parent category ID
    */
   async findChildCategories(parentCategoryId: DbId): Promise<Category[]> {
-    return await db
+    return await (db
       .select()
       .from(categories)
-      .where(eq(categories.parentCategoryId, parentCategoryId));
+      .where(eq(categories.parentCategoryId, parentCategoryId)) as Promise<
+      Category[]
+    >);
   }
 
   /**

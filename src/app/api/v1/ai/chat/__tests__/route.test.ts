@@ -1,5 +1,6 @@
-import { testEndpoint } from "@/packages/next-vibe/testing/test-endpoint";
 import { expect } from "vitest";
+
+import { testEndpoint } from "@/packages/next-vibe/testing/test-endpoint";
 
 import definitions from "../definition";
 import { ChatMessageRole } from "../schema";
@@ -26,20 +27,20 @@ testEndpoint(definitions.POST, {
         },
         urlParams: undefined,
       });
-      
+
       expect(response.success).toBe(true);
       if (response.data) {
         expect(response.data.message).toBeDefined();
         expect(response.data.message.role).toBe(ChatMessageRole.ASSISTANT);
         expect(typeof response.data.message.content).toBe("string");
         expect(typeof response.data.message.timestamp).toBe("number");
-        
+
         if (response.data.parsedFields) {
           expect(typeof response.data.parsedFields).toBe("object");
         }
       }
     },
-    
+
     "should handle empty messages array": async (test) => {
       const response = await test.executeWith({
         data: {
@@ -55,7 +56,7 @@ testEndpoint(definitions.POST, {
         },
         urlParams: undefined,
       });
-      
+
       expect(response.success).toBe(true);
       if (response.data) {
         expect(response.data.message).toBeDefined();

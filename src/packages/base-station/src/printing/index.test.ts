@@ -1,10 +1,7 @@
 import { exec } from "child_process";
 import fs from "fs";
-import path from "path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { config } from "../config";
-import logger from "../logging";
 import { getPrinters, printFile } from "./index";
 
 // Define and export printerService interface for tests
@@ -19,7 +16,7 @@ export const printerService = {
   getPrinters: async () => {
     // Implementation for tests
     return [{ name: "test-printer", isDefault: true, status: "idle" }];
-  }
+  },
 };
 
 // Mock child_process properly for Vitest
@@ -31,9 +28,9 @@ vi.mock("child_process", () => ({
     return {
       on: vi.fn(),
       stdout: { on: vi.fn() },
-      stderr: { on: vi.fn() }
+      stderr: { on: vi.fn() },
     };
-  })
+  }),
 }));
 
 // Mock fs properly for Vitest
@@ -50,7 +47,7 @@ vi.mock("fs", () => {
       writeFileSync: vi.fn(),
       readFileSync: vi.fn(() => "test content"),
       unlinkSync: vi.fn(),
-    }
+    },
   };
 });
 
@@ -69,10 +66,10 @@ vi.mock("../config", () => ({
       maxRetries: 2,
       retryDelay: 100,
       bluetooth: {
-        enabled: false
-      }
-    }
-  }
+        enabled: false,
+      },
+    },
+  },
 }));
 
 // Mock logger
@@ -81,22 +78,22 @@ vi.mock("../logging", () => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
-    debug: vi.fn()
+    debug: vi.fn(),
   },
   logPrintJob: vi.fn(),
-  logError: vi.fn()
+  logError: vi.fn(),
 }));
 
 // Mock notifications
 vi.mock("../notifications", () => ({
-  playSound: vi.fn().mockResolvedValue(undefined)
+  playSound: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Mock bluetooth printer service
 vi.mock("./bluetooth", () => ({
   default: {
-    isAvailable: vi.fn().mockResolvedValue(false)
-  }
+    isAvailable: vi.fn().mockResolvedValue(false),
+  },
 }));
 
 // Mock the functions that interact with printerService
@@ -109,21 +106,21 @@ vi.mock("./index", async (importOriginal) => {
       // Return mocked printer list
       return [
         { name: "printer1", isDefault: false, status: "idle" },
-        { name: "printer2", isDefault: false, status: "idle" }
+        { name: "printer2", isDefault: false, status: "idle" },
       ];
     }),
     printFile: vi.fn().mockImplementation(async (fileName, options) => {
       // Return success by default
       return { success: true };
     }),
-    printerService
+    printerService,
   };
 });
 
 describe("Printing Module", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset printFile mock for each test
     const printFileMock = vi.mocked(printFile);
     printFileMock.mockImplementation(async (fileName, options) => {
@@ -134,7 +131,7 @@ describe("Printing Module", () => {
   describe("getPrinters", () => {
     it("should get list of available printers", async () => {
       const printers = await getPrinters();
-      
+
       expect(printers).toHaveLength(2);
       expect(printers[0].name).toBe("printer1");
       expect(exec).toHaveBeenCalled();
@@ -145,12 +142,12 @@ describe("Printing Module", () => {
       vi.mocked(getPrinters).mockImplementationOnce(async () => {
         return [
           { name: "default-printer", isDefault: true, status: "idle" },
-          { name: "printer2", isDefault: false, status: "idle" }
+          { name: "printer2", isDefault: false, status: "idle" },
         ];
       });
-      
+
       const printers = await getPrinters();
-      
+
       expect(printers[0].isDefault).toBe(true);
       expect(printers[1].isDefault).toBe(false);
     });
@@ -158,7 +155,7 @@ describe("Printing Module", () => {
     it("should handle errors", async () => {
       // Mock getPrinters to throw an error for this specific test
       vi.mocked(getPrinters).mockRejectedValueOnce(new Error("Command failed"));
-      
+
       try {
         await getPrinters();
         fail("Should have thrown an error");
@@ -174,9 +171,9 @@ describe("Printing Module", () => {
       vi.mocked(printFile).mockImplementationOnce(async () => {
         return { success: true };
       });
-      
+
       const result = await printFile("test.txt", undefined);
-      
+
       expect(result.success).toBe(true);
       expect(exec).toHaveBeenCalled();
     });
@@ -187,7 +184,7 @@ describe("Printing Module", () => {
         expect(options?.printer).toBe("specific-printer");
         return { success: true };
       });
-      
+
       await printFile("test.txt", { printer: "specific-printer" });
     });
 
@@ -199,11 +196,11 @@ describe("Printing Module", () => {
         expect(options?.duplex).toBe(true);
         return { success: true };
       });
-      
-      await printFile("test.txt", { 
+
+      await printFile("test.txt", {
         copies: 2,
         orientation: "landscape",
-        duplex: true
+        duplex: true,
       });
     });
 
@@ -212,9 +209,9 @@ describe("Printing Module", () => {
       vi.mocked(printFile).mockImplementationOnce(async () => {
         return { success: false, error: "Print error" };
       });
-      
+
       const result = await printFile("test.txt");
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain("Print error");
     });
@@ -224,11 +221,12 @@ describe("Printing Module", () => {
     describe("print", () => {
       it("should print content", async () => {
         // Use the directly exported printerService mock
-        const spy = vi.spyOn(printerService, "print")
+        const spy = vi
+          .spyOn(printerService, "print")
           .mockResolvedValueOnce({ success: true });
-        
+
         const result = await printerService.print("content", "test.txt");
-        
+
         expect(result.success).toBe(true);
         expect(spy).toHaveBeenCalledWith("content", "test.txt", undefined);
       });
@@ -237,21 +235,22 @@ describe("Printing Module", () => {
         // Mock fs.existsSync to simulate directory not existing
         const existsSyncMock = vi.fn().mockReturnValueOnce(false);
         vi.mocked(fs.existsSync).mockImplementation(existsSyncMock);
-        
-        const spy = vi.spyOn(printerService, "print")
+
+        const spy = vi
+          .spyOn(printerService, "print")
           .mockResolvedValueOnce({ success: true });
-        
+
         await printerService.print("content", "test.txt");
-        
+
         expect(fs.mkdirSync).toHaveBeenCalled();
       });
 
       it("should handle errors", async () => {
         // Mock print to simulate an error
         vi.spyOn(printerService, "print").mockRejectedValueOnce(
-          new Error("File write error")
+          new Error("File write error"),
         );
-        
+
         try {
           await printerService.print("content", "test.txt");
           fail("Should have thrown an error");
@@ -263,13 +262,14 @@ describe("Printing Module", () => {
 
     describe("getPrinters", () => {
       it("should call the getPrinters function", async () => {
-        const spy = vi.spyOn(printerService, "getPrinters")
+        const spy = vi
+          .spyOn(printerService, "getPrinters")
           .mockResolvedValueOnce([
-            { name: "test-printer", isDefault: true, status: "idle" }
+            { name: "test-printer", isDefault: true, status: "idle" },
           ]);
-        
+
         const printers = await printerService.getPrinters();
-        
+
         expect(spy).toHaveBeenCalled();
         expect(printers).toHaveLength(1);
         expect(printers[0].name).toBe("test-printer");
