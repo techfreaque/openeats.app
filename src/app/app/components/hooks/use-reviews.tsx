@@ -18,12 +18,19 @@ const convertApiReviewToLegacyReview = (apiReview: ReviewResponseType): ReviewTy
     restaurantId: apiReview.restaurantId,
     restaurantRating: apiReview.restaurantRating,
     restaurantComment: apiReview.restaurantComment,
-    productReviews: apiReview.productReviews.map((pr: ProductReviewType) => ({
-      productId: pr.productId,
-      productName: pr.productName,
-      rating: pr.rating,
-      comment: pr.comment,
-    })),
+    productReviews: apiReview.productReviews.map((pr: ProductReviewType) => {
+      const review = {
+        productId: pr.productId,
+        productName: pr.productName,
+        rating: pr.rating,
+      };
+      
+      if (pr.comment !== undefined) {
+        return { ...review, comment: pr.comment };
+      }
+      
+      return review;
+    }),
     date: apiReview.date,
   };
 };
