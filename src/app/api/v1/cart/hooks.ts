@@ -1,12 +1,12 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import type { ReactNode } from "react";
+import { useCallback, useMemo } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { useApiQuery } from "next-vibe/client/hooks/query";
 import { useApiMutation } from "next-vibe/client/hooks/mutation";
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { translations } from "@/translations";
+import { useApiStore } from "next-vibe/client/hooks/store";
 
 import type { MenuItemResponseType } from "@/app/api/v1/restaurant/schema/menu.schema";
 import cartEndpoints from "./definition";
@@ -19,7 +19,7 @@ export interface CartItem {
   id: string;
   menuItemId: string;
   quantity: number;
-  specialInstructions?: string;
+  specialInstructions?: string | null;
   menuItem: MenuItemResponseType & { partnerId: string };
 }
 
@@ -67,9 +67,31 @@ function calculateCartTotals(items: CartItem[]): {
 }
 
 /**
- * Cart context type
+ * Create a type-safe translation function
  */
-interface CartContextType {
+const createTranslator = () => {
+  return (key: string, fallback?: string): string => {
+    const parts = key.split(".");
+    let current: Record<string, unknown> = translations.EN;
+    
+    for (const part of parts) {
+      if (current && typeof current === "object" && part in current) {
+        const value = current[part];
+        current = value as Record<string, unknown>;
+      } else {
+        return fallback || key;
+      }
+    }
+    
+    return typeof current === "string" ? current : fallback || key;
+  };
+};
+
+/**
+ * Hook for using the cart
+ * @returns Cart functionality
+ */
+export function useCart(): {
   items: CartItem[];
   restaurantId: string | null;
   addItem: (
@@ -87,49 +109,41 @@ interface CartContextType {
   getTax: () => number;
   itemCount: number;
   isLoading: boolean;
-}
-
-/**
- * Cart context
- */
-const CartContext = createContext<CartContextType | undefined>(undefined);
-
-/**
- * Cart provider component
- */
-export function CartProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
+} {
   const { user } = useAuth();
-  const [localCart, setLocalCart] = useState<CartResponseType>({
-    items: [],
-    restaurantId: null,
-    subtotal: 0,
-    deliveryFee: 0,
-    serviceFee: 0,
-    tax: 0,
-    total: 0,
-    itemCount: 0,
+  const t = createTranslator();
+  
+  // Create a store key based on user ID
+  const storeKey = `cart-${user?.id || "anonymous"}`;
+  
+  // Get or initialize cart state from the store
+  const cartState = useApiStore<CartResponseType>((state) => {
+    return (
+      (state.customState[storeKey] as CartResponseType) || {
+        items: [],
+        restaurantId: null,
+        subtotal: 0,
+        deliveryFee: 0,
+        serviceFee: 0,
+        tax: 0,
+        total: 0,
+        itemCount: 0,
+      }
+    );
   });
   
-  // Simple translation function
-  const t = (key: string, fallback?: string): string => {
-    const parts = key.split(".");
-    let result = translations.EN;
-    
-    for (const part of parts) {
-      if (result && typeof result === "object" && part in result) {
-        // Use type assertion with more specific type
-        result = (result as Record<string, unknown>)[part] as typeof result;
-      } else {
-        return fallback || key;
-      }
-    }
-    
-    return typeof result === "string" ? result : fallback || key;
-  };
+  // Set cart state in the store
+  const setCartState = useCallback(
+    (newState: CartResponseType) => {
+      useApiStore.setState((state) => ({
+        customState: {
+          ...state.customState,
+          [storeKey]: newState,
+        },
+      }));
+    },
+    [storeKey]
+  );
   
   // Fetch cart data from server for authenticated users
   const { isLoading, refetch } = useApiQuery<
@@ -138,25 +152,36 @@ export function CartProvider({
     Record<string, never>,
     "default"
   >(
-    cartEndpoints.GET as any, // Temporary type assertion to fix build
+    cartEndpoints.GET,
     {},
     {},
     {
       enabled: !!user,
-      onSuccess: (data: CartItemResponseType[]) => {
+      onSuccess: (data) => {
         if (data && Array.isArray(data)) {
           // Transform API response to CartResponseType
-          const items = data.map((item) => ({
+          const items: CartItem[] = data.map((item) => ({
             id: item.id,
             menuItemId: item.menuItemId,
             quantity: item.quantity,
-            menuItem: {} as MenuItemResponseType, // This would be populated from a separate API call
+            specialInstructions: item.specialInstructions,
+            menuItem: {
+              id: item.menuItem.id,
+              name: item.menuItem.name,
+              description: item.menuItem.description,
+              price: item.menuItem.price,
+              image: item.menuItem.image,
+              taxPercent: item.menuItem.taxPercent,
+              partnerId: item.restaurantId,
+              categoryId: item.menuItem.categoryId,
+              isAvailable: item.menuItem.isAvailable,
+            } as MenuItemResponseType & { partnerId: string },
           }));
           
           const { subtotal, deliveryFee, serviceFee, tax, total, itemCount } = 
             calculateCartTotals(items);
           
-          setLocalCart({
+          setCartState({
             items,
             restaurantId: data.length > 0 ? data[0]?.restaurantId || null : null,
             subtotal,
@@ -178,15 +203,15 @@ export function CartProvider({
     Record<string, never>,
     "default"
   >(
-    cartEndpoints.POST as any, // Temporary type assertion to fix build
+    cartEndpoints.POST,
     {
       onSuccess: () => {
         refetch();
       },
-      onError: (error: { error: Error }) => {
+      onError: (data: { error: Error }) => {
         toast({
           title: t("common.error", "Error"),
-          description: error.error.message || t("cart.addItemError", "Failed to add item to cart"),
+          description: data.error.message || t("cart.addItemError", "Failed to add item to cart"),
           variant: "destructive",
         });
       },
@@ -196,18 +221,18 @@ export function CartProvider({
   const { mutateAsync: updateItemMutation } = useApiMutation<
     CartItemResponseType,
     CartItemUpdateType,
-    Record<string, never>,
+    { id: string },
     "default"
   >(
-    cartEndpoints.PUT as any, // Temporary type assertion to fix build
+    cartEndpoints.PUT,
     {
       onSuccess: () => {
         refetch();
       },
-      onError: (error: { error: Error }) => {
+      onError: (data: { error: Error }) => {
         toast({
           title: t("common.error", "Error"),
-          description: error.error.message || t("cart.updateItemError", "Failed to update cart item"),
+          description: data.error.message || t("cart.updateItemError", "Failed to update cart item"),
           variant: "destructive",
         });
       },
@@ -216,19 +241,19 @@ export function CartProvider({
   
   const { mutateAsync: removeItemMutation } = useApiMutation<
     Record<string, never>,
-    { id: string },
     Record<string, never>,
+    { id: string },
     "default"
   >(
-    cartEndpoints.DELETE as any, // Temporary type assertion to fix build
+    cartEndpoints.DELETE,
     {
       onSuccess: () => {
         refetch();
       },
-      onError: (error: { error: Error }) => {
+      onError: (data: { error: Error }) => {
         toast({
           title: t("common.error", "Error"),
-          description: error.error.message || t("cart.removeItemError", "Failed to remove cart item"),
+          description: data.error.message || t("cart.removeItemError", "Failed to remove cart item"),
           variant: "destructive",
         });
       },
@@ -241,48 +266,26 @@ export function CartProvider({
     Record<string, never>,
     "default"
   >(
-    cartEndpoints.DELETE as any, // Temporary type assertion to fix build
+    cartEndpoints.CLEAR,
     {
       onSuccess: () => {
         refetch();
       },
-      onError: (error: { error: Error }) => {
+      onError: (data: { error: Error }) => {
         toast({
           title: t("common.error", "Error"),
-          description: error.error.message || t("cart.clearCartError", "Failed to clear cart"),
+          description: data.error.message || t("cart.clearCartError", "Failed to clear cart"),
           variant: "destructive",
         });
       },
     }
   );
   
-  // Load cart from localStorage on initial render for non-authenticated users
-  useEffect(() => {
-    if (!user) {
-      const savedCart = localStorage.getItem("openeats-cart");
-      if (savedCart) {
-        try {
-          const parsedCart = JSON.parse(savedCart) as CartResponseType;
-          setLocalCart(parsedCart);
-        } catch (error) {
-          console.error("Failed to parse cart from localStorage", error);
-        }
-      }
-    }
-  }, [user]);
-  
-  // Save cart to localStorage whenever it changes for non-authenticated users
-  useEffect(() => {
-    if (!user && localCart) {
-      localStorage.setItem("openeats-cart", JSON.stringify(localCart));
-    }
-  }, [localCart, user]);
-  
   // Helper function to update local cart
   const updateLocalCart = useCallback((items: CartItem[], restaurantId: string | null) => {
     const { subtotal, deliveryFee, serviceFee, tax, total, itemCount } = calculateCartTotals(items);
     
-    setLocalCart({
+    setCartState({
       items,
       restaurantId,
       subtotal,
@@ -292,7 +295,7 @@ export function CartProvider({
       total,
       itemCount,
     });
-  }, []);
+  }, [setCartState]);
   
   // Add item to cart
   const addItem = useCallback(
@@ -308,7 +311,8 @@ export function CartProvider({
               menuItemId: menuItem.id,
               restaurantId: menuItem.partnerId,
               quantity,
-            } as CartItemCreateType,
+              specialInstructions: specialInstructions || null,
+            },
             urlParams: {},
           });
           
@@ -322,9 +326,9 @@ export function CartProvider({
       } else {
         // For non-authenticated users, handle cart in localStorage
         if (
-          localCart.restaurantId &&
-          menuItem.partnerId !== localCart.restaurantId &&
-          localCart.items.length > 0
+          cartState.restaurantId &&
+          menuItem.partnerId !== cartState.restaurantId &&
+          cartState.items.length > 0
         ) {
           const confirmed = window.confirm(
             t("cart.differentRestaurantWarning", "Adding items from a different restaurant will clear your current cart. Continue?")
@@ -334,7 +338,7 @@ export function CartProvider({
             return;
           }
           
-          setLocalCart({
+          setCartState({
             items: [],
             restaurantId: null,
             subtotal: 0,
@@ -346,38 +350,45 @@ export function CartProvider({
           });
         }
         
-        const existingItemIndex = localCart.items.findIndex(
+        const existingItemIndex = cartState.items.findIndex(
           (item) => item.menuItemId === menuItem.id
         );
         
         if (existingItemIndex >= 0) {
-          const updatedItems = [...localCart.items];
-          updatedItems[existingItemIndex] = {
-            ...updatedItems[existingItemIndex],
-            quantity: updatedItems[existingItemIndex].quantity + quantity,
-            specialInstructions,
-          };
+          const updatedItems = [...cartState.items];
+          const existingItem = updatedItems[existingItemIndex];
           
-          updateLocalCart(updatedItems, menuItem.partnerId);
+          if (existingItem) {
+            updatedItems[existingItemIndex] = {
+              ...existingItem,
+              quantity: existingItem.quantity + quantity,
+              specialInstructions: specialInstructions || null,
+            };
+            
+            updateLocalCart(updatedItems, menuItem.partnerId);
+          }
         } else {
           const newItem: CartItem = {
             id: `${menuItem.id}-${Date.now()}`, // Unique ID for cart item
             menuItemId: menuItem.id,
             quantity,
-            specialInstructions,
+            specialInstructions: specialInstructions || null,
             menuItem,
           };
           
-          updateLocalCart([...localCart.items, newItem], menuItem.partnerId);
+          updateLocalCart([...cartState.items, newItem], menuItem.partnerId);
         }
         
         toast({
           title: t("cart.itemAdded", "Added to cart"),
           description: `${quantity} × ${menuItem.name} ${t("cart.addedToCart", "added to your cart")}`,
         });
+        
+        // Save to localStorage for persistence
+        localStorage.setItem(`openeats-cart-${user?.id || "anonymous"}`, JSON.stringify(cartState));
       }
     },
-    [addItemMutation, localCart, t, updateLocalCart, user]
+    [addItemMutation, cartState, setCartState, t, updateLocalCart, user]
   );
   
   // Remove item from cart
@@ -386,21 +397,27 @@ export function CartProvider({
       if (user) {
         try {
           await removeItemMutation({
-            requestData: { id },
-            urlParams: {},
+            requestData: {},
+            urlParams: { id },
           });
         } catch (error) {
           // Error is handled in the mutation options
         }
       } else {
-        const updatedItems = localCart.items.filter((item) => item.id !== id);
+        const updatedItems = cartState.items.filter((item) => item.id !== id);
         updateLocalCart(
           updatedItems, 
-          updatedItems.length > 0 ? localCart.restaurantId : null
+          updatedItems.length > 0 ? cartState.restaurantId : null
         );
+        
+        // Save to localStorage for persistence
+        localStorage.setItem(`openeats-cart-${user?.id || "anonymous"}`, JSON.stringify({
+          ...cartState,
+          items: updatedItems,
+        }));
       }
     },
-    [localCart, removeItemMutation, updateLocalCart, user]
+    [cartState, removeItemMutation, updateLocalCart, user]
   );
   
   // Update item quantity
@@ -414,21 +431,27 @@ export function CartProvider({
       if (user) {
         try {
           await updateItemMutation({
-            requestData: { id, quantity } as CartItemUpdateType,
-            urlParams: {},
+            requestData: { quantity },
+            urlParams: { id },
           });
         } catch (error) {
           // Error is handled in the mutation options
         }
       } else {
-        const updatedItems = localCart.items.map((item) =>
+        const updatedItems = cartState.items.map((item) =>
           item.id === id ? { ...item, quantity } : item
         );
         
-        updateLocalCart(updatedItems, localCart.restaurantId);
+        updateLocalCart(updatedItems, cartState.restaurantId);
+        
+        // Save to localStorage for persistence
+        localStorage.setItem(`openeats-cart-${user?.id || "anonymous"}`, JSON.stringify({
+          ...cartState,
+          items: updatedItems,
+        }));
       }
     },
-    [localCart, removeItem, updateItemMutation, updateLocalCart, user]
+    [cartState, removeItem, updateItemMutation, updateLocalCart, user]
   );
   
   // Clear cart
@@ -444,7 +467,7 @@ export function CartProvider({
           // Error is handled in the mutation options
         }
       } else {
-        setLocalCart({
+        setCartState({
           items: [],
           restaurantId: null,
           subtotal: 0,
@@ -454,51 +477,68 @@ export function CartProvider({
           total: 0,
           itemCount: 0,
         });
+        
+        // Clear localStorage
+        localStorage.removeItem(`openeats-cart-${user?.id || "anonymous"}`);
       }
     },
-    [clearCartMutation, user]
+    [clearCartMutation, setCartState, user]
   );
   
   // Getter functions for cart totals
   const getSubtotal = useCallback(
     (): number => {
-      return localCart.subtotal;
+      return cartState.subtotal;
     },
-    [localCart.subtotal]
+    [cartState.subtotal]
   );
   
   const getDeliveryFee = useCallback(
     (): number => {
-      return localCart.deliveryFee;
+      return cartState.deliveryFee;
     },
-    [localCart.deliveryFee]
+    [cartState.deliveryFee]
   );
   
   const getServiceFee = useCallback(
     (): number => {
-      return localCart.serviceFee;
+      return cartState.serviceFee;
     },
-    [localCart.serviceFee]
+    [cartState.serviceFee]
   );
   
   const getTax = useCallback(
     (): number => {
-      return localCart.tax;
+      return cartState.tax;
     },
-    [localCart.tax]
+    [cartState.tax]
   );
   
   const getTotal = useCallback(
     (): number => {
-      return localCart.total;
+      return cartState.total;
     },
-    [localCart.total]
+    [cartState.total]
   );
   
-  // Create context value
-  const contextValue: CartContextType = {
-    items: localCart.items,
-    restaurantId: localCart.restaurantId,
+  // Initialize from localStorage for non-authenticated users
+  useMemo(() => {
+    if (!user && typeof window !== "undefined") {
+      const savedCart = localStorage.getItem(`openeats-cart-${user?.id || "anonymous"}`);
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart) as CartResponseType;
+          setCartState(parsedCart);
+        } catch (error) {
+          console.error("Failed to parse cart from localStorage", error);
+        }
+      }
+    }
+  }, [setCartState, user]);
+  
+  return {
+    items: cartState.items,
+    restaurantId: cartState.restaurantId,
     addItem,
     removeItem,
     updateQuantity,
@@ -508,25 +548,7 @@ export function CartProvider({
     getDeliveryFee,
     getServiceFee,
     getTax,
-    itemCount: localCart.itemCount,
+    itemCount: cartState.itemCount,
     isLoading
   };
-
-  return (
-    <CartContext.Provider value={contextValue}>
-      {children}
-    </CartContext.Provider>
-  );
-}
-
-/**
- * Hook for using the cart context
- * @returns Cart context
- */
-export function useCart(): CartContextType {
-  const context = useContext(CartContext);
-  if (context === undefined) {
-    throw new Error("useCart must be used within a CartProvider");
-  }
-  return context;
 }
