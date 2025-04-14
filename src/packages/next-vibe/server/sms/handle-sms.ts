@@ -1,8 +1,9 @@
-import { ErrorResponseTypes, type ResponseType } from "next-vibe/shared";
-import type { UndefinedType } from "next-vibe/shared/types/common.schema";
-import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 import { performance } from "perf_hooks";
 
+import type { UndefinedType } from "../../shared/types/common.schema";
+import type { ResponseType } from "../../shared/types/response.schema";
+import { ErrorResponseTypes } from "../../shared/types/response.schema";
+import { debugLogger, errorLogger } from "../../shared/utils/logger";
 import type { JwtPayloadType } from "../endpoints/auth/jwt";
 import { env } from "../env";
 import { batchSendSms, sendSms } from "./send-sms";

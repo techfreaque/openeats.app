@@ -20,7 +20,7 @@ global.clearTimeout = vi.fn() as unknown as typeof clearTimeout;
 global.fetch = vi.fn();
 
 // Mock localStorage
-const localStorageMock = (() => {
+const localStorageMock = ((): Storage => {
   let store: Record<string, string> = {};
   return {
     getItem: vi.fn((key: string): string | null => store[key] ?? null),

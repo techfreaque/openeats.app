@@ -13,6 +13,24 @@ vi.mock("../../printing", () => {
   };
 });
 
+// Mock dependencies that may cause timeouts
+vi.mock("../../websocket/client", () => {
+  return {
+    wsClient: {
+      emit: vi.fn(),
+    },
+  };
+});
+
+// Mock analytics dependencies to avoid timeouts
+vi.mock("../../services/analytics", () => {
+  return {
+    analyticsService: {
+      trackPrintJob: vi.fn().mockResolvedValue(undefined),
+    },
+  };
+});
+
 // Use actual sleep instead of mock for better test timing
 async function sleep(ms: number): Promise<void> {
   return await new Promise((resolve) => setTimeout(resolve, ms));
@@ -303,5 +321,313 @@ describe("Print Queue Service", () => {
     });
 
     // Remove or consolidate the duplicate tests to avoid confusion
+  });
+
+  describe("error handling and retry mechanism", () => {
+    it("should mark job as failed after maximum retries", async () => {
+      // Mock the printer service to always fail
+      vi.mocked(printerService.print).mockResolvedValue({
+        success: false,
+        error: "Persistent printer error",
+      });
+      
+      // Add a job with maxRetries = 2
+      const jobId = await printQueueService.addJob("content", "file.txt", {
+        maxRetries: 2,
+      });
+      
+      // Get database reference
+      const database = await db;
+
+      // Manually set the retry count to max to simulate multiple failures
+      await database.run("UPDATE print_jobs SET retries = 2 WHERE id = ?", [jobId]);
+      
+      // Process the queue one more time, which should mark the job as failed
+      await (printQueueService as any).processQueue();
+      
+      // Get the job status after it should be marked as failed
+      const job = await printQueueService.getJob(jobId);
+      expect(job?.status).toBe("failed");
+      expect(job?.error).toBe("Persistent printer error");
+    });
+
+    it("should handle unexpected errors during printing", async () => {
+      // Mock printer service to throw an exception
+      vi.mocked(printerService.print).mockRejectedValueOnce(new Error("Unexpected printer error"));
+      
+      // Add a job
+      const jobId = await printQueueService.addJob("content", "file.txt");
+      
+      // Reset the process queue mock to use the real implementation
+      vi.spyOn(printQueueService as any, "processQueue").mockRestore();
+      
+      // Process the queue (should handle the error)
+      await (printQueueService as any).processQueue();
+      
+      // Check if job was marked as failed
+      const job = await printQueueService.getJob(jobId);
+      expect(job?.status).toBe("failed");
+      expect(job?.error).toBe("Unexpected printer error");
+    });
+
+    it("should handle database errors when updating job status", async () => {
+      // Add a job
+      const jobId = await printQueueService.addJob("content", "file.txt");
+      
+      // Mock the database to throw an error on update
+      const database = await db;
+      const originalRun = database.run;
+      database.run = vi.fn().mockImplementationOnce(() => {
+        throw new Error("Database error");
+      });
+      
+      // Try to update job status
+      await expect(
+        printQueueService.updateJobStatus(jobId, "printing")
+      ).rejects.toThrow("Database error");
+      
+      // Restore the original run method
+      database.run = originalRun;
+    });
+  });
+
+  describe("job priority and queue ordering", () => {
+    it("should process high priority jobs before low priority ones", async () => {
+      // Make sure processQueue doesn't run automatically
+      vi.spyOn(printQueueService as any, "processQueue").mockImplementation(() => Promise.resolve());
+      
+      // Add a low priority job first
+      const lowPriorityJobId = await printQueueService.addJob(
+        "low priority content", 
+        "low.txt", 
+        { priority: 1 }
+      );
+      
+      // Add a high priority job second
+      const highPriorityJobId = await printQueueService.addJob(
+        "high priority content", 
+        "high.txt", 
+        { priority: 5 }
+      );
+      
+      // Restore processQueue functionality and spy on it
+      vi.spyOn(printQueueService as any, "processQueue").mockRestore();
+      const printSpy = vi.spyOn(printerService, "print");
+      
+      // Process the queue
+      await (printQueueService as any).processQueue();
+      
+      // Verify the high priority job was processed first
+      expect(printSpy).toHaveBeenCalledWith(
+        "high priority content",
+        "high.txt",
+        expect.objectContaining({ priority: 5 })
+      );
+      
+      // Update the first job to completed
+      await printQueueService.updateJobStatus(highPriorityJobId, "completed");
+      
+      // Process the queue again
+      await (printQueueService as any).processQueue();
+      
+      // Verify the low priority job was processed second
+      expect(printSpy).toHaveBeenCalledWith(
+        "low priority content",
+        "low.txt",
+        expect.objectContaining({ priority: 1 })
+      );
+    });
+  });
+
+  describe("analytics tracking", () => {
+    it("should add completed job to analytics", async () => {
+      // Mock the DB to spy on analytics insertion
+      const database = await db;
+      const runSpy = vi.spyOn(database, "run");
+      
+      // Add a job
+      const jobId = await printQueueService.addJob("content", "file.txt");
+      
+      // Call addToAnalytics directly
+      await (printQueueService as any).addToAnalytics(jobId, "completed");
+      
+      // Verify analytics was added
+      expect(runSpy).toHaveBeenCalledWith(
+        expect.stringContaining("INSERT INTO print_analytics"),
+        expect.arrayContaining([
+          expect.any(String), // analytics ID
+          jobId,             // job ID
+          null,              // printer
+          "completed",       // status
+          expect.any(String), // created_at
+          expect.any(String), // completed_at
+          null               // error
+        ])
+      );
+    });
+
+    it("should add failed job with error message to analytics", async () => {
+      // Mock the DB to spy on analytics insertion
+      const database = await db;
+      const runSpy = vi.spyOn(database, "run");
+      
+      // Add a job
+      const jobId = await printQueueService.addJob("content", "file.txt");
+      
+      // Call addToAnalytics directly with error
+      const errorMsg = "Test printer error";
+      await (printQueueService as any).addToAnalytics(jobId, "failed", errorMsg);
+      
+      // Verify analytics was added with error
+      expect(runSpy).toHaveBeenCalledWith(
+        expect.stringContaining("INSERT INTO print_analytics"),
+        expect.arrayContaining([
+          expect.any(String), // analytics ID
+          jobId,             // job ID
+          null,              // printer
+          "failed",          // status
+          expect.any(String), // created_at
+          expect.any(String), // completed_at
+          errorMsg           // error
+        ])
+      );
+    });
+
+    it("should handle non-existent job when adding to analytics", async () => {
+      // Mock getJob to return null (non-existent job)
+      vi.spyOn(printQueueService, "getJob").mockResolvedValueOnce(null);
+      
+      // Call addToAnalytics with non-existent job ID
+      await (printQueueService as any).addToAnalytics("non-existent-id", "completed");
+      
+      // Should not throw and just return
+      expect(true).toBe(true); // Just to have an assertion
+    });
+  });
+
+  describe("websocket events", () => {
+    it("should emit queue-updated event", async () => {
+      // Mock the WS client
+      const wsClientMock = (printQueueService as any).wsClient;
+      wsClientMock.emit = vi.fn();
+      
+      // Call emitQueueUpdated
+      (printQueueService as any).emitQueueUpdated();
+      
+      // Verify event was emitted
+      expect(wsClientMock.emit).toHaveBeenCalledWith("queue-updated");
+    });
+
+    it("should emit job-status-changed event with job details", async () => {
+      // Mock the WS client
+      const wsClientMock = (printQueueService as any).wsClient;
+      wsClientMock.emit = vi.fn();
+      
+      // Call emitJobStatusChanged
+      const jobId = "test-job-id";
+      const status = "printing";
+      (printQueueService as any).emitJobStatusChanged(jobId, status);
+      
+      // Verify event was emitted with correct details
+      expect(wsClientMock.emit).toHaveBeenCalledWith(
+        "job-status-changed", 
+        { jobId, status }
+      );
+    });
+  });
+
+  describe("queue concurrency", () => {
+    it("should not process a new job while another is printing", async () => {
+      // Reset mocks and set up print service
+      vi.clearAllMocks();
+      vi.mocked(printerService.print).mockResolvedValue({ success: true });
+      
+      // Create a flag to track if we're in the middle of processing
+      let isProcessing = false;
+      let concurrencyViolation = false;
+      
+      // Add a delay to the print method to simulate printing taking time
+      vi.mocked(printerService.print).mockImplementation(async () => {
+        if (isProcessing) {
+          concurrencyViolation = true;
+        }
+        
+        isProcessing = true;
+        await sleep(50); // Simulate print job taking time
+        isProcessing = false;
+        
+        return { success: true };
+      });
+      
+      // Add two jobs
+      const jobId1 = await printQueueService.addJob("content1", "file1.txt");
+      const jobId2 = await printQueueService.addJob("content2", "file2.txt");
+      
+      // Restore the real processQueue
+      vi.spyOn(printQueueService as any, "processQueue").mockRestore();
+      
+      // Process the queue (should process first job)
+      await (printQueueService as any).processQueue();
+      
+      // Verify no concurrency violations occurred
+      expect(concurrencyViolation).toBe(false);
+      
+      // Verify we've called print once for the first job
+      expect(printerService.print).toHaveBeenCalledTimes(1);
+      expect(printerService.print).toHaveBeenCalledWith(
+        "content1", 
+        "file1.txt", 
+        expect.any(Object)
+      );
+      
+      // Wait for the first job to complete
+      await sleep(100);
+      
+      // After first job completes, second job should be processed 
+      expect(printerService.print).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("printer selection", () => {
+    it("should use the specified printer for a job", async () => {
+      // Add a job with a specific printer
+      const printerName = "Test Printer";
+      const jobId = await printQueueService.addJob(
+        "content", 
+        "file.txt", 
+        { printer: printerName }
+      );
+      
+      // Reset the process queue mock
+      vi.spyOn(printQueueService as any, "processQueue").mockRestore();
+      
+      // Process the queue
+      await (printQueueService as any).processQueue();
+      
+      // Verify the correct printer was used
+      expect(printerService.print).toHaveBeenCalledWith(
+        "content",
+        "file.txt",
+        expect.objectContaining({ printer: printerName })
+      );
+    });
+
+    it("should fall back to default printer when none specified", async () => {
+      // Add a job without specifying a printer
+      const jobId = await printQueueService.addJob("content", "file.txt");
+      
+      // Reset the process queue mock
+      vi.spyOn(printQueueService as any, "processQueue").mockRestore();
+      
+      // Process the queue
+      await (printQueueService as any).processQueue();
+      
+      // Verify printer was called without a specific printer
+      expect(printerService.print).toHaveBeenCalledWith(
+        "content",
+        "file.txt",
+        expect.objectContaining({ printer: null })
+      );
+    });
   });
 });

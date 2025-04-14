@@ -51,7 +51,8 @@ export function useApiQueryForm<
   const debounceTimerRef = useRef<number | null>(null);
 
   // Get query params directly from the function, not via a selector
-  const queryParams = getFormQueryParams(formId) as TRequest ?? ({} as TRequest);
+  const queryParams =
+    (getFormQueryParams(formId) as TRequest) ?? ({} as TRequest);
 
   // Create a function to update query params in the store
   const setQueryParams = useCallback(
@@ -150,7 +151,7 @@ export function useApiQueryForm<
         clearFormError();
 
         // Update query params immediately
-        setQueryParams(formData as TRequest);
+        setQueryParams(formData);
 
         // Refetch with the new params
         const result = await query.refetch();
@@ -158,7 +159,7 @@ export function useApiQueryForm<
         options.onSuccess?.({
           responseData: result,
           pathParams: options.urlParamVariables,
-          requestData: formData as TRequest,
+          requestData: formData,
         });
       } catch (error) {
         // Handle any errors that occur during submission

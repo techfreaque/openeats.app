@@ -48,7 +48,7 @@ export function parseCoordinatesString(
 
     const coords = { latitude, longitude };
     return isValidCoordinates(coords) ? coords : null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

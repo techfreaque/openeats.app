@@ -1,12 +1,12 @@
+import type { JSX } from "react";
+
+import type { UndefinedType } from "../../shared/types/common.schema";
 import type {
   ErrorResponseType,
   ResponseType,
   SuccessResponseType,
-} from "next-vibe/shared";
-import { ErrorResponseTypes } from "next-vibe/shared";
-import type { UndefinedType } from "next-vibe/shared/types/common.schema";
-import type { JSX } from "react";
-
+} from "../../shared/types/response.schema";
+import { ErrorResponseTypes } from "../../shared/types/response.schema";
 import type { JwtPayloadType } from "../endpoints/auth/jwt";
 import { env } from "../env";
 import { sendEmail, type SendEmailParams } from "./send-mail";

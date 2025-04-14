@@ -24,8 +24,8 @@ export function handleApiError(
 
   return {
     success: false,
-    error: parsedError.message || "An unexpected error occurred",
-    status: parsedError.status || 500,
+    error: parsedError.message ?? "An unexpected error occurred",
+    status: parsedError.status ?? 500,
   };
 }
 
@@ -35,7 +35,10 @@ export function handleApiError(
  * @param message - Optional success message
  * @returns Formatted success response
  */
-export function createSuccessResponse<T>(data: T, message = "Success") {
+export function createSuccessResponse<T>(
+  data: T,
+  message = "Success",
+): { success: true; message: string; data: T } {
   return {
     success: true,
     message,
@@ -49,7 +52,10 @@ export function createSuccessResponse<T>(data: T, message = "Success") {
  * @param status - HTTP status code
  * @returns Formatted error response
  */
-export function createErrorResponse(error: string, status = 400) {
+export function createErrorResponse(
+  error: string,
+  status = 400,
+): { success: false; error: string; status: number } {
   return {
     success: false,
     error,

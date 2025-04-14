@@ -156,5 +156,14 @@ async function createTables(db: Database<sqlite3.Database, sqlite3.Statement>) {
   logger.info("Database tables created or verified");
 }
 
-// Export a singleton database instance
-export const db = initializeDatabase();
+let dbSingleton: Promise<Database<sqlite3.Database, sqlite3.Statement>> | null = null;
+
+export function getDb() {
+  if (!dbSingleton) {
+    dbSingleton = initializeDatabase();
+  }
+  return dbSingleton;
+}
+
+// For backward compatibility, export db as getDb()
+export { getDb as db };

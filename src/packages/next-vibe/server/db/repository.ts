@@ -143,7 +143,9 @@ export abstract class BaseRepositoryImpl<
    */
   async findAll(): Promise<TSelect[]> {
     // Use type assertion to handle Drizzle's strict typing
-    const results = await this.db.select().from(this.table as any);
+    const results = await this.db
+      .select()
+      .from(this.table as unknown as PgTable);
     return results as unknown as TSelect[];
   }
 
@@ -158,7 +160,7 @@ export abstract class BaseRepositoryImpl<
     // Use type assertion to handle Drizzle's strict typing
     const results = await this.db
       .select()
-      .from(this.table as any)
+      .from(this.table as unknown as PgTable)
       .where(whereCondition);
 
     if (!results || results.length === 0) {
@@ -178,7 +180,7 @@ export abstract class BaseRepositoryImpl<
     // Use type assertion to handle Drizzle's strict typing
     const results = await this.db
       .insert(this.table)
-      .values(validatedData as any)
+      .values(validatedData as unknown as Record<string, unknown>)
       .returning();
 
     if (!results || !Array.isArray(results) || results.length === 0) {
@@ -210,7 +212,7 @@ export abstract class BaseRepositoryImpl<
     // Update the record with type assertion for Drizzle's strict typing
     const results = await this.db
       .update(this.table)
-      .set(validatedData as any)
+      .set(validatedData as unknown as Record<string, unknown>)
       .where(whereCondition)
       .returning();
 

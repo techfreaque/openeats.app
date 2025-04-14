@@ -1,8 +1,8 @@
 import "server-only";
 
-import { ErrorResponseTypes, type ResponseType } from "next-vibe/shared";
-import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
-
+import type { ResponseType } from "../../shared/types/response.schema";
+import { ErrorResponseTypes } from "../../shared/types/response.schema";
+import { debugLogger, errorLogger } from "../../shared/utils/logger";
 import { env } from "../env";
 import { getAwsSnsProvider } from "./providers/aws-sns";
 import { getHttpProvider } from "./providers/http";

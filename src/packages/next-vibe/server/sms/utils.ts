@@ -1,6 +1,7 @@
-import { errorLogger, type ResponseType } from "next-vibe/shared";
 import { z } from "zod";
 
+import type { ResponseType } from "../../shared/types/response.schema";
+import { errorLogger } from "../../shared/utils/logger";
 import type { JwtPayloadType } from "../endpoints/auth/jwt";
 import { env } from "../env";
 

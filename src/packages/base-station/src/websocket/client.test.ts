@@ -1,51 +1,59 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { EventEmitter } from 'events';
+import { MessageType } from '../types';
 
-// We need to setup mocks BEFORE importing the module
-// Define mock functions
-const mockSend = vi.fn();
-const mockClose = vi.fn();
-const mockAddEventListener = vi.fn();
+// Create a custom test message type for the tests
+type TestMessage = {
+  type: string;
+  data: { [key: string]: any };
+  apiKey?: string;
+};
 
-// We need direct access to event handlers for simulating events
-const eventHandlers = {};
+// Create a mock WebSocket class
+class MockWebSocket extends EventEmitter {
+  readyState = 1; // WebSocket.OPEN
+  send = vi.fn();
+  url: string;
+  static lastInstance: MockWebSocket | null = null;
 
-// Create a proper WebSocket mock
-const MockWebSocket = vi.fn().mockImplementation((url) => {
-  // Store event handlers so we can trigger them in tests
-  const ws = {
-    url,
-    readyState: 1, // OPEN
-    send: mockSend,
-    close: mockClose,
-    addEventListener: (event, handler) => {
-      eventHandlers[event] = eventHandlers[event] || [];
-      eventHandlers[event].push(handler);
-    },
-    // Method to simulate events for testing
-    simulateEvent: (event, data) => {
-      if (eventHandlers[event]) {
-        eventHandlers[event].forEach(handler => handler(data));
-      }
+  constructor(url: string) {
+    super();
+    this.url = url;
+  }
+}
+
+// Add close method to MockWebSocket
+interface MockWebSocket {
+  close: ReturnType<typeof vi.fn>;
+}
+
+MockWebSocket.prototype.close = vi.fn();
+
+// Mock dependencies before imports
+vi.mock('ws', () => {
+  return {
+    default: vi.fn().mockImplementation((url) => {
+      const socket = new MockWebSocket(url);
+      // Store last created instance for test access
+      MockWebSocket.lastInstance = socket;
+      return socket;
+    }),
+    WebSocket: {
+      OPEN: 1,
+      CLOSED: 3
     }
   };
-  return ws;
 });
 
-// Set required static properties
-MockWebSocket.OPEN = 1;
-
-// Create logger mocks
-const mockLoggerInfo = vi.fn();
-const mockLoggerWarn = vi.fn();
-const mockLoggerError = vi.fn();
-const mockLogDebug = vi.fn();
-const mockLogWebSocketConnection = vi.fn();
-const mockLogError = vi.fn();
-
-// Setup mocks
-vi.mock('ws', () => ({
-  default: MockWebSocket,
-  WebSocket: MockWebSocket
+vi.mock('../logging', () => ({
+  default: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn()
+  },
+  logWebSocketConnection: vi.fn(),
+  logError: vi.fn(),
 }));
 
 vi.mock('../config', () => ({
@@ -61,212 +69,362 @@ vi.mock('../config', () => ({
   },
 }));
 
-vi.mock('../logging', () => ({
-  default: {
-    info: mockLoggerInfo,
-    warn: mockLoggerWarn,
-    error: mockLoggerError,
-    debug: mockLogDebug,
-  },
-  logWebSocketConnection: mockLogWebSocketConnection,
-  logError: mockLogError,
-}));
+// Now import the client after all mocks are set up
+import { wsClient } from './client';
 
-// Reset modules to ensure clean import
-vi.resetModules();
-
-// Now import and extend the module with a scheduleReconnect method for testing
-import { wsClient as originalWsClient } from './client';
-
-// Extend the wsClient with a scheduleReconnect method for testing
-const wsClient = {
-  ...originalWsClient,
-  scheduleReconnect: vi.fn()
-};
+// Get references to mocked modules
+const mockLogger = vi.mocked(require('../logging').default);
+const mockLogError = vi.mocked(require('../logging').logError);
+const mockLogWebSocketConnection = vi.mocked(require('../logging').logWebSocketConnection);
 
 describe('WebSocket Client', () => {
-  // Create mocks for wsClient internal methods
-  const originalConnect = wsClient.connect;
-  const originalSend = wsClient.send;
-  const originalIsConnected = wsClient.isConnected;
-  
-  // We need to spy on these methods
-  let scheduleReconnectSpy;
-  
   beforeEach(() => {
-    // Clear all mocks and event handlers
     vi.clearAllMocks();
-    Object.keys(eventHandlers).forEach(key => {
-      eventHandlers[key] = [];
-    });
-    
-    // Reset websocket client state
-    wsClient.ws = null;
-    
-    // Create new spy for scheduleReconnect 
-    scheduleReconnectSpy = vi.spyOn(wsClient, 'scheduleReconnect');
+    vi.useFakeTimers();
+
+    // Reset client state using the close method
+    (wsClient as any).close();
+    (wsClient as any).reconnectAttempts = 0;
+
+    // Reset static reference
+    MockWebSocket.lastInstance = null;
   });
-  
+
   afterEach(() => {
-    // Restore original methods
-    wsClient.connect = originalConnect;
-    wsClient.send = originalSend;
-    wsClient.isConnected = originalIsConnected;
-    
-    // Clean up spies
-    if (scheduleReconnectSpy) {
-      scheduleReconnectSpy.mockRestore();
-    }
+    vi.useRealTimers();
+    vi.resetAllMocks();
   });
-  
+
   describe('connect', () => {
     it('should connect to the WebSocket server', async () => {
-      // Need to spy on the actual connection function
-      const connectSpy = vi.spyOn(wsClient, 'connect')
-        .mockImplementation(async () => {
-          // Create new WebSocket
-          const ws = new MockWebSocket('ws://localhost:8080');
-          wsClient.ws = ws;
-          
-          // Simulate open event immediately
-          setTimeout(() => {
-            if (eventHandlers.open) {
-              eventHandlers.open.forEach(handler => handler());
-            }
-          }, 0);
-          
-          return Promise.resolve();
-        });
-      
-      // Call connect
-      await wsClient.connect();
-      
-      // Verify WebSocket was instantiated with the correct URL
-      expect(MockWebSocket).toHaveBeenCalledWith('ws://localhost:8080');
-      expect(mockLoggerInfo).toHaveBeenCalled();
-      
-      // Clean up
-      connectSpy.mockRestore();
+      // Initialize connection
+      const connectPromise = wsClient.connect();
+
+      // Access the last created WebSocket instance
+      const mockSocketInstance = MockWebSocket.lastInstance;
+      expect(mockSocketInstance).not.toBeNull();
+
+      // Simulate open event
+      if (mockSocketInstance) {
+        mockSocketInstance.emit('open');
+      }
+
+      await connectPromise;
+
+      expect(mockLogger.info).toHaveBeenCalledWith('WebSocket connected');
+      expect((wsClient as any).connected).toBe(true);
     });
-    
+
     it('should handle connection errors', async () => {
-      // Need to spy on the actual connection function
-      const connectSpy = vi.spyOn(wsClient, 'connect')
-        .mockImplementation(async () => {
-          // Create new WebSocket
-          const ws = new MockWebSocket('ws://localhost:8080');
-          wsClient.ws = ws;
-          
-          // Simulate error event
-          setTimeout(() => {
-            const error = new Error('Connection error');
-            if (eventHandlers.error) {
-              eventHandlers.error.forEach(handler => handler({ error }));
-            }
-          }, 0);
-          
-          return Promise.resolve();
-        });
-      
-      // Call connect and wait for error to be processed
-      await wsClient.connect();
-      await vi.runAllTimersAsync();
-      
-      // Verify error was logged
-      expect(mockLoggerError).toHaveBeenCalled();
-      
-      // Clean up
-      connectSpy.mockRestore();
+      const error = new Error('Connection failed');
+
+      // Initialize connection
+      const connectPromise = wsClient.connect();
+
+      // Access the last created WebSocket instance
+      const mockSocketInstance = MockWebSocket.lastInstance;
+      expect(mockSocketInstance).not.toBeNull();
+
+      // Simulate error event
+      if (mockSocketInstance) {
+        mockSocketInstance.emit('error', error);
+      }
+
+      await connectPromise;
+
+      expect(mockLogError).toHaveBeenCalled();
     });
-    
+
     it('should attempt to reconnect on connection close', async () => {
-      // Need to spy on the actual connection function
-      const connectSpy = vi.spyOn(wsClient, 'connect')
-        .mockImplementation(async () => {
-          // Create new WebSocket
-          const ws = new MockWebSocket('ws://localhost:8080');
-          wsClient.ws = ws;
-          
-          // Simulate close event
-          setTimeout(() => {
-            if (eventHandlers.close) {
-              eventHandlers.close.forEach(handler => handler());
-            }
-          }, 0);
-          
-          return Promise.resolve();
-        });
-      
-      // Call connect and wait for close handler to run
-      await wsClient.connect();
-      await vi.runAllTimersAsync();
-      
-      // Verify reconnect was scheduled
-      expect(scheduleReconnectSpy).toHaveBeenCalled();
-      
-      // Clean up
-      connectSpy.mockRestore();
+      // Initialize connection
+      const connectPromise = wsClient.connect();
+
+      // Access the last created WebSocket instance
+      const mockSocketInstance = MockWebSocket.lastInstance;
+      expect(mockSocketInstance).not.toBeNull();
+
+      // Simulate close event
+      if (mockSocketInstance) {
+        mockSocketInstance.emit('close');
+      }
+
+      await connectPromise;
+
+      // Advance timers to trigger reconnect
+      await vi.advanceTimersByTimeAsync(100);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Scheduling reconnect'));
+    });
+
+    it('should respect max reconnect attempts', async () => {
+      // Set reconnectAttempts to almost max
+      (wsClient as any).reconnectAttempts = 2;
+
+      // Initialize connection
+      const connectPromise = wsClient.connect();
+
+      // Access the last created WebSocket instance
+      const mockSocketInstance = MockWebSocket.lastInstance;
+      expect(mockSocketInstance).not.toBeNull();
+
+      // Simulate close event
+      if (mockSocketInstance) {
+        mockSocketInstance.emit('close');
+      }
+
+      await connectPromise;
+
+      // Advance timers to trigger reconnect
+      await vi.advanceTimersByTimeAsync(100);
+
+      // Simulate close event again - should be the final attempt
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.emit('close');
+      }
+
+      // Advance timers again
+      await vi.advanceTimersByTimeAsync(100);
+
+      // Should now log that max attempts are reached
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Maximum reconnect attempts reached'));
+
+      // Should have exactly 3 total attempts (initial + 2 reconnects)
+      expect((wsClient as any).reconnectAttempts).toBe(3);
+    });
+
+    it('should reset reconnect attempts on successful connection', async () => {
+      // Set reconnectAttempts to a non-zero value
+      (wsClient as any).reconnectAttempts = 2;
+
+      // Initialize connection
+      const connectPromise = wsClient.connect();
+
+      // Simulate successful connection
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.emit('open');
+      }
+
+      await connectPromise;
+
+      // Should reset reconnect attempts
+      expect((wsClient as any).reconnectAttempts).toBe(0);
+    });
+
+    it('should log connection status', async () => {
+      // Initialize connection
+      const connectPromise = wsClient.connect();
+
+      // Simulate open event
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.emit('open');
+      }
+
+      await connectPromise;
+
+      // Should log connection status
+      expect(mockLogWebSocketConnection).toHaveBeenCalledWith(true, 'ws://localhost:8080');
+
+      // Simulate close event
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.emit('close');
+      }
+
+      // Should log disconnection
+      expect(mockLogWebSocketConnection).toHaveBeenCalledWith(false, 'ws://localhost:8080');
     });
   });
-  
+
   describe('send', () => {
     it('should send messages when connected', async () => {
-      // Setup a mock connection
-      wsClient.ws = new MockWebSocket('ws://localhost:8080');
-      
-      // Mock isConnected to return true
-      const isConnectedSpy = vi.spyOn(wsClient, 'isConnected')
-        .mockReturnValue(true);
-      
+      // Initialize connection
+      const connectPromise = wsClient.connect();
+
+      // Access the last created WebSocket instance
+      const mockSocketInstance = MockWebSocket.lastInstance;
+      expect(mockSocketInstance).not.toBeNull();
+
+      // Simulate open event
+      if (mockSocketInstance) {
+        mockSocketInstance.emit('open');
+      }
+
+      await connectPromise;
+
       // Send a message
-      wsClient.send({ type: 'TEST', data: { test: true } });
-      
-      // Verify message was sent
-      expect(mockSend).toHaveBeenCalled();
-      expect(mockSend).toHaveBeenCalledWith(expect.stringContaining('TEST'));
-      
-      // Clean up
-      isConnectedSpy.mockRestore();
+      const message = { type: 'status' as any, data: { test: true } };
+      wsClient.send(message as any);
+
+      // Verify send was called with correct argument
+      if (mockSocketInstance) {
+        expect(mockSocketInstance.send).toHaveBeenCalledWith(
+          JSON.stringify({ ...message, apiKey: 'test-api-key' })
+        );
+      }
     });
-    
+
     it('should not send messages when disconnected', () => {
-      // No WebSocket connection
-      wsClient.ws = null;
-      
-      // Mock isConnected to return false (explicit mock for clarity)
-      const isConnectedSpy = vi.spyOn(wsClient, 'isConnected')
-        .mockReturnValue(false);
-      
-      // Try to send a message
-      wsClient.send({ type: 'TEST', data: { test: true } });
-      
-      // Verify warning was logged and no message was sent
-      expect(mockLoggerWarn).toHaveBeenCalled();
-      expect(mockSend).not.toHaveBeenCalled();
-      
-      // Clean up
-      isConnectedSpy.mockRestore();
+      // Ensure client is disconnected
+      expect((wsClient as any).ws).toBeNull();
+      expect((wsClient as any).connected).toBe(false);
+
+      // Attempt to send message
+      wsClient.send({ type: 'status' as any, data: { test: true } } as any);
+
+      // Verify warning was logged
+      expect(mockLogger.warn).toHaveBeenCalledWith('Cannot send message, WebSocket not connected');
+    });
+
+    it('should handle send errors', async () => {
+      // Setup connection
+      const connectPromise = wsClient.connect();
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.emit('open');
+      }
+      await connectPromise;
+
+      // Mock send to throw an error
+      const sendError = new Error('Send failed');
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.send.mockImplementationOnce(() => {
+          throw sendError;
+        });
+      }
+
+      // Send a message
+      wsClient.send({ type: 'status' as any, data: { test: true } } as any);
+
+      // Should log the error
+      expect(mockLogError).toHaveBeenCalledWith(expect.any(String), sendError);
     });
   });
-  
+
   describe('events', () => {
-    it('should register event handlers', async () => {
-      // Create a spy handler
+    it('should handle WebSocket messages', async () => {
+      // Initialize connection
+      const connectPromise = wsClient.connect();
+
+      // Access the last created WebSocket instance
+      const mockSocketInstance = MockWebSocket.lastInstance;
+      expect(mockSocketInstance).not.toBeNull();
+
+      // Simulate open event
+      if (mockSocketInstance) {
+        mockSocketInstance.emit('open');
+      }
+
+      await connectPromise;
+
+      // Set up event handler
       const handler = vi.fn();
-      const testEvent = 'test-event';
-      const testData = { test: true };
-      
-      // Register handler
-      wsClient.on(testEvent, handler);
-      
-      // Create a connection and simulate message from server
-      wsClient.ws = new MockWebSocket('ws://localhost:8080');
-      
-      // Emit the test event programmatically
-      wsClient.emit(testEvent, testData);
-      
-      // Verify handler was called with the data
-      expect(handler).toHaveBeenCalledWith(testData);
+      wsClient.on('test-event', handler);
+
+      // Simulate message event
+      const message = { type: 'test-event', data: { test: true } };
+      if (mockSocketInstance) {
+        mockSocketInstance.emit('message', JSON.stringify(message));
+      }
+
+      // Verify handler was called with correct data
+      expect(handler).toHaveBeenCalledWith(message.data);
+    });
+
+    it('should handle malformed JSON messages', async () => {
+      // Initialize connection
+      const connectPromise = wsClient.connect();
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.emit('open');
+      }
+      await connectPromise;
+
+      // Simulate malformed message
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.emit('message', 'not-valid-json');
+      }
+
+      // Should log an error
+      expect(mockLogError).toHaveBeenCalled();
+    });
+
+    it('should ignore messages with unknown types', async () => {
+      // Initialize connection
+      const connectPromise = wsClient.connect();
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.emit('open');
+      }
+      await connectPromise;
+
+      // Set up handler that should not be called
+      const handler = vi.fn();
+      wsClient.on('test-event', handler);
+
+      // Simulate message with different type
+      const message = { type: 'unknown-event', data: { test: true } };
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.emit('message', JSON.stringify(message));
+      }
+
+      // Handler should not be called
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it('should support multiple event handlers', async () => {
+      // Initialize connection
+      const connectPromise = wsClient.connect();
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.emit('open');
+      }
+      await connectPromise;
+
+      // Set up multiple handlers for same event
+      const handler1 = vi.fn();
+      const handler2 = vi.fn();
+      wsClient.on('test-event', handler1);
+      wsClient.on('test-event', handler2);
+
+      // Simulate message
+      const message = { type: 'test-event', data: { test: true } };
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.emit('message', JSON.stringify(message));
+      }
+
+      // Both handlers should be called
+      expect(handler1).toHaveBeenCalledWith(message.data);
+      expect(handler2).toHaveBeenCalledWith(message.data);
+    });
+  });
+
+  describe('close', () => {
+    it('should close the WebSocket connection', async () => {
+      // Initialize connection
+      const connectPromise = wsClient.connect();
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.emit('open');
+      }
+      await connectPromise;
+
+      // Add close method to mock
+      const closeSpy = vi.fn();
+      if (MockWebSocket.lastInstance) {
+        MockWebSocket.lastInstance.close = closeSpy;
+      }
+
+      // Close the connection
+      wsClient.close();
+
+      // Should call close
+      expect(closeSpy).toHaveBeenCalled();
+
+      // Should reset connected state
+      expect((wsClient as any).connected).toBe(false);
+    });
+
+    it('should handle close when not connected', () => {
+      // Ensure not connected
+      (wsClient as any).ws = null;
+      (wsClient as any).connected = false;
+
+      // Should not throw
+      expect(() => wsClient.close()).not.toThrow();
     });
   });
 });

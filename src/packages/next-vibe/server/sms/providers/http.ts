@@ -1,7 +1,8 @@
-import { ErrorResponseTypes, type ResponseType } from "next-vibe/shared";
-import { debugLogger } from "next-vibe/shared/utils/logger";
 import { z } from "zod";
 
+import type { ResponseType } from "../../../shared/types/response.schema";
+import { ErrorResponseTypes } from "../../../shared/types/response.schema";
+import { debugLogger } from "../../../shared/utils/logger";
 import { env } from "../../env";
 import {
   phoneNumberSchema,

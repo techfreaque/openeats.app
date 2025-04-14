@@ -1,9 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
-import { createEndpoint } from "next-vibe/client/endpoint";
-import { Methods, undefinedSchema, UserRoleValue } from "next-vibe/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
+import { undefinedSchema } from "../../../shared/types/common.schema";
+import { Methods } from "../../../shared/types/endpoint";
+import { UserRoleValue } from "../../../shared/types/enums";
+import { createEndpoint } from "../../endpoint";
 import { useApiQuery } from ".";
 
 // Mock the useApiStore hook
@@ -60,13 +62,13 @@ describe("useApiQuery", () => {
     },
     examples: {
       payloads: {
-        default: { search: "test", limit: 10 }
+        default: { search: "test", limit: 10 },
       },
       urlPathVariables: undefined,
       responses: {
-        default: [{ id: "1", name: "Test" }]
-      }
-    }
+        default: [{ id: "1", name: "Test" }],
+      },
+    },
   }).GET;
 
   const mockExecuteQuery = vi
@@ -169,7 +171,7 @@ describe("useApiQuery", () => {
     );
   });
 
-  it("should call onSuccess callback when query succeeds", async () => {
+  it("should call onSuccess callback when query succeeds", () => {
     const onSuccess = vi.fn();
 
     renderHook(() =>
@@ -180,7 +182,7 @@ describe("useApiQuery", () => {
     expect(onSuccess).toHaveBeenCalledWith([{ id: "1", name: "Test" }]);
   });
 
-  it("should handle query errors", async () => {
+  it("should handle query errors", () => {
     const error = new Error("Query error");
     mockExecuteQuery.mockRejectedValueOnce(error);
 
@@ -193,7 +195,7 @@ describe("useApiQuery", () => {
       queries: {
         "test-query-id": {
           data: undefined,
-          error: error,
+          error,
           isLoading: false,
           isFetching: false,
           isError: true,
@@ -284,7 +286,7 @@ describe("useApiQuery", () => {
           isLoadingFresh: false,
           isCachedData: true,
           statusMessage: "Success (cached)",
-          lastFetchTime: Date.now() - 60000, // 1 minute ago
+          lastFetchTime: Date.now() - 60_000, // 1 minute ago
         },
       },
     }));

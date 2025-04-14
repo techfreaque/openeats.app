@@ -1,12 +1,13 @@
-import { createEndpoint } from "next-vibe/client/endpoint";
-import { Methods, UserRoleValue } from "next-vibe/shared";
+import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
+import { Methods } from "../../../shared/types/endpoint";
+import { UserRoleValue } from "../../../shared/types/enums";
 import { useApiStore } from ".";
 
 // Mock fetch
-global.fetch = vi.fn();
+global.fetch = vi.fn() as unknown as typeof fetch;
 
 describe("useApiStore", () => {
   // Create a test endpoint
@@ -15,7 +16,8 @@ describe("useApiStore", () => {
     email: z.string(),
   });
 
-  const testEndpoint = createEndpoint({
+  // @ts-ignore - Ignore type errors for test endpoint
+  const testEndpoint = {
     description: "Test endpoint",
     method: Methods.POST,
     path: ["test"],
@@ -25,11 +27,12 @@ describe("useApiStore", () => {
       success: z.boolean(),
     }),
     requestUrlSchema: z.object({}),
-    allowedRoles: [UserRoleValue.USER],
+    allowedRoles: [UserRoleValue.ADMIN],
     errorCodes: {
       400: "Bad request",
+      500: "Server error",
     },
-  });
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -111,6 +114,7 @@ describe("useApiStore", () => {
     const data = { id: "123", success: true };
 
     // Set mutation data
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     store.setMutationData(mutationId, data);
 
     // Check that data was set
@@ -128,6 +132,7 @@ describe("useApiStore", () => {
     const error = new Error("Test error");
 
     // Set mutation error
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     store.setMutationError(mutationId, error);
 
     // Check that error was set
@@ -143,6 +148,7 @@ describe("useApiStore", () => {
     const mutationId = store.getMutationId(testEndpoint);
 
     // Set mutation pending
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     store.setMutationPending(mutationId, true);
 
     // Check that pending state was set
@@ -152,6 +158,7 @@ describe("useApiStore", () => {
     expect(state.mutations[mutationId].isSuccess).toBe(false);
 
     // Set mutation not pending
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     store.setMutationPending(mutationId, false);
 
     // Check that pending state was updated
@@ -165,6 +172,7 @@ describe("useApiStore", () => {
     const data = { id: "123", success: true };
 
     // Set query data
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     store.setQueryData(queryId, data);
 
     // Check that data was set
@@ -183,6 +191,7 @@ describe("useApiStore", () => {
     const error = new Error("Test error");
 
     // Set query error
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     store.setQueryError(queryId, error);
 
     // Check that error was set
@@ -199,6 +208,7 @@ describe("useApiStore", () => {
     const queryId = store.getQueryId(["test", "query"]);
 
     // Set query loading
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     store.setQueryLoading(queryId, true, true);
 
     // Check that loading state was set
@@ -208,6 +218,7 @@ describe("useApiStore", () => {
     expect(state.queries[queryId].isLoadingFresh).toBe(true);
 
     // Set query not loading
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     store.setQueryLoading(queryId, false, false);
 
     // Check that loading state was updated
@@ -218,9 +229,10 @@ describe("useApiStore", () => {
 
   it("should execute a mutation", async () => {
     // Mock successful API response
-    global.fetch.mockResolvedValueOnce({
+    (global.fetch as unknown as Mock).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ success: true, data: { id: "123", success: true } }),
+      json: () =>
+        Promise.resolve({ success: true, data: { id: "123", success: true } }),
     });
 
     const store = useApiStore.getState();
@@ -249,10 +261,10 @@ describe("useApiStore", () => {
 
   it("should handle mutation errors", async () => {
     // Mock API error response
-    global.fetch.mockResolvedValueOnce({
+    (global.fetch as unknown as Mock).mockResolvedValueOnce({
       ok: false,
       status: 400,
-      json: async () => ({ success: false, message: "Bad request" }),
+      json: () => Promise.resolve({ success: false, message: "Bad request" }),
     });
 
     const store = useApiStore.getState();

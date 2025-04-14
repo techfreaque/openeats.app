@@ -50,8 +50,9 @@ vi.mock("../logging", () => ({
 // Fix the fs mock to include default export
 vi.mock("fs", () => {
   const mockFs = {
-    existsSync: vi.fn().mockImplementation((path) => {
+    existsSync: vi.fn().mockImplementation((_filePath) => {
       // By default, return true for all paths except when explicitly mocked
+      // Underscore prefix indicates unused parameter
       return true;
     }),
     mkdirSync: vi.fn(),

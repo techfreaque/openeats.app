@@ -1,11 +1,10 @@
-import { Methods } from "next-vibe/shared/types/endpoint";
-import { validateData } from "next-vibe/shared/utils/validation";
-
+import { Methods } from "../../shared/types/endpoint";
 import type {
   ErrorResponseType,
   ResponseType,
   SuccessResponseType,
 } from "../../shared/types/response.schema";
+import { validateData } from "../../shared/utils/validation";
 import type { ApiEndpoint } from "../endpoint";
 import { getAuthToken } from "../storage/auth-client";
 

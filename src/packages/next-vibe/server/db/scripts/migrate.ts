@@ -1,8 +1,8 @@
 import "dotenv/config";
 
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { debugLogger, errorLogger } from "next-vibe/shared";
 
+import { debugLogger, errorLogger } from "../../../shared/utils/logger";
 import { db, rawPool } from "../index";
 
 async function runMigrations(): Promise<void> {

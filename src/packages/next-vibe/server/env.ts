@@ -1,13 +1,16 @@
-import { stringToIntSchema } from "next-vibe/shared";
 import { z } from "zod";
 
 import { envClientBaseSchema } from "../client/env-client";
+import { stringToIntSchema } from "../shared/types/common.schema";
 import { validateEnv } from "../shared/utils/env-util";
 import { AwsSnsAwsRegions } from "./sms/providers/aws-sns";
 import { SmsProviders } from "./sms/utils";
 
 export const envSchema = envClientBaseSchema.extend({
   JWT_SECRET_KEY: z.string(),
+  DATABASE_URL: z.string(),
+  TEST_SERVER_URL: z.string(),
+
   SUPPORT_EMAIL: z.string().email(),
   EMAIL_FROM_EMAIL: z.string().email(),
   EMAIL_FROM_NAME: z.string(),

@@ -1,7 +1,8 @@
 import fs from "fs";
-import { closeDatabase } from "next-vibe/server/db";
-import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 import path from "path";
+
+import { debugLogger, errorLogger } from "../../shared/utils/logger";
+import { closeDatabase } from ".";
 
 export type SeedFn = () => Promise<void>;
 export interface EnvironmentSeeds {

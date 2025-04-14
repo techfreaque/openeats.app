@@ -1,4 +1,4 @@
-import type { ApiEndpoint } from "next-vibe/client/endpoint";
+import type { ApiEndpoint } from "../../client/endpoint";
 
 export interface ApiSection {
   [key: string]: ApiSection | ApiEndpoint<unknown, unknown, unknown, unknown>;

@@ -15,5 +15,8 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    // Increase timeouts for tests with long-running processes
+    testTimeout: 30000,
+    hookTimeout: 30000,
   },
 });

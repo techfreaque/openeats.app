@@ -14,7 +14,6 @@ export * from "./endpoints/auth/user";
 
 // Data providers
 export * from "./endpoints/data/data-provider";
-export * from "./endpoints/data/prisma-provider";
 
 // Email
 export * from "./email/handle-emails";

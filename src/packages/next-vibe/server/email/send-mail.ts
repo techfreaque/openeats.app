@@ -1,11 +1,12 @@
 import "server-only";
 
 import { render } from "@react-email/render";
-import { ErrorResponseTypes, type ResponseType } from "next-vibe/shared";
 import { createTransport } from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
 import type { JSX } from "react";
 
+import type { ResponseType } from "../../shared/types/response.schema";
+import { ErrorResponseTypes } from "../../shared/types/response.schema";
 import { env } from "../env";
 
 /**

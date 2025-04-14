@@ -3,9 +3,8 @@
  * This runs once after all tests complete
  */
 
-import { closeDatabase } from "next-vibe/server/db";
-import { debugLogger, errorLogger } from "next-vibe/shared";
-
+import { closeDatabase } from "../../server/db";
+import { debugLogger, errorLogger } from "../../shared/utils/logger";
 import { stopServer } from "./test-server";
 
 export default async function teardown(): Promise<void> {

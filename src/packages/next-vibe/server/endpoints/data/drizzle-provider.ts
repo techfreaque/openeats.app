@@ -1,10 +1,11 @@
-import { db } from "next-vibe/server/db";
+import type { PgDatabase } from "drizzle-orm/pg-core";
 
 import { userRepository } from "@/app/api/v1/auth/me/users.repository";
 import { userRolesRepository } from "@/app/api/v1/auth/roles/roles.repository";
 
 import { convertPrismaRole } from "../../../shared/types/enums";
 import type { UserRoleResponseType } from "../../../shared/types/user-roles.schema";
+import { db } from "../../db";
 import type { DataProvider } from "./data-provider";
 
 /**
@@ -37,7 +38,7 @@ export class DrizzleDataProvider implements DataProvider {
    * Get the Drizzle client instance
    * (For direct access when needed)
    */
-  getDbClient() {
+  getDbClient(): PgDatabase<Record<string, never>> {
     return db;
   }
 }

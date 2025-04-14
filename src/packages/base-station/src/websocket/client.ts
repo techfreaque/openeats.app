@@ -102,6 +102,24 @@ class WebSocketClient extends EventEmitter {
     });
   }
 
+  // Close the WebSocket connection
+  close(): void {
+    if (this.ws) {
+      try {
+        this.ws.close();
+      } catch (error) {
+        logError("Error closing WebSocket connection", error);
+      }
+      this.ws = null;
+      this.connected = false;
+    }
+
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+  }
+
   // Handle WebSocket open event
   private handleOpen(): void {
     logger.info("WebSocket connected");

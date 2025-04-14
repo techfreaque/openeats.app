@@ -1,12 +1,12 @@
 "use client";
 
-import { errorLogger } from "next-vibe/shared/utils/logger";
 import type { JSX, ReactNode } from "react";
-import { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 import type { TranslationElement } from "@/translations";
 import { Languages, translations } from "@/translations";
 
+import { errorLogger } from "../shared/utils/logger";
 import type { TranslationKey, TranslationValue } from "./types";
 
 // Translation context type

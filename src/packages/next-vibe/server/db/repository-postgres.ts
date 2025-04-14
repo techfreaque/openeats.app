@@ -4,10 +4,10 @@
  */
 
 import type { PgTable } from "drizzle-orm/pg-core";
-import { BaseRepositoryImpl } from "next-vibe/server/db/repository";
 import type { ZodType, ZodTypeDef } from "zod";
 
 import { db } from "./index";
+import { BaseRepositoryImpl } from "./repository";
 
 /**
  * API-specific repository implementation

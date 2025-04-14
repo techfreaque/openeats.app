@@ -1,6 +1,6 @@
-import type { ApiEndpoint } from "next-vibe/client/endpoint";
-import type { JwtPayloadType } from "next-vibe/server/endpoints/auth/jwt";
-import type { ResponseType } from "next-vibe/shared";
+import type { ApiEndpoint } from "../client/endpoint";
+import type { JwtPayloadType } from "../server/endpoints/auth/jwt";
+import type { ResponseType } from "../shared/types/response.schema";
 
 /**
  * Options for testing an API endpoint

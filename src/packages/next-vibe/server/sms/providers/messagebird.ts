@@ -1,6 +1,6 @@
-import { ErrorResponseTypes, type ResponseType } from "next-vibe/shared";
-import { debugLogger } from "next-vibe/shared/utils/logger";
-
+import type { ResponseType } from "../../../shared/types/response.schema";
+import { ErrorResponseTypes } from "../../../shared/types/response.schema";
+import { debugLogger } from "../../../shared/utils/logger";
 import { env } from "../../env";
 import type {
   SendSmsParams,
@@ -197,13 +197,7 @@ export function getMessageBirdProvider(): SmsProvider {
         const data = (await response.json()) as MessageBirdSuccessResponse;
 
         // Extract cost information if available
-        let cost = undefined;
-        if (data.price?.amount !== undefined && data.price?.currency) {
-          cost = {
-            amount: parseFloat(String(data.price.amount)),
-            currency: data.price.currency,
-          };
-        }
+        // Cost is calculated directly when needed in the response
 
         // Build metadata object with conditional properties to satisfy exactOptionalPropertyTypes
         const metadata: SmsResultMetadata = {

@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createRetry, retry, withRetry } from "./retry";
 
-import { createRetry, makeRetryable, withRetry } from "./retry";
-
-describe("Retry Utility", () => {
+describe("Retry Utilities", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
@@ -13,29 +12,19 @@ describe("Retry Utility", () => {
   });
 
   describe("withRetry", () => {
-    it("should resolve when the function succeeds", async () => {
-      const fn = vi.fn().mockResolvedValue("success");
-
-      const promise = withRetry(fn);
-      await expect(promise).resolves.toBe("success");
-
-      expect(fn).toHaveBeenCalledTimes(1);
-    });
-
-    it("should retry when the function fails", async () => {
+    it("should retry on failure and eventually succeed", async () => {
       const fn = vi
         .fn()
-        .mockRejectedValueOnce(new Error("Retry error"))
+        .mockRejectedValueOnce(new Error("First attempt"))
         .mockResolvedValueOnce("success");
 
       const onRetry = vi.fn();
       const promise = withRetry(fn, {
-        maxRetries: 3,
+        maxRetries: 1,
         initialDelayMs: 100,
         onRetry,
       });
 
-      // Advance timers to trigger retry
       vi.advanceTimersByTime(100);
 
       await expect(promise).resolves.toBe("success");
@@ -133,39 +122,106 @@ describe("Retry Utility", () => {
       vi.advanceTimersByTime(100);
 
       await expect(promise).rejects.toThrow("Don't retry me");
-
       expect(fn).toHaveBeenCalledTimes(2); // Initial + 1 retry
     });
-  });
 
-  describe("makeRetryable", () => {
-    it("should create a retryable version of a function", async () => {
+    it("should not retry when condition returns false", async () => {
+      const fn = vi.fn().mockRejectedValue(new Error("Test error"));
+      
+      // Set up condition that always returns false
+      const retryCondition = vi.fn().mockReturnValue(false);
+      
+      const promise = withRetry(fn, {
+        maxRetries: 3,
+        initialDelayMs: 100,
+        retryCondition,
+      });
+      
+      await expect(promise).rejects.toThrow("Test error");
+      expect(fn).toHaveBeenCalledTimes(1); // Only the initial call
+      expect(retryCondition).toHaveBeenCalledTimes(1);
+    });
+    
+    it("should retry until condition returns false", async () => {
+      const fn = vi.fn().mockRejectedValue(new Error("Test error"));
+      
+      // Set up condition that returns true for the first retry, then false
+      const retryCondition = vi.fn()
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false);
+      
+      const promise = withRetry(fn, {
+        maxRetries: 3,
+        initialDelayMs: 100,
+        retryCondition,
+      });
+      
+      // Advance timers to trigger first retry
+      vi.advanceTimersByTime(100);
+      
+      await expect(promise).rejects.toThrow("Test error");
+      expect(fn).toHaveBeenCalledTimes(2); // Initial + 1 retry
+      expect(retryCondition).toHaveBeenCalledTimes(2);
+    });
+    
+    it("should support custom onBeforeRetry hook", async () => {
       const fn = vi
         .fn()
-        .mockRejectedValueOnce(new Error("Retry"))
+        .mockRejectedValueOnce(new Error("First failure"))
         .mockResolvedValueOnce("success");
-
-      const retryableFn = makeRetryable(fn, {
-        maxRetries: 2,
+      
+      const onBeforeRetry = vi.fn();
+      
+      const promise = withRetry(fn, {
+        maxRetries: 1,
         initialDelayMs: 100,
+        onBeforeRetry,
       });
-
-      const promise = retryableFn("arg1", "arg2");
-
+      
       // Advance timers to trigger retry
       vi.advanceTimersByTime(100);
-
+      
       await expect(promise).resolves.toBe("success");
-
-      expect(fn).toHaveBeenCalledTimes(2);
-      expect(fn).toHaveBeenCalledWith("arg1", "arg2");
+      expect(onBeforeRetry).toHaveBeenCalledTimes(1);
+      expect(onBeforeRetry).toHaveBeenCalledWith(
+        expect.any(Error),
+        1,
+        expect.any(Number)
+      );
+    });
+    
+    it("should allow cancelling the retry operation", async () => {
+      const fn = vi.fn().mockRejectedValue(new Error("Test error"));
+      
+      let cancelRetry;
+      const onBeforeRetry = vi.fn().mockImplementation((error, attempt, delay, cancel) => {
+        cancelRetry = cancel;
+      });
+      
+      const promise = withRetry(fn, {
+        maxRetries: 3,
+        initialDelayMs: 100,
+        onBeforeRetry,
+      });
+      
+      // Advance timers to trigger first retry
+      vi.advanceTimersByTime(100);
+      
+      // Cancel the retry operation
+      cancelRetry();
+      
+      // Advance timers but no more retries should happen
+      vi.advanceTimersByTime(1000);
+      
+      await expect(promise).rejects.toThrow("Retry operation cancelled");
+      expect(fn).toHaveBeenCalledTimes(2); // Initial + first retry
     });
   });
 
-  describe("createRetry", () => {
-    it("should create a retry factory with default options", async () => {
+  describe("retry factory", () => {
+    it("should create a retry wrapper", async () => {
       const retry = createRetry({
-        maxRetries: 2,
+        maxRetries: 1,
         initialDelayMs: 100,
       });
 
@@ -210,6 +266,58 @@ describe("Retry Utility", () => {
       await expect(promise).resolves.toBe("success");
 
       expect(fn).toHaveBeenCalledTimes(3); // Initial + 2 retries
+    });
+    
+    it("should retain the original function name", async () => {
+      function testFunction() {
+        return Promise.reject(new Error("test"));
+      }
+      
+      const retryableTestFunction = retry(testFunction);
+      
+      // The wrapper should try to preserve the original function name
+      expect(retryableTestFunction.name).toContain("testFunction");
+    });
+    
+    it("should properly forward arguments", async () => {
+      const fn = vi.fn().mockImplementation((a, b) => {
+        if (fn.mock.calls.length === 1) {
+          return Promise.reject(new Error("First call fails"));
+        }
+        return Promise.resolve(a + b);
+      });
+      
+      const retryableFn = retry(fn);
+      
+      const promise = retryableFn(5, 7);
+      
+      // Advance timers to trigger retry
+      vi.advanceTimersByTime(100);
+      
+      await expect(promise).resolves.toBe(12);
+      expect(fn).toHaveBeenCalledTimes(2);
+      expect(fn).toHaveBeenCalledWith(5, 7);
+    });
+    
+    it("should allow custom retry delay calculation", async () => {
+      const customDelayCalculator = vi.fn().mockReturnValue(500); // Always return 500ms
+      
+      const fn = vi
+        .fn()
+        .mockRejectedValueOnce(new Error("First failure"))
+        .mockResolvedValueOnce("success");
+      
+      const promise = withRetry(fn, {
+        maxRetries: 1,
+        calculateDelay: customDelayCalculator,
+      });
+      
+      // Advance timers to the custom delay
+      vi.advanceTimersByTime(500);
+      
+      await expect(promise).resolves.toBe("success");
+      expect(customDelayCalculator).toHaveBeenCalledTimes(1);
+      expect(customDelayCalculator).toHaveBeenCalledWith(1, expect.any(Number));
     });
   });
 });

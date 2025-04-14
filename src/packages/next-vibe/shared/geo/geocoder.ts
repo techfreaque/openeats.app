@@ -28,7 +28,7 @@ export async function geocodeAddress(
       "navigator" in window &&
       "geolocation" in navigator
     ) {
-      return new Promise((resolve) => {
+      return await new Promise<GeocodeResult | null>((resolve) => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             resolve({
@@ -40,7 +40,7 @@ export async function geocodeAddress(
             });
           },
           () => resolve(null),
-          { timeout: 10000 },
+          { timeout: 10_000 },
         );
       });
     }
@@ -58,7 +58,7 @@ export async function geocodeAddress(
  * @param coordinates - The coordinates to reverse geocode
  * @returns Promise resolving to formatted address or null if failed
  */
-export async function reverseGeocode(
+export function reverseGeocode(
   coordinates: Coordinates,
 ): Promise<string | null> {
   try {

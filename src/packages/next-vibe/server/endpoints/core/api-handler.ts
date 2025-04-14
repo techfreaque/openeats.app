@@ -1,9 +1,9 @@
 import type { NextResponse } from "next/server";
-import type { ResponseType } from "next-vibe/shared";
-import { ErrorResponseTypes } from "next-vibe/shared";
-import { Methods } from "next-vibe/shared/types/endpoint";
 
 import type { ApiEndpoint } from "../../../client/endpoint";
+import { Methods } from "../../../shared/types/endpoint";
+import type { ResponseType } from "../../../shared/types/response.schema";
+import { ErrorResponseTypes } from "../../../shared/types/response.schema";
 import { debugLogger } from "../../../shared/utils/logger";
 import { validateData } from "../../../shared/utils/validation";
 import {

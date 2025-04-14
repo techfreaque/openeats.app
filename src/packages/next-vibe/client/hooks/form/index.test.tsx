@@ -1,10 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
-import { createEndpoint } from "next-vibe/client/endpoint";
-import { Methods, UserRoleValue } from "next-vibe/shared";
 import type { FormEvent } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
+import { Methods } from "../../../shared/types/endpoint";
+import { UserRoleValue } from "../../../shared/types/enums";
+import { createEndpoint } from "../../endpoint";
 import { useApiForm } from "../mutation-form";
 import { useApiStore } from "../store";
 

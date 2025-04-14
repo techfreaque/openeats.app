@@ -2,6 +2,7 @@
  * Tests for the repository pattern
  */
 
+import type { PgDatabase } from "drizzle-orm/pg-core";
 import { pgTable, serial, text } from "drizzle-orm/pg-core";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
@@ -52,7 +53,7 @@ class MockRepository extends BaseRepositoryImpl<
 > {
   constructor() {
     super({
-      db: mockDb as any,
+      db: mockDb as unknown as PgDatabase<Record<string, never>>,
       table: mockTable,
       schema: mockSchema,
       idField: "id",

@@ -1,5 +1,4 @@
-import { envClient } from "next-vibe/client/env-client";
-
+import { envClient } from "../../client/env-client";
 import { errorLogger } from "./logger";
 import { parseError } from "./parse-error";
 

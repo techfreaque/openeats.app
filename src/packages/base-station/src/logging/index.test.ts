@@ -1,5 +1,6 @@
 import fs from "fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import winston from "winston";
 
 // Define mockLogger before vi.mock calls since they are hoisted
 const mockLogger = {
@@ -10,45 +11,53 @@ const mockLogger = {
 };
 
 // Mock winston with mockLogger
-vi.mock("winston", () => ({
-  createLogger: vi.fn().mockReturnValue(mockLogger),
-  format: {
-    combine: vi.fn().mockReturnValue({}),
-    timestamp: vi.fn().mockReturnValue({}),
-    errors: vi.fn().mockReturnValue({}),
-    splat: vi.fn().mockReturnValue({}),
-    json: vi.fn().mockReturnValue({}),
-    printf: vi.fn().mockReturnValue({}),
-    colorize: vi.fn().mockReturnValue({}),
-  },
-  transports: {
-    Console: vi.fn(),
-    File: vi.fn(),
-  },
-}));
-
-// Import after mocks
-import logger, {
-  logApiRequest,
-  logError,
-  logPrintJob,
-  logSystemShutdown,
-  logSystemStartup,
-  logWebSocketConnection,
-} from "./index";
+vi.mock("winston", () => {
+  return {
+    default: {
+      createLogger: vi.fn().mockReturnValue(mockLogger),
+      format: {
+        combine: vi.fn().mockReturnValue({}),
+        timestamp: vi.fn().mockReturnValue({}),
+        errors: vi.fn().mockReturnValue({}),
+        splat: vi.fn().mockReturnValue({}),
+        json: vi.fn().mockReturnValue({}),
+        printf: vi.fn().mockReturnValue({}),
+        colorize: vi.fn().mockReturnValue({}),
+      },
+      transports: {
+        Console: vi.fn(),
+        File: vi.fn(),
+      },
+    },
+    createLogger: vi.fn().mockReturnValue(mockLogger),
+    format: {
+      combine: vi.fn().mockReturnValue({}),
+      timestamp: vi.fn().mockReturnValue({}),
+      errors: vi.fn().mockReturnValue({}),
+      splat: vi.fn().mockReturnValue({}),
+      json: vi.fn().mockReturnValue({}),
+      printf: vi.fn().mockReturnValue({}),
+      colorize: vi.fn().mockReturnValue({}),
+    },
+    transports: {
+      Console: vi.fn(),
+      File: vi.fn(),
+    },
+  };
+});
 
 // Mock DailyRotateFile
 vi.mock("winston-daily-rotate-file", () => ({}));
 
-// Mock fs with default export
+// Mock fs
 vi.mock("fs", () => {
-  const mockFs = {
+  return {
+    default: {
+      existsSync: vi.fn().mockReturnValue(true),
+      mkdirSync: vi.fn(),
+    },
     existsSync: vi.fn().mockReturnValue(true),
     mkdirSync: vi.fn(),
-  };
-  return {
-    ...mockFs,
-    default: mockFs,
   };
 });
 
@@ -61,41 +70,25 @@ vi.mock("../config", () => ({
       maxSize: 10485760,
       maxFiles: 10,
     },
+    websocket: {
+      url: "ws://test-server:8080",
+    },
+    server: {
+      host: "localhost",
+      port: 3000,
+    },
   },
 }));
 
-// Mock the actual logging functions
-vi.mock("./index", async (importOriginal) => {
-  const actual = await importOriginal();
-  
-  // Return both the original and our mock implementations
-  return {
-    ...actual,
-    default: mockLogger,
-    // Mock helper functions to ensure they call the logger
-    logError: vi.fn((message, error) => mockLogger.error(message, { error })),
-    logApiRequest: vi.fn((method, path, ip, statusCode) => 
-      mockLogger.info(`API ${method} ${path} from ${ip} - ${statusCode}`)
-    ),
-    logPrintJob: vi.fn((fileName, printer, success, jobId) => {
-      const printerInfo = printer ? ` to printer ${printer}` : "";
-      if (success) {
-        mockLogger.info(`Print job successful: ${fileName}${printerInfo}${jobId ? `, job ID: ${jobId}` : ""}`);
-      } else {
-        mockLogger.error(`Print job failed: ${fileName}${printerInfo}`);
-      }
-    }),
-    logSystemStartup: vi.fn(() => mockLogger.info("System starting up")),
-    logSystemShutdown: vi.fn(() => mockLogger.info("System shutting down")),
-    logWebSocketConnection: vi.fn((connected, url) => {
-      if (connected) {
-        mockLogger.info(`Connected to WebSocket server: ${url}`);
-      } else {
-        mockLogger.warn(`Disconnected from WebSocket server: ${url}`);
-      }
-    }),
-  };
-});
+// Import after mocks to ensure they're applied
+import logger, {
+  logApiRequest,
+  logError,
+  logPrintJob,
+  logSystemShutdown,
+  logSystemStartup,
+  logWebSocketConnection,
+} from "./index";
 
 describe("Logging Module", () => {
   beforeEach(() => {
@@ -104,27 +97,54 @@ describe("Logging Module", () => {
 
   it("should create logger with correct configuration", () => {
     // The logger is created on module import, so we just verify it was called correctly
-    expect(createLogger).toHaveBeenCalled();
-    expect(transports.Console).toHaveBeenCalled();
-    expect(transports.File).not.toHaveBeenCalled(); // Since we're using DailyRotateFile
+    expect(winston.createLogger).toHaveBeenCalled();
+    expect(winston.transports.Console).toHaveBeenCalled();
+    // Using File instead of DailyRotateFile in our test since we've mocked it
+    expect(winston.transports.File).not.toHaveBeenCalled();
   });
 
   it("should create logs directory if it doesn't exist", () => {
+    // First, reset the mock to return false (directory doesn't exist)
     vi.mocked(fs.existsSync).mockReturnValueOnce(false);
-
-    // Re-import the module to trigger directory creation
-    vi.isolateModules(() => {
-      require("./index");
-      expect(fs.mkdirSync).toHaveBeenCalled();
-      expect(fs.mkdirSync).toHaveBeenCalledWith(expect.any(String), {
-        recursive: true,
-      });
+    
+    // Re-require the module to trigger directory creation logic
+    vi.resetModules();
+    require("./index");
+    
+    expect(fs.mkdirSync).toHaveBeenCalled();
+    expect(fs.mkdirSync).toHaveBeenCalledWith(expect.any(String), {
+      recursive: true,
     });
   });
 
+  it("should handle directory creation failure gracefully", () => {
+    // Mock directory existence check to return false
+    vi.mocked(fs.existsSync).mockReturnValueOnce(false);
+    // Mock directory creation to throw an error
+    const mockError = new Error("Permission denied");
+    vi.mocked(fs.mkdirSync).mockImplementationOnce(() => {
+      throw mockError;
+    });
+    
+    // Spy on console.error since we can't easily check the logger in this case
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    
+    // Re-import the module to trigger directory creation failure
+    vi.resetModules();
+    require("./index");
+    
+    expect(fs.mkdirSync).toHaveBeenCalled();
+    // Since we can't easily check the logger here, we verify the error was thrown
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    
+    // Restore console.error
+    consoleErrorSpy.mockRestore();
+  });
+
   describe("Log helper functions", () => {
-    it("should log errors", () => {
+    it("should log errors with stack trace for Error objects", () => {
       const error = new Error("Test error");
+      error.stack = "Error: Test error\n    at Test.test";
       logError("Test error message", error);
 
       expect(mockLogger.error).toHaveBeenCalled();
@@ -133,21 +153,97 @@ describe("Logging Module", () => {
       });
     });
 
-    it("should log API requests", () => {
-      logApiRequest("GET", "/test", "127.0.0.1", 200);
+    it("should log errors for non-Error objects", () => {
+      const nonErrorObj = { message: "Not an error" };
+      logError("Non-error object", nonErrorObj);
 
-      expect(mockLogger.info).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining("GET /test"),
+      expect(mockLogger.error).toHaveBeenCalled();
+      // Check that it handles non-Error objects correctly
+      expect(mockLogger.error).toHaveBeenCalledWith("Non-error object", {
+        error: nonErrorObj,
+      });
+    });
+
+    it("should log API requests with different HTTP methods", () => {
+      // Test multiple HTTP methods
+      const methods = ["GET", "POST", "PUT", "DELETE", "PATCH"];
+      methods.forEach(method => {
+        logApiRequest(method, "/api/test", "127.0.0.1", 200);
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          expect.stringContaining(`API ${method} /api/test`)
+        );
+      });
+    });
+
+    it("should log API requests with different status codes", () => {
+      // Test success status codes
+      logApiRequest("GET", "/api/test", "127.0.0.1", 200);
+      expect(mockLogger.info).toHaveBeenLastCalledWith(
+        expect.stringContaining("- 200")
+      );
+      
+      // Test redirect status codes
+      logApiRequest("GET", "/api/test", "127.0.0.1", 301);
+      expect(mockLogger.info).toHaveBeenLastCalledWith(
+        expect.stringContaining("- 301")
+      );
+      
+      // Test client error status codes
+      logApiRequest("GET", "/api/test", "127.0.0.1", 404);
+      expect(mockLogger.info).toHaveBeenLastCalledWith(
+        expect.stringContaining("- 404")
+      );
+      
+      // Test server error status codes
+      logApiRequest("GET", "/api/test", "127.0.0.1", 500);
+      expect(mockLogger.info).toHaveBeenLastCalledWith(
+        expect.stringContaining("- 500")
       );
     });
 
-    it("should log print jobs", () => {
-      logPrintJob("job-123", "Test Printer", true);
+    it("should log print jobs with printer information", () => {
+      // Test with printer specified
+      logPrintJob("test-file.pdf", "HP LaserJet", true, "job-123");
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining("test-file.pdf to printer HP LaserJet")
+      );
+      
+      // Test without printer specified
+      logPrintJob("test-file.pdf", undefined, true, "job-123");
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining("test-file.pdf")
+      );
+      expect(mockLogger.info).toHaveBeenLastCalledWith(
+        expect.not.stringContaining("to printer")
+      );
+    });
 
+    it("should log failed print jobs with error details", () => {
+      const errorMessage = "Out of paper";
+      logPrintJob("test-file.pdf", "HP LaserJet", false, undefined, errorMessage);
+      
+      expect(mockLogger.error).toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining(`error: ${errorMessage}`)
+      );
+    });
+
+    it("should log print jobs with job ID when provided", () => {
+      const jobId = "job-456";
+      logPrintJob("test-file.pdf", "Test Printer", true, jobId);
+      
       expect(mockLogger.info).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining("job-123"),
+        expect.stringContaining(`job ID: ${jobId}`)
+      );
+    });
+
+    it("should log print jobs without job ID when not provided", () => {
+      logPrintJob("test-file.pdf", "Test Printer", true);
+      
+      expect(mockLogger.info).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.not.stringContaining("job ID")
       );
     });
 
@@ -156,7 +252,7 @@ describe("Logging Module", () => {
 
       expect(mockLogger.info).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining("System starting up"),
+        expect.stringContaining("System starting up")
       );
     });
 
@@ -165,22 +261,25 @@ describe("Logging Module", () => {
 
       expect(mockLogger.info).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining("System shutting down"),
+        expect.stringContaining("System shutting down")
       );
     });
 
     it("should log WebSocket connections", () => {
-      logWebSocketConnection(true, "ws://localhost:8080");
-
+      const wsUrl = "ws://localhost:8080";
+      
+      // Test connected state
+      logWebSocketConnection(true, wsUrl);
       expect(mockLogger.info).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Connected to WebSocket"),
+        expect.stringContaining(`Connected to WebSocket server: ${wsUrl}`)
       );
 
-      logWebSocketConnection(false, "ws://localhost:8080");
+      // Test disconnected state
+      logWebSocketConnection(false, wsUrl);
       expect(mockLogger.warn).toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Disconnected from WebSocket"),
+        expect.stringContaining(`Disconnected from WebSocket server: ${wsUrl}`)
       );
     });
   });

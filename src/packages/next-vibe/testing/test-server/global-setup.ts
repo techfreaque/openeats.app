@@ -3,17 +3,19 @@
  * This runs once before all test files
  */
 
-import { closeDatabase } from "next-vibe/server/db";
-import seedTestDatabase from "next-vibe/server/db/scripts/seed-dev-db";
-import { debugLogger, errorLogger } from "next-vibe/shared";
-
+import { closeDatabase } from "../../server/db";
+import { seedTestDatabase } from "../../server/db/scripts/seed-test-db";
+import { debugLogger, errorLogger } from "../../shared/utils/logger";
 import teardown from "./global-teardown";
 import { startServer } from "./test-server";
 
 export default async function setup() {
   try {
     await startServer();
-    await seedTestDatabase();
+    // Check if seedTestDatabase is a function before calling it
+    if (typeof seedTestDatabase === "function") {
+      await seedTestDatabase();
+    }
 
     // Return a teardown function that will be run after all tests
     return async (): Promise<void> => {

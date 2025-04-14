@@ -1,9 +1,10 @@
 import { act, renderHook } from "@testing-library/react";
-import type { ApiEndpoint } from "next-vibe/client/endpoint";
-import { Methods, UserRoleValue } from "next-vibe/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
+import { Methods } from "../../../shared/types/endpoint";
+import { UserRoleValue } from "../../../shared/types/enums";
+import type { ApiEndpoint } from "../../endpoint";
 import { useAiForm } from "./index";
 import { ChatMessageRole, FieldParsingStatus } from "./types";
 

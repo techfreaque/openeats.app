@@ -3,11 +3,11 @@
 import type { Server } from "http";
 import { createServer } from "http";
 import next from "next";
-import { debugLogger, errorLogger } from "next-vibe/shared";
 import { cwd } from "process";
 import { parse } from "url";
 
-import { env } from "@/config/env";
+import { env } from "../../server/env";
+import { debugLogger, errorLogger } from "../../shared/utils/logger";
 
 // Server state (singleton)
 let app: ReturnType<typeof next> | undefined = undefined;

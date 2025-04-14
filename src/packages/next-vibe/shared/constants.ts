@@ -1,4 +1,4 @@
-import { envClient } from "next-vibe/client/env-client";
+import { envClient } from "../client/env-client";
 
 export const APP_NAME = envClient.NEXT_PUBLIC_APP_NAME;
 export const APP_DOMAIN = envClient.NEXT_PUBLIC_FRONTEND_APP_URL;
