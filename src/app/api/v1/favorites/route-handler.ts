@@ -3,8 +3,9 @@
  * This file contains the implementation of the API route handlers for favorites
  */
 
-import type { ApiHandlerProps } from "next-vibe/server/endpoints/core/api-handler";
+import type { ApiHandlerProps, ApiHandlerResult } from "next-vibe/server/endpoints/core/api-handler";
 import { debugLogger } from "next-vibe/shared/utils/logger";
+import { ErrorResponseTypes } from "next-vibe/shared/types/response.schema";
 
 import type {
   FavoriteAddType,
@@ -19,7 +20,7 @@ import { favoritesRepository } from "./repository";
  */
 export async function getFavorites(
   props: ApiHandlerProps<FavoritesGetType, Record<string, never>>,
-): Promise<{ success: boolean; data?: FavoritesResponseType; message?: string; errorCode?: number }> {
+): Promise<ApiHandlerResult<FavoritesResponseType>> {
   try {
     const { user } = props;
 
@@ -27,6 +28,7 @@ export async function getFavorites(
       return {
         success: false,
         message: "Authentication required",
+        errorType: ErrorResponseTypes.HTTP_ERROR,
         errorCode: 401,
       };
     }
@@ -46,6 +48,7 @@ export async function getFavorites(
     return {
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
+      errorType: ErrorResponseTypes.HTTP_ERROR,
       errorCode: 500,
     };
   }
@@ -56,7 +59,7 @@ export async function getFavorites(
  */
 export async function addFavorite(
   props: ApiHandlerProps<FavoriteAddType, Record<string, never>>,
-): Promise<{ success: boolean; data?: FavoritesResponseType; message?: string; errorCode?: number }> {
+): Promise<ApiHandlerResult<FavoritesResponseType>> {
   try {
     const { data, user } = props;
 
@@ -64,6 +67,7 @@ export async function addFavorite(
       return {
         success: false,
         message: "Authentication required",
+        errorType: ErrorResponseTypes.HTTP_ERROR,
         errorCode: 401,
       };
     }
@@ -72,6 +76,7 @@ export async function addFavorite(
       return {
         success: false,
         message: "Restaurant ID is required",
+        errorType: ErrorResponseTypes.HTTP_ERROR,
         errorCode: 400,
       };
     }
@@ -93,6 +98,7 @@ export async function addFavorite(
     return {
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
+      errorType: ErrorResponseTypes.HTTP_ERROR,
       errorCode: 500,
     };
   }
@@ -103,7 +109,7 @@ export async function addFavorite(
  */
 export async function removeFavorite(
   props: ApiHandlerProps<FavoriteRemoveType, Record<string, never>>,
-): Promise<{ success: boolean; data?: FavoritesResponseType; message?: string; errorCode?: number }> {
+): Promise<ApiHandlerResult<FavoritesResponseType>> {
   try {
     const { data, user } = props;
 
@@ -111,6 +117,7 @@ export async function removeFavorite(
       return {
         success: false,
         message: "Authentication required",
+        errorType: ErrorResponseTypes.HTTP_ERROR,
         errorCode: 401,
       };
     }
@@ -119,6 +126,7 @@ export async function removeFavorite(
       return {
         success: false,
         message: "Restaurant ID is required",
+        errorType: ErrorResponseTypes.HTTP_ERROR,
         errorCode: 400,
       };
     }
@@ -140,6 +148,7 @@ export async function removeFavorite(
     return {
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
+      errorType: ErrorResponseTypes.HTTP_ERROR,
       errorCode: 500,
     };
   }

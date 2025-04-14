@@ -1,156 +1,73 @@
 "use client";
 
-import type React from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect } from "react";
+import { toast } from "@/components/ui/use-toast";
+import { translations } from "@/translations";
+import { useCart as useApiCart } from "@/app/api/v1/cart/hooks";
 
-import type { MenuItemResponseType } from "@/app/api/v1/restaurant/schema/menu.schema";
+/**
+ * Re-export the cart hook from the API implementation
+ * This maintains backward compatibility with existing code
+ * while using the new zustand-based implementation
+ */
+export type { CartItem } from "@/app/api/v1/cart/hooks";
 
-import { toast } from "../../../../components/ui/use-toast";
-import type { MenuItemType } from "../lib/types";
-
-export interface CartItem {
-  id: string;
-  menuItem: MenuItemResponseType;
-  quantity: number;
-  specialInstructions?: string;
-}
-
-interface CartContextType {
-  items: CartItem[];
-  restaurantId: string | null;
-  addItem: (
-    menuItem: MenuItemResponseType,
-    quantity: number,
-    specialInstructions?: string,
-  ) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
-  clearCart: () => void;
-  getSubtotal: () => number;
-  getTotal: () => number;
-  getDeliveryFee: () => number;
-  getServiceFee: () => number;
-  getTax: () => number;
-  itemCount: number;
-}
-
-const CartContext = createContext<CartContextType | undefined>(undefined);
-
-export function CartProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}): React.JSX.Element {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [restaurantId, setRestaurantId] = useState<string | null>(null);
-
-  // Load cart from localStorage on initial render
-  useEffect(() => {
-    const savedCart = localStorage.getItem("openeats-cart");
-    if (savedCart) {
-      const parsedCart = JSON.parse(savedCart);
-      setItems(parsedCart.items || []);
-      setRestaurantId(parsedCart.restaurantId || null);
-    }
-  }, []);
-
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem(
-      "openeats-cart",
-      JSON.stringify({ items, restaurantId }),
-    );
-  }, [items, restaurantId]);
-
-  // Improve type safety in the cart hook
-
-  // Add proper return types to all functions
-  const addItem = (
-    menuItem: MenuItemType,
-    quantity: number,
-    specialInstructions?: string,
-  ): void => {
-    // Check if adding from a different restaurant
-    if (
-      restaurantId &&
-      menuItem.restaurantId !== restaurantId &&
-      items.length > 0
-    ) {
-      const confirmed = window.confirm(
-        "Adding items from a different restaurant will clear your current cart. Continue?",
-      );
-
-      if (!confirmed) {
-        return;
+/**
+ * Create a type-safe translation function
+ */
+const createTranslator = () => {
+  return (key: string, fallback?: string): string => {
+    const parts = key.split(".");
+    let current: Record<string, unknown> = translations.EN;
+    
+    for (const part of parts) {
+      if (current && typeof current === "object" && part in current) {
+        const value = current[part];
+        current = value as Record<string, unknown>;
+      } else {
+        return fallback || key;
       }
-
-      setItems([]);
     }
-
-    // Set the restaurant ID if it's not set yet
-    if (!restaurantId) {
-      setRestaurantId(menuItem.restaurantId);
-    }
-
-    // Check if item already exists in cart
-    const existingItemIndex = items.findIndex(
-      (item) => item.menuItem.id === menuItem.id,
-    );
-
-    if (existingItemIndex >= 0) {
-      // Update existing item
-      const updatedItems = [...items];
-      updatedItems[existingItemIndex].quantity += quantity;
-      updatedItems[existingItemIndex].specialInstructions = specialInstructions;
-      setItems(updatedItems);
-    } else {
-      // Add new item
-      setItems([
-        ...items,
-        {
-          id: `${menuItem.id}-${Date.now()}`, // Unique ID for cart item
-          menuItem,
-          quantity,
-          specialInstructions,
-        },
-      ]);
-    }
-
-    toast({
-      title: "Added to cart",
-      description: `${quantity} × ${menuItem.name} added to your cart`,
-    });
+    
+    return typeof current === "string" ? current : fallback || key;
   };
+};
 
-  const removeItem = (id: string): void => {
-    setItems(items.filter((item) => item.id !== id));
+/**
+ * Hook for using the cart
+ * This is a wrapper around the API cart hook to maintain backward compatibility
+ */
+export function useCart() {
+  const t = createTranslator();
+  const {
+    items,
+    restaurantId,
+    addItem,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    isLoading,
+  } = useApiCart();
 
-    // If cart is empty, reset restaurant ID
-    if (items.length === 1) {
-      setRestaurantId(null);
+  useEffect(() => {
+    if (items.length === 0 && restaurantId === null) {
+      const savedCart = localStorage.getItem("openeats-cart");
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        if (parsedCart.items && parsedCart.items.length > 0) {
+          toast({
+            title: t("cart.cleared", "Cart cleared"),
+            description: t("cart.clearedDescription", "Your cart has been cleared"),
+          });
+        }
+      }
     }
-  };
-
-  const updateQuantity = (id: string, quantity: number): void => {
-    if (quantity <= 0) {
-      removeItem(id);
-      return;
-    }
-
-    setItems(
-      items.map((item) => (item.id === id ? { ...item, quantity } : item)),
-    );
-  };
-
-  const clearCart = (): void => {
-    setItems([]);
-    setRestaurantId(null);
-  };
+  }, [items.length, restaurantId, t]);
 
   const getSubtotal = (): number => {
     return items.reduce(
-      (sum, item) => sum + item.menuItem.price * item.quantity,
-      0,
+      (sum, item) => sum + (item.menuItem.price || 0) * item.quantity,
+      0
     );
   };
 
@@ -176,32 +93,19 @@ export function CartProvider({
 
   const itemCount = items.reduce((count, item) => count + item.quantity, 0);
 
-  return (
-    <CartContext.Provider
-      value={{
-        items,
-        restaurantId,
-        addItem,
-        removeItem,
-        updateQuantity,
-        clearCart,
-        getSubtotal,
-        getTotal,
-        getDeliveryFee,
-        getServiceFee,
-        getTax,
-        itemCount,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
-}
-
-export function useCart(): CartContextType {
-  const context = useContext(CartContext);
-  if (context === undefined) {
-    throw new Error("useCart must be used within a CartProvider");
-  }
-  return context;
+  return {
+    items,
+    restaurantId,
+    addItem,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    getSubtotal,
+    getTotal,
+    getDeliveryFee,
+    getServiceFee,
+    getTax,
+    itemCount,
+    isLoading,
+  };
 }

@@ -1,0 +1,77 @@
+"use client";
+
+import { createContext, useContext, type ReactNode } from "react";
+
+import { useFavorites as useApiFavorites } from "./hooks";
+
+/**
+ * Favorites context type
+ */
+interface FavoritesContextType {
+  favorites: string[]; // Restaurant IDs
+  isLoading: boolean;
+  error: Error | null;
+  addFavorite: (restaurantId: string) => Promise<void>;
+  removeFavorite: (restaurantId: string) => Promise<void>;
+  isFavorite: (restaurantId: string) => boolean;
+  toggleFavorite: (restaurantId: string) => Promise<void>;
+}
+
+/**
+ * Favorites context
+ */
+const FavoritesContext = createContext<FavoritesContextType | undefined>(
+  undefined
+);
+
+/**
+ * Favorites provider component
+ * Provides favorites functionality to the application
+ */
+export function FavoritesProvider({
+  children,
+}: {
+  children: ReactNode;
+}): JSX.Element {
+  // Use the real API implementation
+  const {
+    favorites,
+    isLoading,
+    error: apiError,
+    addFavorite,
+    removeFavorite,
+    isFavorite,
+    toggleFavorite,
+  } = useApiFavorites();
+
+  // Convert undefined error to null for context type compatibility
+  const error = apiError || null;
+
+  return (
+    <FavoritesContext.Provider
+      value={{
+        favorites,
+        isLoading,
+        error,
+        addFavorite,
+        removeFavorite,
+        isFavorite,
+        toggleFavorite,
+      }}
+    >
+      {children}
+    </FavoritesContext.Provider>
+  );
+}
+
+/**
+ * Hook for accessing favorites functionality
+ * @returns Favorites context
+ */
+export function useFavorites(): FavoritesContextType {
+  const context = useContext(FavoritesContext);
+  if (context === undefined) {
+    throw new Error("useFavorites must be used within a FavoritesProvider");
+  }
+  return context;
+}

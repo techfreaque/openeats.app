@@ -26,7 +26,7 @@ export type FavoritesResponseType = z.infer<typeof FavoritesResponseSchema>;
  */
 export const FavoriteAddSchema = z.object({
   restaurantId: z.string(),
-});
+}).strict();
 
 export type FavoriteAddType = z.infer<typeof FavoriteAddSchema>;
 
@@ -35,7 +35,7 @@ export type FavoriteAddType = z.infer<typeof FavoriteAddSchema>;
  */
 export const FavoriteRemoveSchema = z.object({
   restaurantId: z.string(),
-});
+}).strict();
 
 export type FavoriteRemoveType = z.infer<typeof FavoriteRemoveSchema>;
 

@@ -6,6 +6,7 @@ import { useApiQuery } from "next-vibe/client/hooks/query";
 import { useApiMutation } from "next-vibe/client/hooks/mutation";
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { translations } from "@/translations";
+import { useApiStore } from "next-vibe/client/hooks/store";
 
 import favoritesEndpoints from "./definition";
 import type { 
@@ -16,40 +17,47 @@ import type {
 } from "./schema";
 
 /**
- * Hook for managing user favorites
- * @returns Object with favorites data and methods to add/remove favorites
+ * Create a type-safe translation function
  */
-export const useFavorites = () => {
-  const { user } = useAuth();
-  
-  // Create a simple translation function
-  const t = (key: string, fallback?: string): string => {
+const createTranslator = () => {
+  return (key: string, fallback?: string): string => {
     const parts = key.split(".");
-    let result = translations.EN;
+    let current: Record<string, unknown> = translations.EN;
     
     for (const part of parts) {
-      if (result && typeof result === "object" && part in result) {
-        result = result[part] as any;
+      if (current && typeof current === "object" && part in current) {
+        const value = current[part];
+        current = value as Record<string, unknown>;
       } else {
         return fallback || key;
       }
     }
     
-    return typeof result === "string" ? result : fallback || key;
+    return typeof current === "string" ? current : fallback || key;
   };
+};
+
+/**
+ * Hook for managing user favorites
+ * @returns Object with favorites data and methods to add/remove favorites
+ */
+export const useFavorites = () => {
+  const { user } = useAuth();
+  const t = createTranslator();
   
-  // Query for fetching favorites
+  const queryKey = ["favorites", user?.id || "anonymous"];
+  
   const {
     data,
     isLoading,
     error,
-    refetch,
   } = useApiQuery<FavoritesGetType, FavoritesResponseType, Record<string, never>, "default">(
     favoritesEndpoints.GET,
     {},
     {},
     {
       enabled: !!user,
+      queryKey,
     }
   );
   
@@ -62,10 +70,10 @@ export const useFavorites = () => {
   >(favoritesEndpoints.POST, {
     onSuccess: () => {
       toast({
-        title: t("restaurant.addedToFavorites"),
-        description: "Restaurant added to your favorites",
+        title: t("restaurant.addedToFavorites", "Added to favorites"),
+        description: t("restaurant.addedToFavoritesDescription", "Restaurant added to your favorites"),
       });
-      refetch();
+      useApiStore.getState().invalidateQueries(queryKey);
     },
     onError: (data: { 
       error: Error; 
@@ -73,8 +81,8 @@ export const useFavorites = () => {
       pathParams: Record<string, never>; 
     }) => {
       toast({
-        title: "Error",
-        description: data.error.message || "Failed to add restaurant to favorites",
+        title: t("error", "Error"),
+        description: data.error.message || t("restaurant.errorAddingFavorite", "Failed to add restaurant to favorites"),
         variant: "destructive",
       });
     },
@@ -89,10 +97,10 @@ export const useFavorites = () => {
   >(favoritesEndpoints.DELETE, {
     onSuccess: () => {
       toast({
-        title: t("restaurant.removedFromFavorites"),
-        description: "Restaurant removed from your favorites",
+        title: t("restaurant.removedFromFavorites", "Removed from favorites"),
+        description: t("restaurant.removedFromFavoritesDescription", "Restaurant removed from your favorites"),
       });
-      refetch();
+      useApiStore.getState().invalidateQueries(queryKey);
     },
     onError: (data: { 
       error: Error; 
@@ -100,8 +108,8 @@ export const useFavorites = () => {
       pathParams: Record<string, never>; 
     }) => {
       toast({
-        title: "Error",
-        description: data.error.message || "Failed to remove restaurant from favorites",
+        title: t("error", "Error"),
+        description: data.error.message || t("restaurant.errorRemovingFavorite", "Failed to remove restaurant from favorites"),
         variant: "destructive",
       });
     },
@@ -112,8 +120,8 @@ export const useFavorites = () => {
     async (restaurantId: string) => {
       if (!user) {
         toast({
-          title: "Sign in required",
-          description: "Please sign in to save favorites",
+          title: t("auth.signInRequired", "Sign in required"),
+          description: t("auth.signInToSaveFavorites", "Please sign in to save favorites"),
           variant: "destructive",
         });
         return;
@@ -124,7 +132,7 @@ export const useFavorites = () => {
         urlParams: {},
       });
     },
-    [addFavoriteMutation, user]
+    [addFavoriteMutation, user, t]
   );
   
   // Remove a restaurant from favorites
@@ -159,8 +167,8 @@ export const useFavorites = () => {
     async (restaurantId: string) => {
       if (!user) {
         toast({
-          title: "Sign in required",
-          description: "Please sign in to save favorites",
+          title: t("auth.signInRequired", "Sign in required"),
+          description: t("auth.signInToSaveFavorites", "Please sign in to save favorites"),
           variant: "destructive",
         });
         return;
@@ -172,12 +180,12 @@ export const useFavorites = () => {
         await addFavorite(restaurantId);
       }
     },
-    [addFavorite, isFavorite, removeFavorite, user]
+    [addFavorite, isFavorite, removeFavorite, user, t]
   );
   
   return {
     favorites: data?.favorites || [],
-    isLoading,
+    isLoading: isLoading || false,
     error,
     addFavorite,
     removeFavorite,

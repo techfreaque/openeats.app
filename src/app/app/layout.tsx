@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import type React from "react";
+import type { ReactNode } from "react";
 import type { JSX } from "react";
 
 import { Toaster } from "@/components/ui/toaster";
 
-import { CartProvider } from "./components/hooks/use-cart";
-import { FavoritesProvider } from "./components/hooks/use-favorites";
 import { OrderProvider } from "./components/hooks/use-orders";
 import { ReviewProvider } from "./components/hooks/use-reviews";
 import RootLayout from "./components/layout";
@@ -21,21 +19,17 @@ export default function Layout({
   children,
   withSubMain = true,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   withSubMain?: boolean;
 }): JSX.Element {
   return (
     <main className="m-auto">
-      <CartProvider>
-        <OrderProvider>
-          <FavoritesProvider>
-            <ReviewProvider>
-              <RootLayout withSubMain={withSubMain}>{children}</RootLayout>
-              <Toaster />
-            </ReviewProvider>
-          </FavoritesProvider>
-        </OrderProvider>
-      </CartProvider>
+      <OrderProvider>
+        <ReviewProvider>
+          <RootLayout withSubMain={withSubMain}>{children}</RootLayout>
+          <Toaster />
+        </ReviewProvider>
+      </OrderProvider>
     </main>
   );
 }

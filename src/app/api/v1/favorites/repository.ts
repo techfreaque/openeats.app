@@ -4,6 +4,7 @@
  */
 
 import { and, eq } from "drizzle-orm";
+import { randomUUID } from "crypto";
 
 import { db } from "next-vibe/server/db";
 import { ApiRepositoryImpl } from "next-vibe/server/db/repository-postgres";
@@ -96,8 +97,10 @@ export class FavoritesRepositoryImpl
       
       if (!existingFavorite) {
         await this.create({
+          id: randomUUID(),
           userId,
           restaurantId,
+          createdAt: new Date(),
         });
       }
     } catch (error) {

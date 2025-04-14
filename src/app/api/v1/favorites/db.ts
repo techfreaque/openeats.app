@@ -28,10 +28,10 @@ export const favorites = pgTable("favorites", {
  * Favorite schema for database operations
  */
 export const selectFavoriteSchema = createSelectSchema(favorites);
-export const insertFavoriteSchema = createInsertSchema(favorites).omit({
-  id: true,
-  createdAt: true,
-});
+
+export const insertFavoriteSchema = createInsertSchema(favorites);
+
+export type NewFavoriteInput = Omit<z.infer<typeof insertFavoriteSchema>, 'id' | 'createdAt'>;
 
 /**
  * Favorite types for database operations
