@@ -1,19 +1,18 @@
 "use client";
 
-import type React from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import type { JSX } from "react";
+import { useOrders as useApiOrders } from "@/app/api/v1/order/hooks";
+import type { OrderResponseType, OrderStatus } from "@/app/api/v1/order/schema";
 
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+/**
+ * Re-export the order types from the API schema
+ */
+export { OrderStatus } from "@/app/api/v1/order/schema";
 
-export type OrderStatus =
-  | "pending"
-  | "confirmed"
-  | "preparing"
-  | "ready_for_pickup"
-  | "out_for_delivery"
-  | "delivered"
-  | "cancelled";
-
+/**
+ * Legacy OrderItem interface for backward compatibility
+ */
 export interface OrderItem {
   id: string;
   name: string;
@@ -22,6 +21,9 @@ export interface OrderItem {
   image?: string;
 }
 
+/**
+ * Legacy Order interface for backward compatibility
+ */
 export interface Order {
   id: string;
   userId: string;
@@ -43,242 +45,108 @@ export interface Order {
   estimatedDeliveryTime: string;
 }
 
-interface OrderContextType {
-  orders: Order[];
-  currentOrder: Order | null;
-  isLoading: boolean;
-  error: string | null;
-  placeOrder: (
-    order: Omit<Order, "id" | "status" | "createdAt" | "estimatedDeliveryTime">,
-  ) => Promise<Order>;
-  getOrderById: (id: string) => Order | null;
-  cancelOrder: (id: string) => Promise<boolean>;
-}
+/**
+ * Hook for using orders
+ * This is a wrapper around the API orders hook to maintain backward compatibility
+ */
+export function useOrders() {
+  const {
+    orders: apiOrders,
+    currentOrder: apiCurrentOrder,
+    isLoading,
+    error: apiError,
+    placeOrder,
+    getOrderById: apiGetOrderById,
+    cancelOrder,
+  } = useApiOrders();
 
-const OrderContext = createContext<OrderContextType | undefined>(undefined);
-
-// Mock orders data
-const mockOrders: Order[] = [
-  {
-    id: "order-1",
-    userId: "1",
-    restaurantId: "1",
-    restaurantName: "Burger Joint",
-    items: [
-      {
-        id: "101",
-        name: "Classic Cheeseburger",
-        price: 8.99,
-        quantity: 2,
-        image: "/placeholder.svg?height=80&width=80",
-      },
-      {
-        id: "104",
-        name: "French Fries",
-        price: 3.99,
-        quantity: 1,
-        image: "/placeholder.svg?height=80&width=80",
-      },
-    ],
-    status: "delivered",
-    total: 28.76,
-    subtotal: 21.97,
-    deliveryFee: 2.99,
-    serviceFee: 1.99,
-    tax: 1.81,
-    deliveryAddress: "123 Main St, Anytown, USA",
-    isDelivery: true,
-    driverId: "driver-1",
-    driverName: "John D.",
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    estimatedDeliveryTime: new Date(
-      Date.now() - 2 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000,
-    ).toISOString(),
-  },
-  {
-    id: "order-2",
-    userId: "1",
-    restaurantId: "3",
-    restaurantName: "Sushi World",
-    items: [
-      {
-        id: "301",
-        name: "California Roll",
-        price: 7.99,
-        quantity: 2,
-        image: "/placeholder.svg?height=80&width=80",
-      },
-      {
-        id: "305",
-        name: "Miso Soup",
-        price: 3.99,
-        quantity: 1,
-        image: "/placeholder.svg?height=80&width=80",
-      },
-    ],
-    status: "out_for_delivery",
-    total: 24.56,
-    subtotal: 19.97,
-    deliveryFee: 2.99,
-    serviceFee: 1.99,
-    tax: 1.65,
-    deliveryAddress: "123 Main St, Anytown, USA",
-    isDelivery: true,
-    driverId: "driver-2",
-    driverName: "Sarah L.",
-    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-    estimatedDeliveryTime: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-  },
-];
-
-export function OrderProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}): React.JSX.Element {
-  const { user } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Load user's orders
-    if (user) {
-      setIsLoading(true);
-      // Simulate API call delay
-      setTimeout(() => {
-        // Filter orders for the current user
-        const userOrders = mockOrders.filter(
-          (order) => order.userId === user.id,
-        );
-        setOrders(userOrders);
-        setIsLoading(false);
-      }, 1000);
-    } else {
-      setOrders([]);
-    }
-  }, [user]);
-
-  // Add proper return types to all functions
-  const placeOrder = async (
-    orderData: Omit<
-      Order,
-      "id" | "status" | "createdAt" | "estimatedDeliveryTime"
-    >,
-  ): Promise<Order> => {
-    setIsLoading(true);
-    setError(null);
-
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    try {
-      const newOrder: Order = {
-        ...orderData,
-        id: `order-${Date.now()}`,
-        status: "confirmed",
-        createdAt: new Date().toISOString(),
-        estimatedDeliveryTime: new Date(
-          Date.now() + 30 * 60 * 1000,
-        ).toISOString(),
+  const convertApiOrderToLegacyOrder = (apiOrder: OrderResponseType): Order => {
+    const items: OrderItem[] = apiOrder.orderItems.map(item => {
+      return {
+        id: item.id,
+        name: item.menuItemId || "Unknown Item", // Provide default for type safety
+        price: item.price,
+        quantity: item.quantity,
+        image: undefined, // This would need to be fetched from menu item
       };
+    });
 
-      // Add to orders list
-      setOrders((prevOrders) => [newOrder, ...prevOrders]);
+    const subtotal = apiOrder.total - 
+      (apiOrder.deliveryFee || 0) - 
+      (apiOrder.driverTip || 0) - 
+      (apiOrder.restaurantTip || 0) - 
+      (apiOrder.projectTip || 0);
 
-      // Set as current order
-      setCurrentOrder(newOrder);
+    const deliveryAddress = apiOrder.delivery ? 
+      `${apiOrder.delivery.street || ''} ${apiOrder.delivery.streetNumber || ''}, ${apiOrder.delivery.city || ''}, ${apiOrder.delivery.zip || ''}` : 
+      undefined;
 
-      setIsLoading(false);
-      return newOrder;
-    } catch (err) {
-      setError("Failed to place order. Please try again.");
-      setIsLoading(false);
-      throw new Error("Failed to place order");
-    }
+    const deliveryInstructions = apiOrder.delivery?.message || undefined;
+
+    const isDelivery = apiOrder.delivery?.type === "DELIVERY";
+
+    const driverId = apiOrder.delivery?.driver?.id;
+    const driverName = apiOrder.delivery?.driver?.user?.firstName;
+
+    const createdAt = typeof apiOrder.createdAt === 'string' ? 
+      apiOrder.createdAt : 
+      apiOrder.createdAt.toISOString();
+
+    const estimatedDeliveryTime = new Date(
+      new Date(createdAt).getTime() + 
+      (apiOrder.delivery?.estimatedDeliveryTime || 30) * 60 * 1000
+    ).toISOString();
+
+    const order: Order = {
+      id: apiOrder.id,
+      userId: apiOrder.customerId,
+      restaurantId: apiOrder.restaurant.id,
+      restaurantName: apiOrder.restaurant.name,
+      items,
+      status: apiOrder.status as unknown as OrderStatus, // Type conversion for backward compatibility
+      total: apiOrder.total,
+      subtotal,
+      deliveryFee: apiOrder.deliveryFee || 0,
+      serviceFee: 0, // Not in new API
+      tax: 0, // Not directly in new API
+      deliveryAddress,
+      deliveryInstructions,
+      isDelivery,
+      driverId,
+      driverName,
+      createdAt,
+      estimatedDeliveryTime,
+    };
+
+    return order;
   };
 
+  const orders = apiOrders.map(convertApiOrderToLegacyOrder);
+  
+  const currentOrder = apiCurrentOrder ? convertApiOrderToLegacyOrder(apiCurrentOrder) : null;
+  
+  const error = apiError ? apiError.message : null;
+  
   const getOrderById = (id: string): Order | null => {
-    return orders.find((order) => order.id === id) || null;
+    const apiOrder = apiGetOrderById(id);
+    return apiOrder ? convertApiOrderToLegacyOrder(apiOrder) : null;
   };
 
-  const cancelOrder = async (id: string): Promise<boolean> => {
-    setIsLoading(true);
-    setError(null);
-
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    try {
-      // Find the order
-      const orderIndex = orders.findIndex((order) => order.id === id);
-
-      if (orderIndex === -1) {
-        setError("Order not found");
-        setIsLoading(false);
-        return false;
-      }
-
-      // Check if order can be cancelled
-      const order = orders[orderIndex];
-      if (
-        order.status !== "pending" &&
-        order.status !== "confirmed" &&
-        order.status !== "preparing"
-      ) {
-        setError("This order cannot be cancelled");
-        setIsLoading(false);
-        return false;
-      }
-
-      // Update order status
-      const updatedOrders = [...orders];
-      updatedOrders[orderIndex] = {
-        ...order,
-        status: "cancelled",
-      };
-
-      setOrders(updatedOrders);
-
-      // If this is the current order, update it
-      if (currentOrder && currentOrder.id === id) {
-        setCurrentOrder({
-          ...currentOrder,
-          status: "cancelled",
-        });
-      }
-
-      setIsLoading(false);
-      return true;
-    } catch (err) {
-      setError("Failed to cancel order");
-      setIsLoading(false);
-      return false;
-    }
+  return {
+    orders,
+    currentOrder,
+    isLoading,
+    error,
+    placeOrder,
+    getOrderById,
+    cancelOrder,
   };
-
-  return (
-    <OrderContext.Provider
-      value={{
-        orders,
-        currentOrder,
-        isLoading,
-        error,
-        placeOrder,
-        getOrderById,
-        cancelOrder,
-      }}
-    >
-      {children}
-    </OrderContext.Provider>
-  );
 }
 
-export function useOrders(): OrderContextType {
-  const context = useContext(OrderContext);
-  if (context === undefined) {
-    throw new Error("useOrders must be used within an OrderProvider");
-  }
-  return context;
+/**
+ * OrderProvider is no longer needed as we're using zustand store hooks
+ * This is kept as a no-op component for backward compatibility
+ */
+export function OrderProvider({ children }: { children: ReactNode }): JSX.Element {
+  return <>{children}</>;
 }

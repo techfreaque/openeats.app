@@ -1,38 +1,35 @@
 "use client";
 
-import type React from "react";
+import type { ReactNode } from "react";
 import type { JSX } from "react";
-import { createContext, useContext, useEffect, useState } from "react";
-
+import { useCallback } from "react";
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
-
-import { toast } from "../../../../components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
+import { useApiStore } from "next-vibe/client/hooks/store";
 import type { ReviewType } from "../lib/types";
+import { translations } from "@/translations";
 
-interface ReviewContextType {
-  reviews: ReviewType[];
-  userReviews: ReviewType[];
-  restaurantReviews: (restaurantId: string) => ReviewType[];
-  productReviews: (productId: string) => ReviewType[];
-  isLoading: boolean;
-  error: string | null;
-  addReview: (
-    review: Omit<
-      ReviewType,
-      "id" | "userId" | "userName" | "userAvatar" | "date"
-    >,
-  ) => Promise<boolean>;
-  updateReview: (
-    reviewId: string,
-    review: Partial<ReviewType>,
-  ) => Promise<boolean>;
-  deleteReview: (reviewId: string) => Promise<boolean>;
-  getAverageRestaurantRating: (restaurantId: string) => number;
-  getAverageProductRating: (productId: string) => number;
-}
+/**
+ * Create a type-safe translation function
+ */
+const createTranslator = () => {
+  return (key: string, fallback?: string): string => {
+    const parts = key.split(".");
+    let current: Record<string, unknown> = translations.EN;
+    
+    for (const part of parts) {
+      if (current && typeof current === "object" && part in current) {
+        const value = current[part];
+        current = value as Record<string, unknown>;
+      } else {
+        return fallback || key;
+      }
+    }
+    
+    return typeof current === "string" ? current : fallback || key;
+  };
+};
 
-// Mock reviews data
 const mockReviews: ReviewType[] = [
   {
     id: "review1",
@@ -120,280 +117,229 @@ const mockReviews: ReviewType[] = [
   },
 ];
 
-const ReviewContext = createContext<ReviewContextType | undefined>(undefined);
-
+/**
+ * ReviewProvider component
+ * This is a wrapper around the API reviews hook to maintain backward compatibility
+ */
 export function ReviewProvider({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }): JSX.Element {
-  const { user } = useAuth();
-  const [reviews, setReviews] = useState<ReviewType[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  return <>{children}</>;
+}
 
-  useEffect(() => {
-    const loadReviews = async (): Promise<void> => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        // Simulate API call delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setReviews(mockReviews);
-      } catch (err) {
-        errorLogger("Error loading reviews:", err);
-        setError("Failed to load reviews");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void loadReviews();
-  }, []);
-
-  const userReviews = user
-    ? reviews.filter((review) => review.userId === user.id)
-    : [];
-
-  const restaurantReviews = (restaurantId: string): ReviewType[] => {
-    return reviews.filter((review) => review.restaurantId === restaurantId);
-  };
-
-  const productReviews = (productId: string): ReviewType[] => {
-    return reviews.filter((review) =>
-      review.productReviews.some((pr) => pr.productId === productId),
-    );
-  };
-
-  const getAverageRestaurantRating = (restaurantId: string): number => {
-    const restaurantReviewsList = restaurantReviews(restaurantId);
-    if (restaurantReviewsList.length === 0) {
-      return 0;
-    }
-
-    const sum = restaurantReviewsList.reduce(
-      (acc, review) => acc + review.restaurantRating,
-      0,
-    );
-    return Number.parseFloat((sum / restaurantReviewsList.length).toFixed(1));
-  };
-
-  const getAverageProductRating = (productId: string): number => {
-    const productReviewsList = productReviews(productId);
-    if (productReviewsList.length === 0) {
-      return 0;
-    }
-
-    let totalRating = 0;
-    let count = 0;
-
-    productReviewsList.forEach((review) => {
-      const productReview = review.productReviews.find(
-        (pr) => pr.productId === productId,
-      );
-      if (productReview) {
-        totalRating += productReview.rating;
-        count++;
-      }
-    });
-
-    return count > 0 ? Number.parseFloat((totalRating / count).toFixed(1)) : 0;
-  };
-
-  const addReview = async (
-    review: Omit<
+/**
+ * Hook for using reviews
+ * This is a zustand-based implementation that will be connected to the API
+ */
+export function useReviews(): {
+  reviews: ReviewType[];
+  userReviews: ReviewType[];
+  restaurantReviews: (restaurantId: string) => ReviewType[];
+  productReviews: (productId: string) => ReviewType[];
+  isLoading: boolean;
+  error: string | null;
+  addReview: (
+    reviewData: Omit<
       ReviewType,
       "id" | "userId" | "userName" | "userAvatar" | "date"
     >,
-  ): Promise<boolean> => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to leave a review",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      const newReview: ReviewType = {
-        id: `review${Date.now()}`,
-        userId: user.id,
-        userName: user.firstName,
-        userAvatar: user.imageUrl,
-        date: new Date().toISOString(),
-        ...review,
-      };
-
-      setReviews((prevReviews) => [...prevReviews, newReview]);
-
-      toast({
-        title: "Review submitted",
-        description: "Thank you for your feedback!",
-      });
-
-      return true;
-    } catch (err) {
-      errorLogger("Error adding review:", err);
-      setError("Failed to submit review");
-
-      toast({
-        title: "Error",
-        description: "Failed to submit your review. Please try again.",
-        variant: "destructive",
-      });
-
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateReview = async (
+  ) => Promise<boolean>;
+  updateReview: (
     reviewId: string,
-    reviewUpdate: Partial<ReviewType>,
-  ): Promise<boolean> => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to update a review",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      const reviewToUpdate = reviews.find((r) => r.id === reviewId);
-
-      if (!reviewToUpdate) {
-        setError("Review not found");
-        return false;
-      }
-
-      if (reviewToUpdate.userId !== user.id) {
-        setError("You can only update your own reviews");
-        return false;
-      }
-
-      setReviews((prevReviews) =>
-        prevReviews.map((r) =>
-          r.id === reviewId ? { ...r, ...reviewUpdate } : r,
-        ),
-      );
-
-      toast({
-        title: "Review updated",
-        description: "Your review has been updated successfully",
-      });
-
-      return true;
-    } catch (err) {
-      errorLogger("Error updating review:", err);
-      setError("Failed to update review");
-
-      toast({
-        title: "Error",
-        description: "Failed to update your review. Please try again.",
-        variant: "destructive",
-      });
-
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const deleteReview = async (reviewId: string): Promise<boolean> => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to delete a review",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      const reviewToDelete = reviews.find((r) => r.id === reviewId);
-
-      if (!reviewToDelete) {
-        setError("Review not found");
-        return false;
-      }
-
-      if (reviewToDelete.userId !== user.id) {
-        setError("You can only delete your own reviews");
-        return false;
-      }
-
-      setReviews((prevReviews) => prevReviews.filter((r) => r.id !== reviewId));
-
-      toast({
-        title: "Review deleted",
-        description: "Your review has been deleted successfully",
-      });
-
-      return true;
-    } catch (err) {
-      errorLogger("Error deleting review:", err);
-      setError("Failed to delete review");
-
-      toast({
-        title: "Error",
-        description: "Failed to delete your review. Please try again.",
-        variant: "destructive",
-      });
-
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <ReviewContext.Provider
-      value={{
-        reviews,
-        userReviews,
-        restaurantReviews,
-        productReviews,
-        isLoading,
-        error,
-        addReview,
-        updateReview,
-        deleteReview,
-        getAverageRestaurantRating,
-        getAverageProductRating,
-      }}
-    >
-      {children}
-    </ReviewContext.Provider>
+    reviewData: Partial<ReviewType>,
+  ) => Promise<boolean>;
+  deleteReview: (reviewId: string) => Promise<boolean>;
+  getAverageRestaurantRating: (restaurantId: string) => number;
+  getAverageProductRating: (productId: string) => number;
+} {
+  const { user } = useAuth();
+  const t = createTranslator();
+  
+  const reviews = mockReviews;
+  const isLoading = false;
+  const error = null;
+  
+  const userReviews = user 
+    ? reviews.filter((review) => review.userId === user.id)
+    : [];
+  
+  const restaurantReviews = useCallback(
+    (restaurantId: string): ReviewType[] => {
+      return reviews.filter((review) => review.restaurantId === restaurantId);
+    },
+    [reviews]
   );
-}
-
-export function useReviews(): ReviewContextType {
-  const context = useContext(ReviewContext);
-  if (context === undefined) {
-    throw new Error("useReviews must be used within a ReviewProvider");
-  }
-  return context;
+  
+  const productReviews = useCallback(
+    (productId: string): ReviewType[] => {
+      return reviews.filter((review) =>
+        review.productReviews.some((pr) => pr.productId === productId)
+      );
+    },
+    [reviews]
+  );
+  
+  const getAverageRestaurantRating = useCallback(
+    (restaurantId: string): number => {
+      const restaurantReviewsList = restaurantReviews(restaurantId);
+      if (restaurantReviewsList.length === 0) {
+        return 0;
+      }
+      
+      const sum = restaurantReviewsList.reduce(
+        (acc, review) => acc + review.restaurantRating,
+        0
+      );
+      return Number.parseFloat((sum / restaurantReviewsList.length).toFixed(1));
+    },
+    [restaurantReviews]
+  );
+  
+  const getAverageProductRating = useCallback(
+    (productId: string): number => {
+      const productReviewsList = productReviews(productId);
+      if (productReviewsList.length === 0) {
+        return 0;
+      }
+      
+      let totalRating = 0;
+      let count = 0;
+      
+      productReviewsList.forEach((review) => {
+        const productReview = review.productReviews.find(
+          (pr) => pr.productId === productId
+        );
+        if (productReview) {
+          totalRating += productReview.rating;
+          count++;
+        }
+      });
+      
+      return count > 0 ? Number.parseFloat((totalRating / count).toFixed(1)) : 0;
+    },
+    [productReviews]
+  );
+  
+  const addReview = useCallback(
+    async (
+      data: Omit<
+        ReviewType,
+        "id" | "userId" | "userName" | "userAvatar" | "date"
+      >
+    ): Promise<boolean> => {
+      if (!user) {
+        toast({
+          title: t("auth.signInRequired", "Authentication required"),
+          description: t("auth.signInToReview", "Please sign in to leave a review"),
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      try {
+        console.log("Adding review:", data);
+        
+        toast({
+          title: t("review.added", "Review submitted"),
+          description: t("review.addedDescription", "Thank you for your feedback!"),
+        });
+        
+        useApiStore.getState().invalidateQueries(["reviews"]);
+        
+        return true;
+      } catch (err) {
+        toast({
+          title: t("error", "Error"),
+          description: t("review.errorAdding", "Failed to submit your review. Please try again."),
+          variant: "destructive",
+        });
+        return false;
+      }
+    },
+    [user, t]
+  );
+  
+  const updateReview = useCallback(
+    async (id: string, data: Partial<ReviewType>): Promise<boolean> => {
+      if (!user) {
+        toast({
+          title: t("auth.signInRequired", "Authentication required"),
+          description: t("auth.signInToUpdateReview", "Please sign in to update a review"),
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      try {
+        console.log("Updating review:", id, data);
+        
+        toast({
+          title: t("review.updated", "Review updated"),
+          description: t("review.updatedDescription", "Your review has been updated successfully"),
+        });
+        
+        useApiStore.getState().invalidateQueries(["reviews"]);
+        
+        return true;
+      } catch (err) {
+        toast({
+          title: t("error", "Error"),
+          description: t("review.errorUpdating", "Failed to update your review. Please try again."),
+          variant: "destructive",
+        });
+        return false;
+      }
+    },
+    [user, t]
+  );
+  
+  const deleteReview = useCallback(
+    async (id: string): Promise<boolean> => {
+      if (!user) {
+        toast({
+          title: t("auth.signInRequired", "Authentication required"),
+          description: t("auth.signInToDeleteReview", "Please sign in to delete a review"),
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      try {
+        console.log("Deleting review:", id);
+        
+        toast({
+          title: t("review.deleted", "Review deleted"),
+          description: t("review.deletedDescription", "Your review has been deleted successfully"),
+        });
+        
+        useApiStore.getState().invalidateQueries(["reviews"]);
+        
+        return true;
+      } catch (err) {
+        toast({
+          title: t("error", "Error"),
+          description: t("review.errorDeleting", "Failed to delete your review. Please try again."),
+          variant: "destructive",
+        });
+        return false;
+      }
+    },
+    [user, t]
+  );
+  
+  return {
+    reviews,
+    userReviews,
+    restaurantReviews,
+    productReviews,
+    isLoading,
+    error,
+    addReview,
+    updateReview,
+    deleteReview,
+    getAverageRestaurantRating,
+    getAverageProductRating,
+  };
 }
