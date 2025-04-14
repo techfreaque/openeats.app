@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
 import { FeaturedCollection } from "@/app/app/components/featured-collection";
-import { useFavorites } from "@/app/app/components/hooks/use-favorites";
+import { useFavorites } from "@/app/api/v1/favorites/hooks";
 import {
   type OrderType,
   OrderTypeSelector,
@@ -36,7 +36,7 @@ export default function RestaurantHomePage(): JSX.Element {
   const { toast } = useToast();
 
   const { user } = useAuth();
-  const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+  const { isFavorite, addFavorite, removeFavorite, toggleFavorite } = useFavorites();
   const config = useRestaurantConfig();
 
   const { data: restaurant, isLoading, error } = useRestaurant(id);
@@ -70,22 +70,12 @@ export default function RestaurantHomePage(): JSX.Element {
    * Handle favorite button click
    * Adds or removes restaurant from favorites
    */
-  const handleFavoriteClick = (): void => {
+  const handleFavoriteClick = async (): Promise<void> => {
     if (!restaurant) {
       return;
     }
 
-    if (favorite) {
-      removeFavorite(restaurant.id);
-      toast({
-        description: t("restaurant.removedFromFavorites"),
-      });
-    } else {
-      addFavorite(restaurant.id);
-      toast({
-        description: t("restaurant.addedToFavorites"),
-      });
-    }
+    await toggleFavorite(restaurant.id);
   };
 
   if (isLoading) {
