@@ -2,27 +2,32 @@
 
 import type { ReactNode } from "react";
 import type { JSX } from "react";
-import { useOrders as useApiOrders } from "@/app/api/v1/order/hooks";
-import type { OrderResponseType, OrderStatus } from "@/app/api/v1/order/schema";
+import { useOrders as useApiOrders } from "../../../api/v1/order/hooks";
+import type { OrderResponseType, OrderStatus } from "../../../api/v1/order/schema";
 
 /**
  * Re-export the order types from the API schema
  */
-export { OrderStatus } from "@/app/api/v1/order/schema";
+export { OrderStatus } from "../../../api/v1/order/schema";
 
 /**
  * Legacy OrderItem interface for backward compatibility
+ */
+/**
+ * Legacy OrderItem interface for backward compatibility
+ * With strict typing for exactOptionalPropertyTypes
  */
 export interface OrderItem {
   id: string;
   name: string;
   price: number;
   quantity: number;
-  image?: string;
+  image?: string | undefined;
 }
 
 /**
  * Legacy Order interface for backward compatibility
+ * With strict typing for exactOptionalPropertyTypes
  */
 export interface Order {
   id: string;
@@ -36,11 +41,11 @@ export interface Order {
   deliveryFee: number;
   serviceFee: number;
   tax: number;
-  deliveryAddress?: string;
-  deliveryInstructions?: string;
+  deliveryAddress?: string | undefined;
+  deliveryInstructions?: string | undefined;
   isDelivery: boolean;
-  driverId?: string;
-  driverName?: string;
+  driverId?: string | undefined;
+  driverName?: string | undefined;
   createdAt: string;
   estimatedDeliveryTime: string;
 }
@@ -61,52 +66,82 @@ export function useOrders() {
   } = useApiOrders();
 
   const convertApiOrderToLegacyOrder = (apiOrder: OrderResponseType): Order => {
-    const items: OrderItem[] = apiOrder.orderItems.map(item => {
-      return {
+    const typedOrder = apiOrder as unknown as {
+      id: string;
+      customerId: string;
+      total: number;
+      deliveryFee: number;
+      driverTip: number | null;
+      restaurantTip: number | null;
+      projectTip: number | null;
+      createdAt: string | Date;
+      restaurant: { id: string; name: string };
+      delivery?: {
+        street?: string;
+        streetNumber?: string;
+        city?: string;
+        zip?: string;
+        message?: string;
+        type?: string;
+        estimatedDeliveryTime?: number;
+        driver?: { id?: string; user?: { firstName?: string } };
+      };
+      orderItems: Array<{
+        id: string;
+        menuItemId: string;
+        price: number;
+        quantity: number;
+      }>;
+      status: string;
+    };
+    
+    const mappedItems: OrderItem[] = typedOrder.orderItems.map(item => {
+      const orderItem: OrderItem = {
         id: item.id,
         name: item.menuItemId || "Unknown Item", // Provide default for type safety
         price: item.price,
         quantity: item.quantity,
         image: undefined, // This would need to be fetched from menu item
       };
+      return orderItem;
     });
 
-    const subtotal = apiOrder.total - 
-      (apiOrder.deliveryFee || 0) - 
-      (apiOrder.driverTip || 0) - 
-      (apiOrder.restaurantTip || 0) - 
-      (apiOrder.projectTip || 0);
+    const subtotal = typedOrder.total - 
+      (typedOrder.deliveryFee || 0) - 
+      (typedOrder.driverTip || 0) - 
+      (typedOrder.restaurantTip || 0) - 
+      (typedOrder.projectTip || 0);
 
-    const deliveryAddress = apiOrder.delivery ? 
-      `${apiOrder.delivery.street || ''} ${apiOrder.delivery.streetNumber || ''}, ${apiOrder.delivery.city || ''}, ${apiOrder.delivery.zip || ''}` : 
+    const deliveryAddress = typedOrder.delivery ? 
+      `${typedOrder.delivery.street || ''} ${typedOrder.delivery.streetNumber || ''}, ${typedOrder.delivery.city || ''}, ${typedOrder.delivery.zip || ''}` : 
       undefined;
 
-    const deliveryInstructions = apiOrder.delivery?.message || undefined;
+    const deliveryInstructions = typedOrder.delivery?.message || undefined;
 
-    const isDelivery = apiOrder.delivery?.type === "DELIVERY";
+    const isDelivery = typedOrder.delivery?.type === "DELIVERY";
 
-    const driverId = apiOrder.delivery?.driver?.id;
-    const driverName = apiOrder.delivery?.driver?.user?.firstName;
+    const driverId = typedOrder.delivery?.driver?.id;
+    const driverName = typedOrder.delivery?.driver?.user?.firstName;
 
-    const createdAt = typeof apiOrder.createdAt === 'string' ? 
-      apiOrder.createdAt : 
-      apiOrder.createdAt.toISOString();
+    const createdAt = typeof typedOrder.createdAt === 'string' ? 
+      typedOrder.createdAt : 
+      typedOrder.createdAt.toISOString();
 
     const estimatedDeliveryTime = new Date(
       new Date(createdAt).getTime() + 
-      (apiOrder.delivery?.estimatedDeliveryTime || 30) * 60 * 1000
+      (typedOrder.delivery?.estimatedDeliveryTime || 30) * 60 * 1000
     ).toISOString();
 
-    const order: Order = {
-      id: apiOrder.id,
-      userId: apiOrder.customerId,
-      restaurantId: apiOrder.restaurant.id,
-      restaurantName: apiOrder.restaurant.name,
-      items,
-      status: apiOrder.status as unknown as OrderStatus, // Type conversion for backward compatibility
-      total: apiOrder.total,
+    const result: Order = {
+      id: typedOrder.id,
+      userId: typedOrder.customerId,
+      restaurantId: typedOrder.restaurant.id,
+      restaurantName: typedOrder.restaurant.name,
+      items: mappedItems,
+      status: typedOrder.status as OrderStatus, // Type conversion for backward compatibility
+      total: typedOrder.total,
       subtotal,
-      deliveryFee: apiOrder.deliveryFee || 0,
+      deliveryFee: typedOrder.deliveryFee || 0,
       serviceFee: 0, // Not in new API
       tax: 0, // Not directly in new API
       deliveryAddress,
@@ -118,7 +153,7 @@ export function useOrders() {
       estimatedDeliveryTime,
     };
 
-    return order;
+    return result;
   };
 
   const orders = apiOrders.map(convertApiOrderToLegacyOrder);
