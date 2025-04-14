@@ -1,13 +1,14 @@
 import { spawn } from "child_process";
+import fs from "fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { config } from "../config";
 import logger from "../logging";
-import { playSound, setVolume } from "./index";
+import { isNotificationEnabled, playSound, setVolume } from "./index";
 
 // Mock child_process
-vi.mock("child_process", () => ({
-  spawn: vi.fn().mockReturnValue({
+vi.mock("child_process", () => {
+  const mockSpawn = vi.fn().mockReturnValue({
     on: vi.fn().mockImplementation((event, callback) => {
       if (event === "close") {
         callback(0); // Call with exit code 0 (success)
@@ -16,12 +17,13 @@ vi.mock("child_process", () => ({
     }),
     stdout: { on: vi.fn() },
     stderr: { on: vi.fn() },
-  }),
-}));
+  });
+  return { spawn: mockSpawn };
+});
 
 // Mock config
-vi.mock("../config", () => ({
-  config: {
+vi.mock("../config", () => {
+  const mockConfig = {
     notifications: {
       enabled: true,
       volume: 80,
@@ -31,8 +33,9 @@ vi.mock("../config", () => ({
         printError: "sounds/print-error.mp3",
       },
     },
-  },
-}));
+  };
+  return { config: mockConfig };
+});
 
 // Mock logger
 vi.mock("../logging", () => ({
@@ -47,12 +50,16 @@ vi.mock("../logging", () => ({
 // Fix the fs mock to include default export
 vi.mock("fs", () => {
   const mockFs = {
-    existsSync: vi.fn().mockReturnValue(true),
+    existsSync: vi.fn().mockImplementation((path) => {
+      // By default, return true for all paths except when explicitly mocked
+      return true;
+    }),
     mkdirSync: vi.fn(),
   };
   return {
     ...mockFs,
     default: mockFs,
+    __esModule: true,
   };
 });
 
@@ -75,15 +82,21 @@ describe("Notifications Module", () => {
     });
 
     it("should not play sound when notifications are disabled", async () => {
-      vi.mocked(config.notifications.enabled).mockReturnValueOnce(false);
+      // Temporarily set enabled to false
+      const originalEnabled = config.notifications.enabled;
+      config.notifications.enabled = false;
 
       await playSound("newOrder");
+
+      // Restore original value
+      config.notifications.enabled = originalEnabled;
 
       expect(spawn).not.toHaveBeenCalled();
     });
 
     it("should log warning when sound file doesn't exist", async () => {
-      vi.mocked(require("fs").existsSync).mockReturnValueOnce(false);
+      // Mock fs.existsSync to return false for this test
+      vi.mocked(fs.existsSync).mockImplementationOnce(() => false);
 
       await playSound("newOrder");
 
@@ -167,15 +180,17 @@ describe("Notifications Module", () => {
 
   describe("isNotificationEnabled", () => {
     it("should return notification enabled status", () => {
-      // Import the function
-      const { isNotificationEnabled } = require("./index");
-      
       // Test with default state (enabled=true from mock config)
       expect(isNotificationEnabled()).toBe(true);
-      
-      // Set up the mock to return false next time
-      vi.mocked(config.notifications.enabled).mockReturnValueOnce(false);
+
+      // Temporarily set enabled to false
+      const originalEnabled = config.notifications.enabled;
+      config.notifications.enabled = false;
+
       expect(isNotificationEnabled()).toBe(false);
+
+      // Restore original value
+      config.notifications.enabled = originalEnabled;
     });
   });
 });

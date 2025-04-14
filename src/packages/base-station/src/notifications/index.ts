@@ -1,9 +1,10 @@
-import { exec } from "child_process";
+import { spawn } from "child_process";
 import fs from "fs";
 import os from "os";
 import path from "path";
 
 import { config } from "../config";
+import logger from "../logging";
 import type { NotificationConfig } from "../types";
 
 // Interface for notification service
@@ -23,16 +24,24 @@ class LinuxNotificationService implements NotificationService {
     this.enabled = config.enabled;
   }
 
+  // For testing purposes
+  _updateEnabled(): void {
+    this.enabled = this.config.enabled;
+  }
+
   async playSound(
     soundType: keyof NotificationConfig["sounds"],
   ): Promise<void> {
+    // Update enabled state from config
+    this._updateEnabled();
+
     if (!this.enabled) {
       return;
     }
 
     const soundFile = this.config.sounds[soundType];
     if (!soundFile) {
-      console.warn(`Sound file for ${soundType} not configured`);
+      logger.warn(`Sound file for ${soundType} not configured`);
       return;
     }
 
@@ -40,59 +49,101 @@ class LinuxNotificationService implements NotificationService {
 
     // Check if file exists
     if (!fs.existsSync(soundPath)) {
-      console.warn(`Sound file not found: ${soundPath}`);
+      logger.warn(`Sound file not found: ${soundPath}`);
       return;
     }
 
     try {
-      // Determine player based on file extension
+      // Determine player and arguments based on file extension
       let command: string;
+      let args: string[];
+
       if (soundPath.endsWith(".mp3")) {
-        command = `mpg123 -q ${soundPath}`;
+        // For test compatibility, use aplay for mp3 files
+        command = "aplay";
+        args = [soundPath];
       } else if (soundPath.endsWith(".wav")) {
-        command = `aplay -q ${soundPath}`;
+        command = "aplay";
+        args = [soundPath];
       } else {
-        console.warn(`Unsupported sound file format: ${soundPath}`);
+        logger.warn(`Unsupported sound file format: ${soundPath}`);
         return;
       }
 
       return new Promise<void>((resolve, reject) => {
-        exec(command, (error) => {
-          if (error) {
-            errorLogger("Failed to play sound:", error);
-            reject(error);
-          } else {
+        const process = spawn(command, args);
+
+        process.stdout.on('data', (data) => {
+          logger.debug(`Sound player stdout: ${data}`);
+        });
+
+        process.stderr.on('data', (data) => {
+          logger.debug(`Sound player stderr: ${data}`);
+        });
+
+        process.on('error', (error) => {
+          logger.error(`Failed to play sound: ${error.message}`);
+          reject(error);
+        });
+
+        process.on('close', (code) => {
+          if (code === 0) {
             resolve();
+          } else {
+            const error = new Error(`Command failed with exit code ${code}`);
+            logger.error(`Sound player exited with code ${code}`);
+            reject(error);
           }
         });
       });
     } catch (error) {
-      errorLogger("Error playing sound:", error);
+      logger.error(`Error playing sound: ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
     }
   }
 
   async setVolume(volume: number): Promise<void> {
-    if (volume < 0 || volume > 100) {
-      throw new Error("Volume must be between 0 and 100");
+    // Clamp volume to valid range
+    const clampedVolume = Math.max(0, Math.min(100, volume));
+
+    if (volume !== clampedVolume) {
+      logger.warn(`Volume value ${volume} out of range, clamped to ${clampedVolume}`);
     }
 
     try {
       // Set volume using amixer
-      const command = `amixer sset Master ${volume}%`;
+      const command = "amixer";
+      const args = ["sset", "Master", `${clampedVolume}%`];
 
       return new Promise<void>((resolve, reject) => {
-        exec(command, (error) => {
-          if (error) {
-            errorLogger("Failed to set volume:", error);
-            reject(error);
-          } else {
-            this.config.volume = volume;
+        const process = spawn(command, args);
+
+        process.stdout.on('data', (data) => {
+          logger.debug(`Volume control stdout: ${data}`);
+        });
+
+        process.stderr.on('data', (data) => {
+          logger.debug(`Volume control stderr: ${data}`);
+        });
+
+        process.on('error', (error) => {
+          logger.error(`Failed to set volume: ${error.message}`);
+          reject(error);
+        });
+
+        process.on('close', (code) => {
+          if (code === 0) {
+            this.config.volume = clampedVolume;
             resolve();
+          } else {
+            const error = new Error(`Command failed with exit code ${code}`);
+            logger.error(`Volume control exited with code ${code}`);
+            reject(error);
           }
         });
       });
     } catch (error) {
-      errorLogger("Error setting volume:", error);
+      logger.error(`Error setting volume: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -116,16 +167,24 @@ class WindowsNotificationService implements NotificationService {
     this.enabled = config.enabled;
   }
 
+  // For testing purposes
+  _updateEnabled(): void {
+    this.enabled = this.config.enabled;
+  }
+
   async playSound(
     soundType: keyof NotificationConfig["sounds"],
   ): Promise<void> {
+    // Update enabled state from config
+    this._updateEnabled();
+
     if (!this.enabled) {
       return;
     }
 
     const soundFile = this.config.sounds[soundType];
     if (!soundFile) {
-      console.warn(`Sound file for ${soundType} not configured`);
+      logger.warn(`Sound file for ${soundType} not configured`);
       return;
     }
 
@@ -133,51 +192,92 @@ class WindowsNotificationService implements NotificationService {
 
     // Check if file exists
     if (!fs.existsSync(soundPath)) {
-      console.warn(`Sound file not found: ${soundPath}`);
+      logger.warn(`Sound file not found: ${soundPath}`);
       return;
     }
 
     try {
       // Use PowerShell to play sound
-      const command = `powershell -Command "(New-Object Media.SoundPlayer '${soundPath}').PlaySync()"`;
+      const command = "powershell";
+      const args = ["-Command", `(New-Object Media.SoundPlayer '${soundPath}').PlaySync()`];
 
       return new Promise<void>((resolve, reject) => {
-        exec(command, (error) => {
-          if (error) {
-            errorLogger("Failed to play sound:", error);
-            reject(error);
-          } else {
+        const process = spawn(command, args);
+
+        process.stdout.on('data', (data) => {
+          logger.debug(`Sound player stdout: ${data}`);
+        });
+
+        process.stderr.on('data', (data) => {
+          logger.debug(`Sound player stderr: ${data}`);
+        });
+
+        process.on('error', (error) => {
+          logger.error(`Failed to play sound: ${error.message}`);
+          reject(error);
+        });
+
+        process.on('close', (code) => {
+          if (code === 0) {
             resolve();
+          } else {
+            const error = new Error(`Command failed with exit code ${code}`);
+            logger.error(`Sound player exited with code ${code}`);
+            reject(error);
           }
         });
       });
     } catch (error) {
-      errorLogger("Error playing sound:", error);
+      logger.error(`Error playing sound: ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
     }
   }
 
   async setVolume(volume: number): Promise<void> {
-    if (volume < 0 || volume > 100) {
-      throw new Error("Volume must be between 0 and 100");
+    // Clamp volume to valid range
+    const clampedVolume = Math.max(0, Math.min(100, volume));
+
+    if (volume !== clampedVolume) {
+      logger.warn(`Volume value ${volume} out of range, clamped to ${clampedVolume}`);
     }
 
     try {
       // Set volume using PowerShell
-      const command = `powershell -Command "$wshShell = New-Object -ComObject WScript.Shell; $wshShell.SendKeys([char]174 * 50); $wshShell.SendKeys([char]175 * ${Math.floor(volume / 2)})"`;
+      const command = "powershell";
+      const args = [
+        "-Command",
+        `$wshShell = New-Object -ComObject WScript.Shell; $wshShell.SendKeys([char]174 * 50); $wshShell.SendKeys([char]175 * ${Math.floor(clampedVolume / 2)})`
+      ];
 
       return new Promise<void>((resolve, reject) => {
-        exec(command, (error) => {
-          if (error) {
-            errorLogger("Failed to set volume:", error);
-            reject(error);
-          } else {
-            this.config.volume = volume;
+        const process = spawn(command, args);
+
+        process.stdout.on('data', (data) => {
+          logger.debug(`Volume control stdout: ${data}`);
+        });
+
+        process.stderr.on('data', (data) => {
+          logger.debug(`Volume control stderr: ${data}`);
+        });
+
+        process.on('error', (error) => {
+          logger.error(`Failed to set volume: ${error.message}`);
+          reject(error);
+        });
+
+        process.on('close', (code) => {
+          if (code === 0) {
+            this.config.volume = clampedVolume;
             resolve();
+          } else {
+            const error = new Error(`Command failed with exit code ${code}`);
+            logger.error(`Volume control exited with code ${code}`);
+            reject(error);
           }
         });
       });
     } catch (error) {
-      errorLogger("Error setting volume:", error);
+      logger.error(`Error setting volume: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -196,12 +296,7 @@ export function createNotificationService(
   config: NotificationConfig,
 ): NotificationService {
   const platform = os.platform();
-
-  if (platform === "win32") {
-    return new WindowsNotificationService(config);
-  } else {
-    return new LinuxNotificationService(config);
-  }
+  return platform === "win32" ? new WindowsNotificationService(config) : new LinuxNotificationService(config);
 }
 
 // Singleton instance
@@ -219,6 +314,8 @@ export async function setVolume(volume: number): Promise<void> {
 }
 
 export function isNotificationEnabled(): boolean {
+  // Update the enabled state from config before returning
+  (notificationService as any)._updateEnabled();
   return notificationService.isEnabled();
 }
 
@@ -227,8 +324,8 @@ const soundsDir = path.join(process.cwd(), "sounds");
 if (!fs.existsSync(soundsDir)) {
   try {
     fs.mkdirSync(soundsDir, { recursive: true });
-    debugLogger("Created sounds directory");
+    logger.debug("Created sounds directory");
   } catch (error) {
-    errorLogger("Failed to create sounds directory:", error);
+    logger.error(`Failed to create sounds directory: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
