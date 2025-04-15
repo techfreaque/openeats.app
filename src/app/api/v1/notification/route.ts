@@ -5,6 +5,7 @@ import {
   getConnections,
   sendNotification,
 } from "next-vibe/server/notification";
+import { ErrorResponseTypes } from "next-vibe/shared/types/response.schema";
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
 import {
@@ -12,6 +13,7 @@ import {
   notificationSendEndpoint,
   notificationSubscribeEndpoint,
 } from "./definition";
+import type { NotificationSendRequestType } from "./schema";
 
 /**
  * Notification API route handlers
@@ -57,6 +59,7 @@ export const POST = apiHandler({
         success: false,
         message: error instanceof Error ? error.message : "Unknown error",
         errorCode: 500,
+        errorType: ErrorResponseTypes.HTTP_ERROR,
       };
     }
   },
@@ -72,26 +75,46 @@ export const PUT = apiHandler({
     try {
       debugLogger("Notification send request", { data, urlVariables, user });
 
-      // Validate data
+      // Validate data with better error messages
       if (!data || typeof data !== "object") {
-        throw new Error("Invalid notification data");
+        errorLogger("Invalid notification data format", { data });
+        return {
+          success: false,
+          message: "Invalid notification data format",
+          errorCode: 400,
+          errorType: ErrorResponseTypes.VALIDATION_ERROR,
+        };
       }
 
-      // Extract data with type safety
+      // Extract data with proper type safety
       const {
         channel,
         title,
         message,
         data: notificationData,
-      } = data as {
-        channel: string;
-        title: string;
-        message: string;
-        data?: Record<string, unknown>;
-      };
+      } = data as NotificationSendRequestType;
 
-      if (!channel || !title || !message) {
-        throw new Error("Missing required fields: channel, title, message");
+      // Validate required fields with specific error messages
+      const missingFields = [];
+      if (!channel) {
+        missingFields.push("channel");
+      }
+      if (!title) {
+        missingFields.push("title");
+      }
+      if (!message) {
+        missingFields.push("message");
+      }
+
+      if (missingFields.length > 0) {
+        const errorMessage = `Missing required fields: ${missingFields.join(", ")}`;
+        errorLogger(errorMessage, { data });
+        return {
+          success: false,
+          message: errorMessage,
+          errorCode: 400,
+          errorType: ErrorResponseTypes.VALIDATION_ERROR,
+        };
       }
 
       // In a real implementation, you might log the notification to a database
@@ -131,6 +154,7 @@ export const PUT = apiHandler({
         success: false,
         message: error instanceof Error ? error.message : "Unknown error",
         errorCode: 500,
+        errorType: ErrorResponseTypes.HTTP_ERROR,
       };
     }
   },
@@ -155,7 +179,8 @@ export const GET = apiHandler({
           success: false,
           message: "Insufficient permissions",
           errorCode: 403,
-        } as const;
+          errorType: ErrorResponseTypes.HTTP_ERROR,
+        };
       }
 
       // Get connections using the notification service
@@ -164,22 +189,24 @@ export const GET = apiHandler({
       if (!result.success) {
         return {
           success: false,
-          message: result.message || "Unknown error",
-          errorCode: result.errorCode || 500,
-        } as const;
+          message: result.message ?? "Unknown error",
+          errorCode: result.errorCode ?? 500,
+          errorType: ErrorResponseTypes.HTTP_ERROR,
+        };
       }
 
       return {
         success: true,
-        data: result.data || { connections: [] },
-      } as const;
+        data: result.data ?? { connections: [] },
+      };
     } catch (error) {
       errorLogger("Error in get notification connections", error);
       return {
         success: false,
         message: error instanceof Error ? error.message : "Unknown error",
         errorCode: 500,
-      } as const;
+        errorType: ErrorResponseTypes.HTTP_ERROR,
+      };
     }
   },
 });

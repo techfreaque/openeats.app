@@ -3,6 +3,7 @@ import "server-only";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
 import { db } from "../../../../packages/next-vibe/server/db";
+import type { MenuItem } from "./db";
 import type { MenuItemRequestUrlParamsType, MenuItemType } from "./definition";
 
 /**
@@ -20,7 +21,7 @@ export const getMenuItems = async ({
 }: {
   urlVariables: MenuItemRequestUrlParamsType;
 }): Promise<
-  | { success: true; data: any[] }
+  | { success: true; data: MenuItem[] }
   | { success: false; message: string; errorCode: number }
 > => {
   try {
@@ -84,7 +85,7 @@ export const createMenuItem = async ({
   urlVariables: MenuItemRequestUrlParamsType;
   user: { id: string };
 }): Promise<
-  | { success: true; data: any }
+  | { success: true; data: MenuItem }
   | { success: false; message: string; errorCode: number }
 > => {
   try {

@@ -1,9 +1,7 @@
 import fs from "fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { printPreviewService } from "./index";
-
-// Create our spy first, before any vi.mock calls
+// Create our mock before any vi.mock calls
 const execPromiseMock = vi.fn().mockResolvedValue({ stdout: "", stderr: "" });
 
 // Mock the fs module properly for Vitest
@@ -84,6 +82,44 @@ vi.mock("util", () => {
     },
   };
 });
+
+// Mock uuid 
+vi.mock("uuid", () => {
+  return {
+    v4: vi.fn().mockReturnValue("mock-uuid"),
+  };
+});
+
+// Mock the path module
+vi.mock("path", () => {
+  return {
+    join: vi.fn((...args) => args.join('/')),
+    basename: vi.fn((path) => path.split('/').pop()),
+  };
+});
+
+// Mock the logger
+vi.mock("../../logging", () => {
+  return {
+    default: {
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+    },
+    logError: vi.fn(),
+  };
+});
+
+// Mock process.cwd() to return a consistent value for tests
+vi.mock("process", () => {
+  return {
+    cwd: vi.fn().mockReturnValue("/test/mock/directory"),
+  };
+});
+
+// Import the module after all mocks
+import { printPreviewService } from "./index";
 
 describe("Print Preview Service", () => {
   beforeEach(() => {

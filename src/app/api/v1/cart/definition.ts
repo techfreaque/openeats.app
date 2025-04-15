@@ -5,43 +5,41 @@ import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 
-// Define cart item schemas
-const cartItemCreateSchema = z.object({
-  menuItemId: z.string().uuid({ message: "Valid menu item ID is required" }),
-  restaurantId: z.string().uuid({ message: "Valid restaurant ID is required" }),
-  quantity: z.number().min(1, { message: "Quantity must be at least 1" }),
-});
+/**
+ * Cart API endpoints
+ * This file defines all the endpoints for the cart API
+ */
+
+// Import schemas from schema.ts
+import {
+  cartItemCreateSchema,
+  cartItemUpdateSchema,
+  cartItemResponseSchema,
+  cartItemUrlParamsSchema,
+} from "./schema";
+
+// Export types for use in other files
 export type CartItemCreateType = z.infer<typeof cartItemCreateSchema>;
-
-const cartItemUpdateSchema = z.object({
-  id: z.string().uuid({ message: "Valid cart item ID is required" }),
-  quantity: z.number().min(1, { message: "Quantity must be at least 1" }),
-});
 export type CartItemUpdateType = z.infer<typeof cartItemUpdateSchema>;
-
-const cartItemResponseSchema = z.object({
-  id: z.string().uuid(),
-  menuItemId: z.string().uuid(),
-  restaurantId: z.string().uuid(),
-  userId: z.string().uuid(),
-  quantity: z.number(),
-  createdAt: z.string().or(z.date()),
-  updatedAt: z.string().or(z.date()),
-});
 export type CartItemResponseType = z.infer<typeof cartItemResponseSchema>;
+export type CartItemUrlParamsType = z.infer<typeof cartItemUrlParamsSchema>;
 
-// Example data
+// Example data for documentation and testing
 const exampleCartItem = {
   id: uuidv4(),
   menuItemId: "menu-item-id-1",
-  restaurantId: "restaurant-id-1",
+  partnerId: "restaurant-id-1",
   userId: "user-id-1",
   quantity: 2,
+  notes: "No onions please",
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
 
-// GET endpoint for retrieving cart items
+/**
+ * GET endpoint for retrieving cart items
+ * Returns all cart items for the current user
+ */
 const cartGetEndpoint = createEndpoint({
   description: "Get all cart items for the current user",
   method: Methods.GET,
@@ -68,7 +66,10 @@ const cartGetEndpoint = createEndpoint({
   },
 });
 
-// POST endpoint for adding items to cart
+/**
+ * POST endpoint for adding items to cart
+ * Creates a new cart item for the current user
+ */
 const cartAddEndpoint = createEndpoint({
   description: "Add an item to the cart",
   method: Methods.POST,
@@ -107,7 +108,10 @@ const cartAddEndpoint = createEndpoint({
   },
 });
 
-// PUT endpoint for updating cart items
+/**
+ * PUT endpoint for updating cart items
+ * Updates an existing cart item for the current user
+ */
 const cartUpdateEndpoint = createEndpoint({
   description: "Update a cart item",
   method: Methods.PUT,
@@ -147,7 +151,10 @@ const cartUpdateEndpoint = createEndpoint({
   },
 });
 
-// DELETE endpoint for removing cart items
+/**
+ * DELETE endpoint for removing cart items
+ * Removes a cart item for the current user
+ */
 const cartDeleteEndpoint = createEndpoint({
   description: "Remove a cart item",
   method: Methods.DELETE,
@@ -184,6 +191,7 @@ const cartDeleteEndpoint = createEndpoint({
 
 /**
  * Cart API endpoints
+ * Combines all cart endpoints into a single object
  */
 const cartEndpoints = {
   ...cartGetEndpoint,

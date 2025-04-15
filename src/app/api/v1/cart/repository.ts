@@ -1,165 +1,364 @@
+/**
+ * Cart repository implementation
+ * Provides database access for cart-related operations
+ */
+
 import { and, eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { db } from "next-vibe/server/db";
+import { ApiRepositoryImpl } from "next-vibe/server/db/repository-postgres";
+import type { DbId } from "next-vibe/server/db/types";
 
-import { db } from "@/app/api/db";
-import { Repository } from "next-vibe/server/db/repository";
-
-import { cartItems, insertCartItemSchema, selectCartItemSchema } from "./db";
+import { categories } from "../category/db";
 import { menuItems } from "../menu/db";
+import { partners } from "../restaurant/db";
+
+import type { CartItem, NewCartItem } from "./db";
+import { cartItems, insertCartItemSchema, selectCartItemSchema } from "./db";
 
 /**
- * Repository for cart operations
+ * Cart repository interface
+ * Extends the base repository with cart-specific operations
  */
-export class CartRepository extends Repository<
-  typeof cartItems,
-  typeof selectCartItemSchema,
-  typeof insertCartItemSchema
-> {
+export interface CartRepository {
+  /**
+   * Find all cart items for a user
+   * @param userId - The user ID
+   */
+  findByUserId(userId: DbId): Promise<CartItem[]>;
+
+  /**
+   * Find all cart items for a user with menu item and restaurant details
+   * @param userId - The user ID
+   */
+  findByUserIdWithDetails(userId: DbId): Promise<
+    Array<
+      CartItem & {
+        menuItem: {
+          id: string;
+          name: string;
+          description: string | null;
+          price: string;
+          currency: string;
+          imageUrl: string | null;
+          categoryId: string;
+          category: {
+            id: string;
+            name: string;
+            description: string | null;
+          };
+        };
+        restaurant: {
+          id: string;
+          name: string;
+          imageUrl: string | null;
+          deliveryFee: string;
+          minimumOrderAmount: string;
+        };
+      }
+    >
+  >;
+
+  /**
+   * Find a cart item by ID and user ID
+   * @param id - The cart item ID
+   * @param userId - The user ID
+   */
+  findByIdAndUserId(id: DbId, userId: DbId): Promise<CartItem | undefined>;
+
+  /**
+   * Find a cart item by menu item ID, restaurant ID, and user ID
+   * @param menuItemId - The menu item ID
+   * @param restaurantId - The restaurant ID
+   * @param userId - The user ID
+   */
+  findByMenuItemAndRestaurantAndUserId(
+    menuItemId: DbId,
+    restaurantId: DbId,
+    userId: DbId,
+  ): Promise<CartItem | undefined>;
+
+  /**
+   * Add or update a cart item
+   * @param userId - The user ID
+   * @param menuItemId - The menu item ID
+   * @param restaurantId - The restaurant ID
+   * @param quantity - The quantity
+   * @param notes - Optional notes for the cart item
+   */
+  upsertCartItem(
+    userId: DbId,
+    menuItemId: DbId,
+    restaurantId: DbId,
+    quantity: number,
+    notes?: string,
+  ): Promise<CartItem>;
+
+  /**
+   * Update a cart item quantity
+   * @param id - The cart item ID
+   * @param quantity - The new quantity
+   * @param notes - Optional notes for the cart item
+   */
+  updateQuantity(
+    id: DbId,
+    quantity: number,
+    notes?: string,
+  ): Promise<CartItem | undefined>;
+
+  /**
+   * Clear all cart items for a user
+   * @param userId - The user ID
+   */
+  clearCart(userId: DbId): Promise<boolean>;
+
+  /**
+   * Get restaurant ID for a user's cart
+   * @param userId - The user ID
+   * @returns Restaurant ID or null if cart is empty
+   */
+  getCartRestaurantId(userId: DbId): Promise<string | null>;
+}
+
+/**
+ * Cart repository implementation
+ */
+export class CartRepositoryImpl
+  extends ApiRepositoryImpl<
+    typeof cartItems,
+    CartItem,
+    NewCartItem,
+    typeof selectCartItemSchema
+  >
+  implements CartRepository
+{
+  /**
+   * Constructor
+   */
   constructor() {
-    super(db, cartItems, selectCartItemSchema, insertCartItemSchema);
+    super(cartItems, insertCartItemSchema);
   }
 
   /**
-   * Get cart items for a user
-   * @param userId User ID
-   * @returns Cart items with menu item details
+   * Find all cart items for a user
+   * @param userId - The user ID
    */
-  async getCartItems(userId: string) {
-    const result = await db
+  async findByUserId(userId: DbId): Promise<CartItem[]> {
+    return await db
+      .select()
+      .from(cartItems)
+      .where(eq(cartItems.userId, userId));
+  }
+
+  /**
+   * Find all cart items for a user with menu item and restaurant details
+   * @param userId - The user ID
+   */
+  async findByUserIdWithDetails(userId: DbId): Promise<
+    Array<
+      CartItem & {
+        menuItem: {
+          id: string;
+          name: string;
+          description: string | null;
+          price: string;
+          currency: string;
+          imageUrl: string | null;
+          categoryId: string;
+          category: {
+            id: string;
+            name: string;
+            description: string | null;
+          };
+        };
+        restaurant: {
+          id: string;
+          name: string;
+          imageUrl: string | null;
+          deliveryFee: string;
+          minimumOrderAmount: string;
+        };
+      }
+    >
+  > {
+    // Define types for the category and database columns
+    interface CategoryType {
+      id: string;
+      name: string;
+      description: string;
+    }
+
+    // Type assertion for the database columns
+    const categoriesTyped = categories as unknown as CategoryType;
+
+    const results = await db
       .select({
-        cartItem: cartItems,
-        menuItem: menuItems,
+        id: cartItems.id,
+        userId: cartItems.userId,
+        menuItemId: cartItems.menuItemId,
+        partnerId: cartItems.partnerId,
+        quantity: cartItems.quantity,
+        notes: cartItems.notes,
+        createdAt: cartItems.createdAt,
+        updatedAt: cartItems.updatedAt,
+        menuItem: {
+          id: menuItems.id,
+          name: menuItems.name,
+          description: menuItems.description,
+          price: menuItems.price,
+          currency: menuItems.currency,
+          imageUrl: menuItems.imageUrl,
+          categoryId: menuItems.categoryId,
+          category: {
+            id: categoriesTyped.id,
+            name: categoriesTyped.name,
+            description: categoriesTyped.description,
+          },
+        },
+        restaurant: {
+          id: partners.id,
+          name: partners.name,
+          imageUrl: partners.imageUrl,
+          deliveryFee: partners.deliveryFee,
+          minimumOrderAmount: partners.minimumOrderAmount,
+        },
       })
       .from(cartItems)
       .leftJoin(menuItems, eq(cartItems.menuItemId, menuItems.id))
+      .leftJoin(categories, eq(menuItems.categoryId, categoriesTyped.id))
+      .leftJoin(partners, eq(cartItems.partnerId, partners.id))
       .where(eq(cartItems.userId, userId));
 
-    return result.map((item) => ({
-      ...item.cartItem,
-      menuItem: item.menuItem,
-    }));
+    return results;
   }
 
   /**
-   * Add an item to the cart
-   * @param userId User ID
-   * @param menuItemId Menu item ID
-   * @param partnerId Restaurant ID
-   * @param quantity Quantity
-   * @param notes Special instructions
-   * @returns Created cart item
+   * Find a cart item by ID and user ID
+   * @param id - The cart item ID
+   * @param userId - The user ID
    */
-  async addCartItem(
-    userId: string,
-    menuItemId: string,
-    partnerId: string,
-    quantity: number,
-    notes?: string
-  ) {
-    const existingItem = await db
+  async findByIdAndUserId(
+    id: DbId,
+    userId: DbId,
+  ): Promise<CartItem | undefined> {
+    const results = await db
+      .select()
+      .from(cartItems)
+      .where(and(eq(cartItems.id, id), eq(cartItems.userId, userId)));
+
+    return results.length > 0 ? results[0] : undefined;
+  }
+
+  /**
+   * Find a cart item by menu item ID, restaurant ID, and user ID
+   * @param menuItemId - The menu item ID
+   * @param restaurantId - The restaurant ID
+   * @param userId - The user ID
+   */
+  async findByMenuItemAndRestaurantAndUserId(
+    menuItemId: DbId,
+    restaurantId: DbId,
+    userId: DbId,
+  ): Promise<CartItem | undefined> {
+    const results = await db
       .select()
       .from(cartItems)
       .where(
         and(
+          eq(cartItems.menuItemId, menuItemId),
+          eq(cartItems.partnerId, restaurantId),
           eq(cartItems.userId, userId),
-          eq(cartItems.menuItemId, menuItemId)
-        )
-      )
-      .limit(1);
+        ),
+      );
 
-    if (existingItem.length > 0) {
-      const updatedItem = await db
-        .update(cartItems)
-        .set({
-          quantity: existingItem[0].quantity + quantity,
-          notes: notes || existingItem[0].notes,
-          updatedAt: new Date(),
-        })
-        .where(eq(cartItems.id, existingItem[0].id))
-        .returning();
+    return results.length > 0 ? results[0] : undefined;
+  }
 
-      return updatedItem[0];
-    }
+  /**
+   * Add or update a cart item
+   * @param userId - The user ID
+   * @param menuItemId - The menu item ID
+   * @param restaurantId - The restaurant ID
+   * @param quantity - The quantity
+   * @param notes - Optional notes for the cart item
+   */
+  async upsertCartItem(
+    userId: DbId,
+    menuItemId: DbId,
+    restaurantId: DbId,
+    quantity: number,
+    notes?: string,
+  ): Promise<CartItem> {
+    // Check if the cart item already exists
+    const existingCartItem = await this.findByMenuItemAndRestaurantAndUserId(
+      menuItemId,
+      restaurantId,
+      userId,
+    );
 
-    const newItem = await db
-      .insert(cartItems)
-      .values({
-        id: nanoid(),
+    if (existingCartItem) {
+      // Update the existing cart item
+      const updatedCartItem = await this.update(existingCartItem.id, {
+        quantity,
+        notes,
+        updatedAt: new Date(),
+      });
+
+      if (!updatedCartItem) {
+        throw new Error("Failed to update cart item");
+      }
+
+      return updatedCartItem;
+    } else {
+      // Create a new cart item
+      return await this.create({
         userId,
         menuItemId,
-        partnerId,
+        partnerId: restaurantId,
         quantity,
         notes,
         createdAt: new Date(),
         updatedAt: new Date(),
-      })
-      .returning();
-
-    return newItem[0];
+      });
+    }
   }
 
   /**
-   * Update a cart item
-   * @param userId User ID
-   * @param itemId Cart item ID
-   * @param quantity New quantity
-   * @param notes New special instructions
-   * @returns Updated cart item
+   * Update a cart item quantity
+   * @param id - The cart item ID
+   * @param quantity - The new quantity
+   * @param notes - Optional notes for the cart item
    */
-  async updateCartItem(
-    userId: string,
-    itemId: string,
+  async updateQuantity(
+    id: DbId,
     quantity: number,
-    notes?: string
-  ) {
-    const updatedItem = await db
-      .update(cartItems)
-      .set({
-        quantity,
-        notes,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(cartItems.id, itemId), eq(cartItems.userId, userId)))
-      .returning();
-
-    return updatedItem[0];
-  }
-
-  /**
-   * Remove a cart item
-   * @param userId User ID
-   * @param itemId Cart item ID
-   * @returns Deleted cart item
-   */
-  async removeCartItem(userId: string, itemId: string) {
-    const deletedItem = await db
-      .delete(cartItems)
-      .where(and(eq(cartItems.id, itemId), eq(cartItems.userId, userId)))
-      .returning();
-
-    return deletedItem[0];
+    notes?: string,
+  ): Promise<CartItem | undefined> {
+    return await this.update(id, {
+      quantity,
+      notes,
+      updatedAt: new Date(),
+    });
   }
 
   /**
    * Clear all cart items for a user
-   * @param userId User ID
-   * @returns Deleted cart items
+   * @param userId - The user ID
    */
-  async clearCart(userId: string) {
-    const deletedItems = await db
+  async clearCart(userId: DbId): Promise<boolean> {
+    const results = await db
       .delete(cartItems)
       .where(eq(cartItems.userId, userId))
-      .returning();
+      .returning({ id: cartItems.id });
 
-    return deletedItems;
+    return results.length > 0;
   }
 
   /**
    * Get restaurant ID for a user's cart
-   * @param userId User ID
+   * @param userId - The user ID
    * @returns Restaurant ID or null if cart is empty
    */
-  async getCartRestaurantId(userId: string) {
+  async getCartRestaurantId(userId: DbId): Promise<string | null> {
     const result = await db
       .select({ partnerId: cartItems.partnerId })
       .from(cartItems)
@@ -170,4 +369,7 @@ export class CartRepository extends Repository<
   }
 }
 
-export const cartRepository = new CartRepository();
+/**
+ * Cart repository singleton instance
+ */
+export const cartRepository = new CartRepositoryImpl();

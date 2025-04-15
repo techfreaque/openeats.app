@@ -32,7 +32,9 @@ async function devSeed(): Promise<void> {
     .onConflictDoNothing()
     .returning({ id: partners.id });
 
-  debugLogger(`✅ Inserted ${insertedRestaurants.length} development restaurants`);
+  debugLogger(
+    `✅ Inserted ${insertedRestaurants.length} development restaurants`,
+  );
 }
 
 /**

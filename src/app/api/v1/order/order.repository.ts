@@ -9,13 +9,14 @@ import { BaseRepositoryImpl } from "next-vibe/server/db/repository";
 import type { DbId } from "next-vibe/server/db/types";
 
 import { users } from "@/app/api/v1/auth/me/users.db";
+import type { MenuItem } from "@/app/api/v1/menu/db";
 import { partners } from "@/app/api/v1/restaurant/db";
 
-import type { Delivery } from "./delivery.db";
+import type { Delivery, NewDelivery } from "./delivery.db";
 import { deliveries } from "./delivery.db";
 import type { NewOrder, Order, selectOrderSchema } from "./order.db";
 import { insertOrderSchema, orders } from "./order.db";
-import type { OrderItem } from "./order-item.db";
+import type { NewOrderItem, OrderItem } from "./order-item.db";
 import { orderItems } from "./order-item.db";
 
 /**
@@ -119,6 +120,24 @@ export interface OrderRepository {
    * @param id - The order ID
    */
   cancelOrder(id: DbId): Promise<Order | undefined>;
+
+  /**
+   * Get menu items by IDs
+   * @param ids - Array of menu item IDs
+   */
+  getMenuItemsByIds(ids: DbId[]): Promise<MenuItem[]>;
+
+  /**
+   * Create an order item
+   * @param data - The order item data
+   */
+  createOrderItem(data: NewOrderItem): Promise<OrderItem>;
+
+  /**
+   * Create a delivery record
+   * @param data - The delivery data
+   */
+  createDelivery(data: NewDelivery): Promise<Delivery>;
 }
 
 /**
@@ -453,6 +472,50 @@ export class OrderRepositoryImpl
       status: "CANCELLED",
       updatedAt: new Date(),
     });
+  }
+
+  /**
+   * Get menu items by IDs
+   * @param ids - Array of menu item IDs
+   */
+  async getMenuItemsByIds(ids: DbId[]): Promise<MenuItem[]> {
+    if (!ids.length) {
+      return [];
+    }
+
+    // Since we're dealing with a type issue that's hard to resolve,
+    // we'll use a simpler approach with a SQL query
+    if (ids.length === 0) {
+      return [];
+    }
+
+    // Convert ids to a comma-separated string for the SQL query
+    const idList = ids.map((id) => `'${id}'`).join(",");
+
+    // Use a raw SQL query to avoid type issues
+    const result = await db.execute(
+      `SELECT * FROM menu_items WHERE id IN (${idList})`,
+    );
+
+    return result as unknown as MenuItem[];
+  }
+
+  /**
+   * Create an order item
+   * @param data - The order item data
+   */
+  async createOrderItem(data: NewOrderItem): Promise<OrderItem> {
+    const result = await db.insert(orderItems).values(data).returning();
+    return result[0];
+  }
+
+  /**
+   * Create a delivery record
+   * @param data - The delivery data
+   */
+  async createDelivery(data: NewDelivery): Promise<Delivery> {
+    const result = await db.insert(deliveries).values(data).returning();
+    return result[0];
   }
 }
 

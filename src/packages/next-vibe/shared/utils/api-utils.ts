@@ -22,10 +22,18 @@ export function handleApiError(
   const parsedError = parseError(error);
   errorLogger(`Error in ${context}:`, parsedError);
 
+  // Check for status code in error object
+  let status = 500;
+  if (error && typeof error === "object" && "status" in error) {
+    status = (error as { status: number }).status;
+  } else if (error && typeof error === "object" && "statusCode" in error) {
+    status = (error as { statusCode: number }).statusCode;
+  }
+
   return {
     success: false,
-    error: parsedError.message ?? "An unexpected error occurred",
-    status: parsedError.status ?? 500,
+    error: parsedError.message || "An unexpected error occurred",
+    status,
   };
 }
 

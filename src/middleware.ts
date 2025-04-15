@@ -1,5 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+import {
+  apiRateLimiter,
+  strictRateLimiter,
+} from "./packages/next-vibe/server/middleware/rate-limit";
+
 export function middleware(request: NextRequest) {
   // Handle WebSocket upgrade requests
   if (
@@ -9,6 +14,16 @@ export function middleware(request: NextRequest) {
   ) {
     // Let the WebSocket route handler manage this request
     return NextResponse.next();
+  }
+
+  // Apply strict rate limiting to authentication routes
+  if (request.nextUrl.pathname.startsWith("/api/v1/auth")) {
+    return strictRateLimiter(request);
+  }
+
+  // Apply standard API rate limiting to all other API routes
+  if (request.nextUrl.pathname.startsWith("/api/v1/")) {
+    return apiRateLimiter(request);
   }
 
   // Continue with other requests

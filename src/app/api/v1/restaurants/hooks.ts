@@ -13,11 +13,7 @@ export function useRestaurants() {
     RestaurantsSearchType,
     RestaurantsResponseType,
     UndefinedType
-  >(
-    restaurantsEndpoints.POST, 
-    undefined, 
-    {
-      debounceMs: 800
-    }
-  );
+  >(restaurantsEndpoints.POST, undefined, {
+    debounceMs: 800,
+  });
 }

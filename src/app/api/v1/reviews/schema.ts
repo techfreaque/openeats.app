@@ -1,7 +1,6 @@
-import { z } from "zod";
-
 import { dateSchema } from "next-vibe/shared/types/common.schema";
-import { ResponseType } from "next-vibe/shared/types/response.schema";
+import type { ResponseType } from "next-vibe/shared/types/response.schema";
+import { z } from "zod";
 
 /**
  * Product review schema

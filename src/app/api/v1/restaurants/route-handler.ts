@@ -3,7 +3,6 @@ import "server-only";
 import { and, asc, desc, sql } from "drizzle-orm";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 import { getDayEnumFromDate } from "next-vibe/shared/utils/time";
-import { DeliveryType } from "../order/delivery.schema";
 
 import {
   calculateDistance,
@@ -11,6 +10,7 @@ import {
 } from "@/lib/geo/distance";
 
 import { db } from "../../../../packages/next-vibe/server/db";
+import { DeliveryType } from "../order/delivery.schema";
 import { partners } from "../restaurant/db";
 import {
   filterMenuItems,
@@ -18,16 +18,16 @@ import {
   filterPrivateData,
 } from "../restaurant/route-handler";
 import type { RestaurantResponseType } from "../restaurant/schema/restaurant.schema";
-import type {
-  RestaurantsSearchOutputType,
-} from "./schema";
+import type { RestaurantsSearchOutputType } from "./schema";
 
 /**
  * Gets restaurants based on search criteria with pagination and filtering
  * @param props - API handler props
  * @returns List of restaurants matching search criteria with pagination
  */
-export const getRestaurants = async ({ data }: {
+export const getRestaurants = async ({
+  data,
+}: {
   data: RestaurantsSearchOutputType;
 }) => {
   try {
@@ -169,7 +169,10 @@ export const getRestaurants = async ({ data }: {
       };
       delivery?: boolean;
       pickup?: boolean;
-      OR?: Array<Record<string, unknown>>;
+      OR?: Array<
+        | { mainCategory: { equals: string; mode: "insensitive" } }
+        | { categories: { has: string } }
+      >;
     } = {};
 
     // Filter by current open status if requested
@@ -224,42 +227,42 @@ export const getRestaurants = async ({ data }: {
     }
 
     const whereConditions = [];
-    
+
     whereConditions.push(sql`${partners.isActive} = true`);
     whereConditions.push(sql`${partners.country} = ${countryCode}`);
-    
+
     if (search) {
       whereConditions.push(
         sql`(${partners.name} ILIKE ${`%${search}%`} OR 
              (${partners.description} IS NOT NULL AND 
-              ${partners.description} ILIKE ${`%${search}%`}))`
+              ${partners.description} ILIKE ${`%${search}%`}))`,
       );
     }
-    
+
     // Add rating filter if provided
     if (rating !== null && rating !== undefined) {
       whereConditions.push(sql`${partners.rating} >= ${rating}`);
     }
-    
+
     // Add delivery type filter
     if (deliveryType === DeliveryType.DELIVERY) {
       whereConditions.push(sql`${partners.isActive} = true`); // Placeholder
     } else if (deliveryType === DeliveryType.PICKUP) {
       whereConditions.push(sql`${partners.isActive} = true`); // Placeholder
     }
-    
+
     const allRestaurants = await db
       .select()
       .from(partners)
       .where(and(...whereConditions))
       .orderBy(
-        sortBy === "rating" 
+        sortBy === "rating"
           ? desc(partners.rating)
           : sortBy === "price-low"
             ? asc(partners.minimumOrderAmount)
             : sortBy === "price-high"
               ? desc(partners.minimumOrderAmount)
-              : desc(partners.rating)
+              : desc(partners.rating),
       );
 
     debugLogger("Retrieved restaurants from database", {
@@ -267,14 +270,24 @@ export const getRestaurants = async ({ data }: {
     });
 
     // Apply distance filtering only if we have coordinates
-    let restaurantsWithDistanceAndFilters: Array<Record<string, unknown>> = [];
-    
+    let restaurantsWithDistanceAndFilters: Array<
+      RestaurantResponseType & { distance: number }
+    > = [];
+
     if (allRestaurants && Array.isArray(allRestaurants)) {
-      if (doLocationFiltering && latitude !== undefined && longitude !== undefined) {
+      if (
+        doLocationFiltering &&
+        latitude !== undefined &&
+        longitude !== undefined
+      ) {
         restaurantsWithDistanceAndFilters = allRestaurants
           .map((restaurant) => {
-            if (!restaurant) return { distance: Infinity };
-            
+            if (!restaurant) {
+              return { distance: Infinity } as RestaurantResponseType & {
+                distance: number;
+              };
+            }
+
             // Calculate distance in km between search location and restaurant
             const distance = calculateDistance(
               latitude,
@@ -284,36 +297,47 @@ export const getRestaurants = async ({ data }: {
             );
             return { ...restaurant, distance };
           })
-          .filter((restaurant) => restaurant && (restaurant.distance || 0) <= (radius ?? 10))
+          .filter(
+            (restaurant) =>
+              restaurant && (restaurant.distance || 0) <= (radius ?? 10),
+          )
           .sort((a, b) => (a.distance || 0) - (b.distance || 0)); // Sort by distance
       } else {
-        restaurantsWithDistanceAndFilters = allRestaurants.map((restaurant) => 
-          restaurant ? { ...restaurant, distance: 0 } : { distance: 0 }
+        restaurantsWithDistanceAndFilters = allRestaurants.map((restaurant) =>
+          restaurant
+            ? { ...restaurant, distance: 0 }
+            : ({ distance: 0 } as RestaurantResponseType & {
+                distance: number;
+              }),
         );
       }
     }
 
-    
-    const safeRestaurantsArray = Array.isArray(restaurantsWithDistanceAndFilters) 
-      ? [...restaurantsWithDistanceAndFilters] 
+    const safeRestaurantsArray = Array.isArray(
+      restaurantsWithDistanceAndFilters,
+    )
+      ? [...restaurantsWithDistanceAndFilters]
       : [];
-      
+
     restaurantsWithDistanceAndFilters = safeRestaurantsArray;
 
     const skip = (data.page - 1) * data.limit;
-    const paginatedRestaurants = Array.isArray(restaurantsWithDistanceAndFilters) 
-      ? restaurantsWithDistanceAndFilters.slice(
-          skip,
-          skip + data.limit,
-        )
+    const paginatedRestaurants = Array.isArray(
+      restaurantsWithDistanceAndFilters,
+    )
+      ? restaurantsWithDistanceAndFilters.slice(skip, skip + data.limit)
       : [];
 
     // Filter out private data, unpublished opening times, and unpublished menu items
-    const filteredRestaurants = Array.isArray(paginatedRestaurants) 
-      ? paginatedRestaurants.map((restaurant: Record<string, unknown>) => {
-          if (!restaurant) return {} as RestaurantResponseType;
-          
-          const typedRestaurant = restaurant as RestaurantResponseType;
+    const filteredRestaurants = Array.isArray(paginatedRestaurants)
+      ? paginatedRestaurants.map((restaurant) => {
+          if (!restaurant) {
+            return {} as RestaurantResponseType;
+          }
+
+          const typedRestaurant = restaurant as RestaurantResponseType & {
+            distance: number;
+          };
           return filterMenuItems(
             filterOpeningTimes(filterPrivateData(typedRestaurant)),
           );
@@ -335,7 +359,9 @@ export const getRestaurants = async ({ data }: {
           total: restaurantsWithDistanceAndFilters.length,
           page: data.page,
           limit: data.limit,
-          pages: Math.ceil(restaurantsWithDistanceAndFilters.length / data.limit),
+          pages: Math.ceil(
+            restaurantsWithDistanceAndFilters.length / data.limit,
+          ),
         },
       },
     };

@@ -2,7 +2,11 @@ import "server-only";
 
 import type { SuccessResponseType } from "next-vibe/shared";
 
-import type { LlmApiRequestType, LlmApiResponseType } from "../schema";
+import type {
+  FormFieldValue,
+  LlmApiRequestType,
+  LlmApiResponseType,
+} from "../schema";
 import { ChatMessageRole } from "../schema";
 
 /**
@@ -28,7 +32,7 @@ export async function processChat(
     };
   }
 
-  const parsedFields: Record<string, unknown> = {};
+  const parsedFields: Record<string, FormFieldValue> = {};
 
   if (request.formSchema) {
     const fieldNames = Object.keys(request.formSchema);

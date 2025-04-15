@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { toast } from "@/components/ui/use-toast";
-import { translations } from "@/translations";
+
 import { useCart as useApiCart } from "@/app/api/v1/cart/hooks";
+import { toast } from "@/components/ui/use-toast";
+import { useTranslation } from "@/translations";
 
 /**
  * Re-export the cart hook from the API implementation
@@ -13,32 +14,11 @@ import { useCart as useApiCart } from "@/app/api/v1/cart/hooks";
 export type { CartItem } from "@/app/api/v1/cart/hooks";
 
 /**
- * Create a type-safe translation function
- */
-const createTranslator = () => {
-  return (key: string, fallback?: string): string => {
-    const parts = key.split(".");
-    let current: Record<string, unknown> = translations.EN;
-    
-    for (const part of parts) {
-      if (current && typeof current === "object" && part in current) {
-        const value = current[part];
-        current = value as Record<string, unknown>;
-      } else {
-        return fallback || key;
-      }
-    }
-    
-    return typeof current === "string" ? current : fallback || key;
-  };
-};
-
-/**
  * Hook for using the cart
  * This is a wrapper around the API cart hook to maintain backward compatibility
  */
 export function useCart() {
-  const t = createTranslator();
+  const { t } = useTranslation();
   const {
     items,
     restaurantId,
@@ -57,7 +37,10 @@ export function useCart() {
         if (parsedCart.items && parsedCart.items.length > 0) {
           toast({
             title: t("cart.cleared", "Cart cleared"),
-            description: t("cart.clearedDescription", "Your cart has been cleared"),
+            description: t(
+              "cart.clearedDescription",
+              "Your cart has been cleared",
+            ),
           });
         }
       }
@@ -67,7 +50,7 @@ export function useCart() {
   const getSubtotal = (): number => {
     return items.reduce(
       (sum, item) => sum + (item.menuItem.price || 0) * item.quantity,
-      0
+      0,
     );
   };
 

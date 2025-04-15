@@ -1,16 +1,32 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { toast } from "@/components/ui/use-toast";
-import { useApiQuery } from "next-vibe/client/hooks/query";
-import { useApiMutation } from "next-vibe/client/hooks/mutation";
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { translations } from "@/translations";
-import { useApiStore } from "next-vibe/client/hooks/store";
+/**
+ * Cart API hooks for client-side usage
+ * These hooks provide a convenient way to interact with the cart API
+ *
+ * This file includes both simplified API hooks using the next-vibe pattern
+ * and a more complex useCart hook for comprehensive cart management
+ */
 
+import { useApiForm, useApiQueryForm } from "next-vibe/client/hooks/api";
+import type { UseApiFormOptions } from "next-vibe/client/hooks/api/use-api-form";
+import type { UseApiQueryFormOptions } from "next-vibe/client/hooks/api/use-api-query-form";
+import { useApiMutation } from "next-vibe/client/hooks/mutation";
+import { useApiQuery } from "next-vibe/client/hooks/query";
+import { useApiStore } from "next-vibe/client/hooks/store";
+import { useCallback, useMemo } from "react";
+
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import type { MenuItemResponseType } from "@/app/api/v1/restaurant/schema/menu.schema";
+import { toast } from "@/components/ui/use-toast";
+import { useTranslation } from "@/translations";
+
+import type {
+  CartItemCreateType,
+  CartItemResponseType,
+  CartItemUpdateType,
+} from "./definition";
 import cartEndpoints from "./definition";
-import type { CartItemCreateType, CartItemUpdateType, CartItemResponseType } from "./definition";
 
 /**
  * Cart item type with menu item details
@@ -50,12 +66,12 @@ function calculateCartTotals(items: CartItem[]): {
 } {
   const subtotal = items.reduce(
     (sum, item) => sum + (item.menuItem.price || 0) * item.quantity,
-    0
+    0,
   );
   const deliveryFee = items.length > 0 ? 2.99 : 0;
   const serviceFee = subtotal > 0 ? 1.99 : 0;
   const tax = subtotal * 0.0825; // 8.25% tax rate
-  
+
   return {
     subtotal,
     deliveryFee,
@@ -67,27 +83,6 @@ function calculateCartTotals(items: CartItem[]): {
 }
 
 /**
- * Create a type-safe translation function
- */
-const createTranslator = () => {
-  return (key: string, fallback?: string): string => {
-    const parts = key.split(".");
-    let current: Record<string, unknown> = translations.EN;
-    
-    for (const part of parts) {
-      if (current && typeof current === "object" && part in current) {
-        const value = current[part];
-        current = value as Record<string, unknown>;
-      } else {
-        return fallback || key;
-      }
-    }
-    
-    return typeof current === "string" ? current : fallback || key;
-  };
-};
-
-/**
  * Hook for using the cart
  * @returns Cart functionality
  */
@@ -97,7 +92,7 @@ export function useCart(): {
   addItem: (
     menuItem: MenuItemResponseType & { partnerId: string },
     quantity: number,
-    specialInstructions?: string
+    specialInstructions?: string,
   ) => Promise<void>;
   removeItem: (id: string) => Promise<void>;
   updateQuantity: (id: string, quantity: number) => Promise<void>;
@@ -111,11 +106,11 @@ export function useCart(): {
   isLoading: boolean;
 } {
   const { user } = useAuth();
-  const t = createTranslator();
-  
+  const { t } = useTranslation();
+
   // Create a store key based on user ID
   const storeKey = `cart-${user?.id || "anonymous"}`;
-  
+
   // Get or initialize cart state from the store
   const cartState = useApiStore<CartResponseType>((state) => {
     return (
@@ -131,7 +126,7 @@ export function useCart(): {
       }
     );
   });
-  
+
   // Set cart state in the store
   const setCartState = useCallback(
     (newState: CartResponseType) => {
@@ -142,9 +137,9 @@ export function useCart(): {
         },
       }));
     },
-    [storeKey]
+    [storeKey],
   );
-  
+
   // Fetch cart data from server for authenticated users
   const { isLoading, refetch } = useApiQuery<
     Record<string, never>,
@@ -177,13 +172,14 @@ export function useCart(): {
               isAvailable: item.menuItem.isAvailable,
             } as MenuItemResponseType & { partnerId: string },
           }));
-          
-          const { subtotal, deliveryFee, serviceFee, tax, total, itemCount } = 
+
+          const { subtotal, deliveryFee, serviceFee, tax, total, itemCount } =
             calculateCartTotals(items);
-          
+
           setCartState({
             items,
-            restaurantId: data.length > 0 ? data[0]?.restaurantId || null : null,
+            restaurantId:
+              data.length > 0 ? data[0]?.restaurantId || null : null,
             subtotal,
             deliveryFee,
             serviceFee,
@@ -193,116 +189,116 @@ export function useCart(): {
           });
         }
       },
-    }
+    },
   );
-  
+
   // API mutations
   const { mutateAsync: addItemMutation } = useApiMutation<
     CartItemResponseType,
     CartItemCreateType,
     Record<string, never>,
     "default"
-  >(
-    cartEndpoints.POST,
-    {
-      onSuccess: () => {
-        refetch();
-      },
-      onError: (data: { error: Error }) => {
-        toast({
-          title: t("common.error", "Error"),
-          description: data.error.message || t("cart.addItemError", "Failed to add item to cart"),
-          variant: "destructive",
-        });
-      },
-    }
-  );
-  
+  >(cartEndpoints.POST, {
+    onSuccess: () => {
+      refetch();
+    },
+    onError: (data: { error: Error }) => {
+      toast({
+        title: t("common.error", "Error"),
+        description:
+          data.error.message ||
+          t("cart.addItemError", "Failed to add item to cart"),
+        variant: "destructive",
+      });
+    },
+  });
+
   const { mutateAsync: updateItemMutation } = useApiMutation<
     CartItemResponseType,
     CartItemUpdateType,
     { id: string },
     "default"
-  >(
-    cartEndpoints.PUT,
-    {
-      onSuccess: () => {
-        refetch();
-      },
-      onError: (data: { error: Error }) => {
-        toast({
-          title: t("common.error", "Error"),
-          description: data.error.message || t("cart.updateItemError", "Failed to update cart item"),
-          variant: "destructive",
-        });
-      },
-    }
-  );
-  
+  >(cartEndpoints.PUT, {
+    onSuccess: () => {
+      refetch();
+    },
+    onError: (data: { error: Error }) => {
+      toast({
+        title: t("common.error", "Error"),
+        description:
+          data.error.message ||
+          t("cart.updateItemError", "Failed to update cart item"),
+        variant: "destructive",
+      });
+    },
+  });
+
   const { mutateAsync: removeItemMutation } = useApiMutation<
     Record<string, never>,
     Record<string, never>,
     { id: string },
     "default"
-  >(
-    cartEndpoints.DELETE,
-    {
-      onSuccess: () => {
-        refetch();
-      },
-      onError: (data: { error: Error }) => {
-        toast({
-          title: t("common.error", "Error"),
-          description: data.error.message || t("cart.removeItemError", "Failed to remove cart item"),
-          variant: "destructive",
-        });
-      },
-    }
-  );
-  
+  >(cartEndpoints.DELETE, {
+    onSuccess: () => {
+      refetch();
+    },
+    onError: (data: { error: Error }) => {
+      toast({
+        title: t("common.error", "Error"),
+        description:
+          data.error.message ||
+          t("cart.removeItemError", "Failed to remove cart item"),
+        variant: "destructive",
+      });
+    },
+  });
+
   const { mutateAsync: clearCartMutation } = useApiMutation<
     Record<string, never>,
     Record<string, never>,
     Record<string, never>,
     "default"
-  >(
-    cartEndpoints.CLEAR,
-    {
-      onSuccess: () => {
-        refetch();
-      },
-      onError: (data: { error: Error }) => {
-        toast({
-          title: t("common.error", "Error"),
-          description: data.error.message || t("cart.clearCartError", "Failed to clear cart"),
-          variant: "destructive",
-        });
-      },
-    }
-  );
-  
+  >(cartEndpoints.CLEAR, {
+    onSuccess: () => {
+      refetch();
+    },
+    onError: (data: { error: Error }) => {
+      toast({
+        title: t("common.error", "Error"),
+        description:
+          data.error.message ||
+          t("cart.clearCartError", "Failed to clear cart"),
+        variant: "destructive",
+      });
+    },
+  });
+
   // Helper function to update local cart
-  const updateLocalCart = useCallback((items: CartItem[], restaurantId: string | null) => {
-    const { subtotal, deliveryFee, serviceFee, tax, total, itemCount } = calculateCartTotals(items);
-    
-    setCartState({
-      items,
-      restaurantId,
-      subtotal,
-      deliveryFee,
-      serviceFee,
-      tax,
-      total,
-      itemCount,
-    });
-  }, [setCartState]);
-  
+  const updateLocalCart = useCallback(
+    (items: CartItem[], restaurantId: string | null) => {
+      const { subtotal, deliveryFee, serviceFee, tax, total, itemCount } =
+        calculateCartTotals(items);
+
+      setCartState({
+        items,
+        restaurantId,
+        subtotal,
+        deliveryFee,
+        serviceFee,
+        tax,
+        total,
+        itemCount,
+      });
+    },
+    [setCartState],
+  );
+
   // Add item to cart
   const addItem = useCallback(
     async (
       menuItem: MenuItemResponseType & { partnerId: string },
       quantity: number,
-      specialInstructions?: string
+      specialInstructions?: string,
     ): Promise<void> => {
       if (user) {
         try {
@@ -315,7 +311,7 @@ export function useCart(): {
             },
             urlParams: {},
           });
-          
+
           toast({
             title: t("cart.itemAdded", "Added to cart"),
             description: `${quantity} × ${menuItem.name} ${t("cart.addedToCart", "added to your cart")}`,
@@ -331,13 +327,16 @@ export function useCart(): {
           cartState.items.length > 0
         ) {
           const confirmed = window.confirm(
-            t("cart.differentRestaurantWarning", "Adding items from a different restaurant will clear your current cart. Continue?")
+            t(
+              "cart.differentRestaurantWarning",
+              "Adding items from a different restaurant will clear your current cart. Continue?",
+            ),
           );
-          
+
           if (!confirmed) {
             return;
           }
-          
+
           setCartState({
             items: [],
             restaurantId: null,
@@ -349,22 +348,22 @@ export function useCart(): {
             itemCount: 0,
           });
         }
-        
+
         const existingItemIndex = cartState.items.findIndex(
-          (item) => item.menuItemId === menuItem.id
+          (item) => item.menuItemId === menuItem.id,
         );
-        
+
         if (existingItemIndex >= 0) {
           const updatedItems = [...cartState.items];
           const existingItem = updatedItems[existingItemIndex];
-          
+
           if (existingItem) {
             updatedItems[existingItemIndex] = {
               ...existingItem,
               quantity: existingItem.quantity + quantity,
               specialInstructions: specialInstructions || null,
             };
-            
+
             updateLocalCart(updatedItems, menuItem.partnerId);
           }
         } else {
@@ -375,22 +374,25 @@ export function useCart(): {
             specialInstructions: specialInstructions || null,
             menuItem,
           };
-          
+
           updateLocalCart([...cartState.items, newItem], menuItem.partnerId);
         }
-        
+
         toast({
           title: t("cart.itemAdded", "Added to cart"),
           description: `${quantity} × ${menuItem.name} ${t("cart.addedToCart", "added to your cart")}`,
         });
-        
+
         // Save to localStorage for persistence
-        localStorage.setItem(`openeats-cart-${user?.id || "anonymous"}`, JSON.stringify(cartState));
+        localStorage.setItem(
+          `openeats-cart-${user?.id || "anonymous"}`,
+          JSON.stringify(cartState),
+        );
       }
     },
-    [addItemMutation, cartState, setCartState, t, updateLocalCart, user]
+    [addItemMutation, cartState, setCartState, t, updateLocalCart, user],
   );
-  
+
   // Remove item from cart
   const removeItem = useCallback(
     async (id: string): Promise<void> => {
@@ -406,20 +408,23 @@ export function useCart(): {
       } else {
         const updatedItems = cartState.items.filter((item) => item.id !== id);
         updateLocalCart(
-          updatedItems, 
-          updatedItems.length > 0 ? cartState.restaurantId : null
+          updatedItems,
+          updatedItems.length > 0 ? cartState.restaurantId : null,
         );
-        
+
         // Save to localStorage for persistence
-        localStorage.setItem(`openeats-cart-${user?.id || "anonymous"}`, JSON.stringify({
-          ...cartState,
-          items: updatedItems,
-        }));
+        localStorage.setItem(
+          `openeats-cart-${user?.id || "anonymous"}`,
+          JSON.stringify({
+            ...cartState,
+            items: updatedItems,
+          }),
+        );
       }
     },
-    [cartState, removeItemMutation, updateLocalCart, user]
+    [cartState, removeItemMutation, updateLocalCart, user],
   );
-  
+
   // Update item quantity
   const updateQuantity = useCallback(
     async (id: string, quantity: number): Promise<void> => {
@@ -427,7 +432,7 @@ export function useCart(): {
         await removeItem(id);
         return;
       }
-      
+
       if (user) {
         try {
           await updateItemMutation({
@@ -439,92 +444,79 @@ export function useCart(): {
         }
       } else {
         const updatedItems = cartState.items.map((item) =>
-          item.id === id ? { ...item, quantity } : item
+          item.id === id ? { ...item, quantity } : item,
         );
-        
+
         updateLocalCart(updatedItems, cartState.restaurantId);
-        
+
         // Save to localStorage for persistence
-        localStorage.setItem(`openeats-cart-${user?.id || "anonymous"}`, JSON.stringify({
-          ...cartState,
-          items: updatedItems,
-        }));
+        localStorage.setItem(
+          `openeats-cart-${user?.id || "anonymous"}`,
+          JSON.stringify({
+            ...cartState,
+            items: updatedItems,
+          }),
+        );
       }
     },
-    [cartState, removeItem, updateItemMutation, updateLocalCart, user]
+    [cartState, removeItem, updateItemMutation, updateLocalCart, user],
   );
-  
+
   // Clear cart
-  const clearCart = useCallback(
-    async (): Promise<void> => {
-      if (user) {
-        try {
-          await clearCartMutation({
-            requestData: {},
-            urlParams: {},
-          });
-        } catch (error) {
-          // Error is handled in the mutation options
-        }
-      } else {
-        setCartState({
-          items: [],
-          restaurantId: null,
-          subtotal: 0,
-          deliveryFee: 0,
-          serviceFee: 0,
-          tax: 0,
-          total: 0,
-          itemCount: 0,
+  const clearCart = useCallback(async (): Promise<void> => {
+    if (user) {
+      try {
+        await clearCartMutation({
+          requestData: {},
+          urlParams: {},
         });
-        
-        // Clear localStorage
-        localStorage.removeItem(`openeats-cart-${user?.id || "anonymous"}`);
+      } catch (error) {
+        // Error is handled in the mutation options
       }
-    },
-    [clearCartMutation, setCartState, user]
-  );
-  
+    } else {
+      setCartState({
+        items: [],
+        restaurantId: null,
+        subtotal: 0,
+        deliveryFee: 0,
+        serviceFee: 0,
+        tax: 0,
+        total: 0,
+        itemCount: 0,
+      });
+
+      // Clear localStorage
+      localStorage.removeItem(`openeats-cart-${user?.id || "anonymous"}`);
+    }
+  }, [clearCartMutation, setCartState, user]);
+
   // Getter functions for cart totals
-  const getSubtotal = useCallback(
-    (): number => {
-      return cartState.subtotal;
-    },
-    [cartState.subtotal]
-  );
-  
-  const getDeliveryFee = useCallback(
-    (): number => {
-      return cartState.deliveryFee;
-    },
-    [cartState.deliveryFee]
-  );
-  
-  const getServiceFee = useCallback(
-    (): number => {
-      return cartState.serviceFee;
-    },
-    [cartState.serviceFee]
-  );
-  
-  const getTax = useCallback(
-    (): number => {
-      return cartState.tax;
-    },
-    [cartState.tax]
-  );
-  
-  const getTotal = useCallback(
-    (): number => {
-      return cartState.total;
-    },
-    [cartState.total]
-  );
-  
+  const getSubtotal = useCallback((): number => {
+    return cartState.subtotal;
+  }, [cartState.subtotal]);
+
+  const getDeliveryFee = useCallback((): number => {
+    return cartState.deliveryFee;
+  }, [cartState.deliveryFee]);
+
+  const getServiceFee = useCallback((): number => {
+    return cartState.serviceFee;
+  }, [cartState.serviceFee]);
+
+  const getTax = useCallback((): number => {
+    return cartState.tax;
+  }, [cartState.tax]);
+
+  const getTotal = useCallback((): number => {
+    return cartState.total;
+  }, [cartState.total]);
+
   // Initialize from localStorage for non-authenticated users
   useMemo(() => {
     if (!user && typeof window !== "undefined") {
-      const savedCart = localStorage.getItem(`openeats-cart-${user?.id || "anonymous"}`);
+      const savedCart = localStorage.getItem(
+        `openeats-cart-${user?.id || "anonymous"}`,
+      );
       if (savedCart) {
         try {
           const parsedCart = JSON.parse(savedCart) as CartResponseType;
@@ -535,7 +527,7 @@ export function useCart(): {
       }
     }
   }, [setCartState, user]);
-  
+
   return {
     items: cartState.items,
     restaurantId: cartState.restaurantId,
@@ -549,6 +541,82 @@ export function useCart(): {
     getServiceFee,
     getTax,
     itemCount: cartState.itemCount,
-    isLoading
+    isLoading,
   };
 }
+
+/**
+ * Simplified API hooks using the next-vibe pattern
+ * These hooks provide a more standardized way to interact with the cart API
+ */
+
+/**
+ * Hook for retrieving cart items
+ * @param options - API query options
+ * @returns API query result with cart items
+ */
+export const useGetCart = (
+  options?: UseApiQueryFormOptions<
+    undefined,
+    CartItemResponseType[],
+    undefined,
+    undefined
+  >,
+) => {
+  return useApiQueryForm({
+    endpoint: cartEndpoints.GET,
+    ...options,
+  });
+};
+
+/**
+ * Hook for adding an item to the cart
+ * @param options - API form options
+ * @returns API form result for adding cart items
+ */
+export const useAddCartItem = (
+  options?: UseApiFormOptions<
+    CartItemCreateType,
+    CartItemResponseType,
+    undefined,
+    undefined
+  >,
+) => {
+  return useApiForm({
+    endpoint: cartEndpoints.POST,
+    ...options,
+  });
+};
+
+/**
+ * Hook for updating a cart item
+ * @param options - API form options
+ * @returns API form result for updating cart items
+ */
+export const useUpdateCartItem = (
+  options?: UseApiFormOptions<
+    CartItemUpdateType,
+    CartItemResponseType,
+    { id: string },
+    undefined
+  >,
+) => {
+  return useApiForm({
+    endpoint: cartEndpoints.PUT,
+    ...options,
+  });
+};
+
+/**
+ * Hook for removing a cart item
+ * @param options - API form options
+ * @returns API form result for removing cart items
+ */
+export const useRemoveCartItem = (
+  options?: UseApiFormOptions<undefined, undefined, { id: string }, undefined>,
+) => {
+  return useApiForm({
+    endpoint: cartEndpoints.DELETE,
+    ...options,
+  });
+};

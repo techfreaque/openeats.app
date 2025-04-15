@@ -1,17 +1,18 @@
 import { and, eq } from "drizzle-orm";
+import { db } from "next-vibe/server/db";
 import type { ApiHandlerFunction } from "next-vibe/server/endpoints/core/api-handler";
 import { formatResponse } from "next-vibe/server/endpoints/core/api-response";
+import { ErrorResponseTypes } from "next-vibe/shared";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
-import { db } from "../../../../packages/next-vibe/server/db";
 import { menuItems } from "../menu/db";
-import { cartRepository } from "./cart.repository";
 import type {
   CartItemCreateType,
   CartItemResponseType,
   CartItemUpdateType,
 } from "./definition";
+import { cartRepository } from "./repository";
 
 /**
  * Get all cart items for the current user
@@ -38,6 +39,7 @@ export const getCart: ApiHandlerFunction<
     return {
       success: false,
       message: "Failed to get cart items",
+      errorType: ErrorResponseTypes.HTTP_ERROR,
       errorCode: 500,
     };
   }
@@ -71,6 +73,7 @@ export const createCart: ApiHandlerFunction<
       return {
         success: false,
         message: "Menu item not found or not available",
+        errorType: ErrorResponseTypes.NOT_FOUND,
         errorCode: 404,
       };
     }
@@ -92,7 +95,15 @@ export const createCart: ApiHandlerFunction<
     );
 
     if (!itemWithDetails) {
-      throw new Error("Failed to retrieve cart item details");
+      errorLogger("Failed to retrieve cart item details", {
+        cartItemId: cartItem.id,
+      });
+      return {
+        success: false,
+        message: "Failed to retrieve cart item details",
+        errorType: ErrorResponseTypes.HTTP_ERROR,
+        errorCode: 500,
+      };
     }
 
     // Format the response
@@ -110,6 +121,7 @@ export const createCart: ApiHandlerFunction<
     return {
       success: false,
       message: "Failed to add item to cart",
+      errorType: ErrorResponseTypes.HTTP_ERROR,
       errorCode: 500,
     };
   }
@@ -136,6 +148,7 @@ export const updateCart: ApiHandlerFunction<
       return {
         success: false,
         message: "Cart item not found",
+        errorType: ErrorResponseTypes.NOT_FOUND,
         errorCode: 404,
       };
     }
@@ -150,7 +163,13 @@ export const updateCart: ApiHandlerFunction<
     const updatedCartItem = cartItemWithDetails.find((item) => item.id === id);
 
     if (!updatedCartItem) {
-      throw new Error("Failed to retrieve updated cart item");
+      errorLogger("Failed to retrieve updated cart item", { cartItemId: id });
+      return {
+        success: false,
+        message: "Failed to retrieve updated cart item",
+        errorType: ErrorResponseTypes.HTTP_ERROR,
+        errorCode: 500,
+      };
     }
 
     // Format the response
@@ -168,6 +187,7 @@ export const updateCart: ApiHandlerFunction<
     return {
       success: false,
       message: "Failed to update cart item",
+      errorType: ErrorResponseTypes.HTTP_ERROR,
       errorCode: 500,
     };
   }
@@ -194,6 +214,7 @@ export const deleteCart: ApiHandlerFunction<
       return {
         success: false,
         message: "Cart item not found",
+        errorType: ErrorResponseTypes.NOT_FOUND,
         errorCode: 404,
       };
     }
@@ -202,7 +223,13 @@ export const deleteCart: ApiHandlerFunction<
     const deleted = await cartRepository.delete(id);
 
     if (!deleted) {
-      throw new Error("Failed to delete cart item");
+      errorLogger("Failed to delete cart item", { cartItemId: id });
+      return {
+        success: false,
+        message: "Failed to delete cart item",
+        errorType: ErrorResponseTypes.HTTP_ERROR,
+        errorCode: 500,
+      };
     }
 
     debugLogger("Deleted cart item:", id);
@@ -213,6 +240,7 @@ export const deleteCart: ApiHandlerFunction<
     return {
       success: false,
       message: "Failed to delete cart item",
+      errorType: ErrorResponseTypes.HTTP_ERROR,
       errorCode: 500,
     };
   }

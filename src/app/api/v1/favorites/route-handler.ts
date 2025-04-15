@@ -3,17 +3,20 @@
  * This file contains the implementation of the API route handlers for favorites
  */
 
-import type { ApiHandlerProps, ApiHandlerResult } from "next-vibe/server/endpoints/core/api-handler";
-import { debugLogger } from "next-vibe/shared/utils/logger";
+import type {
+  ApiHandlerProps,
+  ApiHandlerResult,
+} from "next-vibe/server/endpoints/core/api-handler";
 import { ErrorResponseTypes } from "next-vibe/shared/types/response.schema";
+import { debugLogger } from "next-vibe/shared/utils/logger";
 
+import { favoritesRepository } from "./repository";
 import type {
   FavoriteAddType,
   FavoriteRemoveType,
   FavoritesGetType,
   FavoritesResponseType,
 } from "./schema";
-import { favoritesRepository } from "./repository";
 
 /**
  * Get user favorites
@@ -72,7 +75,7 @@ export async function addFavorite(
       };
     }
 
-    if (!data || !data.restaurantId) {
+    if (!data?.restaurantId) {
       return {
         success: false,
         message: "Restaurant ID is required",
@@ -81,7 +84,10 @@ export async function addFavorite(
       };
     }
 
-    debugLogger("Add favorite request", { userId: user.id, restaurantId: data.restaurantId });
+    debugLogger("Add favorite request", {
+      userId: user.id,
+      restaurantId: data.restaurantId,
+    });
 
     await favoritesRepository.addFavorite(user.id, data.restaurantId);
 
@@ -122,7 +128,7 @@ export async function removeFavorite(
       };
     }
 
-    if (!data || !data.restaurantId) {
+    if (!data?.restaurantId) {
       return {
         success: false,
         message: "Restaurant ID is required",
@@ -131,7 +137,10 @@ export async function removeFavorite(
       };
     }
 
-    debugLogger("Remove favorite request", { userId: user.id, restaurantId: data.restaurantId });
+    debugLogger("Remove favorite request", {
+      userId: user.id,
+      restaurantId: data.restaurantId,
+    });
 
     await favoritesRepository.removeFavorite(user.id, data.restaurantId);
 

@@ -1,5 +1,31 @@
 import { z } from "zod";
 
+// Define a specific schema for notification data instead of using generic record
+export const notificationDataSchema = z
+  .object({
+    orderId: z.string().optional(),
+    menuItemId: z.string().optional(),
+    userId: z.string().optional(),
+    restaurantId: z.string().optional(),
+    amount: z.number().optional(),
+    status: z.string().optional(),
+    type: z.string().optional(),
+    timestamp: z.number().optional(),
+    url: z.string().url().optional(),
+    priority: z.enum(["low", "medium", "high"]).optional(),
+    actions: z
+      .array(
+        z.object({
+          label: z.string(),
+          action: z.string(),
+          data: z.record(z.string()).optional(),
+        }),
+      )
+      .optional(),
+    // Add additional specific fields as needed
+  })
+  .or(z.record(z.unknown())); // Allow for backwards compatibility
+
 // Schema for notification subscription request
 export const notificationSubscribeRequestSchema = z.object({
   channels: z
@@ -32,7 +58,7 @@ export const notificationSendRequestSchema = z.object({
   channel: z.string().min(1, { message: "Channel is required" }),
   title: z.string().min(1, { message: "Title is required" }),
   message: z.string().min(1, { message: "Message is required" }),
-  data: z.record(z.unknown()).optional(),
+  data: notificationDataSchema.optional(),
 });
 export type NotificationSendRequestType = z.infer<
   typeof notificationSendRequestSchema

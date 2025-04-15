@@ -2,6 +2,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import os from "os";
 import { EventEmitter } from "events";
 import util from "util";
+import { exec } from "child_process";
+
+// Create mock functions BEFORE they're used in vi.mock
+const mockExecPromise = vi.fn();
+const mockConfigBluetooth = { 
+  enabled: true, 
+  name: "TestPrinter",
+  address: "00:11:22:33:44:55",
+  channel: 1,
+  discoverable: true,
+  discoveryTimeout: 30000
+};
 
 // Create a mock for the child_process exec
 const mockExec = vi.fn().mockImplementation(() => {
@@ -27,7 +39,10 @@ vi.mock("child_process", () => ({
 }));
 
 vi.mock("util", () => ({
-  promisify: vi.fn(() => mockExec),
+  default: {
+    promisify: vi.fn().mockImplementation((fn) => mockExecPromise),
+  },
+  promisify: vi.fn().mockImplementation((fn) => mockExecPromise),
 }));
 
 vi.mock("fs", () => ({
@@ -48,14 +63,7 @@ vi.mock("../../config", () => ({
     printing: {
       tempDirectory: "/tmp/printing",
       receiptWidth: 40,
-      bluetooth: {
-        enabled: true,
-        name: "Test Bluetooth Printer",
-        address: "00:11:22:33:44:55",
-        channel: 1,
-        discoverable: true,
-        discoveryTimeout: 1000,
-      },
+      bluetooth: mockConfigBluetooth,
     },
   },
 }));
@@ -69,6 +77,25 @@ vi.mock("../../logging", () => ({
   },
   logError: vi.fn(),
 }));
+
+// Create mock responses for the Bluetooth discovery process
+const mockSuccessStdout = `Scanning ...
+	00:11:22:33:44:55	TestPrinter
+	AA:BB:CC:DD:EE:FF	OtherDevice
+Scan complete
+`;
+
+const mockNoDevicesStdout = `Scanning ...
+Scan complete
+`;
+
+// Set up mock for successful execution
+mockExecPromise.mockImplementation((command) => {
+  if (command.includes("hcitool scan")) {
+    return Promise.resolve({ stdout: mockSuccessStdout, stderr: "" });
+  }
+  return Promise.resolve({ stdout: "Success", stderr: "" });
+});
 
 // Import after mocks are set up
 import {
@@ -455,6 +482,169 @@ describe("Bluetooth Printer Service", () => {
       const result = await service.print("test content", "test.txt", { printer: "" });
       expect(result.success).toBe(false);
       expect(result.error).toContain("No Bluetooth printer address specified");
+    });
+  });
+
+  describe("isAvailable", () => {
+    it("should check if bluetooth is available", async () => {
+      // Call the method
+      const result = await bluetoothPrinterService.isAvailable();
+      
+      // Since we've mocked the exec call to succeed, it should be available
+      expect(result).toBe(true);
+      expect(mockExecPromise).toHaveBeenCalledWith(expect.stringContaining("rfcomm"));
+    });
+
+    it("should handle errors when checking availability", async () => {
+      // Make the exec call fail
+      mockExecPromise.mockRejectedValueOnce(new Error("Command failed"));
+      
+      // Call the method
+      const result = await bluetoothPrinterService.isAvailable();
+      
+      // Should return false when command fails
+      expect(result).toBe(false);
+    });
+  });
+
+  describe("discoverPrinters", () => {
+    it("should discover bluetooth printers", async () => {
+      // Call the method
+      const result = await bluetoothPrinterService.discoverPrinters();
+      
+      // Should return parsed devices from stdout
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({
+        name: "TestPrinter",
+        address: "00:11:22:33:44:55",
+      });
+      expect(mockExecPromise).toHaveBeenCalledWith(expect.stringContaining("hcitool scan"));
+    });
+    
+    it("should handle no devices found", async () => {
+      // Make the scan return no devices
+      mockExecPromise.mockResolvedValueOnce({ stdout: mockNoDevicesStdout, stderr: "" });
+      
+      // Call the method
+      const result = await bluetoothPrinterService.discoverPrinters();
+      
+      // Should return empty array
+      expect(result).toEqual([]);
+    });
+    
+    it("should handle errors during discovery", async () => {
+      // Make the exec call fail
+      mockExecPromise.mockRejectedValueOnce(new Error("Command failed"));
+      
+      // Call the method
+      const result = await bluetoothPrinterService.discoverPrinters();
+      
+      // Should return empty array on error
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("connectPrinter", () => {
+    it("should connect to a bluetooth printer", async () => {
+      // Call the method
+      const result = await bluetoothPrinterService.connectPrinter("00:11:22:33:44:55", "TestPrinter");
+      
+      // Should succeed
+      expect(result).toBe(true);
+      expect(mockExecPromise).toHaveBeenCalledWith(expect.stringContaining("rfcomm bind"));
+    });
+    
+    it("should handle connection errors", async () => {
+      // Make the exec call fail
+      mockExecPromise.mockRejectedValueOnce(new Error("Connection failed"));
+      
+      // Call the method
+      const result = await bluetoothPrinterService.connectPrinter("00:11:22:33:44:55", "TestPrinter");
+      
+      // Should return false on error
+      expect(result).toBe(false);
+    });
+  });
+
+  describe("disconnectPrinter", () => {
+    it("should disconnect from a bluetooth printer", async () => {
+      // Call the method
+      const result = await bluetoothPrinterService.disconnectPrinter("00:11:22:33:44:55");
+      
+      // Should succeed
+      expect(result).toBe(true);
+      expect(mockExecPromise).toHaveBeenCalledWith(expect.stringContaining("rfcomm release"));
+    });
+    
+    it("should handle disconnection errors", async () => {
+      // Make the exec call fail
+      mockExecPromise.mockRejectedValueOnce(new Error("Disconnection failed"));
+      
+      // Call the method
+      const result = await bluetoothPrinterService.disconnectPrinter("00:11:22:33:44:55");
+      
+      // Should return false on error
+      expect(result).toBe(false);
+    });
+  });
+
+  describe("printFile", () => {
+    it("should print a file to bluetooth printer", async () => {
+      // Call the method
+      const result = await bluetoothPrinterService.printFile("/path/to/file.txt");
+      
+      // Should succeed
+      expect(result).toBe(true);
+      expect(mockExecPromise).toHaveBeenCalledWith(expect.stringContaining("cat"));
+    });
+    
+    it("should handle printing errors", async () => {
+      // Make the exec call fail
+      mockExecPromise.mockRejectedValueOnce(new Error("Printing failed"));
+      
+      // Call the method
+      const result = await bluetoothPrinterService.printFile("/path/to/file.txt");
+      
+      // Should return false on error
+      expect(result).toBe(false);
+    });
+  });
+
+  describe("getPrinterStatus", () => {
+    it("should get printer status", async () => {
+      // Call the method
+      const result = await bluetoothPrinterService.getPrinterStatus("00:11:22:33:44:55");
+      
+      // Should succeed with default connected status since we mocked success
+      expect(result).toEqual({ connected: true, status: "Ready" });
+    });
+    
+    it("should handle status check errors", async () => {
+      // Make the exec call fail
+      mockExecPromise.mockRejectedValueOnce(new Error("Status check failed"));
+      
+      // Call the method
+      const result = await bluetoothPrinterService.getPrinterStatus("00:11:22:33:44:55");
+      
+      // Should return disconnected status on error
+      expect(result).toEqual({ connected: false, status: "Disconnected" });
+    });
+  });
+
+  describe("Configuration", () => {
+    it("should update bluetooth settings", async () => {
+      // Call the method
+      const newSettings = {
+        enabled: true,
+        name: "NewPrinterName",
+        address: "AA:BB:CC:DD:EE:FF"
+      };
+      
+      bluetoothPrinterService.updateSettings(newSettings);
+      
+      // Should update the internal config
+      expect(mockConfigBluetooth.name).toBe("NewPrinterName");
+      expect(mockConfigBluetooth.address).toBe("AA:BB:CC:DD:EE:FF");
     });
   });
 });

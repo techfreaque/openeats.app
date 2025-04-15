@@ -3,9 +3,9 @@
  * This file defines the database schema for reviews
  */
 
-import { pgTable, text, timestamp, integer, jsonb } from "drizzle-orm/pg-core";
+import { integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { z } from "zod";
+import type { z } from "zod";
 
 import { users } from "../auth/me/db";
 import { partners } from "../restaurant/db";
@@ -13,12 +13,12 @@ import { partners } from "../restaurant/db";
 /**
  * Product review type for database
  */
-export type ProductReviewDb = {
+export interface ProductReviewDb {
   productId: string;
   productName: string;
   rating: number;
   comment?: string;
-};
+}
 
 /**
  * Reviews table schema
@@ -33,7 +33,9 @@ export const reviews = pgTable("reviews", {
     .references(() => partners.id, { onDelete: "cascade" }),
   restaurantRating: integer("restaurantRating").notNull(),
   restaurantComment: text("restaurantComment"),
-  productReviews: jsonb("productReviews").$type<ProductReviewDb[]>().default([]),
+  productReviews: jsonb("productReviews")
+    .$type<ProductReviewDb[]>()
+    .default([]),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
@@ -45,7 +47,10 @@ export const selectReviewSchema = createSelectSchema(reviews);
 
 export const insertReviewSchema = createInsertSchema(reviews);
 
-export type NewReviewInput = Omit<z.infer<typeof insertReviewSchema>, 'id' | 'createdAt' | 'updatedAt'>;
+export type NewReviewInput = Omit<
+  z.infer<typeof insertReviewSchema>,
+  "id" | "createdAt" | "updatedAt"
+>;
 
 /**
  * Review types for database operations

@@ -2,21 +2,19 @@ import { exec } from "child_process";
 import fs from "fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getPrinters, printFile } from "./index";
-
-// Define and export printerService interface for tests
-export const printerService = {
-  print: async (content, fileName, options) => {
+// Define printerService mock at the top before it's used in any mocks
+const printerServiceMock = {
+  print: vi.fn(async (content, fileName, options) => {
     // Implementation for tests
     if (!fileName) {
       return { success: false, error: "Missing filename" };
     }
     return { success: true };
-  },
-  getPrinters: async () => {
+  }),
+  getPrinters: vi.fn(async () => {
     // Implementation for tests
     return [{ name: "test-printer", isDefault: true, status: "idle" }];
-  },
+  }),
 };
 
 // Mock child_process properly for Vitest
@@ -113,9 +111,15 @@ vi.mock("./index", async (importOriginal) => {
       // Return success by default
       return { success: true };
     }),
-    printerService,
+    printerService: printerServiceMock,
   };
 });
+
+// Now import the mocked modules
+import { getPrinters, printFile } from "./index";
+
+// Export the mock for use in other tests
+export const printerService = printerServiceMock;
 
 describe("Printing Module", () => {
   beforeEach(() => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Create mock dependencies
+// Create mock database object
 const mockDb = {
   exec: vi.fn().mockResolvedValue(undefined),
   run: vi.fn().mockResolvedValue(undefined),
@@ -13,39 +13,26 @@ const mockDb = {
   close: vi.fn().mockResolvedValue(undefined),
 };
 
-// Create a test-specific implementation for the db module
-const createMockDbModule = () => {
-  let dbInstance = null;
-  
-  return {
-    initializeDatabase: vi.fn().mockImplementation(async () => {
-      if (!dbInstance) {
-        dbInstance = mockDb;
-      }
-      return dbInstance;
-    }),
-    getDb: vi.fn().mockImplementation(() => {
-      if (!dbInstance) {
-        dbInstance = mockDb;
-      }
-      return Promise.resolve(dbInstance);
-    }),
-    db: vi.fn().mockImplementation(() => {
-      if (!dbInstance) {
-        dbInstance = mockDb;
-      }
-      return Promise.resolve(dbInstance);
-    }),
-  };
-};
-
-// Create mock for fs
+// Create mock filesystem object
 const mockFs = {
   existsSync: vi.fn().mockReturnValue(true),
   mkdirSync: vi.fn(),
 };
 
-// Mock other dependencies
+// Define mockDbModule with our mock functions using a function
+const createMockDbModule = () => ({
+  initializeDatabase: vi.fn().mockImplementation(async () => {
+    return mockDb;
+  }),
+  getDb: vi.fn().mockImplementation(() => {
+    return Promise.resolve(mockDb);
+  }),
+  db: vi.fn().mockImplementation(() => {
+    return Promise.resolve(mockDb);
+  }),
+});
+
+// Mock dependencies
 vi.mock('fs', () => mockFs);
 vi.mock('path', () => ({
   join: (...args) => args.join('/'),
@@ -63,10 +50,13 @@ vi.mock('../logging', () => ({
   }
 }));
 
-// Mock the entire module
-vi.mock('./index', () => createMockDbModule(), { virtual: true });
+// Create our mock module with the factory pattern
+const mockDbModule = createMockDbModule();
 
-// Import the module (this will use our mock implementation)
+// Mock the module itself
+vi.mock('./index', () => mockDbModule);
+
+// Import the module after all mocks
 import * as dbModule from './index';
 
 describe('Database Module', () => {
@@ -114,6 +104,7 @@ describe('Database Module', () => {
       
       // Clear mocks to check if subsequent calls don't re-initialize
       vi.clearAllMocks();
+      
       const database2 = await dbModule.db();
       
       // Both references should be the same instance

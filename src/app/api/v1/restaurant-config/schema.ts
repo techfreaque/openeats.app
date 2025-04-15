@@ -178,7 +178,16 @@ export interface RestaurantCustomSectionType {
   content?: string;
   type: "text" | "image-text" | "gallery" | "testimonials" | "menu-preview";
   backgroundColor?: string;
-  items?: Array<Record<string, unknown>>;
+  items?: Array<CustomSectionItem>;
+}
+
+export interface CustomSectionItem {
+  id?: string;
+  title?: string;
+  description?: string;
+  imageUrl?: string;
+  link?: string;
+  order?: number;
 }
 
 export interface RestaurantSocialLinkType {

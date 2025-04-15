@@ -3,11 +3,11 @@ import { undefinedSchema } from "next-vibe/shared/types/common.schema";
 import { Methods } from "next-vibe/shared/types/endpoint";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 
-import { 
-  reviewCreateSchema, 
-  reviewResponseSchema, 
+import {
+  reviewCreateSchema,
+  reviewResponseSchema,
   reviewsResponseSchema,
-  reviewUpdateSchema
+  reviewUpdateSchema,
 } from "./schema";
 
 /**

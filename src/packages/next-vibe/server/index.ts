@@ -28,3 +28,6 @@ export * from "./notification";
 
 // WebSocket
 export * from "./websocket";
+
+// Middleware
+export * from "./middleware/rate-limit";

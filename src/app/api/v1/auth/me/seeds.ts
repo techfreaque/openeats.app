@@ -2,12 +2,12 @@ import { db } from "next-vibe/server/db";
 import { registerSeed } from "next-vibe/server/db/seed-manager";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
-import { users } from "./db";
+import { type NewUser, users } from "./db";
 
 /**
  * Helper function to create user seed data
  */
-function createUserSeed(overrides?: Partial<any>): any {
+function createUserSeed(overrides?: Partial<NewUser>): NewUser {
   return {
     email: `user${Math.floor(Math.random() * 1000)}@example.com`,
     password: "$2b$10$dRFLSkYedQ05sqMs3b2pcOyTXHqMX2f4z4BCyAihIW/EM5YUmwigy", // hashed "password123"

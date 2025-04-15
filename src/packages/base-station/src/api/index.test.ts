@@ -1,8 +1,10 @@
 import express from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import logger from "../logging";
-import { startServer } from "./index";
+// Define mock objects before they're used in any mocks
+const mockBluetoothPrinterService = {
+  isAvailable: vi.fn().mockResolvedValue(false),
+};
 
 // Mock express
 vi.mock("express", () => {
@@ -36,7 +38,7 @@ vi.mock("express", () => {
   };
 });
 
-// Mock config
+// Mock config with required bluetooth settings
 vi.mock("../config", () => ({
   config: {
     server: {
@@ -45,7 +47,13 @@ vi.mock("../config", () => ({
     },
     security: {
       apiKey: "test-api-key",
+      disableApiKeyValidation: false
     },
+    printing: {
+      bluetooth: {
+        enabled: false
+      }
+    }
   },
   loadConfig: vi.fn().mockReturnValue({
     server: { port: 3000 },
@@ -62,6 +70,12 @@ vi.mock("../logging", () => ({
     debug: vi.fn(),
   },
   logApiRequest: vi.fn(),
+  logError: vi.fn(),
+}));
+
+// Mock the bluetooth printer service - use the predefined mock object
+vi.mock("../printing/bluetooth", () => ({
+  bluetoothPrinterService: mockBluetoothPrinterService
 }));
 
 // Mock services
@@ -111,6 +125,7 @@ vi.mock("../services/barcodes", () => ({
 
 vi.mock("../printing", () => ({
   getPrinters: vi.fn().mockResolvedValue([]),
+  getPrinterStatus: vi.fn().mockResolvedValue([]),
 }));
 
 // Mock middleware
@@ -118,6 +133,10 @@ vi.mock("./middleware", () => ({
   checkLocalNetwork: (req, res, next) => next(),
   authenticateApiKey: (req, res, next) => next(),
 }));
+
+// Import the module after all mocks - make sure to import startServer
+import logger from "../logging";
+import { startServer } from "./index";
 
 describe("API Server", () => {
   beforeEach(() => {

@@ -3,14 +3,14 @@
  * This file contains the database operations for favorites
  */
 
-import { and, eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
-
+import { and, eq } from "drizzle-orm";
 import { db } from "next-vibe/server/db";
 import { ApiRepositoryImpl } from "next-vibe/server/db/repository-postgres";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
-import { favorites, insertFavoriteSchema, Favorite, NewFavorite } from "./db";
+import type { Favorite, NewFavorite } from "./db";
+import { favorites, insertFavoriteSchema } from "./db";
 
 /**
  * Favorites repository interface
@@ -78,7 +78,7 @@ export class FavoritesRepositoryImpl
         .select({ restaurantId: favorites.restaurantId })
         .from(favorites)
         .where(eq(favorites.userId, userId));
-      
+
       return results.map((row) => row.restaurantId);
     } catch (error) {
       debugLogger("Error getting user favorites", error);
@@ -94,7 +94,7 @@ export class FavoritesRepositoryImpl
   async addFavorite(userId: string, restaurantId: string): Promise<void> {
     try {
       const existingFavorite = await this.isFavorite(userId, restaurantId);
-      
+
       if (!existingFavorite) {
         await this.create({
           id: randomUUID(),
@@ -121,8 +121,8 @@ export class FavoritesRepositoryImpl
         .where(
           and(
             eq(favorites.userId, userId),
-            eq(favorites.restaurantId, restaurantId)
-          )
+            eq(favorites.restaurantId, restaurantId),
+          ),
         );
     } catch (error) {
       debugLogger("Error removing favorite", error);
@@ -144,10 +144,10 @@ export class FavoritesRepositoryImpl
         .where(
           and(
             eq(favorites.userId, userId),
-            eq(favorites.restaurantId, restaurantId)
-          )
+            eq(favorites.restaurantId, restaurantId),
+          ),
         );
-      
+
       return results.length > 0;
     } catch (error) {
       debugLogger("Error checking if restaurant is favorite", error);

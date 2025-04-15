@@ -20,7 +20,8 @@ const getFavoritesEndpoint = createEndpoint({
   responseSchema: FavoritesResponseSchema,
   requestUrlSchema: z.object({}),
   fieldDescriptions: {
-    userId: "Optional user ID to get favorites for. If not provided, uses the authenticated user.",
+    userId:
+      "Optional user ID to get favorites for. If not provided, uses the authenticated user.",
   },
   apiQueryOptions: {
     queryKey: ["favorites"],

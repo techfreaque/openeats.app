@@ -9,6 +9,8 @@ import { testEndpoint } from "@/packages/next-vibe/testing/test-endpoint";
 import definitions from "./definition";
 
 // Test the endpoints using the test-endpoint utility
+testEndpoint(definitions.GET);
+testEndpoint(definitions.PUT);
 testEndpoint(definitions.POST, {
   customTests: {
     "should handle custom parameters": async (test) => {
@@ -23,6 +25,3 @@ testEndpoint(definitions.POST, {
     },
   },
 });
-
-// Test the endpoints using the test-endpoint utility only
-// This avoids type issues with mocking the repository directly

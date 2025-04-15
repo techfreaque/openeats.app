@@ -95,11 +95,11 @@ export async function getFullUser(userId: string): Promise<FullUser> {
     // Type assertion for roles array
     const typedRoles = roles as UserRoleType[];
 
-    // Create a properly typed user object
-    const typedUser = user as Record<string, unknown>;
+    // Create a properly typed user object with explicit type casting
+    const typedUser = user as FullUser;
 
-    // Combine the results
-    const result: Record<string, unknown> = {
+    // Combine the results with proper typing
+    const result: FullUser = {
       ...typedUser,
       userRoles: typedRoles.map((role) => ({
         id: role.id,
@@ -108,7 +108,7 @@ export async function getFullUser(userId: string): Promise<FullUser> {
       })),
     };
 
-    return result as FullUser;
+    return result;
   } catch (error) {
     debugLogger("Error getting full user information", error);
     throw error;

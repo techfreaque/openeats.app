@@ -41,6 +41,18 @@ export const orderStatusEnum = pgEnum("order_status", [
 ]);
 
 /**
+ * Order status enum for TypeScript
+ */
+export enum OrderStatus {
+  NEW = "NEW",
+  PREPARING = "PREPARING",
+  READY = "READY",
+  OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY",
+  DELIVERED = "DELIVERED",
+  CANCELLED = "CANCELLED",
+}
+
+/**
  * Orders table schema
  */
 export const orders = pgTable("orders", {

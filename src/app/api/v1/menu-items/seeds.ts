@@ -28,25 +28,25 @@ async function devSeed(): Promise<void> {
   debugLogger("🌱 Seeding menu items data for development environment");
 
   const devMenuItems = [
-    createMenuItemSeed({ 
-      name: "Margherita Pizza", 
+    createMenuItemSeed({
+      name: "Margherita Pizza",
       description: "Classic pizza with tomato sauce, mozzarella, and basil",
-      price: "12.99"
+      price: "12.99",
     }),
-    createMenuItemSeed({ 
-      name: "Cheeseburger", 
+    createMenuItemSeed({
+      name: "Cheeseburger",
       description: "Juicy beef patty with cheese, lettuce, and tomato",
-      price: "9.99"
+      price: "9.99",
     }),
-    createMenuItemSeed({ 
-      name: "California Roll", 
+    createMenuItemSeed({
+      name: "California Roll",
       description: "Fresh sushi roll with crab, avocado, and cucumber",
-      price: "14.99"
+      price: "14.99",
     }),
-    createMenuItemSeed({ 
-      name: "Chicken Tacos", 
+    createMenuItemSeed({
+      name: "Chicken Tacos",
       description: "Soft tacos with grilled chicken, salsa, and guacamole",
-      price: "8.99"
+      price: "8.99",
     }),
   ];
 
@@ -66,13 +66,13 @@ async function testSeed(): Promise<void> {
   debugLogger("🌱 Seeding menu items data for test environment");
 
   const testMenuItems = [
-    createMenuItemSeed({ 
+    createMenuItemSeed({
       name: "Test Menu Item 1",
-      price: "10.00"
+      price: "10.00",
     }),
-    createMenuItemSeed({ 
+    createMenuItemSeed({
       name: "Test Menu Item 2",
-      price: "15.00"
+      price: "15.00",
     }),
   ];
 

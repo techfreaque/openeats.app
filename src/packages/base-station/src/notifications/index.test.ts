@@ -1,23 +1,22 @@
-import { spawn } from "child_process";
-import fs from "fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import fs from "fs";
 
-import { config } from "../config";
-import logger from "../logging";
-import { isNotificationEnabled, playSound, setVolume } from "./index";
+// Define mock functions BEFORE they're used in mocks
+const mockSpawnOn = vi.fn().mockImplementation((event, callback) => {
+  if (event === "close") {
+    callback(0); // Call with exit code 0 (success)
+  }
+  return { on: mockSpawnOn, stdout: { on: vi.fn() }, stderr: { on: vi.fn() } };
+});
 
-// Mock child_process
+const mockSpawn = vi.fn().mockReturnValue({
+  on: mockSpawnOn,
+  stdout: { on: vi.fn() },
+  stderr: { on: vi.fn() },
+});
+
+// Mock child_process - AFTER defining the mock functions
 vi.mock("child_process", () => {
-  const mockSpawn = vi.fn().mockReturnValue({
-    on: vi.fn().mockImplementation((event, callback) => {
-      if (event === "close") {
-        callback(0); // Call with exit code 0 (success)
-      }
-      return this;
-    }),
-    stdout: { on: vi.fn() },
-    stderr: { on: vi.fn() },
-  });
   return { spawn: mockSpawn };
 });
 
@@ -66,6 +65,12 @@ vi.mock("fs", () => {
 
 // Don't mock notifications module - we're testing the actual implementation
 vi.unmock("./index");
+
+// Import after all mocks are set up
+import { config } from "../config";
+import logger from "../logging";
+import { isNotificationEnabled, playSound, setVolume } from "./index";
+import { spawn } from "child_process";
 
 describe("Notifications Module", () => {
   beforeEach(() => {

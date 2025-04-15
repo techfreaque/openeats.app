@@ -13,6 +13,5 @@ export function validateEnv<TSchema extends z.ZodType>(
   if (!success || !data) {
     throw new Error(`Environment validation error: ${message}`);
   }
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return data;
+  return data as z.infer<TSchema>;
 }

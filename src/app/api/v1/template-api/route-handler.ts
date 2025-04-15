@@ -3,45 +3,25 @@
  * This file contains the implementation of the API route handlers
  */
 
-import type { ApiHandlerProps } from "next-vibe/server/endpoints/core/api-handler";
+import type { ApiHandlerFunction } from "next-vibe/server/endpoints/core/api-handler";
+import { ErrorResponseTypes } from "next-vibe/shared";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
-import type { Template } from "./db";
+import { templateRepository } from "./repository";
 import type {
   TemplatePostRequestType,
   TemplatePostRequestUrlParamsType,
+  TemplateResponseType,
 } from "./schema";
-import { templateRepository } from "./repository";
-
-// Define the response type for success and error cases
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  errorCode?: number;
-}
-
-// Define the template response data type
-interface TemplateResponseData {
-  template?: Template;
-  someOutputValue: string;
-}
-
-// Define the templates response data type
-interface TemplatesResponseData {
-  templates?: Template[];
-  someOutputValue: string;
-}
 
 /**
  * Create a new template
  */
-export async function createTemplate(
-  props: ApiHandlerProps<
-    TemplatePostRequestType,
-    TemplatePostRequestUrlParamsType
-  >,
-): Promise<ApiResponse<TemplateResponseData>> {
+export const createTemplate: ApiHandlerFunction<
+  TemplatePostRequestType,
+  TemplateResponseType,
+  TemplatePostRequestUrlParamsType
+> = async (props) => {
   try {
     const { data, urlVariables, user } = props;
 
@@ -53,7 +33,7 @@ export async function createTemplate(
       return {
         success: false,
         message: "Invalid input data",
-        errorCode: 400,
+        errorType: ErrorResponseTypes.VALIDATION_ERROR,
       };
     }
 
@@ -79,17 +59,16 @@ export async function createTemplate(
       errorCode: 500,
     };
   }
-}
+};
 
 /**
  * Get templates
  */
-export async function getTemplates(
-  props: ApiHandlerProps<
-    TemplatePostRequestType,
-    TemplatePostRequestUrlParamsType
-  >,
-): Promise<ApiResponse<TemplatesResponseData>> {
+export const getTemplate: ApiHandlerFunction<
+  TemplatePostRequestType,
+  TemplateResponseType,
+  TemplatePostRequestUrlParamsType
+> = async (props) => {
   try {
     const { data, urlVariables, user } = props;
 
@@ -127,20 +106,20 @@ export async function getTemplates(
     return {
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
+      errorType: ErrorResponseTypes.HTTP_ERROR,
       errorCode: 500,
     };
   }
-}
+};
 
 /**
  * Update a template
  */
-export async function updateTemplate(
-  props: ApiHandlerProps<
-    TemplatePostRequestType,
-    TemplatePostRequestUrlParamsType
-  >,
-): Promise<ApiResponse<TemplateResponseData>> {
+export const updateTemplate: ApiHandlerFunction<
+  TemplatePostRequestType,
+  TemplateResponseType,
+  TemplatePostRequestUrlParamsType
+> = async (props) => {
   try {
     const { data, urlVariables, user } = props;
 
@@ -152,7 +131,7 @@ export async function updateTemplate(
       return {
         success: false,
         message: "Missing URL parameters",
-        errorCode: 400,
+        errorType: ErrorResponseTypes.VALIDATION_ERROR,
       };
     }
 
@@ -160,7 +139,7 @@ export async function updateTemplate(
       return {
         success: false,
         message: "Invalid input data",
-        errorCode: 400,
+        errorType: ErrorResponseTypes.VALIDATION_ERROR,
       };
     }
 
@@ -198,4 +177,4 @@ export async function updateTemplate(
       errorCode: 500,
     };
   }
-}
+};

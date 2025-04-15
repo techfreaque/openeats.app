@@ -4,7 +4,7 @@ import type { ApiHandlerFunction } from "next-vibe/server/endpoints/core/api-han
 import { hasRole } from "next-vibe/server/endpoints/data";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
-import { debugLogger } from "next-vibe/shared/utils/logger";
+import { apiLogger, debugLogger } from "next-vibe/shared/utils/logger";
 
 import { db } from "../../../../packages/next-vibe/server/db";
 import type {
@@ -175,8 +175,12 @@ export const getCategories: ApiHandlerFunction<
   CategoryResponseType[],
   UndefinedType
 > = async ({ user }) => {
+  const startTime = Date.now();
+  let statusCode = 200;
+
   try {
     if (!user?.id) {
+      statusCode = 401;
       return {
         success: false,
         message: "User authentication required",
@@ -223,6 +227,7 @@ export const getCategories: ApiHandlerFunction<
       data: categories,
     };
   } catch (error) {
+    statusCode = 500;
     debugLogger("Error getting categories", error);
     return {
       success: false,
@@ -232,5 +237,16 @@ export const getCategories: ApiHandlerFunction<
           : "Unknown error getting categories",
       errorCode: 500,
     };
+  } finally {
+    // Log API request details
+    const responseTime = Date.now() - startTime;
+    apiLogger(
+      "GET",
+      "/api/v1/restaurant-config/categories",
+      statusCode,
+      responseTime,
+      user?.id,
+      { categoriesCount: statusCode === 200 ? "success" : "error" },
+    );
   }
 };

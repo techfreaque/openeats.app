@@ -98,7 +98,7 @@ export interface RestaurantRepository {
 /**
  * Restaurant repository implementation
  */
-export class RestaurantRepositoryImpl 
+export class RestaurantRepositoryImpl
   extends BaseRepositoryImpl<
     typeof partners,
     Partner,
@@ -191,7 +191,7 @@ export class RestaurantRepositoryImpl
    * @param data - The data to validate
    */
   override validate(data: unknown): Partner {
-    return this.schema.parse(data) as Partner;
+    return this.schema.parse(data);
   }
 
   /**
@@ -215,7 +215,10 @@ export class RestaurantRepositoryImpl
    * @param id - The record ID
    * @param data - The record data
    */
-  override async update(id: DbId, data: Partial<NewPartner>): Promise<Partner | undefined> {
+  override async update(
+    id: DbId,
+    data: Partial<NewPartner>,
+  ): Promise<Partner | undefined> {
     return await super.update(id, data);
   }
 

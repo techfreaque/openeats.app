@@ -46,6 +46,7 @@ export const orderCreateSchema = orderBaseSchema.extend({
   restaurantId: z.string().uuid(),
   delivery: deliveryCreateSchema,
   orderItems: z.array(orderItemSchema).min(1),
+  deliveryFee: z.number().nonnegative().optional(),
 });
 export type OrderCreateType = z.infer<typeof orderCreateSchema>;
 

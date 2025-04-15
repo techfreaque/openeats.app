@@ -1,10 +1,12 @@
-import type {
-  UseApiMutationReturn,
-  UseApiQueryReturn,
-} from "next-vibe/client/hooks/query";
-import { useApiMutation, useApiQuery } from "next-vibe/client/hooks/query";
+import type { ApiFormReturn, ApiQueryFormReturn } from "next-vibe/client";
+import { useApiForm, useApiQueryForm } from "next-vibe/client";
 
 import definitions from "./definition";
+import type {
+  TemplateCreateType,
+  TemplatePostRequestUrlParamsType,
+  TemplateResponseType,
+} from "./schema";
 
 /**
  * Template API hooks
@@ -16,20 +18,18 @@ import definitions from "./definition";
  * @param params - Optional parameters for the query
  * @returns Query result with template data
  */
-export function useTemplates(params?: {
-  someInputValue?: string;
+export function useTemplates(params: {
+  someInputValue: string;
+  someValueFromTheRouteUrl: string;
   enabled?: boolean;
-}): UseApiQueryReturn {
-  return useApiQuery({
-    endpoint: definitions.GET,
-    payload: params?.someInputValue
-      ? { someInputValue: params.someInputValue }
-      : undefined,
-    urlParams: { someValueFromTheRouteUrl: "" },
-    options: {
-      enabled: params?.enabled,
-    },
-  }) as UseApiQueryReturn;
+}): ApiQueryFormReturn<
+  TemplateCreateType,
+  TemplateResponseType,
+  TemplatePostRequestUrlParamsType
+> {
+  return useApiQueryForm(definitions.GET, {
+    someValueFromTheRouteUrl: params.someValueFromTheRouteUrl,
+  });
 }
 export type UseTemplatesReturn = ReturnType<typeof useTemplates>;
 
@@ -37,14 +37,12 @@ export type UseTemplatesReturn = ReturnType<typeof useTemplates>;
  * Hook for creating template resources
  * @returns Mutation for creating templates
  */
-export function useCreateTemplate(): UseApiMutationReturn {
-  // Using type assertion to handle the error
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  const mutation = useApiMutation({
-    endpoint: definitions.POST,
-    urlParams: { someValueFromTheRouteUrl: "" },
-  });
-  return mutation as UseApiMutationReturn;
+export function useCreateTemplate(): ApiFormReturn<
+  TemplateCreateType,
+  TemplateResponseType,
+  TemplatePostRequestUrlParamsType
+> {
+  return useApiForm(definitions.POST);
 }
 export type UseCreateTemplateReturn = ReturnType<typeof useCreateTemplate>;
 
@@ -52,13 +50,11 @@ export type UseCreateTemplateReturn = ReturnType<typeof useCreateTemplate>;
  * Hook for updating template resources
  * @returns Mutation for updating templates
  */
-export function useUpdateTemplate(): UseApiMutationReturn {
-  // Using type assertion to handle the error
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  const mutation = useApiMutation({
-    endpoint: definitions.PUT,
-    urlParams: { someValueFromTheRouteUrl: "" },
-  });
-  return mutation as UseApiMutationReturn;
+export function useUpdateTemplate(): ApiFormReturn<
+  TemplateCreateType,
+  TemplateResponseType,
+  TemplatePostRequestUrlParamsType
+> {
+  return useApiForm(definitions.PUT);
 }
 export type UseUpdateTemplateReturn = ReturnType<typeof useUpdateTemplate>;

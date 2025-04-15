@@ -16,7 +16,7 @@ function createCategorySeed(overrides?: Partial<NewCategory>): NewCategory {
     published: true,
     ...overrides,
   };
-  
+
   return insertCategorySchema.parse(baseData);
 }
 
@@ -27,28 +27,28 @@ async function devSeed(): Promise<void> {
   debugLogger("🌱 Seeding category data for development environment");
 
   const devCategories = [
-    createCategorySeed({ 
-      name: "Pizza", 
+    createCategorySeed({
+      name: "Pizza",
       description: "Delicious pizza options",
     }),
-    createCategorySeed({ 
-      name: "Burgers", 
+    createCategorySeed({
+      name: "Burgers",
       description: "Juicy burgers and sides",
     }),
-    createCategorySeed({ 
-      name: "Sushi", 
+    createCategorySeed({
+      name: "Sushi",
       description: "Fresh sushi and Japanese cuisine",
     }),
-    createCategorySeed({ 
-      name: "Mexican", 
+    createCategorySeed({
+      name: "Mexican",
       description: "Authentic Mexican food",
     }),
-    createCategorySeed({ 
-      name: "Italian", 
+    createCategorySeed({
+      name: "Italian",
       description: "Classic Italian dishes",
     }),
-    createCategorySeed({ 
-      name: "Chinese", 
+    createCategorySeed({
+      name: "Chinese",
       description: "Traditional Chinese cuisine",
     }),
   ];
@@ -59,7 +59,9 @@ async function devSeed(): Promise<void> {
     .onConflictDoNothing()
     .returning({ id: categories.id });
 
-  debugLogger(`✅ Inserted ${insertedCategories.length} development categories`);
+  debugLogger(
+    `✅ Inserted ${insertedCategories.length} development categories`,
+  );
 }
 
 /**
@@ -69,10 +71,10 @@ async function testSeed(): Promise<void> {
   debugLogger("🌱 Seeding category data for test environment");
 
   const testCategories = [
-    createCategorySeed({ 
+    createCategorySeed({
       name: "Test Category 1",
     }),
-    createCategorySeed({ 
+    createCategorySeed({
       name: "Test Category 2",
     }),
   ];

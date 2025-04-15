@@ -1,15 +1,24 @@
-import { eq, and } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-
 import { Repository } from "next-vibe/server/db/repository";
+
 import { db } from "@/app/api/db";
 
-import { reviews, type Review, type NewReview, type NewReviewInput } from "./db";
+import {
+  type NewReview,
+  type NewReviewInput,
+  type Review,
+  reviews,
+} from "./db";
 
 /**
  * Repository for reviews
  */
-export class ReviewRepository extends Repository<typeof reviews, Review, NewReview> {
+export class ReviewRepository extends Repository<
+  typeof reviews,
+  Review,
+  NewReview
+> {
   constructor() {
     super(db, reviews);
   }
@@ -60,10 +69,7 @@ export class ReviewRepository extends Repository<typeof reviews, Review, NewRevi
    */
   async getUserReview(id: string, userId: string): Promise<Review | null> {
     const result = await this.findMany({
-      where: and(
-        eq(reviews.id, id),
-        eq(reviews.userId, userId)
-      ),
+      where: and(eq(reviews.id, id), eq(reviews.userId, userId)),
     });
 
     return result.length > 0 ? result[0] : null;

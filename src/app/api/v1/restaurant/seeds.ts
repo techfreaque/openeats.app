@@ -42,29 +42,29 @@ async function devSeed(): Promise<void> {
   debugLogger("🌱 Seeding restaurant data for development environment");
 
   const devRestaurants = [
-    createRestaurantSeed({ 
-      name: "Pizza Palace", 
+    createRestaurantSeed({
+      name: "Pizza Palace",
       description: "Best pizza in town",
       rating: "4.8",
-      minimumOrderAmount: "15"
+      minimumOrderAmount: "15",
     }),
-    createRestaurantSeed({ 
-      name: "Burger Heaven", 
+    createRestaurantSeed({
+      name: "Burger Heaven",
       description: "Juicy burgers and crispy fries",
       rating: "4.6",
-      minimumOrderAmount: "12"
+      minimumOrderAmount: "12",
     }),
-    createRestaurantSeed({ 
-      name: "Sushi World", 
+    createRestaurantSeed({
+      name: "Sushi World",
       description: "Fresh sushi and Japanese cuisine",
       rating: "4.9",
-      minimumOrderAmount: "20"
+      minimumOrderAmount: "20",
     }),
-    createRestaurantSeed({ 
-      name: "Taco Time", 
+    createRestaurantSeed({
+      name: "Taco Time",
       description: "Authentic Mexican tacos",
       rating: "4.5",
-      minimumOrderAmount: "10"
+      minimumOrderAmount: "10",
     }),
   ];
 
@@ -74,7 +74,9 @@ async function devSeed(): Promise<void> {
     .onConflictDoNothing()
     .returning({ id: partners.id });
 
-  debugLogger(`✅ Inserted ${insertedRestaurants.length} development restaurants`);
+  debugLogger(
+    `✅ Inserted ${insertedRestaurants.length} development restaurants`,
+  );
 }
 
 /**
@@ -84,15 +86,15 @@ async function testSeed(): Promise<void> {
   debugLogger("🌱 Seeding restaurant data for test environment");
 
   const testRestaurants = [
-    createRestaurantSeed({ 
+    createRestaurantSeed({
       name: "Test Restaurant 1",
       rating: "4.0",
-      minimumOrderAmount: "10" 
+      minimumOrderAmount: "10",
     }),
-    createRestaurantSeed({ 
+    createRestaurantSeed({
       name: "Test Restaurant 2",
       rating: "4.5",
-      minimumOrderAmount: "15" 
+      minimumOrderAmount: "15",
     }),
   ];
 

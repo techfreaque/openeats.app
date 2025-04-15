@@ -1,4 +1,13 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import ip from "ip";
+
+// Create mock functions for IP validation
+const mockIsPrivate = vi.fn((ipAddress) => {
+  return ipAddress === "192.168.1.100" || 
+         ipAddress === "10.0.0.5" || 
+         ipAddress.includes("127.0.0.1") || 
+         ipAddress.includes("::1");
+});
 
 // Mock dependencies before importing the modules under test
 vi.mock("../../config", () => ({
@@ -11,9 +20,10 @@ vi.mock("../../config", () => ({
 }));
 
 vi.mock("ip", () => ({
-  isPrivate: vi.fn((ip) => {
-    return ip === "192.168.1.100" || ip === "10.0.0.5" || ip.includes("127.0.0.1") || ip.includes("::1");
-  }),
+  isPrivate: mockIsPrivate,
+  default: {
+    isPrivate: mockIsPrivate,
+  },
 }));
 
 // Mock the logging module
@@ -26,12 +36,6 @@ vi.mock("../../logging", () => ({
   },
   logError: vi.fn()
 }));
-
-// Import after mocks
-import { authenticateApiKey, checkLocalNetwork } from "./auth";
-import { config } from "../../config";
-import logger, { logError } from "../../logging";
-import { isPrivate } from "ip";
 
 // Create mock Express request, response and next function
 const createMockReq = (overrides = {}) => ({
@@ -50,6 +54,11 @@ const createMockRes = () => {
 };
 
 const mockNext = vi.fn();
+
+// Import after all mocks are defined
+import { authenticateApiKey, checkLocalNetwork } from "./auth";
+import { config } from "../../config";
+import logger, { logError } from "../../logging";
 
 describe("Authentication Middleware", () => {
   beforeEach(() => {
@@ -214,7 +223,7 @@ describe("Authentication Middleware", () => {
       const res = createMockRes();
       
       // Mock the IP validation to throw an error
-      vi.mocked(isPrivate).mockImplementationOnce(() => {
+      vi.mocked(mockIsPrivate).mockImplementationOnce(() => {
         throw new Error("IP validation error");
       });
 

@@ -1,41 +1,21 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { toast } from "@/components/ui/use-toast";
-import { useApiQuery } from "next-vibe/client/hooks/query";
 import { useApiMutation } from "next-vibe/client/hooks/mutation";
-import { useAuth } from "../auth/hooks/useAuth";
-import { translations } from "@/translations";
+import { useApiQuery } from "next-vibe/client/hooks/query";
 import { useApiStore } from "next-vibe/client/hooks/store";
+import { useCallback, useMemo } from "react";
 
+import { toast } from "@/components/ui/use-toast";
+import { useTranslation } from "@/translations";
+
+import { useAuth } from "../auth/hooks/useAuth";
 import reviewsEndpoints from "./definition";
-import { 
+import type {
   ReviewCreateType,
   ReviewResponseType,
   ReviewsResponseType,
-  ReviewUpdateType
+  ReviewUpdateType,
 } from "./schema";
-
-/**
- * Create a type-safe translation function
- */
-const createTranslator = () => {
-  return (key: string, fallback?: string): string => {
-    const parts = key.split(".");
-    let current: Record<string, unknown> = translations.EN;
-    
-    for (const part of parts) {
-      if (current && typeof current === "object" && part in current) {
-        const value = current[part];
-        current = value as Record<string, unknown>;
-      } else {
-        return fallback || key;
-      }
-    }
-    
-    return typeof current === "string" ? current : fallback || key;
-  };
-};
 
 /**
  * Hook for managing reviews
@@ -43,114 +23,144 @@ const createTranslator = () => {
  */
 export const useReviews = (restaurantId?: string) => {
   const { user } = useAuth();
-  const t = createTranslator();
-  
-  const queryParams = restaurantId ? { restaurantId } : user ? { userId: user.id } : undefined;
-  const queryKey = restaurantId ? ["reviews", restaurantId] : ["reviews", user?.id || "anonymous"];
-  
+  const { t } = useTranslation();
+
+  const queryParams = restaurantId
+    ? { restaurantId }
+    : user
+      ? { userId: user.id }
+      : undefined;
+  const queryKey = restaurantId
+    ? ["reviews", restaurantId]
+    : ["reviews", user?.id || "anonymous"];
+
   const {
     data,
     isLoading: isLoadingReviews,
     error,
-  } = useApiQuery<Record<string, never>, ReviewsResponseType, Record<string, never>, "default">(
+  } = useApiQuery<
+    Record<string, never>,
+    ReviewsResponseType,
+    Record<string, never>,
+    "default"
+  >(
     reviewsEndpoints.GET,
     {},
     {},
     {
       enabled: !!queryParams,
       queryKey,
-    }
+    },
   );
-  
-  const { mutateAsync: addReviewMutation, isLoading: isAddingReview } = useApiMutation<
-    ReviewResponseType,
-    ReviewCreateType,
-    Record<string, never>,
-    "default"
-  >(reviewsEndpoints.POST, {
-    onSuccess: (responseData) => {
-      toast({
-        title: t("review.added", "Review submitted"),
-        description: t("review.addedDescription", "Thank you for your feedback!"),
-      });
-      useApiStore.getState().invalidateQueries(queryKey);
-    },
-    onError: (data: { 
-      error: Error; 
-      requestData: ReviewCreateType; 
-      pathParams: Record<string, never>; 
-    }) => {
-      toast({
-        title: t("error", "Error"),
-        description: data.error.message || t("review.errorAdding", "Failed to submit review"),
-        variant: "destructive",
-      });
-    },
-  });
-  
-  const { mutateAsync: updateReviewMutation, isLoading: isUpdatingReview } = useApiMutation<
-    ReviewResponseType,
-    ReviewUpdateType,
-    { id: string },
-    "default"
-  >(reviewsEndpoints.PUT, {
-    onSuccess: (responseData) => {
-      toast({
-        title: t("review.updated", "Review updated"),
-        description: t("review.updatedDescription", "Your review has been updated successfully"),
-      });
-      useApiStore.getState().invalidateQueries(queryKey);
-    },
-    onError: (data: { 
-      error: Error; 
-      requestData: ReviewUpdateType; 
-      pathParams: { id: string }; 
-    }) => {
-      toast({
-        title: t("error", "Error"),
-        description: data.error.message || t("review.errorUpdating", "Failed to update review"),
-        variant: "destructive",
-      });
-    },
-  });
-  
-  const { mutateAsync: deleteReviewMutation, isLoading: isDeletingReview } = useApiMutation<
-    undefined,
-    undefined,
-    { id: string },
-    "default"
-  >(reviewsEndpoints.DELETE, {
-    onSuccess: () => {
-      toast({
-        title: t("review.deleted", "Review deleted"),
-        description: t("review.deletedDescription", "Your review has been deleted successfully"),
-      });
-      useApiStore.getState().invalidateQueries(queryKey);
-    },
-    onError: (data: { 
-      error: Error; 
-      requestData: undefined; 
-      pathParams: { id: string }; 
-    }) => {
-      toast({
-        title: t("error", "Error"),
-        description: data.error.message || t("review.errorDeleting", "Failed to delete review"),
-        variant: "destructive",
-      });
-    },
-  });
-  
+
+  const { mutateAsync: addReviewMutation, isLoading: isAddingReview } =
+    useApiMutation<
+      ReviewResponseType,
+      ReviewCreateType,
+      Record<string, never>,
+      "default"
+    >(reviewsEndpoints.POST, {
+      onSuccess: (responseData) => {
+        toast({
+          title: t("review.added", "Review submitted"),
+          description: t(
+            "review.addedDescription",
+            "Thank you for your feedback!",
+          ),
+        });
+        useApiStore.getState().invalidateQueries(queryKey);
+      },
+      onError: (data: {
+        error: Error;
+        requestData: ReviewCreateType;
+        pathParams: Record<string, never>;
+      }) => {
+        toast({
+          title: t("error", "Error"),
+          description:
+            data.error.message ||
+            t("review.errorAdding", "Failed to submit review"),
+          variant: "destructive",
+        });
+      },
+    });
+
+  const { mutateAsync: updateReviewMutation, isLoading: isUpdatingReview } =
+    useApiMutation<
+      ReviewResponseType,
+      ReviewUpdateType,
+      { id: string },
+      "default"
+    >(reviewsEndpoints.PUT, {
+      onSuccess: (responseData) => {
+        toast({
+          title: t("review.updated", "Review updated"),
+          description: t(
+            "review.updatedDescription",
+            "Your review has been updated successfully",
+          ),
+        });
+        useApiStore.getState().invalidateQueries(queryKey);
+      },
+      onError: (data: {
+        error: Error;
+        requestData: ReviewUpdateType;
+        pathParams: { id: string };
+      }) => {
+        toast({
+          title: t("error", "Error"),
+          description:
+            data.error.message ||
+            t("review.errorUpdating", "Failed to update review"),
+          variant: "destructive",
+        });
+      },
+    });
+
+  const { mutateAsync: deleteReviewMutation, isLoading: isDeletingReview } =
+    useApiMutation<undefined, undefined, { id: string }, "default">(
+      reviewsEndpoints.DELETE,
+      {
+        onSuccess: () => {
+          toast({
+            title: t("review.deleted", "Review deleted"),
+            description: t(
+              "review.deletedDescription",
+              "Your review has been deleted successfully",
+            ),
+          });
+          useApiStore.getState().invalidateQueries(queryKey);
+        },
+        onError: (data: {
+          error: Error;
+          requestData: undefined;
+          pathParams: { id: string };
+        }) => {
+          toast({
+            title: t("error", "Error"),
+            description:
+              data.error.message ||
+              t("review.errorDeleting", "Failed to delete review"),
+            variant: "destructive",
+          });
+        },
+      },
+    );
+
   const addReview = useCallback(
     async (review: Omit<ReviewCreateType, "userId">): Promise<boolean> => {
       if (!user) {
         toast({
           title: t("auth.signInRequired", "Authentication required"),
-          description: t("auth.signInToReview", "Please sign in to leave a review"),
+          description: t(
+            "auth.signInToReview",
+            "Please sign in to leave a review",
+          ),
           variant: "destructive",
         });
         return false;
       }
-      
+
       try {
         await addReviewMutation({
           requestData: review as ReviewCreateType,
@@ -161,20 +171,23 @@ export const useReviews = (restaurantId?: string) => {
         return false;
       }
     },
-    [addReviewMutation, user, t]
+    [addReviewMutation, user, t],
   );
-  
+
   const updateReview = useCallback(
     async (reviewId: string, review: ReviewUpdateType): Promise<boolean> => {
       if (!user) {
         toast({
           title: t("auth.signInRequired", "Authentication required"),
-          description: t("auth.signInToUpdateReview", "Please sign in to update a review"),
+          description: t(
+            "auth.signInToUpdateReview",
+            "Please sign in to update a review",
+          ),
           variant: "destructive",
         });
         return false;
       }
-      
+
       try {
         await updateReviewMutation({
           requestData: review,
@@ -185,20 +198,23 @@ export const useReviews = (restaurantId?: string) => {
         return false;
       }
     },
-    [updateReviewMutation, user, t]
+    [updateReviewMutation, user, t],
   );
-  
+
   const deleteReview = useCallback(
     async (reviewId: string): Promise<boolean> => {
       if (!user) {
         toast({
           title: t("auth.signInRequired", "Authentication required"),
-          description: t("auth.signInToDeleteReview", "Please sign in to delete a review"),
+          description: t(
+            "auth.signInToDeleteReview",
+            "Please sign in to delete a review",
+          ),
           variant: "destructive",
         });
         return false;
       }
-      
+
       try {
         await deleteReviewMutation({
           requestData: undefined,
@@ -209,88 +225,94 @@ export const useReviews = (restaurantId?: string) => {
         return false;
       }
     },
-    [deleteReviewMutation, user, t]
+    [deleteReviewMutation, user, t],
   );
-  
+
   const userReviews = useMemo(() => {
     if (!data || !user) {
       return [];
     }
-    
+
     return data.filter((review) => review.userId === user.id);
   }, [data, user]);
-  
+
   const restaurantReviews = useCallback(
     (restaurantId: string): ReviewResponseType[] => {
       if (!data) {
         return [];
       }
-      
+
       return data.filter((review) => review.restaurantId === restaurantId);
     },
-    [data]
+    [data],
   );
-  
+
   const productReviews = useCallback(
     (productId: string): ReviewResponseType[] => {
       if (!data) {
         return [];
       }
-      
-      return data.filter((review) => 
-        review.productReviews.some((pr) => pr.productId === productId)
+
+      return data.filter((review) =>
+        review.productReviews.some((pr) => pr.productId === productId),
       );
     },
-    [data]
+    [data],
   );
-  
+
   const getAverageRestaurantRating = useCallback(
     (restaurantId: string): number => {
       const reviews = restaurantReviews(restaurantId);
       if (reviews.length === 0) {
         return 0;
       }
-      
+
       const sum = reviews.reduce(
         (acc, review) => acc + review.restaurantRating,
-        0
+        0,
       );
       return Number.parseFloat((sum / reviews.length).toFixed(1));
     },
-    [restaurantReviews]
+    [restaurantReviews],
   );
-  
+
   const getAverageProductRating = useCallback(
     (productId: string): number => {
       const reviews = productReviews(productId);
       if (reviews.length === 0) {
         return 0;
       }
-      
+
       let totalRating = 0;
       let count = 0;
-      
+
       reviews.forEach((review) => {
         const productReview = review.productReviews.find(
-          (pr) => pr.productId === productId
+          (pr) => pr.productId === productId,
         );
         if (productReview) {
           totalRating += productReview.rating;
           count++;
         }
       });
-      
-      return count > 0 ? Number.parseFloat((totalRating / count).toFixed(1)) : 0;
+
+      return count > 0
+        ? Number.parseFloat((totalRating / count).toFixed(1))
+        : 0;
     },
-    [productReviews]
+    [productReviews],
   );
-  
+
   return {
     reviews: data || [],
     userReviews,
     restaurantReviews,
     productReviews,
-    isLoading: isLoadingReviews || isAddingReview || isUpdatingReview || isDeletingReview,
+    isLoading:
+      isLoadingReviews ||
+      isAddingReview ||
+      isUpdatingReview ||
+      isDeletingReview,
     error,
     addReview,
     updateReview,
