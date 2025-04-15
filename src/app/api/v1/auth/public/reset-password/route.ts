@@ -5,12 +5,23 @@ import type {
   ApiHandlerResult,
 } from "next-vibe/server/endpoints/core/api-handler";
 import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
+import { ErrorResponseTypes } from "next-vibe/shared";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
-import resetPasswordEndpoint from "./definition";
-import { passwordResetService } from "./reset-password.service";
-import type { ResetPasswordRequestType } from "./schema";
+import { passwordResetRepository, userRepository } from "../../repository";
+import {
+  resetPasswordConfirm,
+  resetPasswordRequest,
+  resetPasswordValidate,
+} from "./definition";
+import { renderResetPasswordMail } from "./email";
+import { renderResetPasswordConfirmMail } from "./email-confirm";
+import type {
+  ResetPasswordConfirmType,
+  ResetPasswordRequestType,
+  ResetPasswordValidateType,
+} from "./schema";
 
 /**
  * Reset Password API route handler
@@ -20,27 +31,40 @@ import type { ResetPasswordRequestType } from "./schema";
 /**
  * POST handler for password reset request
  */
-// Create a properly typed handler
 const resetPasswordHandler = apiHandler({
-  endpoint: resetPasswordEndpoint.POST,
+  endpoint: resetPasswordRequest,
   handler: handleResetPasswordRequest,
-  email: {}, // Email sending is handled by the service
+  email: {
+    afterHandlerEmails: [
+      {
+        render: renderResetPasswordMail,
+        ignoreErrors: true,
+      },
+    ],
+  },
 });
 
 /**
  * PUT handler for password reset confirmation
  */
 const resetPasswordConfirmHandler = apiHandler({
-  endpoint: resetPasswordEndpoint.PUT,
+  endpoint: resetPasswordConfirm,
   handler: handleResetPasswordConfirm,
-  email: {}, // No emails for this endpoint
+  email: {
+    afterHandlerEmails: [
+      {
+        render: renderResetPasswordConfirmMail,
+        ignoreErrors: false,
+      },
+    ],
+  },
 });
 
 /**
  * GET handler for password reset token validation
  */
 const resetPasswordValidateHandler = apiHandler({
-  endpoint: resetPasswordEndpoint.GET,
+  endpoint: resetPasswordValidate,
   handler: handleResetPasswordValidate,
   email: {}, // No emails for this endpoint
 });
@@ -64,7 +88,7 @@ async function handleResetPasswordRequest({
     debugLogger("Password reset request received", { email: data.email });
 
     // Create a password reset token
-    await passwordResetService.createPasswordResetToken(data.email);
+    await passwordResetRepository.createPasswordResetToken(data.email);
 
     // We don't want to reveal if the email exists or not for security reasons
     // So we always return a success message
@@ -81,6 +105,7 @@ async function handleResetPasswordRequest({
           ? error.message
           : "Unknown error processing request",
       errorCode: 500,
+      errorType: ErrorResponseTypes.INTERNAL_ERROR,
     };
   }
 }
@@ -92,39 +117,91 @@ async function handleResetPasswordRequest({
  */
 async function handleResetPasswordConfirm({
   data,
-}: ApiHandlerProps<
-  { token: string; password: string },
-  UndefinedType
->): Promise<ApiHandlerResult<string>> {
+}: ApiHandlerProps<ResetPasswordConfirmType, UndefinedType>): Promise<
+  ApiHandlerResult<string>
+> {
   try {
-    debugLogger("Password reset confirmation received", { token: data.token });
+    debugLogger("Processing password reset confirmation", {
+      email: data.email,
+    });
 
-    // Reset the password
-    const success = await passwordResetService.resetPassword(
+    // Verify the reset token
+    const resetPayload = await passwordResetRepository.verifyJwtToken(
       data.token,
-      data.password,
     );
-
-    if (!success) {
+    if (!resetPayload?.email || !resetPayload.userId) {
+      debugLogger("Invalid or expired token", { email: data.email });
       return {
         success: false,
-        message: "Invalid or expired password reset token",
+        message:
+          "Invalid or expired token. Please request a new password reset.",
+        errorType: ErrorResponseTypes.TOKEN_EXPIRED_ERROR,
         errorCode: 400,
       };
     }
 
+    // Check if the email in the token matches the provided email
+    if (resetPayload.email !== data.email) {
+      debugLogger("Email mismatch in reset token", {
+        tokenEmail: resetPayload.email,
+        providedEmail: data.email,
+      });
+      return {
+        success: false,
+        message: "Email does not match the token. Please try again.",
+        errorType: ErrorResponseTypes.VALIDATION_ERROR,
+        errorCode: 400,
+      };
+    }
+
+    // Find the user
+    const user = await userRepository.findByEmail(resetPayload.email);
+
+    if (!user || user.id !== resetPayload.userId) {
+      debugLogger("User not found in password reset confirm", {
+        userId: resetPayload.userId,
+        email: resetPayload.email,
+      });
+      return {
+        success: false,
+        message: "User not found or the link was already used",
+        errorType: ErrorResponseTypes.NOT_FOUND,
+        errorCode: 404,
+      };
+    }
+
+    // Update the user's password with the repository method that handles hashing
+    const updatedUser = await userRepository.updatePassword(
+      user.id,
+      data.password,
+    );
+
+    if (!updatedUser) {
+      return {
+        success: false,
+        message: "Failed to update password",
+        errorType: ErrorResponseTypes.INTERNAL_ERROR,
+        errorCode: 500,
+      };
+    }
+
+    debugLogger("Password reset successful", {
+      userId: user.id,
+      email: user.email,
+    });
     return {
       success: true,
-      data: "Password reset successfully",
+      data: "Password has been reset successfully. You can now log in with your new password.",
     };
   } catch (error) {
-    debugLogger("Error processing password reset confirmation", error);
+    debugLogger("Error during password reset confirmation", error);
     return {
       success: false,
       message:
         error instanceof Error
           ? error.message
-          : "Unknown error processing request",
+          : "Unknown error during password reset",
+      errorType: ErrorResponseTypes.HTTP_ERROR,
       errorCode: 500,
     };
   }
@@ -137,7 +214,7 @@ async function handleResetPasswordConfirm({
  */
 async function handleResetPasswordValidate({
   data,
-}: ApiHandlerProps<{ token: string }, UndefinedType>): Promise<
+}: ApiHandlerProps<ResetPasswordValidateType, UndefinedType>): Promise<
   ApiHandlerResult<string>
 > {
   try {
@@ -146,7 +223,7 @@ async function handleResetPasswordValidate({
     });
 
     // Validate the token
-    const userId = await passwordResetService.validatePasswordResetToken(
+    const userId = await passwordResetRepository.validatePasswordResetToken(
       data.token,
     );
 
@@ -155,6 +232,7 @@ async function handleResetPasswordValidate({
         success: false,
         message: "Invalid or expired password reset token",
         errorCode: 400,
+        errorType: ErrorResponseTypes.TOKEN_EXPIRED_ERROR,
       };
     }
 
@@ -171,6 +249,7 @@ async function handleResetPasswordValidate({
           ? error.message
           : "Unknown error processing request",
       errorCode: 500,
+      errorType: ErrorResponseTypes.INTERNAL_ERROR,
     };
   }
 }

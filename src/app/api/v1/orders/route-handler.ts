@@ -5,7 +5,7 @@ import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
 import type { User } from "@/app/api/v1/auth/me/db";
-import { userRolesRepository } from "@/app/api/v1/auth/roles/roles.repository";
+import { userRolesRepository } from "@/app/api/v1/auth/repository";
 import type { Delivery } from "@/app/api/v1/order/delivery.db";
 import type { Order } from "@/app/api/v1/order/order.db";
 import { orderRepository } from "@/app/api/v1/order/order.repository";

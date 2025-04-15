@@ -1,8 +1,13 @@
+/**
+ * Auth seeds
+ * Provides seed data for auth-related tables
+ */
+
 import { registerSeed } from "next-vibe/server/db/seed-manager";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
-import { type NewUser } from "../db";
-import { userRepository } from "../repository";
+import type { NewUser } from "./db";
+import { userRepository, userRolesRepository } from "./repository";
 
 /**
  * Helper function to create user seed data
@@ -19,23 +24,26 @@ function createUserSeed(overrides?: Partial<NewUser>): NewUser {
 }
 
 /**
- * Development seed function for user module
+ * Development seed function for auth module
  */
 async function devSeed(): Promise<void> {
-  debugLogger("🌱 Seeding user data for development environment");
+  debugLogger("🌱 Seeding auth data for development environment");
 
+  // Create admin user
   const adminUser = createUserSeed({
     email: "admin@example.com",
     firstName: "Admin",
     lastName: "User",
   });
 
+  // Create demo user
   const demoUser = createUserSeed({
     email: "demo@example.com",
     firstName: "Demo",
     lastName: "User",
   });
 
+  // Create regular users
   const regularUsers = [
     createUserSeed({
       email: "user1@example.com",
@@ -56,15 +64,34 @@ async function devSeed(): Promise<void> {
     allUsers.map((user) => userRepository.createWithHashedPassword(user)),
   );
 
-  debugLogger(`✅ Inserted ${createdUsers.length} development users`);
+  // Create roles for users
+  await userRolesRepository.create({
+    userId: createdUsers[0].id, // Admin user
+    role: "ADMIN",
+  });
+
+  await userRolesRepository.create({
+    userId: createdUsers[1].id, // Demo user
+    role: "CUSTOMER",
+  });
+
+  for (let i = 2; i < createdUsers.length; i++) {
+    await userRolesRepository.create({
+      userId: createdUsers[i].id, // Regular users
+      role: "CUSTOMER",
+    });
+  }
+
+  debugLogger(`✅ Inserted ${createdUsers.length} development users with roles`);
 }
 
 /**
- * Test seed function for user module
+ * Test seed function for auth module
  */
 async function testSeed(): Promise<void> {
-  debugLogger("🌱 Seeding user data for test environment");
+  debugLogger("🌱 Seeding auth data for test environment");
 
+  // Create test users
   const testUsers = [
     createUserSeed({
       email: "test1@example.com",
@@ -79,19 +106,31 @@ async function testSeed(): Promise<void> {
   ];
 
   // Create test users with hashed passwords using the repository
-  await Promise.all(
+  const createdUsers = await Promise.all(
     testUsers.map((user) => userRepository.createWithHashedPassword(user)),
   );
 
-  debugLogger("✅ Inserted test users");
+  // Create roles for test users
+  await userRolesRepository.create({
+    userId: createdUsers[0].id,
+    role: "ADMIN",
+  });
+
+  await userRolesRepository.create({
+    userId: createdUsers[1].id,
+    role: "CUSTOMER",
+  });
+
+  debugLogger("✅ Inserted test users with roles");
 }
 
 /**
- * Production seed function for user module
+ * Production seed function for auth module
  */
 async function prodSeed(): Promise<void> {
-  debugLogger("🌱 Seeding user data for production environment");
+  debugLogger("🌱 Seeding auth data for production environment");
 
+  // Create admin user
   const adminUser = createUserSeed({
     email: "admin@openeats.app",
     firstName: "Admin",
@@ -99,12 +138,19 @@ async function prodSeed(): Promise<void> {
   });
 
   // Create admin user with hashed password using the repository
-  await userRepository.createWithHashedPassword(adminUser);
+  const createdAdmin = await userRepository.createWithHashedPassword(adminUser);
 
-  debugLogger("✅ Inserted essential production users");
+  // Create admin role for admin user
+  await userRolesRepository.create({
+    userId: createdAdmin.id,
+    role: "ADMIN",
+  });
+
+  debugLogger("✅ Inserted essential production users with roles");
 }
 
-registerSeed("users", {
+// Register seeds with the seed manager
+registerSeed("auth", {
   dev: devSeed,
   test: testSeed,
   prod: prodSeed,

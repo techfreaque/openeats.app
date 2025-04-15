@@ -6,8 +6,7 @@ import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
-import { userRepository } from "../auth/me/user.repository";
-import { userRolesRepository } from "../auth/roles/roles.repository";
+import { userRepository, userRolesRepository } from "../auth/repository";
 import type { Driver } from "./drivers.db";
 import { driverRepository } from "./drivers.repository";
 import type { DriverCreateType, DriverUpdateType } from "./schema";

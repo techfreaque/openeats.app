@@ -1,7 +1,6 @@
 import type { PgDatabase } from "drizzle-orm/pg-core";
 
-import { userRepository } from "@/app/api/v1/auth/me/users.repository";
-import { userRolesRepository } from "@/app/api/v1/auth/roles/roles.repository";
+import { userRepository, userRolesRepository } from "@/app/api/v1/auth/repository";
 
 import { convertPrismaRole } from "../../../shared/types/enums";
 import type { UserRoleResponseType } from "../../../shared/types/user-roles.schema";

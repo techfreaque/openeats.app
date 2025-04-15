@@ -6,7 +6,7 @@ import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
 import type { UserResponseType, UserUpdateRequestType } from "../schema";
-import { userRepository } from "../users.repository";
+import { userRepository } from "../../repository";
 import { getFullUser } from "./get-me";
 
 /**

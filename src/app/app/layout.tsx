@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function Layout({
   children,
-  withSubMain = true,
+  withSubMain = false,
 }: {
   children: ReactNode;
   withSubMain?: boolean;

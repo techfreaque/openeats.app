@@ -13,8 +13,7 @@ import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
 import { env } from "../../../../../../config/env";
 import { getFullUser } from "../../me/route-handler/get-me";
-import { userRepository } from "../../me/users.repository";
-import { sessionRepository } from "../../sessions/sessions.repository";
+import { sessionRepository, userRepository } from "../../repository";
 import type { LoginFormInputType, LoginResponseInputType } from "./schema";
 
 /**

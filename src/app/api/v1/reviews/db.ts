@@ -7,7 +7,7 @@ import { integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import type { z } from "zod";
 
-import { users } from "../auth/me/db";
+import { users } from "../auth/me/users.db";
 import { partners } from "../restaurant/db";
 
 /**

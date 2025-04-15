@@ -9,9 +9,8 @@ import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
 import { createSessionAndGetUser } from "../../public/login/route-handler";
 import type { LoginResponseInputType } from "../../public/login/schema";
-import { userRolesRepository } from "../../roles/roles.repository";
+import { userRepository, userRolesRepository } from "../../repository";
 import type { UserResponseType } from "../schema";
-import { userRepository } from "../users.repository";
 
 /**
  * User API handlers

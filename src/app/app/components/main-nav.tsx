@@ -72,17 +72,37 @@ export function MainNav(): JSX.Element {
         <Link href="/app" className="flex items-center gap-2">
           <span className="text-2xl">🍔</span>
           <span className="font-bold text-xl">{t("common.appName")}</span>
-          <Badge variant="outline" className="hidden md:inline-flex text-xs">
+          <Badge
+            variant="outline"
+            className="hidden md:inline-flex text-xs text-nowrap"
+          >
             {t("common.openSource")}
           </Badge>
         </Link>
 
-        <div className="flex items-center gap-3">
-          <LocationSelector
-            currentLocation={location}
-            onLocationChange={handleLocationChange}
+        <form
+          onSubmit={handleSearch}
+          className="relative w-full max-[400px]: mx-3"
+        >
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t("nav.searchPlaceholder")}
+            className="pl-8 pr-10 h-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-
+          {searchQuery && (
+            <Button
+              type="submit"
+              size="sm"
+              variant="ghost"
+              className="absolute right-0 top-0 h-9 px-3"
+            >
+              Go
+            </Button>
+          )}
+        </form>
+        <div className="flex items-center gap-3">
           <div className="hidden md:flex items-center gap-2">
             <LanguageSelector />
 
@@ -205,7 +225,7 @@ export function MainNav(): JSX.Element {
                     >
                       {t("nav.restaurants")}
                     </Link>
-                    <Link
+                    {/* <Link
                       href="/app/markets"
                       className="flex items-center gap-2 py-2 text-base font-medium"
                     >
@@ -216,7 +236,7 @@ export function MainNav(): JSX.Element {
                       className="flex items-center gap-2 py-2 text-base font-medium"
                     >
                       {t("nav.localShops")}
-                    </Link>
+                    </Link> */}
                     <Link
                       href="/app/partners"
                       className="flex items-center gap-2 py-2 text-base font-medium"
@@ -331,7 +351,7 @@ export function MainNav(): JSX.Element {
             >
               {t("nav.restaurants")}
             </Link>
-            <Link
+            {/* <Link
               href="/app/markets"
               className={cn(
                 "text-sm font-medium transition-colors hover:text-primary",
@@ -352,7 +372,7 @@ export function MainNav(): JSX.Element {
               )}
             >
               {t("nav.localShops")}
-            </Link>
+            </Link> */}
             <Link
               href="/app/partners"
               className={cn(
@@ -389,26 +409,10 @@ export function MainNav(): JSX.Element {
           </nav>
 
           <div className="flex items-center gap-4">
-            <form onSubmit={handleSearch} className="relative w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t("nav.searchPlaceholder")}
-                className="pl-8 pr-10 h-9"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <Button
-                  type="submit"
-                  size="sm"
-                  variant="ghost"
-                  className="absolute right-0 top-0 h-9 px-3"
-                >
-                  Go
-                </Button>
-              )}
-            </form>
-
+            <LocationSelector
+              currentLocation={location}
+              onLocationChange={handleLocationChange}
+            />
             <Button variant="outline" size="icon" className="relative" asChild>
               <Link href="/app/cart">
                 <ShoppingCart className="h-5 w-5" />

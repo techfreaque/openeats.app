@@ -2,7 +2,7 @@ import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import type { z } from "zod";
 
-import { users } from "../auth/me/db";
+import { users } from "../auth/db";
 import { drivers } from "../drivers/db";
 import { driverRatings } from "../drivers/ratings/db";
 import { earnings } from "../earnings/db";

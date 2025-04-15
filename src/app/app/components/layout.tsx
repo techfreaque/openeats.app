@@ -14,7 +14,7 @@ import { MainNav } from "./main-nav";
 
 export default function RootLayout({
   children,
-  withSubMain = true,
+  withSubMain = false,
 }: {
   children: React.ReactNode;
   withSubMain?: boolean;

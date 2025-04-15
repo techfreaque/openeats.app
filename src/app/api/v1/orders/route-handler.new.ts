@@ -11,7 +11,7 @@ import { hasRole } from "next-vibe/server/endpoints/data";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
-import { userRolesRepository } from "@/app/api/v1/auth/roles/roles.repository";
+import { userRolesRepository } from "@/app/api/v1/auth/repository";
 import { deliveryRepository } from "@/app/api/v1/order/delivery.repository";
 import { orderRepository } from "@/app/api/v1/order/order.repository";
 

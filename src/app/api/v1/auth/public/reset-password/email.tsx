@@ -5,16 +5,15 @@ import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { ErrorResponseTypes } from "next-vibe/shared/types/response.schema";
 
 import { EmailTemplate } from "../../../../../../config/email.template";
+import { passwordResetRepository, userRepository } from "../../repository";
 import type { ResetPasswordRequestType } from "./schema";
-import { findUserByEmail } from "./user.repository";
-import { generatePasswordResetToken } from "./utils";
 
 export const renderResetPasswordMail: EmailFunctionType<
   ResetPasswordRequestType,
   string,
   UndefinedType
 > = async ({ requestData }) => {
-  const existingUser = await findUserByEmail(requestData.email);
+  const existingUser = await userRepository.findByEmail(requestData.email);
   if (!existingUser) {
     // will not get sent to the user as ignoreError is true
     return {
@@ -24,7 +23,7 @@ export const renderResetPasswordMail: EmailFunctionType<
       errorCode: 404,
     };
   }
-  const token = await generatePasswordResetToken(
+  const token = await passwordResetRepository.generateJwtToken(
     requestData.email,
     existingUser.id,
   );

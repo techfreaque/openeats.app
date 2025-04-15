@@ -7,14 +7,16 @@ export function ThemeProvider({
   children,
   ...props
 }: ThemeProviderProps): JSX.Element {
-  return <NextThemesProvider 
-    attribute="class"
-    defaultTheme="light"
-    forcedTheme="light"
-    enableSystem={false}
-    disableTransitionOnChange={false}
-    {...props}
-  >
-    {children}
-  </NextThemesProvider>;
+  return (
+    <NextThemesProvider
+      attribute="class"
+      defaultTheme="light"
+      // forcedTheme="light"
+      enableSystem={false}
+      disableTransitionOnChange={false}
+      {...props}
+    >
+      {children}
+    </NextThemesProvider>
+  );
 }

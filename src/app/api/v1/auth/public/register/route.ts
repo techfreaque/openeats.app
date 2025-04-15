@@ -10,8 +10,7 @@ import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
-import { userRepository } from "../../me/users.repository";
-import { userRolesRepository } from "../../roles/roles.repository";
+import { userRepository, userRolesRepository } from "../../repository";
 import { loginUser } from "../login/route-handler";
 import type { LoginResponseInputType } from "../login/schema";
 import registerEndpoint from "./definition";

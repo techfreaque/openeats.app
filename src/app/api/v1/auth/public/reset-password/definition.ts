@@ -3,9 +3,12 @@ import { undefinedSchema } from "next-vibe/shared/types/common.schema";
 import { Methods } from "next-vibe/shared/types/endpoint";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { messageResponseSchema } from "next-vibe/shared/types/response.schema";
-import { z } from "zod";
 
-import { resetPasswordRequestSchema } from "./schema";
+import {
+  resetPasswordConfirmSchema,
+  resetPasswordRequestSchema,
+  resetPasswordValidateSchema,
+} from "./schema";
 
 /**
  * Reset Password API endpoint definition
@@ -13,9 +16,9 @@ import { resetPasswordRequestSchema } from "./schema";
  */
 
 /**
- * Reset Password endpoint definition
+ * Reset Password Request endpoint definition
  */
-const resetPasswordEndpoint = createEndpoint({
+const resetPasswordRequestEndpoint = createEndpoint({
   description: "Send a password reset email",
   method: Methods.POST,
   path: ["v1", "auth", "public", "reset-password"],
@@ -49,67 +52,66 @@ const resetPasswordEndpoint = createEndpoint({
 });
 
 /**
- * Reset Password confirmation endpoint definition
+ * Reset Password Confirm endpoint definition
  */
 const resetPasswordConfirmEndpoint = createEndpoint({
-  description: "Confirm a password reset",
+  description: "Reset a password with a token",
   method: Methods.PUT,
   path: ["v1", "auth", "public", "reset-password"],
-  requestSchema: z.object({
-    token: z.string(),
-    password: z
-      .string()
-      .min(8, { message: "Password must be at least 8 characters" }),
-  }),
+  requestSchema: resetPasswordConfirmSchema,
   responseSchema: messageResponseSchema,
   requestUrlSchema: undefinedSchema,
   apiQueryOptions: {
     queryKey: ["reset-password-confirm"],
-    // Don't cache password reset confirmations
+    // Don't cache password reset confirmation requests
     staleTime: 0,
   },
   fieldDescriptions: {
-    token: "Password reset token",
-    password: "New password",
+    email: "Email address associated with the account",
+    token: "Password reset token received via email",
+    password: "New password (min 8 characters)",
+    confirmPassword: "Confirm new password (must match password)",
   },
   errorCodes: {
-    400: "Invalid token or password",
+    400: "Invalid request data or token",
+    404: "User not found or token already used",
     500: "Internal server error",
   },
   allowedRoles: [UserRoleValue.PUBLIC],
   examples: {
     payloads: {
       default: {
-        token: "abc123",
+        email: "user@example.com",
+        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example",
         password: "newPassword123",
+        confirmPassword: "newPassword123",
       },
     },
     urlPathVariables: undefined,
     responses: {
-      default: "Password reset successfully",
+      default:
+        "Password has been reset successfully. You can now log in with your new password.",
     },
   },
 });
 
 /**
- * Reset Password validation endpoint definition
+ * Reset Password Validate endpoint definition
  */
 const resetPasswordValidateEndpoint = createEndpoint({
   description: "Validate a password reset token",
   method: Methods.GET,
   path: ["v1", "auth", "public", "reset-password"],
-  requestSchema: z.object({
-    token: z.string(),
-  }),
+  requestSchema: resetPasswordValidateSchema,
   responseSchema: messageResponseSchema,
   requestUrlSchema: undefinedSchema,
   apiQueryOptions: {
     queryKey: ["reset-password-validate"],
-    // Don't cache password reset validations
+    // Don't cache password reset validation requests
     staleTime: 0,
   },
   fieldDescriptions: {
-    token: "Password reset token",
+    token: "Password reset token to validate",
   },
   errorCodes: {
     400: "Invalid token",
@@ -119,7 +121,7 @@ const resetPasswordValidateEndpoint = createEndpoint({
   examples: {
     payloads: {
       default: {
-        token: "abc123",
+        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example",
       },
     },
     urlPathVariables: undefined,
@@ -132,15 +134,15 @@ const resetPasswordValidateEndpoint = createEndpoint({
 /**
  * Reset Password API endpoints
  */
-const definition = {
-  POST: resetPasswordEndpoint,
+const resetPasswordEndpoints = {
+  POST: resetPasswordRequestEndpoint,
   PUT: resetPasswordConfirmEndpoint,
   GET: resetPasswordValidateEndpoint,
 };
 
-export default definition;
+// Export individual endpoints for direct access
+export const resetPasswordRequest = resetPasswordRequestEndpoint;
+export const resetPasswordConfirm = resetPasswordConfirmEndpoint;
+export const resetPasswordValidate = resetPasswordValidateEndpoint;
 
-/**
- * Export definitions for use in other files
- */
-export const definitions = definition;
+export default resetPasswordEndpoints;
