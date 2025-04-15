@@ -114,21 +114,33 @@ export function useCart(): {
   // Create a store key based on user ID
   const storeKey = `cart-${user?.id || "anonymous"}`;
 
-  // Get or initialize cart state from the store
-  const cartState = useApiStore<CartResponseType>((state) => {
-    return (
-      (state.customState[storeKey] as CartResponseType) || {
-        items: [],
-        restaurantId: null,
-        subtotal: 0,
-        deliveryFee: 0,
-        serviceFee: 0,
-        tax: 0,
-        total: 0,
-        itemCount: 0,
-      }
-    );
-  });
+  // Create memoized default state
+  const defaultCartState = useMemo<CartResponseType>(
+    () => ({
+      items: [],
+      restaurantId: null,
+      subtotal: 0,
+      deliveryFee: 0,
+      serviceFee: 0,
+      tax: 0,
+      total: 0,
+      itemCount: 0,
+    }),
+    [],
+  );
+
+  // Create a memoized selector function for the store
+  const cartSelector = useCallback(
+    (state: any) => {
+      return (
+        (state.customState?.[storeKey] as CartResponseType) || defaultCartState
+      );
+    },
+    [storeKey, defaultCartState],
+  );
+
+  // Get or initialize cart state from the store using memoized selector
+  const cartState = useApiStore<CartResponseType>(cartSelector);
 
   // Set cart state in the store
   const setCartState = useCallback(
@@ -261,7 +273,7 @@ export function useCart(): {
     Record<string, never>,
     Record<string, never>,
     "default"
-  >(cartEndpoints.CLEAR, {
+  >(cartEndpoints.DELETE, {
     onSuccess: () => {
       refetch();
     },

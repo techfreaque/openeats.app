@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/toaster";
+
 import RootLayout from "./components/layout";
 
 export const metadata: Metadata = {
