@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslation } from "next-vibe/i18n";
 import { useEffect } from "react";
 
 import { useCart as useApiCart } from "@/app/api/v1/cart/hooks";
@@ -18,7 +17,6 @@ export type { CartItem } from "@/app/api/v1/cart/hooks";
  * This is a wrapper around the API cart hook to maintain backward compatibility
  */
 export function useCart() {
-  const { t } = useTranslation();
   const {
     items,
     restaurantId,
@@ -26,6 +24,7 @@ export function useCart() {
     removeItem,
     updateQuantity,
     clearCart,
+    itemCount,
     isLoading,
   } = useApiCart();
 
@@ -36,21 +35,19 @@ export function useCart() {
         const parsedCart = JSON.parse(savedCart);
         if (parsedCart.items && parsedCart.items.length > 0) {
           toast({
-            title: t("cart.cleared", "Cart cleared"),
-            description: t(
-              "cart.clearedDescription",
-              "Your cart has been cleared",
-            ),
+            title: "Cart cleared",
+            description: "Your cart has been cleared",
           });
         }
       }
     }
-  }, [items.length, restaurantId, t]);
+  }, [items.length, restaurantId]);
 
+  // These methods are kept for backward compatibility
   const getSubtotal = (): number => {
     return items.reduce(
-      (sum, item) => sum + (item.menuItem.price || 0) * item.quantity,
-      0,
+      (sum, item) => sum + parseFloat(String(item.menuItem.price)) * item.quantity,
+      0
     );
   };
 
@@ -73,8 +70,6 @@ export function useCart() {
   const getTotal = (): number => {
     return getSubtotal() + getDeliveryFee() + getServiceFee() + getTax();
   };
-
-  const itemCount = items.reduce((count, item) => count + item.quantity, 0);
 
   return {
     items,

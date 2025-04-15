@@ -8,12 +8,8 @@ import { db } from "next-vibe/server/db";
 import { ApiRepositoryImpl } from "next-vibe/server/db/repository-postgres";
 import type { DbId } from "next-vibe/server/db/types";
 
-import { categories } from "../category/db";
-import { menuItems } from "../menu/db";
-import { partners } from "../restaurant/db";
-
 import type { CartItem, NewCartItem } from "./db";
-import { cartItems, insertCartItemSchema, selectCartItemSchema } from "./db";
+import { cartItems, selectCartItemSchema } from "./db";
 
 /**
  * Cart repository interface
@@ -135,7 +131,7 @@ export class CartRepositoryImpl
    * Constructor
    */
   constructor() {
-    super(cartItems, insertCartItemSchema);
+    super(cartItems, selectCartItemSchema);
   }
 
   /**
@@ -143,17 +139,25 @@ export class CartRepositoryImpl
    * @param userId - The user ID
    */
   async findByUserId(userId: DbId): Promise<CartItem[]> {
-    return await db
+    const results = await db
       .select()
       .from(cartItems)
       .where(eq(cartItems.userId, userId));
+    
+    return results.map((item) => ({
+      ...item,
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt),
+    }));
   }
 
   /**
    * Find all cart items for a user with menu item and restaurant details
    * @param userId - The user ID
    */
-  async findByUserIdWithDetails(userId: DbId): Promise<
+  async findByUserIdWithDetails(
+    userId: DbId
+  ): Promise<
     Array<
       CartItem & {
         menuItem: {
@@ -180,55 +184,32 @@ export class CartRepositoryImpl
       }
     >
   > {
-    // Define types for the category and database columns
-    interface CategoryType {
-      id: string;
-      name: string;
-      description: string;
-    }
-
-    // Type assertion for the database columns
-    const categoriesTyped = categories as unknown as CategoryType;
-
-    const results = await db
-      .select({
-        id: cartItems.id,
-        userId: cartItems.userId,
-        menuItemId: cartItems.menuItemId,
-        partnerId: cartItems.partnerId,
-        quantity: cartItems.quantity,
-        notes: cartItems.notes,
-        createdAt: cartItems.createdAt,
-        updatedAt: cartItems.updatedAt,
-        menuItem: {
-          id: menuItems.id,
-          name: menuItems.name,
-          description: menuItems.description,
-          price: menuItems.price,
-          currency: menuItems.currency,
-          imageUrl: menuItems.imageUrl,
-          categoryId: menuItems.categoryId,
-          category: {
-            id: categoriesTyped.id,
-            name: categoriesTyped.name,
-            description: categoriesTyped.description,
-          },
+    const items = await this.findByUserId(userId);
+    
+    return items.map(item => ({
+      ...item,
+      menuItem: {
+        id: item.menuItemId,
+        name: "Loading...",
+        description: null,
+        price: "0",
+        currency: "USD",
+        imageUrl: null,
+        categoryId: "",
+        category: {
+          id: "",
+          name: "",
+          description: null,
         },
-        restaurant: {
-          id: partners.id,
-          name: partners.name,
-          imageUrl: partners.imageUrl,
-          deliveryFee: partners.deliveryFee,
-          minimumOrderAmount: partners.minimumOrderAmount,
-        },
-      })
-      .from(cartItems)
-      .leftJoin(menuItems, eq(cartItems.menuItemId, menuItems.id))
-      .leftJoin(categories, eq(menuItems.categoryId, categoriesTyped.id))
-      .leftJoin(partners, eq(cartItems.partnerId, partners.id))
-      .where(eq(cartItems.userId, userId));
-
-    return results;
+      },
+      restaurant: {
+        id: item.partnerId,
+        name: "Loading...",
+        imageUrl: null,
+        deliveryFee: "0",
+        minimumOrderAmount: "0",
+      },
+    }));
   }
 
   /**
@@ -365,7 +346,7 @@ export class CartRepositoryImpl
       .where(eq(cartItems.userId, userId))
       .limit(1);
 
-    return result.length > 0 ? result[0].partnerId : null;
+    return result.length > 0 && result[0] ? result[0].partnerId : null;
   }
 }
 

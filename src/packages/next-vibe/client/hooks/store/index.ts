@@ -45,6 +45,8 @@ export interface ApiStore {
     }
   >;
 
+  customState: Record<string, unknown>;
+
   // Methods
   executeQuery: <TRequest, TResponse, TUrlVariables, TExampleKey>(
     endpoint: ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>,
@@ -110,6 +112,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
   queries: {},
   mutations: {},
   forms: {},
+  customState: {},
 
   getQueryId: (queryKey: QueryKey): string => generateCacheKey(queryKey),
 
