@@ -8,18 +8,21 @@
  * and a more complex useCart hook for comprehensive cart management
  */
 
-import { useApiForm, useApiQueryForm } from "next-vibe/client/hooks/api";
-import type { UseApiFormOptions } from "next-vibe/client/hooks/api/use-api-form";
-import type { UseApiQueryFormOptions } from "next-vibe/client/hooks/api/use-api-query-form";
 import { useApiMutation } from "next-vibe/client/hooks/mutation";
+import { useApiForm } from "next-vibe/client/hooks/mutation-form";
 import { useApiQuery } from "next-vibe/client/hooks/query";
+import { useApiQueryForm } from "next-vibe/client/hooks/query-form";
 import { useApiStore } from "next-vibe/client/hooks/store";
+import type {
+  ApiFormOptions,
+  ApiQueryFormOptions,
+} from "next-vibe/client/hooks/types";
+import { useTranslation } from "next-vibe/i18n";
 import { useCallback, useMemo } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import type { MenuItemResponseType } from "@/app/api/v1/restaurant/schema/menu.schema";
 import { toast } from "@/components/ui/use-toast";
-import { useTranslation } from "@/translations";
 
 import type {
   CartItemCreateType,
@@ -556,7 +559,7 @@ export function useCart(): {
  * @returns API query result with cart items
  */
 export const useGetCart = (
-  options?: UseApiQueryFormOptions<
+  options?: ApiQueryFormOptions<
     undefined,
     CartItemResponseType[],
     undefined,
@@ -575,7 +578,7 @@ export const useGetCart = (
  * @returns API form result for adding cart items
  */
 export const useAddCartItem = (
-  options?: UseApiFormOptions<
+  options?: ApiFormOptions<
     CartItemCreateType,
     CartItemResponseType,
     undefined,
@@ -594,7 +597,7 @@ export const useAddCartItem = (
  * @returns API form result for updating cart items
  */
 export const useUpdateCartItem = (
-  options?: UseApiFormOptions<
+  options?: ApiFormOptions<
     CartItemUpdateType,
     CartItemResponseType,
     { id: string },
@@ -613,7 +616,7 @@ export const useUpdateCartItem = (
  * @returns API form result for removing cart items
  */
 export const useRemoveCartItem = (
-  options?: UseApiFormOptions<undefined, undefined, { id: string }, undefined>,
+  options?: ApiFormOptions<undefined, undefined, { id: string }, undefined>,
 ) => {
   return useApiForm({
     endpoint: cartEndpoints.DELETE,

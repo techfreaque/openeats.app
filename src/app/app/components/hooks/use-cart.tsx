@@ -1,10 +1,10 @@
 "use client";
 
+import { useTranslation } from "next-vibe/i18n";
 import { useEffect } from "react";
 
 import { useCart as useApiCart } from "@/app/api/v1/cart/hooks";
 import { toast } from "@/components/ui/use-toast";
-import { useTranslation } from "@/translations";
 
 /**
  * Re-export the cart hook from the API implementation
