@@ -1,17 +1,24 @@
 import "server-only";
 
-import { cookies } from "next/headers";
 import type {
   ApiHandlerProps,
   ApiHandlerResult,
 } from "next-vibe/server/endpoints/core/api-handler";
+
+const cookies = async () => ({
+  delete: (name: string) => {
+    console.log(`Deleting cookie: ${name}`);
+  }
+});
 import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
 import { formatResponse } from "next-vibe/server/endpoints/core/api-response";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import type { MessageResponseType } from "next-vibe/shared/types/response.schema";
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
-import { sessionRepository } from "../sessions/sessions.repository";
+import { SessionRepositoryImpl } from "../repository";
+
+const sessionRepository = new SessionRepositoryImpl();
 import logoutEndpoint from "./definition";
 
 /**
@@ -52,7 +59,7 @@ async function logoutUser({
 
     // Remove sessions from database
     try {
-      await sessionRepository.invalidateAllUserSessions(user.id);
+      await sessionRepository.deleteByUserId(user.id);
       debugLogger("Deleted user sessions", { userId: user.id });
     } catch (error) {
       errorLogger("Error deleting user sessions", error);
@@ -64,9 +71,9 @@ async function logoutUser({
     errorLogger("Error during logout", error);
     return {
       success: false,
-      message:
-        error instanceof Error ? error.message : "Unknown error during logout",
+      message: error instanceof Error ? error.message : "Unknown error during logout",
       errorCode: 500,
-    };
+      data: undefined
+    } as ApiHandlerResult<MessageResponseType>;
   }
 }

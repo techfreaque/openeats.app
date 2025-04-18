@@ -1,6 +1,8 @@
 "use server";
 
-import { userRepository } from "@/app/api/v1/auth/me/users.repository";
+import { UserRepositoryImpl } from "../../../app/api/v1/auth/repository";
+
+const userRepository = new UserRepositoryImpl();
 import { uiRepository } from "@/app/api/v1/website-editor/website-editor.repository";
 // Removed db import
 import type { FullUI, UiType as _UiType } from "@/lib/website-editor/types";
