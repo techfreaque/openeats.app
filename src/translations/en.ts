@@ -244,9 +244,11 @@ const translations: TranslationSchema = {
     addedToFavorites: "Added to favorites",
     removedFromFavorites: "Removed from favorites",
     notFound: "Restaurant not found",
-    notFoundDescription: "The restaurant you're looking for doesn't exist or has been removed.",
+    notFoundDescription:
+      "The restaurant you're looking for doesn't exist or has been removed.",
     readyToOrder: "Ready to Order?",
-    exploreMenu: "Explore our full menu and place your order for delivery or pickup.",
+    exploreMenu:
+      "Explore our full menu and place your order for delivery or pickup.",
     orderTypeSelector: {
       delivery: "Delivery",
       pickup: "Pickup",

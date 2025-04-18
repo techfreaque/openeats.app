@@ -3,7 +3,7 @@
  * This file defines the database schema for favorites
  */
 
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import type { z } from "zod";
 
@@ -14,14 +14,14 @@ import { partners } from "../restaurant/db";
  * Favorites table schema
  */
 export const favorites = pgTable("favorites", {
-  id: text("id").primaryKey().notNull(),
-  userId: text("userId")
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  restaurantId: text("restaurantId")
+  restaurantId: uuid("restaurant_id")
     .notNull()
     .references(() => partners.id, { onDelete: "cascade" }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 /**

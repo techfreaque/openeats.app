@@ -9,20 +9,15 @@ import { useApiMutation } from "next-vibe/client/hooks/mutation";
 import { useApiForm } from "next-vibe/client/hooks/mutation-form";
 import { useApiQuery } from "next-vibe/client/hooks/query";
 import { useApiQueryForm } from "next-vibe/client/hooks/query-form";
+import { useTranslation } from "next-vibe/i18n";
+import { useCallback } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { useTranslation } from "next-vibe/i18n";
-import { useCallback, useEffect } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import type { MenuItemResponseType } from "@/app/api/v1/restaurant/schema/menu.schema";
 import { toast } from "@/components/ui/use-toast";
 
-import type {
-  CartItemCreateType,
-  CartItemResponseType,
-  CartItemUpdateType,
-} from "./definition";
 import cartEndpoints from "./definition";
 
 /**
@@ -143,7 +138,10 @@ export const useCartStore = create<CartState>()(
       },
 
       addItem: (
-        menuItem: MenuItemResponseType & { partnerId: string; categoryId: string },
+        menuItem: MenuItemResponseType & {
+          partnerId: string;
+          categoryId: string;
+        },
         quantity: number,
         specialInstructions?: string | null,
       ) => {
@@ -214,8 +212,12 @@ export const useCartStore = create<CartState>()(
                 name: "",
                 image: "",
               },
-              availableFrom: menuItem.availableFrom ? menuItem.availableFrom.toString() : null,
-              availableTo: menuItem.availableTo ? menuItem.availableTo.toString() : null,
+              availableFrom: menuItem.availableFrom
+                ? menuItem.availableFrom.toString()
+                : null,
+              availableTo: menuItem.availableTo
+                ? menuItem.availableTo.toString()
+                : null,
             },
           };
           updatedItems = [...items, newItem];
@@ -336,10 +338,10 @@ export function useCart(): {
 } {
   const { user } = useAuth();
   const { t } = useTranslation();
-  
+
   // Get cart state from zustand store
   const cartState = useCartStore();
-  
+
   // API query for fetching cart items
   const { isLoading, refetch } = useApiQuery(
     cartEndpoints.GET,
@@ -396,31 +398,37 @@ export function useCart(): {
     },
   });
 
-  const { mutateAsync: updateItemMutation } = useApiMutation(cartEndpoints.PUT, {
-    onSuccess: () => {
-      refetch();
+  const { mutateAsync: updateItemMutation } = useApiMutation(
+    cartEndpoints.PUT,
+    {
+      onSuccess: () => {
+        refetch();
+      },
+      onError: (data: { error: Error }) => {
+        toast({
+          title: "Error",
+          description: data.error.message || "Failed to update cart item",
+          variant: "destructive",
+        });
+      },
     },
-    onError: (data: { error: Error }) => {
-      toast({
-        title: "Error",
-        description: data.error.message || "Failed to update cart item",
-        variant: "destructive",
-      });
-    },
-  });
+  );
 
-  const { mutateAsync: removeItemMutation } = useApiMutation(cartEndpoints.DELETE, {
-    onSuccess: () => {
-      refetch();
+  const { mutateAsync: removeItemMutation } = useApiMutation(
+    cartEndpoints.DELETE,
+    {
+      onSuccess: () => {
+        refetch();
+      },
+      onError: (data: { error: Error }) => {
+        toast({
+          title: "Error",
+          description: data.error.message || "Failed to remove cart item",
+          variant: "destructive",
+        });
+      },
     },
-    onError: (data: { error: Error }) => {
-      toast({
-        title: "Error",
-        description: data.error.message || "Failed to remove cart item",
-        variant: "destructive",
-      });
-    },
-  });
+  );
 
   const { mutateAsync: clearCartMutation } = useApiMutation(
     cartEndpoints.DELETE,
@@ -441,7 +449,10 @@ export function useCart(): {
   // Add item to cart
   const addItem = useCallback(
     async (
-      menuItem: MenuItemResponseType & { partnerId: string; categoryId: string },
+      menuItem: MenuItemResponseType & {
+        partnerId: string;
+        categoryId: string;
+      },
       quantity: number,
       specialInstructions?: string | null,
     ): Promise<void> => {
@@ -558,9 +569,7 @@ export function useCart(): {
  * @param options - API query options
  * @returns API query result with cart items
  */
-export const useGetCart = (
-  options?: Parameters<typeof useApiQueryForm>[0],
-) => {
+export const useGetCart = (options?: Parameters<typeof useApiQueryForm>[0]) => {
   return useApiQueryForm({
     endpoint: cartEndpoints.GET,
     ...options,
@@ -572,9 +581,7 @@ export const useGetCart = (
  * @param options - API form options
  * @returns API form result for adding cart items
  */
-export const useAddCartItem = (
-  options?: Parameters<typeof useApiForm>[0],
-) => {
+export const useAddCartItem = (options?: Parameters<typeof useApiForm>[0]) => {
   return useApiForm({
     endpoint: cartEndpoints.POST,
     ...options,

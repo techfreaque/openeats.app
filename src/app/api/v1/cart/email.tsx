@@ -19,13 +19,13 @@ export const renderCartEmail: EmailFunctionType<
 > = async ({ responseData, requestData, urlVariables, user }) => {
   try {
     const fullUser = await getFullUser(user.id);
-    
+
     // Log data for debugging
     debugLogger("Cart email request data:", requestData);
     debugLogger("Cart email URL variables:", urlVariables);
     debugLogger("Cart email user:", user);
     debugLogger("Cart email response data:", responseData);
-    
+
     return {
       success: true,
       data: {

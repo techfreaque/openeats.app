@@ -40,7 +40,7 @@ const CATEGORY_ICONS = {
 
 export default function Home(): JSX.Element {
   const { form, data, isLoading, submitForm } = useRestaurants();
-  const restaurants = (data?.restaurants || []) as RestaurantResponseType[];
+  const restaurants = data?.restaurants || [];
 
   const [activeCategory, setActiveCategory] = useState("all");
   const [deliveryType, setDeliveryType] = useState<DeliveryType>(

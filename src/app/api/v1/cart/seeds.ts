@@ -3,116 +3,193 @@
  * This file provides seed data for testing and development
  */
 
-import { nanoid } from "nanoid";
+import { sql } from "drizzle-orm";
 import { db } from "next-vibe/server/db";
-import { registerSeed } from "next-vibe/server/db/seed-manager";
 import { debugLogger } from "next-vibe/shared/utils/logger";
+import { v4 as uuidv4 } from "uuid";
+
+import { users } from "../auth/me/users.db";
+import { menuItems } from "../menu/db";
+import { partners } from "../restaurant/db";
 
 import { cartItems, type NewCartItem } from "./db";
 
-/**
- * Helper function to create cart item seed data
- * @param overrides - Optional overrides for the cart item
- * @returns A new cart item object
- */
-function createCartItemSeed(overrides?: Partial<NewCartItem>): NewCartItem {
-  const baseData: NewCartItem = {
-    id: nanoid(),
-    userId: "00000000-0000-0000-0000-000000000001", // Will be replaced with actual user ID
-    menuItemId: "00000000-0000-0000-0000-000000000001", // Will be replaced with actual menu item ID
-    partnerId: "00000000-0000-0000-0000-000000000001", // Will be replaced with actual partner ID
-    quantity: 1,
-    notes: "No special instructions",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  };
 
-  return baseData;
-}
 
 /**
  * Development seed function for cart module
- * @returns Promise that resolves when seeding is complete
  */
-async function seedCartItemsDev(): Promise<void> {
+async function devSeed(): Promise<void> {
   debugLogger("🌱 Seeding cart data for development environment");
 
+  // First, get some user IDs, menu item IDs, and restaurant IDs to associate cart items with
+  const userIds = await db.select({ id: users.id }).from(users).limit(3);
+  const menuItemsData = await db
+    .select({ id: menuItems.id, partnerId: menuItems.partnerId })
+    .from(menuItems)
+    .limit(5);
+
+  // If no users or menu items exist yet, log a warning and return
+  if (userIds.length === 0 || menuItemsData.length === 0) {
+    debugLogger("⚠️ No users or menu items found to associate cart items with, skipping cart seeds");
+    return;
+  }
+
+  // Create sample cart items for development
   const devCartItems = [
-    createCartItemSeed({
-      userId: "dev-user-1",
-      menuItemId: "dev-menu-item-1",
-      partnerId: "dev-restaurant-1",
+    {
+      id: uuidv4(),
+      userId: userIds[0]?.id,
+      menuItemId: menuItemsData[0]?.id,
+      partnerId: menuItemsData[0]?.partnerId,
       quantity: 2,
-      notes: "Extra sauce please",
-    }),
-    createCartItemSeed({
-      userId: "dev-user-1",
-      menuItemId: "dev-menu-item-2",
-      partnerId: "dev-restaurant-1",
+      notes: "Extra cheese please",
+    },
+    {
+      id: uuidv4(),
+      userId: userIds[0]?.id,
+      menuItemId: menuItemsData.length > 1 ? menuItemsData[1]?.id : menuItemsData[0]?.id,
+      partnerId: menuItemsData.length > 1 ? menuItemsData[1]?.partnerId : menuItemsData[0]?.partnerId,
       quantity: 1,
-      notes: "No onions",
-    }),
-    createCartItemSeed({
-      userId: "dev-user-2",
-      menuItemId: "dev-menu-item-3",
-      partnerId: "dev-restaurant-2",
+      notes: null,
+    },
+    {
+      id: uuidv4(),
+      userId: userIds.length > 1 ? userIds[1]?.id : userIds[0]?.id,
+      menuItemId: menuItemsData.length > 2 ? menuItemsData[2]?.id : menuItemsData[0]?.id,
+      partnerId: menuItemsData.length > 2 ? menuItemsData[2]?.partnerId : menuItemsData[0]?.partnerId,
       quantity: 3,
-      notes: "Well done",
-    }),
-  ];
+      notes: "No onions",
+    },
+  ].filter(item =>
+    item.userId !== undefined &&
+    item.menuItemId !== undefined &&
+    item.partnerId !== undefined
+  ) as any[];
 
-  // Insert development cart items
-  await db.insert(cartItems).values(devCartItems);
+  // Check if the cart_items table exists before trying to insert
+  try {
+    // Use upsert operation (insert or update)
+    const insertedCartItems = await db
+      .insert(cartItems)
+      .values(devCartItems)
+      .onConflictDoUpdate({
+        target: [cartItems.userId, cartItems.menuItemId],
+        set: {
+          quantity: sql`excluded.quantity`,
+          notes: sql`excluded.notes`,
+          updatedAt: sql`now()`,
+        },
+      })
+      .returning({ id: cartItems.id });
 
-  debugLogger(`✅ Created ${devCartItems.length} development cart items`);
+    debugLogger(`✅ Inserted ${insertedCartItems.length} development cart items`);
+  } catch (error) {
+    // If the table doesn't exist, log a warning and continue
+    if ((error as any)?.code === '42P01') { // relation does not exist
+      debugLogger("⚠️ Cart items table does not exist yet, skipping cart seeds");
+    } else {
+      // Re-throw other errors
+      throw error;
+    }
+  }
 }
 
 /**
  * Test seed function for cart module
- * @returns Promise that resolves when seeding is complete
  */
-async function seedCartItemsTest(): Promise<void> {
+async function testSeed(): Promise<void> {
   debugLogger("🌱 Seeding cart data for test environment");
 
+  // First, get some user IDs, menu item IDs, and restaurant IDs to associate cart items with
+  const userIds = await db.select({ id: users.id }).from(users).limit(2);
+  const menuItemsData = await db
+    .select({ id: menuItems.id, partnerId: menuItems.partnerId })
+    .from(menuItems)
+    .limit(2);
+
+  // If no users or menu items exist yet, log a warning and return
+  if (userIds.length === 0 || menuItemsData.length === 0) {
+    debugLogger("⚠️ No users or menu items found to associate cart items with, skipping cart seeds");
+    return;
+  }
+
+  // Create sample cart items for testing
   const testCartItems = [
-    createCartItemSeed({
-      userId: "test-user-1",
-      menuItemId: "test-menu-item-1",
-      partnerId: "test-restaurant-1",
+    {
+      id: uuidv4(),
+      userId: userIds[0]?.id,
+      menuItemId: menuItemsData[0]?.id,
+      partnerId: menuItemsData[0]?.partnerId,
       quantity: 1,
-      notes: "Test Cart Item 1",
-    }),
-    createCartItemSeed({
-      userId: "test-user-1",
-      menuItemId: "test-menu-item-2",
-      partnerId: "test-restaurant-1",
+      notes: "Test note",
+    },
+    {
+      id: uuidv4(),
+      userId: userIds.length > 1 ? userIds[1]?.id : userIds[0]?.id,
+      menuItemId: menuItemsData.length > 1 ? menuItemsData[1]?.id : menuItemsData[0]?.id,
+      partnerId: menuItemsData.length > 1 ? menuItemsData[1]?.partnerId : menuItemsData[0]?.partnerId,
       quantity: 2,
-      notes: "Test Cart Item 2",
-    }),
-  ];
+      notes: null,
+    },
+  ].filter(item =>
+    item.userId !== undefined &&
+    item.menuItemId !== undefined &&
+    item.partnerId !== undefined
+  ) as any[];
 
-  // Insert test cart items
-  await db.insert(cartItems).values(testCartItems);
+  // Check if the cart_items table exists before trying to insert
+  try {
+    // Use upsert operation (insert or update)
+    await db
+      .insert(cartItems)
+      .values(testCartItems)
+      .onConflictDoUpdate({
+        target: [cartItems.userId, cartItems.menuItemId],
+        set: {
+          quantity: sql`excluded.quantity`,
+          notes: sql`excluded.notes`,
+          updatedAt: sql`now()`,
+        },
+      });
 
-  debugLogger("✅ Created test cart items");
+    debugLogger("✅ Inserted test cart items");
+  } catch (error) {
+    // If the table doesn't exist, log a warning and continue
+    if ((error as any)?.code === '42P01') { // relation does not exist
+      debugLogger("⚠️ Cart items table does not exist yet, skipping cart seeds");
+    } else {
+      // Re-throw other errors
+      throw error;
+    }
+  }
 }
 
 /**
  * Production seed function for cart module
- * @returns Promise that resolves when seeding is complete
  */
-async function seedCartItemsProd(): Promise<void> {
+async function prodSeed(): Promise<void> {
   debugLogger("🌱 Seeding cart data for production environment");
 
-  // No production seeds for cart items
-  // This is just a placeholder
-  debugLogger("✅ No production cart items needed");
+  // In production, we don't seed cart items
+  // as they should be created by users themselves
+
+  // Add a dummy await to satisfy TypeScript
+  await Promise.resolve();
+
+  debugLogger("✅ No production cart items needed, skipping");
 }
 
-// Register seeds with the seed manager
-registerSeed("cart-items", {
-  dev: seedCartItemsDev,
-  test: seedCartItemsTest,
-  prod: seedCartItemsProd,
-});
+// Export the seed functions directly
+export const dev = devSeed;
+export const test = testSeed;
+export const prod = prodSeed;
+
+// Also export as default for compatibility
+const seeds = {
+  dev,
+  test,
+  prod,
+};
+
+export default seeds;

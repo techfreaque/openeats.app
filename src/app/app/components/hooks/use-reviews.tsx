@@ -1,15 +1,21 @@
 "use client";
 
-import type { ReactNode } from "react";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
+
 import { useReviews as useApiReviews } from "@/app/api/v1/reviews/hooks";
+import type {
+  ProductReviewType,
+  ReviewResponseType,
+} from "@/app/api/v1/reviews/schema";
+
 import type { ReviewType } from "../lib/types";
-import type { ProductReviewType, ReviewResponseType } from "@/app/api/v1/reviews/schema";
 
 /**
  * Convert API review response to legacy ReviewType
  */
-const convertApiReviewToLegacyReview = (apiReview: ReviewResponseType): ReviewType => {
+const convertApiReviewToLegacyReview = (
+  apiReview: ReviewResponseType,
+): ReviewType => {
   return {
     id: apiReview.id,
     userId: apiReview.userId,
@@ -24,11 +30,11 @@ const convertApiReviewToLegacyReview = (apiReview: ReviewResponseType): ReviewTy
         productName: pr.productName,
         rating: pr.rating,
       };
-      
+
       if (pr.comment !== undefined) {
         return { ...review, comment: pr.comment };
       }
-      
+
       return review;
     }),
     date: apiReview.date,
@@ -85,48 +91,50 @@ export function useReviews(): {
     getAverageRestaurantRating,
     getAverageProductRating,
   } = useApiReviews();
-  
+
   const reviews = apiReviews.map(convertApiReviewToLegacyReview);
-  
+
   const userReviews = apiUserReviews.map(convertApiReviewToLegacyReview);
-  
+
   const restaurantReviews = (restaurantId: string): ReviewType[] => {
-    return apiRestaurantReviews(restaurantId).map(convertApiReviewToLegacyReview);
+    return apiRestaurantReviews(restaurantId).map(
+      convertApiReviewToLegacyReview,
+    );
   };
-  
+
   const productReviews = (productId: string): ReviewType[] => {
     return apiProductReviews(productId).map(convertApiReviewToLegacyReview);
   };
-  
+
   const addReview = async (
     reviewData: Omit<
       ReviewType,
       "id" | "userId" | "userName" | "userAvatar" | "date"
-    >
+    >,
   ): Promise<boolean> => {
-    return apiAddReview({
+    return await apiAddReview({
       restaurantId: reviewData.restaurantId,
       restaurantRating: reviewData.restaurantRating,
       restaurantComment: reviewData.restaurantComment,
       productReviews: reviewData.productReviews,
     });
   };
-  
+
   const updateReview = async (
     reviewId: string,
-    reviewData: Partial<ReviewType>
+    reviewData: Partial<ReviewType>,
   ): Promise<boolean> => {
-    return apiUpdateReview(reviewId, {
+    return await apiUpdateReview(reviewId, {
       restaurantRating: reviewData.restaurantRating,
       restaurantComment: reviewData.restaurantComment,
       productReviews: reviewData.productReviews,
     });
   };
-  
+
   const deleteReview = async (reviewId: string): Promise<boolean> => {
-    return apiDeleteReview(reviewId);
+    return await apiDeleteReview(reviewId);
   };
-  
+
   return {
     reviews,
     userReviews,

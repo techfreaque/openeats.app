@@ -5,8 +5,8 @@ import { formatResponse } from "next-vibe/server/endpoints/core/api-response";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
-import type { UserResponseType, UserUpdateRequestType } from "../schema";
 import { userRepository } from "../../repository";
+import type { UserResponseType, UserUpdateRequestType } from "../schema";
 import { getFullUser } from "./get-me";
 
 /**

@@ -1,9 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
+
 import { useOrders as useApiOrders } from "../../../api/v1/order/hooks";
-import type { OrderResponseType, OrderStatus } from "../../../api/v1/order/schema";
+import type {
+  OrderResponseType,
+  OrderStatus,
+} from "../../../api/v1/order/schema";
 
 /**
  * Re-export the order types from the API schema
@@ -94,8 +97,8 @@ export function useOrders() {
       }>;
       status: string;
     };
-    
-    const mappedItems: OrderItem[] = typedOrder.orderItems.map(item => {
+
+    const mappedItems: OrderItem[] = typedOrder.orderItems.map((item) => {
       const orderItem: OrderItem = {
         id: item.id,
         name: item.menuItemId || "Unknown Item", // Provide default for type safety
@@ -106,15 +109,16 @@ export function useOrders() {
       return orderItem;
     });
 
-    const subtotal = typedOrder.total - 
-      (typedOrder.deliveryFee || 0) - 
-      (typedOrder.driverTip || 0) - 
-      (typedOrder.restaurantTip || 0) - 
+    const subtotal =
+      typedOrder.total -
+      (typedOrder.deliveryFee || 0) -
+      (typedOrder.driverTip || 0) -
+      (typedOrder.restaurantTip || 0) -
       (typedOrder.projectTip || 0);
 
-    const deliveryAddress = typedOrder.delivery ? 
-      `${typedOrder.delivery.street || ''} ${typedOrder.delivery.streetNumber || ''}, ${typedOrder.delivery.city || ''}, ${typedOrder.delivery.zip || ''}` : 
-      undefined;
+    const deliveryAddress = typedOrder.delivery
+      ? `${typedOrder.delivery.street || ""} ${typedOrder.delivery.streetNumber || ""}, ${typedOrder.delivery.city || ""}, ${typedOrder.delivery.zip || ""}`
+      : undefined;
 
     const deliveryInstructions = typedOrder.delivery?.message || undefined;
 
@@ -123,13 +127,14 @@ export function useOrders() {
     const driverId = typedOrder.delivery?.driver?.id;
     const driverName = typedOrder.delivery?.driver?.user?.firstName;
 
-    const createdAt = typeof typedOrder.createdAt === 'string' ? 
-      typedOrder.createdAt : 
-      typedOrder.createdAt.toISOString();
+    const createdAt =
+      typeof typedOrder.createdAt === "string"
+        ? typedOrder.createdAt
+        : typedOrder.createdAt.toISOString();
 
     const estimatedDeliveryTime = new Date(
-      new Date(createdAt).getTime() + 
-      (typedOrder.delivery?.estimatedDeliveryTime || 30) * 60 * 1000
+      new Date(createdAt).getTime() +
+        (typedOrder.delivery?.estimatedDeliveryTime || 30) * 60 * 1000,
     ).toISOString();
 
     const result: Order = {
@@ -157,11 +162,13 @@ export function useOrders() {
   };
 
   const orders = apiOrders.map(convertApiOrderToLegacyOrder);
-  
-  const currentOrder = apiCurrentOrder ? convertApiOrderToLegacyOrder(apiCurrentOrder) : null;
-  
+
+  const currentOrder = apiCurrentOrder
+    ? convertApiOrderToLegacyOrder(apiCurrentOrder)
+    : null;
+
   const error = apiError ? apiError.message : null;
-  
+
   const getOrderById = (id: string): Order | null => {
     const apiOrder = apiGetOrderById(id);
     return apiOrder ? convertApiOrderToLegacyOrder(apiOrder) : null;
@@ -182,6 +189,10 @@ export function useOrders() {
  * OrderProvider is no longer needed as we're using zustand store hooks
  * This is kept as a no-op component for backward compatibility
  */
-export function OrderProvider({ children }: { children: ReactNode }): JSX.Element {
+export function OrderProvider({
+  children,
+}: {
+  children: ReactNode;
+}): JSX.Element {
   return <>{children}</>;
 }

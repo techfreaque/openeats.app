@@ -26,8 +26,10 @@ export function RestaurantHero({
   const [isScrolling, setIsScrolling] = useState(false);
 
   // Combine main image with additional images for carousel
-  const allImages = [restaurantImage, ...(Array.isArray(additionalImages) ? additionalImages : [])].filter((img): img is string => 
-    typeof img === 'string' && img.length > 0);
+  const allImages = [
+    restaurantImage,
+    ...(Array.isArray(additionalImages) ? additionalImages : []),
+  ].filter((img): img is string => typeof img === "string" && img.length > 0);
 
   // Auto-advance carousel if style is carousel
   useEffect(() => {
@@ -176,7 +178,7 @@ export function RestaurantHero({
         <div className="absolute inset-0 bg-black/40" />
 
         {/* Hero content */}
-        {config && config.heroContent && (
+        {config?.heroContent && (
           <div className="absolute inset-0 flex items-center justify-center text-white">
             <div className="text-center p-4 max-w-3xl">
               {config.heroContent?.showLogo && (
@@ -271,7 +273,7 @@ export function RestaurantHero({
       />
 
       {/* Hero content overlay */}
-      {config && config.heroContent && (
+      {config?.heroContent && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white">
           <div className="text-center p-4 max-w-3xl">
             {config.heroContent?.showLogo && (

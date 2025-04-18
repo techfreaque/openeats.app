@@ -3,7 +3,6 @@
  * Provides seed data for auth-related tables
  */
 
-import { registerSeed } from "next-vibe/server/db/seed-manager";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
 import type { NewUser } from "./db";
@@ -65,24 +64,42 @@ async function devSeed(): Promise<void> {
   );
 
   // Create roles for users
-  await userRolesRepository.create({
-    userId: createdUsers[0].id, // Admin user
-    role: "ADMIN",
-  });
+  try {
+    if (createdUsers.length > 0 && createdUsers[0]?.id) {
+      await userRolesRepository.create({
+        userId: createdUsers[0].id, // Admin user
+        role: "ADMIN",
+      });
+    }
 
-  await userRolesRepository.create({
-    userId: createdUsers[1].id, // Demo user
-    role: "CUSTOMER",
-  });
+    if (createdUsers.length > 1 && createdUsers[1]?.id) {
+      await userRolesRepository.create({
+        userId: createdUsers[1].id, // Demo user
+        role: "CUSTOMER",
+      });
+    }
 
-  for (let i = 2; i < createdUsers.length; i++) {
-    await userRolesRepository.create({
-      userId: createdUsers[i].id, // Regular users
-      role: "CUSTOMER",
-    });
+    for (let i = 2; i < createdUsers.length; i++) {
+      if (createdUsers[i]?.id) {
+        await userRolesRepository.create({
+          userId: createdUsers[i].id, // Regular users
+          role: "CUSTOMER",
+        });
+      }
+    }
+
+    debugLogger(`✅ Inserted ${createdUsers.length} development users with roles`);
+  } catch (error) {
+    // If the table doesn't exist, log a warning and continue
+    if ((error as any)?.code === '42P01') { // relation does not exist
+      debugLogger("⚠️ User roles table does not exist yet, skipping auth role seeds");
+    } else {
+      // Re-throw other errors
+      throw error;
+    }
   }
 
-  debugLogger(`✅ Inserted ${createdUsers.length} development users with roles`);
+
 }
 
 /**
@@ -111,17 +128,31 @@ async function testSeed(): Promise<void> {
   );
 
   // Create roles for test users
-  await userRolesRepository.create({
-    userId: createdUsers[0].id,
-    role: "ADMIN",
-  });
+  try {
+    if (createdUsers.length > 0 && createdUsers[0]?.id) {
+      await userRolesRepository.create({
+        userId: createdUsers[0].id,
+        role: "ADMIN",
+      });
+    }
 
-  await userRolesRepository.create({
-    userId: createdUsers[1].id,
-    role: "CUSTOMER",
-  });
+    if (createdUsers.length > 1 && createdUsers[1]?.id) {
+      await userRolesRepository.create({
+        userId: createdUsers[1].id,
+        role: "CUSTOMER",
+      });
+    }
 
-  debugLogger("✅ Inserted test users with roles");
+    debugLogger("✅ Inserted test users with roles");
+  } catch (error) {
+    // If the table doesn't exist, log a warning and continue
+    if ((error as any)?.code === '42P01') { // relation does not exist
+      debugLogger("⚠️ User roles table does not exist yet, skipping auth role seeds");
+    } else {
+      // Re-throw other errors
+      throw error;
+    }
+  }
 }
 
 /**
@@ -141,17 +172,34 @@ async function prodSeed(): Promise<void> {
   const createdAdmin = await userRepository.createWithHashedPassword(adminUser);
 
   // Create admin role for admin user
-  await userRolesRepository.create({
-    userId: createdAdmin.id,
-    role: "ADMIN",
-  });
+  try {
+    await userRolesRepository.create({
+      userId: createdAdmin.id,
+      role: "ADMIN",
+    });
 
-  debugLogger("✅ Inserted essential production users with roles");
+    debugLogger("✅ Inserted essential production users with roles");
+  } catch (error) {
+    // If the table doesn't exist, log a warning and continue
+    if ((error as any)?.code === '42P01') { // relation does not exist
+      debugLogger("⚠️ User roles table does not exist yet, skipping auth role seeds");
+    } else {
+      // Re-throw other errors
+      throw error;
+    }
+  }
 }
 
-// Register seeds with the seed manager
-registerSeed("auth", {
-  dev: devSeed,
-  test: testSeed,
-  prod: prodSeed,
-});
+// Export the seed functions directly
+export const dev = devSeed;
+export const test = testSeed;
+export const prod = prodSeed;
+
+// Also export as default for compatibility
+const seeds = {
+  dev,
+  test,
+  prod,
+};
+
+export default seeds;

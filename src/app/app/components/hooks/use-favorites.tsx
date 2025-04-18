@@ -1,7 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
+
 import { useFavorites as useApiFavorites } from "@/app/api/v1/favorites/hooks";
 
 /**
@@ -36,15 +36,15 @@ export function useFavorites(): {
     removeFavorite: apiRemoveFavorite,
     isFavorite,
   } = useApiFavorites();
-  
+
   const addFavorite = async (restaurantId: string): Promise<void> => {
     await apiAddFavorite(restaurantId);
   };
-  
+
   const removeFavorite = async (restaurantId: string): Promise<void> => {
     await apiRemoveFavorite(restaurantId);
   };
-  
+
   return {
     favorites,
     isLoading,

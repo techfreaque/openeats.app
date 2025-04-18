@@ -46,8 +46,9 @@ export function useCart() {
   // These methods are kept for backward compatibility
   const getSubtotal = (): number => {
     return items.reduce(
-      (sum, item) => sum + parseFloat(String(item.menuItem.price)) * item.quantity,
-      0
+      (sum, item) =>
+        sum + parseFloat(String(item.menuItem.price)) * item.quantity,
+      0,
     );
   };
 

@@ -244,9 +244,11 @@ const translations = {
     addedToFavorites: "Zu Favoriten hinzugefügt",
     removedFromFavorites: "Aus Favoriten entfernt",
     notFound: "Restaurant nicht gefunden",
-    notFoundDescription: "Das gesuchte Restaurant existiert nicht oder wurde entfernt.",
+    notFoundDescription:
+      "Das gesuchte Restaurant existiert nicht oder wurde entfernt.",
     readyToOrder: "Bereit zum Bestellen?",
-    exploreMenu: "Erkunde unser vollständiges Menü und gib deine Bestellung für Lieferung oder Abholung auf.",
+    exploreMenu:
+      "Erkunde unser vollständiges Menü und gib deine Bestellung für Lieferung oder Abholung auf.",
     orderTypeSelector: {
       delivery: "Lieferung",
       pickup: "Abholung",

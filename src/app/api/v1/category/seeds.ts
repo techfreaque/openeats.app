@@ -1,5 +1,5 @@
+import { sql } from "drizzle-orm";
 import { db } from "next-vibe/server/db";
-import { registerSeed } from "next-vibe/server/db/seed-manager";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
 import type { NewCategory } from "./db";
@@ -53,15 +53,33 @@ async function devSeed(): Promise<void> {
     }),
   ];
 
-  const insertedCategories = await db
-    .insert(categories)
-    .values(devCategories)
-    .onConflictDoNothing()
-    .returning({ id: categories.id });
+  // Check if the categories table exists before trying to insert
+  try {
+    // Use upsert operation (insert or update)
+    const insertedCategories = await db
+      .insert(categories)
+      .values(devCategories)
+      .onConflictDoUpdate({
+        target: categories.name,
+        set: {
+          description: sql`excluded.description`,
+          imageUrl: sql`excluded.image_url`,
+          published: sql`excluded.published`,
+          updatedAt: sql`now()`,
+        },
+      })
+      .returning({ id: categories.id });
 
-  debugLogger(
-    `✅ Inserted ${insertedCategories.length} development categories`,
-  );
+    debugLogger(`✅ Inserted ${insertedCategories.length} development categories`);
+  } catch (error) {
+    // If the table doesn't exist, log a warning and continue
+    if ((error as any)?.code === '42P01') { // relation does not exist
+      debugLogger("⚠️ Categories table does not exist yet, skipping category seeds");
+    } else {
+      // Re-throw other errors
+      throw error;
+    }
+  }
 }
 
 /**
@@ -79,9 +97,32 @@ async function testSeed(): Promise<void> {
     }),
   ];
 
-  await db.insert(categories).values(testCategories).onConflictDoNothing();
+  // Check if the categories table exists before trying to insert
+  try {
+    // Use upsert operation (insert or update)
+    await db
+      .insert(categories)
+      .values(testCategories)
+      .onConflictDoUpdate({
+        target: categories.name,
+        set: {
+          description: sql`excluded.description`,
+          imageUrl: sql`excluded.image_url`,
+          published: sql`excluded.published`,
+          updatedAt: sql`now()`,
+        },
+      });
 
-  debugLogger("✅ Inserted test categories");
+    debugLogger("✅ Inserted test categories");
+  } catch (error) {
+    // If the table doesn't exist, log a warning and continue
+    if ((error as any)?.code === '42P01') { // relation does not exist
+      debugLogger("⚠️ Categories table does not exist yet, skipping category seeds");
+    } else {
+      // Re-throw other errors
+      throw error;
+    }
+  }
 }
 
 /**
@@ -98,13 +139,44 @@ async function prodSeed(): Promise<void> {
     }),
   ];
 
-  await db.insert(categories).values(essentialCategories).onConflictDoNothing();
+  // Check if the categories table exists before trying to insert
+  try {
+    // Use upsert operation (insert or update)
+    await db
+      .insert(categories)
+      .values(essentialCategories)
+      .onConflictDoUpdate({
+        target: categories.name,
+        set: {
+          description: sql`excluded.description`,
+          imageUrl: sql`excluded.image_url`,
+          published: sql`excluded.published`,
+          updatedAt: sql`now()`,
+        },
+      });
 
-  debugLogger("✅ Inserted essential production categories");
+    debugLogger("✅ Inserted essential production categories");
+  } catch (error) {
+    // If the table doesn't exist, log a warning and continue
+    if ((error as any)?.code === '42P01') { // relation does not exist
+      debugLogger("⚠️ Categories table does not exist yet, skipping category seeds");
+    } else {
+      // Re-throw other errors
+      throw error;
+    }
+  }
 }
 
-registerSeed("category", {
-  dev: devSeed,
-  test: testSeed,
-  prod: prodSeed,
-});
+// Export the seed functions directly
+export const dev = devSeed;
+export const test = testSeed;
+export const prod = prodSeed;
+
+// Also export as default for compatibility
+const seeds = {
+  dev,
+  test,
+  prod,
+};
+
+export default seeds;

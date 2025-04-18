@@ -1,4 +1,3 @@
-import { registerSeed } from "next-vibe/server/db/seed-manager";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
 import { type NewUser } from "../db";
@@ -52,11 +51,28 @@ async function devSeed(): Promise<void> {
   const allUsers = [adminUser, demoUser, ...regularUsers];
 
   // Create users with hashed passwords using the repository
-  const createdUsers = await Promise.all(
-    allUsers.map((user) => userRepository.createWithHashedPassword(user)),
-  );
+  // Handle potential duplicates by checking if the user already exists
+  const createdUsers = [];
 
-  debugLogger(`✅ Inserted ${createdUsers.length} development users`);
+  for (const user of allUsers) {
+    try {
+      // Check if user already exists
+      const existingUser = await userRepository.findByEmail(user.email);
+
+      if (existingUser) {
+        debugLogger(`User with email ${user.email} already exists, skipping`);
+        createdUsers.push(existingUser);
+      } else {
+        // Create new user
+        const newUser = await userRepository.createWithHashedPassword(user);
+        createdUsers.push(newUser);
+      }
+    } catch (error) {
+      debugLogger(`Error creating user ${user.email}: ${(error as Error).message}`);
+    }
+  }
+
+  debugLogger(`✅ Processed ${createdUsers.length} development users`);
 }
 
 /**
@@ -79,11 +95,28 @@ async function testSeed(): Promise<void> {
   ];
 
   // Create test users with hashed passwords using the repository
-  await Promise.all(
-    testUsers.map((user) => userRepository.createWithHashedPassword(user)),
-  );
+  // Handle potential duplicates by checking if the user already exists
+  const createdTestUsers = [];
 
-  debugLogger("✅ Inserted test users");
+  for (const user of testUsers) {
+    try {
+      // Check if user already exists
+      const existingUser = await userRepository.findByEmail(user.email);
+
+      if (existingUser) {
+        debugLogger(`User with email ${user.email} already exists, skipping`);
+        createdTestUsers.push(existingUser);
+      } else {
+        // Create new user
+        const newUser = await userRepository.createWithHashedPassword(user);
+        createdTestUsers.push(newUser);
+      }
+    } catch (error) {
+      debugLogger(`Error creating user ${user.email}: ${(error as Error).message}`);
+    }
+  }
+
+  debugLogger(`✅ Processed ${createdTestUsers.length} test users`);
 }
 
 /**
@@ -99,13 +132,34 @@ async function prodSeed(): Promise<void> {
   });
 
   // Create admin user with hashed password using the repository
-  await userRepository.createWithHashedPassword(adminUser);
+  try {
+    // Check if admin user already exists
+    const existingAdmin = await userRepository.findByEmail(adminUser.email);
 
-  debugLogger("✅ Inserted essential production users");
+    if (existingAdmin) {
+      debugLogger(`Admin user with email ${adminUser.email} already exists, skipping`);
+    } else {
+      // Create new admin user
+      await userRepository.createWithHashedPassword(adminUser);
+      debugLogger(`Created admin user with email ${adminUser.email}`);
+    }
+  } catch (error) {
+    debugLogger(`Error creating admin user: ${(error as Error).message}`);
+  }
+
+  debugLogger("✅ Processed essential production users");
 }
 
-registerSeed("users", {
-  dev: devSeed,
-  test: testSeed,
-  prod: prodSeed,
-});
+// Export the seed functions directly
+export const dev = devSeed;
+export const test = testSeed;
+export const prod = prodSeed;
+
+// Also export as default for compatibility
+const seeds = {
+  dev,
+  test,
+  prod,
+};
+
+export default seeds;

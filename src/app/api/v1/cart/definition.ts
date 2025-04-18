@@ -9,13 +9,12 @@ import { z } from "zod";
  * Cart API endpoints
  * This file defines all the endpoints for the cart API
  */
-
 // Import schemas from schema.ts
+import type { cartItemUrlParamsSchema } from "./schema";
 import {
   cartItemCreateSchema,
-  cartItemUpdateSchema,
   cartItemResponseSchema,
-  cartItemUrlParamsSchema,
+  cartItemUpdateSchema,
 } from "./schema";
 
 // Export types for use in other files

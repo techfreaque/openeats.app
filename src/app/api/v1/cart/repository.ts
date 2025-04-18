@@ -143,7 +143,7 @@ export class CartRepositoryImpl
       .select()
       .from(cartItems)
       .where(eq(cartItems.userId, userId));
-    
+
     return results.map((item) => ({
       ...item,
       createdAt: new Date(item.createdAt),
@@ -155,9 +155,7 @@ export class CartRepositoryImpl
    * Find all cart items for a user with menu item and restaurant details
    * @param userId - The user ID
    */
-  async findByUserIdWithDetails(
-    userId: DbId
-  ): Promise<
+  async findByUserIdWithDetails(userId: DbId): Promise<
     Array<
       CartItem & {
         menuItem: {
@@ -185,8 +183,8 @@ export class CartRepositoryImpl
     >
   > {
     const items = await this.findByUserId(userId);
-    
-    return items.map(item => ({
+
+    return items.map((item) => ({
       ...item,
       menuItem: {
         id: item.menuItemId,
