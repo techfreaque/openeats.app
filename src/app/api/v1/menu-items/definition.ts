@@ -11,6 +11,7 @@ import {
   menuItemResponseSchema,
   menuItemSearchSchema,
 } from "../restaurant/schema/menu.schema";
+import type { MenuItemCreateType, MenuItemResponseType, MenuItemSearchType } from "../restaurant/schema/menu.schema";
 
 /**
  * Menu Items API endpoint definitions
@@ -42,7 +43,13 @@ const exampleMenuItem = {
 };
 
 // GET endpoint for retrieving all menu items
-const menuItemsGetEndpoint = createEndpoint({
+const menuItemsGetEndpoint = createEndpoint<
+  Record<string, never>,
+  MenuItemResponseType[],
+  Record<string, never>,
+  Methods.GET,
+  "default"
+>({
   description: "Get all menu items",
   method: Methods.GET,
   requestSchema: undefinedSchema,
@@ -52,7 +59,7 @@ const menuItemsGetEndpoint = createEndpoint({
   apiQueryOptions: {
     queryKey: ["menu-items"],
   },
-  fieldDescriptions: undefined,
+  fieldDescriptions: {},
   allowedRoles: [
     UserRoleValue.PUBLIC,
     UserRoleValue.ADMIN,
@@ -65,8 +72,12 @@ const menuItemsGetEndpoint = createEndpoint({
     500: "Internal server error",
   },
   examples: {
-    payloads: undefined,
-    urlPathVariables: undefined,
+    payloads: {
+      default: {}
+    },
+    urlPathVariables: {
+      default: {}
+    },
     responses: {
       default: [exampleMenuItem],
     },
@@ -74,7 +85,13 @@ const menuItemsGetEndpoint = createEndpoint({
 });
 
 // POST endpoint for creating a menu item
-const menuItemCreateEndpoint = createEndpoint({
+const menuItemCreateEndpoint = createEndpoint<
+  MenuItemCreateType,
+  MenuItemResponseType,
+  Record<string, never>,
+  Methods.POST,
+  "default"
+>({
   description: "Create a new menu item",
   method: Methods.POST,
   requestSchema: menuItemCreateSchema,
@@ -131,7 +148,9 @@ const menuItemCreateEndpoint = createEndpoint({
         updatedAt: new Date().toISOString(),
       },
     },
-    urlPathVariables: undefined,
+    urlPathVariables: {
+      default: {}
+    },
     responses: {
       default: exampleMenuItem,
     },
@@ -139,7 +158,13 @@ const menuItemCreateEndpoint = createEndpoint({
 });
 
 // Search endpoint for menu items
-const menuItemSearchEndpoint = createEndpoint({
+const menuItemSearchEndpoint = createEndpoint<
+  MenuItemSearchType,
+  MenuItemResponseType[],
+  Record<string, never>,
+  Methods.POST,
+  "default"
+>({
   description: "Search menu items",
   method: Methods.POST,
   requestSchema: menuItemSearchSchema,
@@ -178,9 +203,131 @@ const menuItemSearchEndpoint = createEndpoint({
         restaurantId: "restaurant-id-1",
       },
     },
-    urlPathVariables: undefined,
+    urlPathVariables: {
+      default: {}
+    },
     responses: {
       default: [exampleMenuItem],
+    },
+  },
+});
+
+// PUT endpoint for updating a menu item
+const menuItemUpdateEndpoint = createEndpoint<
+  MenuItemCreateType & { id: string },
+  MenuItemResponseType,
+  Record<string, never>,
+  Methods.PUT,
+  "default"
+>({
+  description: "Update a menu item",
+  method: Methods.PUT,
+  requestSchema: menuItemCreateSchema.extend({
+    id: z.string().uuid(),
+  }),
+  responseSchema: menuItemResponseSchema,
+  requestUrlSchema: undefinedSchema,
+  path: ["v1", "menu-items"],
+  apiQueryOptions: {
+    queryKey: ["update-menu-item"],
+  },
+  fieldDescriptions: {
+    id: "ID of the menu item to update",
+    name: "Name of the menu item",
+    description: "Description of the menu item",
+    price: "Price of the menu item",
+    taxPercent: "Tax percentage for the menu item",
+    currency: "Currency for the menu item",
+    image: "Image URL for the menu item",
+    published: "Whether the menu item is published",
+    isAvailable: "Whether the menu item is available",
+    restaurantId: "ID of the restaurant this menu item belongs to",
+  },
+  allowedRoles: [
+    UserRoleValue.ADMIN,
+    UserRoleValue.PARTNER_ADMIN,
+    UserRoleValue.PARTNER_EMPLOYEE,
+  ],
+  errorCodes: {
+    400: "Invalid request data",
+    401: "Not authenticated",
+    403: "Not authorized to modify this restaurant's menu",
+    404: "Menu item not found",
+    500: "Internal server error",
+  },
+  examples: {
+    payloads: {
+      default: {
+        id: "menu-item-id-1",
+        name: "Updated Pizza",
+        description: "Updated description",
+        price: 14.99,
+        taxPercent: 19,
+        currency: Currencies.EUR,
+        image: "/menu-placeholder.jpg",
+        published: true,
+        isAvailable: true,
+        restaurantId: "restaurant-id-1",
+      },
+    },
+    urlPathVariables: {
+      default: {}
+    },
+    responses: {
+      default: exampleMenuItem,
+    },
+  },
+});
+
+// DELETE endpoint for deleting a menu item
+const menuItemDeleteEndpoint = createEndpoint<
+  { id: string },
+  { deleted: boolean },
+  Record<string, never>,
+  Methods.DELETE,
+  "default"
+>({
+  description: "Delete a menu item",
+  method: Methods.DELETE,
+  requestSchema: z.object({
+    id: z.string().uuid(),
+  }),
+  responseSchema: z.object({
+    deleted: z.boolean(),
+  }),
+  requestUrlSchema: undefinedSchema,
+  path: ["v1", "menu-items"],
+  apiQueryOptions: {
+    queryKey: ["delete-menu-item"],
+  },
+  fieldDescriptions: {
+    id: "ID of the menu item to delete",
+  },
+  allowedRoles: [
+    UserRoleValue.ADMIN,
+    UserRoleValue.PARTNER_ADMIN,
+    UserRoleValue.PARTNER_EMPLOYEE,
+  ],
+  errorCodes: {
+    400: "Invalid request data",
+    401: "Not authenticated",
+    403: "Not authorized to delete this menu item",
+    404: "Menu item not found",
+    500: "Internal server error",
+  },
+  examples: {
+    payloads: {
+      default: {
+        id: "menu-item-id-1",
+      },
+    },
+    urlPathVariables: {
+      default: {}
+    },
+    responses: {
+      default: {
+        deleted: true,
+      },
     },
   },
 });
@@ -189,9 +336,11 @@ const menuItemSearchEndpoint = createEndpoint({
  * Menu Items API endpoints
  */
 const menuItemsEndpoints = {
-  ...menuItemsGetEndpoint,
-  ...menuItemCreateEndpoint,
-  ...menuItemSearchEndpoint,
+  GET: menuItemsGetEndpoint.GET,
+  POST: menuItemCreateEndpoint.POST,
+  PUT: menuItemUpdateEndpoint.PUT,
+  DELETE: menuItemDeleteEndpoint.DELETE,
+  SEARCH: menuItemSearchEndpoint.POST,
 };
 
 export default menuItemsEndpoints;
