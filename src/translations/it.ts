@@ -140,6 +140,7 @@ const translations: TranslationSchema = {
     reddit: "Reddit",
     github: "GitHub",
     discord: "Discord",
+    tryAgain: "Riprova",
   },
 
   // Navigation

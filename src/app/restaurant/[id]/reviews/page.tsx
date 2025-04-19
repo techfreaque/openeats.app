@@ -1,8 +1,26 @@
 "use client";
 
+import { AlertCircle, Loader2, Search, Star } from "lucide-react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useTranslation } from "next-vibe/i18n";
+import { cn } from "next-vibe/shared/utils/utils";
 import {
   Button,
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+  RadioGroup,
+  RadioGroupItem,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Tabs,
   TabsContent,
   TabsList,
@@ -13,24 +31,55 @@ import type { JSX } from "react";
 import { useState } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
 import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
+import { LanguageSelector } from "@/app/app/components/language-selector";
 import type { MenuItemType } from "@/app/app/components/lib/types";
+import { useRestaurantConfig } from "@/app/app/components/restaurant-config-provider";
 import { ReviewForm } from "@/app/app/components/review-form";
 import { ReviewsList } from "@/app/app/components/reviews-list";
+
+// Define filter type
+type ReviewFilter =
+  | "all"
+  | "positive"
+  | "negative"
+  | "with-photos"
+  | "with-replies";
 
 export default function RestaurantReviewsPage(): JSX.Element | null {
   const params = useParams<{ id: string }>();
   const id = params.id;
-
-  const { getRestaurantById, getMenuItemsByRestaurantId } = useRestaurants();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const config = useRestaurantConfig();
 
-  const restaurant = getRestaurantById(id);
+  // API data
+  const { data: restaurant, isLoading, error } = useRestaurant(id);
+  const { getRestaurantById, getMenuItemsByRestaurantId } = useRestaurants();
+  const mockRestaurant = getRestaurantById(id);
   const menuItems = getMenuItemsByRestaurantId(id);
+
+  // Filter states
+  const [activeFilter, setActiveFilter] = useState<ReviewFilter>("all");
+  const [sortBy, setSortBy] = useState<
+    "newest" | "highest" | "lowest" | "most-helpful"
+  >("newest");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [activeTab, setActiveTab] = useState<string>("read");
   const [selectedItems, setSelectedItems] = useState<MenuItemType[]>([]);
+
+  // Calculate average rating - in a real app, this would come from the API
+  const averageRating = "4.7";
+
+  // Rating distribution - in a real app, this would come from the API
+  const ratingDistribution = [5, 4, 3, 2, 1].map((rating) => {
+    const count = Math.floor(Math.random() * 20) + (rating === 5 ? 30 : 5); // More 5-star reviews
+    const percentage = (100 * count) / 85; // Total of 85 reviews
+    return { rating, count, percentage };
+  });
 
   const handleAddReviewClick = (): void => {
     if (!user) {
@@ -56,58 +105,319 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
     });
   };
 
-  if (!restaurant) {
-    return null;
+  if (isLoading) {
+    return (
+      <div className="container px-4 md:px-6 py-12">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading reviews...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !restaurant) {
+    return (
+      <div className="container px-4 md:px-6 py-12">
+        <div className="flex flex-col items-center text-center">
+          <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+          <h1 className="text-3xl font-bold mb-4">
+            {error ? "Error loading restaurant" : "Restaurant not found"}
+          </h1>
+          <p className="text-muted-foreground max-w-2xl mb-6">
+            {error
+              ? "There was a problem loading the restaurant information. Please try again later."
+              : "The restaurant you are looking for does not exist or has been removed."}
+          </p>
+          <Button size="lg" asChild>
+            <Link href={`/restaurant/${id}`}>Back to Restaurant</Link>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="py-8">
-      <div className="container px-4 md:px-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Reviews</h1>
-          <p className="text-muted-foreground">
-            See what others are saying about {restaurant.name} or share your own
-            experience
-          </p>
+    <div className="pb-20">
+      {/* Hero section */}
+      <div className="bg-muted py-8">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">
+                {restaurant.name} -{" "}
+                {t("restaurant.reviews.title", "Customer Reviews")}
+              </h1>
+              <p className="text-muted-foreground max-w-2xl">
+                {t(
+                  "restaurant.reviews.subtitle",
+                  "See what others are saying about our restaurant or share your own experience",
+                )}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/restaurant/${id}`}>
+                  {t(
+                    "restaurant.reviews.backToRestaurant",
+                    "Back to Restaurant",
+                  )}
+                </Link>
+              </Button>
+              <LanguageSelector />
+            </div>
+          </div>
         </div>
+      </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="flex items-center justify-between mb-6">
-            <TabsList>
-              <TabsTrigger value="read">Read Reviews</TabsTrigger>
-              <TabsTrigger value="write">Write a Review</TabsTrigger>
-            </TabsList>
+      <div className="container px-4 md:px-6 py-8">
+        <div className="grid gap-8 md:grid-cols-[1fr_2fr]">
+          {/* Sidebar with rating summary */}
+          <div className="space-y-6">
+            {/* Rating overview */}
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {t("restaurant.reviews.ratingOverview", "Rating Overview")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-center gap-4">
+                  <div className="text-center">
+                    <div className="text-5xl font-bold">{averageRating}</div>
+                    <div className="flex mt-2 justify-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={cn(
+                            "h-5 w-5",
+                            parseFloat(averageRating) >= star
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-muted-foreground",
+                          )}
+                        />
+                      ))}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {t(
+                        "restaurant.reviews.basedOn",
+                        "Based on {{count}} reviews",
+                        { count: 85 },
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-            {activeTab === "read" && (
-              <Button onClick={handleAddReviewClick}>Write a Review</Button>
-            )}
+                <div className="space-y-2">
+                  {ratingDistribution.map((dist) => (
+                    <div key={dist.rating} className="flex items-center gap-2">
+                      <div className="w-12 text-sm font-medium">
+                        {dist.rating} {t("restaurant.reviews.stars", "stars")}
+                      </div>
+                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-yellow-400"
+                          style={{ width: `${dist.percentage}%` }}
+                        />
+                      </div>
+                      <div className="w-10 text-sm text-muted-foreground text-right">
+                        {dist.count}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  className="w-full"
+                  onClick={handleAddReviewClick}
+                  disabled={!user}
+                >
+                  {t("restaurant.reviews.writeReview", "Write a Review")}
+                </Button>
+              </CardFooter>
+            </Card>
+
+            {/* Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {t("restaurant.reviews.filterReviews", "Filter Reviews")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>{t("restaurant.reviews.rating", "Rating")}</Label>
+                  <RadioGroup
+                    value={activeFilter}
+                    onValueChange={(value) =>
+                      setActiveFilter(value as ReviewFilter)
+                    }
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="all" id="all" />
+                      <Label htmlFor="all">
+                        {t("restaurant.reviews.allRatings", "All Ratings")}
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="positive" id="positive" />
+                      <Label htmlFor="positive">
+                        {t(
+                          "restaurant.reviews.positive",
+                          "Positive (4-5 stars)",
+                        )}
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="negative" id="negative" />
+                      <Label htmlFor="negative">
+                        {t(
+                          "restaurant.reviews.critical",
+                          "Critical (1-3 stars)",
+                        )}
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>{t("restaurant.reviews.features", "Features")}</Label>
+                  <RadioGroup
+                    value={activeFilter}
+                    onValueChange={(value) =>
+                      setActiveFilter(value as ReviewFilter)
+                    }
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="with-photos" id="with-photos" />
+                      <Label htmlFor="with-photos">
+                        {t("restaurant.reviews.withPhotos", "With Photos")}
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="with-replies" id="with-replies" />
+                      <Label htmlFor="with-replies">
+                        {t(
+                          "restaurant.reviews.withReplies",
+                          "With Owner Replies",
+                        )}
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>{t("restaurant.reviews.sortBy", "Sort By")}</Label>
+                  <Select
+                    value={sortBy}
+                    onValueChange={(value) => setSortBy(value as any)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest">
+                        {t("restaurant.reviews.newest", "Newest First")}
+                      </SelectItem>
+                      <SelectItem value="highest">
+                        {t("restaurant.reviews.highest", "Highest Rated")}
+                      </SelectItem>
+                      <SelectItem value="lowest">
+                        {t("restaurant.reviews.lowest", "Lowest Rated")}
+                      </SelectItem>
+                      <SelectItem value="most-helpful">
+                        {t("restaurant.reviews.mostHelpful", "Most Helpful")}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={t(
+                      "restaurant.reviews.searchPlaceholder",
+                      "Search reviews...",
+                    )}
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setActiveFilter("all");
+                    setSortBy("newest");
+                    setSearchQuery("");
+                  }}
+                >
+                  {t("restaurant.reviews.resetFilters", "Reset Filters")}
+                </Button>
+              </CardFooter>
+            </Card>
           </div>
 
-          <TabsContent value="read">
-            <ReviewsList restaurantId={restaurant.id} />
-          </TabsContent>
+          {/* Reviews content */}
+          <div>
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <TabsList>
+                  <TabsTrigger value="read">
+                    {t("restaurant.reviews.readReviews", "Read Reviews")}
+                  </TabsTrigger>
+                  <TabsTrigger value="write">
+                    {t("restaurant.reviews.writeReview", "Write a Review")}
+                  </TabsTrigger>
+                </TabsList>
 
-          <TabsContent value="write">
-            {user ? (
-              <div className="max-w-2xl mx-auto">
-                <ReviewForm
-                  restaurantId={restaurant.id}
-                  orderedItems={selectedItems}
-                  onSuccess={handleReviewSuccess}
-                />
+                {activeTab === "read" && (
+                  <Button onClick={handleAddReviewClick}>
+                    {t("restaurant.reviews.writeReview", "Write a Review")}
+                  </Button>
+                )}
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">
-                  Please sign in to leave a review
-                </p>
-                <Button asChild>
-                  <a href="/app/signin">Sign In</a>
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+
+              <TabsContent value="read">
+                <ReviewsList restaurantId={restaurant.id} />
+              </TabsContent>
+
+              <TabsContent value="write">
+                {user ? (
+                  <div className="max-w-2xl mx-auto">
+                    <ReviewForm
+                      restaurantId={restaurant.id}
+                      orderedItems={selectedItems}
+                      onSuccess={handleReviewSuccess}
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-4">
+                      {t(
+                        "restaurant.reviews.signInRequired",
+                        "Please sign in to leave a review",
+                      )}
+                    </p>
+                    <Button asChild>
+                      <a href="/app/signin">
+                        {t("restaurant.reviews.signIn", "Sign In")}
+                      </a>
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </div>
     </div>
   );

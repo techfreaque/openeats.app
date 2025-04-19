@@ -56,7 +56,7 @@ export async function searchRestaurants(
           reviewCount: parseInt(restaurant.ratingCount) || 0,
           priceLevel: restaurant.priceLevel || 1,
           mainCategory: mainCategory || {
-            id: "0",
+            id: "00000000-0000-4000-a000-000000000000", // Using a valid nil UUID format
             name: "Uncategorized",
             image: "",
           },

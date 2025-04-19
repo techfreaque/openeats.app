@@ -139,6 +139,7 @@ const translations = {
     reddit: "Reddit",
     github: "GitHub",
     discord: "Discord",
+    tryAgain: "Erneut versuchen",
   },
 
   // Navigation

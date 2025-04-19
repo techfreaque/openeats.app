@@ -5,8 +5,10 @@ export function parseError(error: unknown): Error {
     return new Error(JSON.stringify(error));
   } else if (typeof error === "string") {
     return new Error(error);
+  } else if (error === undefined) {
+    return new Error("No error details available");
   } else {
-    return new Error(`Unknown error: ${error}`);
+    return new Error(`Unknown error: ${String(error)}`);
   }
 }
 

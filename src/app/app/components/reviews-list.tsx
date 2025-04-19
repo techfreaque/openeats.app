@@ -7,7 +7,7 @@ import { Button } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useState } from "react";
 
-import { useReviews } from "./hooks/use-reviews";
+import { useReviews } from "@/app/api/v1/reviews/hooks";
 
 interface ReviewsListProps {
   restaurantId: string;

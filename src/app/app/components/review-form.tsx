@@ -7,8 +7,8 @@ import type { JSX } from "react";
 import { useState } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useReviews } from "@/app/api/v1/reviews/hooks";
 
-import { useReviews } from "./hooks/use-reviews";
 import type { MenuItemType } from "./lib/types";
 
 interface ReviewFormProps {
