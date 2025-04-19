@@ -43,13 +43,13 @@ export async function deleteUi({
           success: false,
           message: "UI component not found",
           errorCode: 404,
-        } as unknown as ApiHandlerResult<DeleteUiResponseType>;
+        } as ApiHandlerResult<DeleteUiResponseType>;
       } else if (error.message === "Unauthorized") {
         return {
           success: false,
           message: "You are not authorized to delete this UI component",
           errorCode: 403,
-        } as unknown as ApiHandlerResult<DeleteUiResponseType>;
+        } as ApiHandlerResult<DeleteUiResponseType>;
       }
     }
 
@@ -57,6 +57,6 @@ export async function deleteUi({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    } as unknown as ApiHandlerResult<DeleteUiResponseType>;
+    } as ApiHandlerResult<DeleteUiResponseType>;
   }
 }

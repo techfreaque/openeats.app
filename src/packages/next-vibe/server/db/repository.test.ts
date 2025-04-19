@@ -53,7 +53,7 @@ class MockRepository extends BaseRepositoryImpl<
 > {
   constructor() {
     super({
-      db: mockDb as unknown as PgDatabase<Record<string, never>>,
+      db: mockDb as PgDatabase<Record<string, never>>,
       table: mockTable,
       schema: mockSchema,
       idField: "id",

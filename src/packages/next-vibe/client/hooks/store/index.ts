@@ -577,7 +577,9 @@ export const useApiStore = create<ApiStore>((set, get) => ({
       } catch (validationError) {
         // Handle validation errors gracefully
         debugLogger("Validation error in API mutation", validationError);
-        throw new Error(`Request validation error: ${validationError instanceof Error ? validationError.message : 'Unknown validation error'}`);
+        throw new Error(
+          `Request validation error: ${validationError instanceof Error ? validationError.message : "Unknown validation error"}`,
+        );
       }
 
       const response = await callApi<

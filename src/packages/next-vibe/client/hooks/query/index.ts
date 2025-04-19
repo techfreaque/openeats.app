@@ -56,28 +56,33 @@ export function useApiQuery<
   // Create a stable query key
   const queryKey: QueryKey = useMemo(() => {
     // Create a stable representation of the endpoint
-    const endpointKey = `${endpoint.path.join('/')}:${endpoint.method}`;
+    const endpointKey = `${endpoint.path.join("/")}:${endpoint.method}`;
 
     // Create a stable representation of the request data
     let requestDataKey: string | undefined;
     if (requestData) {
       try {
         // For objects, create a stable JSON representation
-        if (typeof requestData === 'object') {
+        if (typeof requestData === "object") {
           // Filter out internal properties and handle circular references
           const safeRequestData = JSON.stringify(requestData, (key, value) => {
             // Skip internal properties
-            if (key.startsWith('_')) return undefined;
+            if (key.startsWith("_")) {
+              return undefined;
+            }
             // Handle circular references and complex objects
-            if (typeof value === 'object' && value !== null) {
+            if (typeof value === "object" && value !== null) {
               // Return a simplified version of objects
-              return Object.keys(value).length > 0 ?
-                Object.fromEntries(
-                  Object.entries(value)
-                    .filter(([k]) => !k.startsWith('_'))
-                    .map(([k, v]) => [k, typeof v === 'function' ? '[Function]' : v])
-                ) :
-                value;
+              return Object.keys(value).length > 0
+                ? Object.fromEntries(
+                    Object.entries(value)
+                      .filter(([k]) => !k.startsWith("_"))
+                      .map(([k, v]) => [
+                        k,
+                        typeof v === "function" ? "[Function]" : v,
+                      ]),
+                  )
+                : value;
             }
             return value;
           });
@@ -88,9 +93,10 @@ export function useApiQuery<
         }
       } catch (error) {
         // If JSON stringification fails, use a fallback
-        requestDataKey = typeof requestData === 'object' ?
-          Object.keys(requestData).sort().join(',') :
-          String(requestData);
+        requestDataKey =
+          typeof requestData === "object"
+            ? Object.keys(requestData).sort().join(",")
+            : String(requestData);
       }
     }
 
@@ -99,21 +105,26 @@ export function useApiQuery<
     if (urlParams) {
       try {
         // For objects, create a stable JSON representation
-        if (typeof urlParams === 'object') {
+        if (typeof urlParams === "object") {
           // Filter out internal properties and handle circular references
           urlParamsKey = JSON.stringify(urlParams, (key, value) => {
             // Skip internal properties
-            if (key.startsWith('_')) return undefined;
+            if (key.startsWith("_")) {
+              return undefined;
+            }
             // Handle circular references and complex objects
-            if (typeof value === 'object' && value !== null) {
+            if (typeof value === "object" && value !== null) {
               // Return a simplified version of objects
-              return Object.keys(value).length > 0 ?
-                Object.fromEntries(
-                  Object.entries(value)
-                    .filter(([k]) => !k.startsWith('_'))
-                    .map(([k, v]) => [k, typeof v === 'function' ? '[Function]' : v])
-                ) :
-                value;
+              return Object.keys(value).length > 0
+                ? Object.fromEntries(
+                    Object.entries(value)
+                      .filter(([k]) => !k.startsWith("_"))
+                      .map(([k, v]) => [
+                        k,
+                        typeof v === "function" ? "[Function]" : v,
+                      ]),
+                  )
+                : value;
             }
             return value;
           });
@@ -123,18 +134,15 @@ export function useApiQuery<
         }
       } catch (error) {
         // If JSON stringification fails, use a fallback
-        urlParamsKey = typeof urlParams === 'object' ?
-          Object.keys(urlParams).sort().join(',') :
-          String(urlParams);
+        urlParamsKey =
+          typeof urlParams === "object"
+            ? Object.keys(urlParams).sort().join(",")
+            : String(urlParams);
       }
     }
 
     // Return the custom query key or build one from the components
-    return customQueryKey ?? [
-      endpointKey,
-      requestDataKey,
-      urlParamsKey,
-    ];
+    return customQueryKey ?? [endpointKey, requestDataKey, urlParamsKey];
   }, [customQueryKey, endpoint.path, endpoint.method, requestData, urlParams]);
 
   // Get API store methods
@@ -219,37 +227,40 @@ export function useApiQuery<
     const now = Date.now();
     if (now - lastExecutionTimeRef.current < minExecutionInterval) {
       // We're executing too frequently, wait a bit
-      const timeoutId = setTimeout(() => {
-        // Check if we already have data in the store
-        const existingQuery = useApiStore.getState().queries[queryId];
-        const hasValidData = existingQuery?.data && !existingQuery.isError;
-        const isFresh =
-          existingQuery?.lastFetchTime &&
-          Date.now() - existingQuery.lastFetchTime <
-            (queryOptions.staleTime || 60_000);
+      const timeoutId = setTimeout(
+        () => {
+          // Check if we already have data in the store
+          const existingQuery = useApiStore.getState().queries[queryId];
+          const hasValidData = existingQuery?.data && !existingQuery.isError;
+          const isFresh =
+            existingQuery?.lastFetchTime &&
+            Date.now() - existingQuery.lastFetchTime <
+              (queryOptions.staleTime || 60_000);
 
-        // Skip fetch if we have fresh data
-        if (hasValidData && isFresh && !isInitialMount.current) {
-          return;
-        }
+          // Skip fetch if we have fresh data
+          if (hasValidData && isFresh && !isInitialMount.current) {
+            return;
+          }
 
-        // Mark as executing
-        isExecutingRef.current = true;
+          // Mark as executing
+          isExecutingRef.current = true;
 
-        // Execute the query
-        void executeQuery(endpoint, requestData, urlParams, {
-          ...queryOptions,
-          queryKey,
-        }).finally(() => {
-          // Mark as no longer executing
-          isExecutingRef.current = false;
-          // Update execution time
-          lastExecutionTimeRef.current = Date.now();
-        });
+          // Execute the query
+          void executeQuery(endpoint, requestData, urlParams, {
+            ...queryOptions,
+            queryKey,
+          }).finally(() => {
+            // Mark as no longer executing
+            isExecutingRef.current = false;
+            // Update execution time
+            lastExecutionTimeRef.current = Date.now();
+          });
 
-        // Update initial mount ref
-        isInitialMount.current = false;
-      }, minExecutionInterval - (now - lastExecutionTimeRef.current));
+          // Update initial mount ref
+          isInitialMount.current = false;
+        },
+        minExecutionInterval - (now - lastExecutionTimeRef.current),
+      );
 
       return () => clearTimeout(timeoutId);
     }

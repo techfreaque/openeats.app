@@ -7,7 +7,7 @@ import { UserRoleValue } from "../../../shared/types/enums";
 import { useApiStore } from ".";
 
 // Mock fetch
-global.fetch = vi.fn() as unknown as typeof fetch;
+global.fetch = vi.fn() as typeof fetch;
 
 describe("useApiStore", () => {
   // Create a test endpoint
@@ -229,7 +229,7 @@ describe("useApiStore", () => {
 
   it("should execute a mutation", async () => {
     // Mock successful API response
-    (global.fetch as unknown as Mock).mockResolvedValueOnce({
+    (global.fetch as Mock).mockResolvedValueOnce({
       ok: true,
       json: () =>
         Promise.resolve({ success: true, data: { id: "123", success: true } }),
@@ -261,7 +261,7 @@ describe("useApiStore", () => {
 
   it("should handle mutation errors", async () => {
     // Mock API error response
-    (global.fetch as unknown as Mock).mockResolvedValueOnce({
+    (global.fetch as Mock).mockResolvedValueOnce({
       ok: false,
       status: 400,
       json: () => Promise.resolve({ success: false, message: "Bad request" }),

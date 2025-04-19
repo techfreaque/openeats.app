@@ -76,7 +76,7 @@ type JsxParserComponents = Record<
 function castComponents(
   components: typeof UI | typeof NextComponents,
 ): JsxParserComponents {
-  return components as unknown as JsxParserComponents;
+  return components as JsxParserComponents;
 }
 
 const ParsedContent = ({

@@ -247,7 +247,7 @@ export function getEndpointByPath<
   for (const p of _path) {
     endpoint = endpoint[p] as ApiSection;
   }
-  return endpoint as unknown as ApiEndpoint<
+  return endpoint as ApiEndpoint<
     TRequest,
     TResponse,
     TUrlVariables,

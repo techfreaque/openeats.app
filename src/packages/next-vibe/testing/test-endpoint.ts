@@ -145,11 +145,11 @@ export function testEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>(
             data:
               exampleKey && payloads
                 ? (payloads[exampleKey] as TRequest)
-                : (undefined as unknown as TRequest),
+                : (undefined as TRequest),
             urlParams:
               exampleKey && urlPathVariables
                 ? (urlPathVariables[exampleKey] as TUrlVariables)
-                : (undefined as unknown as TUrlVariables),
+                : (undefined as TUrlVariables),
             user: unauthorizedUser,
           });
 
@@ -175,11 +175,11 @@ export function testEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey>(
                 data:
                   exampleKey && payloads
                     ? (payloads[exampleKey] as TRequest)
-                    : (undefined as unknown as TRequest),
+                    : (undefined as TRequest),
                 urlParams:
                   exampleKey && urlPathVariables
                     ? (urlPathVariables[exampleKey] as TUrlVariables)
-                    : (undefined as unknown as TUrlVariables),
+                    : (undefined as TUrlVariables),
               });
 
               // Should succeed with proper authorization

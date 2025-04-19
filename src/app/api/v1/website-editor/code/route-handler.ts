@@ -30,7 +30,7 @@ export async function getCode({
         success: false,
         message: "Code not found",
         errorCode: 404,
-      } as unknown as ApiHandlerResult<GetCodeResponseType>;
+      } as ApiHandlerResult<GetCodeResponseType>;
     }
 
     // Transform the result to match the expected response format
@@ -49,6 +49,6 @@ export async function getCode({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    } as unknown as ApiHandlerResult<GetCodeResponseType>;
+    } as ApiHandlerResult<GetCodeResponseType>;
   }
 }

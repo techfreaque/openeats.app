@@ -1,11 +1,36 @@
 "use client";
 
-import { Calendar, Clock, Facebook, Globe, Instagram, Mail, MapPin, Phone, Twitter } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  Facebook,
+  Globe,
+  Instagram,
+  Mail,
+  MapPin,
+  Phone,
+  Twitter,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslation } from "next-vibe/i18n";
-import { Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input, Label, Tabs, TabsContent, TabsList, TabsTrigger, Textarea, useToast } from "next-vibe-ui/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Textarea,
+  useToast,
+} from "next-vibe-ui/ui";
 import type React from "react";
 import type { JSX } from "react";
 import { useState } from "react";
@@ -34,11 +59,15 @@ export default function RestaurantContactPage(): JSX.Element | null {
     reservationTime: "",
     partySize: "2",
   });
-  const [activeTab, setActiveTab] = useState<"contact" | "reservation">("contact");
+  const [activeTab, setActiveTab] = useState<"contact" | "reservation">(
+    "contact",
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -48,7 +77,10 @@ export default function RestaurantContactPage(): JSX.Element | null {
     e.preventDefault();
 
     // Basic validation
-    if (activeTab === "contact" && (!formData.name || !formData.email || !formData.message)) {
+    if (
+      activeTab === "contact" &&
+      (!formData.name || !formData.email || !formData.message)
+    ) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -57,7 +89,13 @@ export default function RestaurantContactPage(): JSX.Element | null {
       return;
     }
 
-    if (activeTab === "reservation" && (!formData.name || !formData.email || !formData.reservationDate || !formData.reservationTime)) {
+    if (
+      activeTab === "reservation" &&
+      (!formData.name ||
+        !formData.email ||
+        !formData.reservationDate ||
+        !formData.reservationTime)
+    ) {
       toast({
         title: "Error",
         description: "Please fill in all required fields for your reservation",
@@ -72,10 +110,12 @@ export default function RestaurantContactPage(): JSX.Element | null {
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     toast({
-      title: activeTab === "contact" ? "Message sent" : "Reservation request sent",
-      description: activeTab === "contact"
-        ? "We'll get back to you as soon as possible"
-        : "We'll confirm your reservation shortly",
+      title:
+        activeTab === "contact" ? "Message sent" : "Reservation request sent",
+      description:
+        activeTab === "contact"
+          ? "We'll get back to you as soon as possible"
+          : "We'll confirm your reservation shortly",
     });
 
     // Reset form
@@ -125,9 +165,9 @@ export default function RestaurantContactPage(): JSX.Element | null {
 
     return restaurant.openingTimes
       .sort((a, b) => a.day - b.day)
-      .map(time => ({
+      .map((time) => ({
         day: days[time.day],
-        hours: `${formatTime(time.open)} - ${formatTime(time.close)}`
+        hours: `${formatTime(time.open)} - ${formatTime(time.close)}`,
       }));
   };
 
@@ -135,7 +175,11 @@ export default function RestaurantContactPage(): JSX.Element | null {
 
   // Social media links - in a real app, these would come from the restaurant data
   const socialLinks = [
-    { name: "Website", icon: <Globe className="h-5 w-5" />, url: restaurant.website || "#" },
+    {
+      name: "Website",
+      icon: <Globe className="h-5 w-5" />,
+      url: restaurant.website || "#",
+    },
     { name: "Facebook", icon: <Facebook className="h-5 w-5" />, url: "#" },
     { name: "Instagram", icon: <Instagram className="h-5 w-5" />, url: "#" },
     { name: "Twitter", icon: <Twitter className="h-5 w-5" />, url: "#" },
@@ -149,16 +193,23 @@ export default function RestaurantContactPage(): JSX.Element | null {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold mb-2">
-                {restaurant.name} - {t("restaurant.contact.title", "Contact Us")}
+                {restaurant.name} -{" "}
+                {t("restaurant.contact.title", "Contact Us")}
               </h1>
               <p className="text-muted-foreground max-w-2xl">
-                {t("restaurant.contact.subtitle", "We'd love to hear from you. Send us a message or make a reservation.")}
+                {t(
+                  "restaurant.contact.subtitle",
+                  "We'd love to hear from you. Send us a message or make a reservation.",
+                )}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/restaurant/${id}`}>
-                  {t("restaurant.contact.backToRestaurant", "Back to Restaurant")}
+                  {t(
+                    "restaurant.contact.backToRestaurant",
+                    "Back to Restaurant",
+                  )}
                 </Link>
               </Button>
               <LanguageSelector />
@@ -251,7 +302,10 @@ export default function RestaurantContactPage(): JSX.Element | null {
               <CardContent>
                 <div className="space-y-2">
                   {openingTimes.map((time, index) => (
-                    <div key={index} className="flex justify-between items-center">
+                    <div
+                      key={index}
+                      className="flex justify-between items-center"
+                    >
                       <span className="font-medium">{time.day}</span>
                       <span>{time.hours}</span>
                     </div>
@@ -271,7 +325,12 @@ export default function RestaurantContactPage(): JSX.Element | null {
                 <div className="flex flex-wrap gap-3">
                   {socialLinks.map((link, index) => (
                     <Button key={index} variant="outline" size="sm" asChild>
-                      <a href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
                         {link.icon}
                         {link.name}
                       </a>
@@ -295,16 +354,27 @@ export default function RestaurantContactPage(): JSX.Element | null {
           <div>
             <Card>
               <CardHeader>
-                <CardTitle>{t("restaurant.contact.getInTouch", "Get in Touch")}</CardTitle>
+                <CardTitle>
+                  {t("restaurant.contact.getInTouch", "Get in Touch")}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="contact" value={activeTab} onValueChange={(value) => setActiveTab(value as "contact" | "reservation")}>
+                <Tabs
+                  defaultValue="contact"
+                  value={activeTab}
+                  onValueChange={(value) =>
+                    setActiveTab(value as "contact" | "reservation")
+                  }
+                >
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="contact">
                       {t("restaurant.contact.sendMessage", "Send Message")}
                     </TabsTrigger>
                     <TabsTrigger value="reservation">
-                      {t("restaurant.contact.makeReservation", "Make Reservation")}
+                      {t(
+                        "restaurant.contact.makeReservation",
+                        "Make Reservation",
+                      )}
                     </TabsTrigger>
                   </TabsList>
 
@@ -313,7 +383,9 @@ export default function RestaurantContactPage(): JSX.Element | null {
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="name">{t("restaurant.contact.yourName", "Your Name")}</Label>
+                          <Label htmlFor="name">
+                            {t("restaurant.contact.yourName", "Your Name")}
+                          </Label>
                           <Input
                             id="name"
                             name="name"
@@ -324,7 +396,12 @@ export default function RestaurantContactPage(): JSX.Element | null {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="email">{t("restaurant.contact.emailAddress", "Email Address")}</Label>
+                          <Label htmlFor="email">
+                            {t(
+                              "restaurant.contact.emailAddress",
+                              "Email Address",
+                            )}
+                          </Label>
                           <Input
                             id="email"
                             name="email"
@@ -338,7 +415,12 @@ export default function RestaurantContactPage(): JSX.Element | null {
                       </div>
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="phone">{t("restaurant.contact.phoneNumber", "Phone Number")}</Label>
+                          <Label htmlFor="phone">
+                            {t(
+                              "restaurant.contact.phoneNumber",
+                              "Phone Number",
+                            )}
+                          </Label>
                           <Input
                             id="phone"
                             name="phone"
@@ -348,7 +430,9 @@ export default function RestaurantContactPage(): JSX.Element | null {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="subject">{t("restaurant.contact.subject", "Subject")}</Label>
+                          <Label htmlFor="subject">
+                            {t("restaurant.contact.subject", "Subject")}
+                          </Label>
                           <Input
                             id="subject"
                             name="subject"
@@ -360,7 +444,9 @@ export default function RestaurantContactPage(): JSX.Element | null {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="message">{t("restaurant.contact.message", "Message")}</Label>
+                        <Label htmlFor="message">
+                          {t("restaurant.contact.message", "Message")}
+                        </Label>
                         <Textarea
                           id="message"
                           name="message"
@@ -376,7 +462,9 @@ export default function RestaurantContactPage(): JSX.Element | null {
                         className="w-full"
                         disabled={isSubmitting}
                       >
-                        {isSubmitting ? t("restaurant.contact.sending", "Sending...") : t("restaurant.contact.sendMessage", "Send Message")}
+                        {isSubmitting
+                          ? t("restaurant.contact.sending", "Sending...")
+                          : t("restaurant.contact.sendMessage", "Send Message")}
                       </Button>
                     </form>
                   </TabsContent>
@@ -386,7 +474,9 @@ export default function RestaurantContactPage(): JSX.Element | null {
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="name">{t("restaurant.contact.yourName", "Your Name")}</Label>
+                          <Label htmlFor="name">
+                            {t("restaurant.contact.yourName", "Your Name")}
+                          </Label>
                           <Input
                             id="name"
                             name="name"
@@ -397,7 +487,12 @@ export default function RestaurantContactPage(): JSX.Element | null {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="email">{t("restaurant.contact.emailAddress", "Email Address")}</Label>
+                          <Label htmlFor="email">
+                            {t(
+                              "restaurant.contact.emailAddress",
+                              "Email Address",
+                            )}
+                          </Label>
                           <Input
                             id="email"
                             name="email"
@@ -411,7 +506,12 @@ export default function RestaurantContactPage(): JSX.Element | null {
                       </div>
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="phone">{t("restaurant.contact.phoneNumber", "Phone Number")}</Label>
+                          <Label htmlFor="phone">
+                            {t(
+                              "restaurant.contact.phoneNumber",
+                              "Phone Number",
+                            )}
+                          </Label>
                           <Input
                             id="phone"
                             name="phone"
@@ -422,7 +522,9 @@ export default function RestaurantContactPage(): JSX.Element | null {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="partySize">{t("restaurant.contact.partySize", "Party Size")}</Label>
+                          <Label htmlFor="partySize">
+                            {t("restaurant.contact.partySize", "Party Size")}
+                          </Label>
                           <select
                             id="partySize"
                             name="partySize"
@@ -431,18 +533,22 @@ export default function RestaurantContactPage(): JSX.Element | null {
                             onChange={handleChange}
                             required
                           >
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => (
-                              <option key={num} value={num}>
-                                {num} {num === 1 ? "Person" : "People"}
-                              </option>
-                            ))}
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(
+                              (num) => (
+                                <option key={num} value={num}>
+                                  {num} {num === 1 ? "Person" : "People"}
+                                </option>
+                              ),
+                            )}
                             <option value="more">More than 12</option>
                           </select>
                         </div>
                       </div>
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="reservationDate">{t("restaurant.contact.date", "Date")}</Label>
+                          <Label htmlFor="reservationDate">
+                            {t("restaurant.contact.date", "Date")}
+                          </Label>
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                             <Input
@@ -456,7 +562,9 @@ export default function RestaurantContactPage(): JSX.Element | null {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="reservationTime">{t("restaurant.contact.time", "Time")}</Label>
+                          <Label htmlFor="reservationTime">
+                            {t("restaurant.contact.time", "Time")}
+                          </Label>
                           <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <Input
@@ -471,7 +579,12 @@ export default function RestaurantContactPage(): JSX.Element | null {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="message">{t("restaurant.contact.specialRequests", "Special Requests")}</Label>
+                        <Label htmlFor="message">
+                          {t(
+                            "restaurant.contact.specialRequests",
+                            "Special Requests",
+                          )}
+                        </Label>
                         <Textarea
                           id="message"
                           name="message"
@@ -488,7 +601,10 @@ export default function RestaurantContactPage(): JSX.Element | null {
                       >
                         {isSubmitting
                           ? t("restaurant.contact.processing", "Processing...")
-                          : t("restaurant.contact.requestReservation", "Request Reservation")}
+                          : t(
+                              "restaurant.contact.requestReservation",
+                              "Request Reservation",
+                            )}
                       </Button>
                     </form>
                   </TabsContent>

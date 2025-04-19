@@ -27,7 +27,7 @@ export async function getUiDetail({
       success: false,
       message: "UI ID is required",
       errorCode: 400,
-    } as unknown as ApiHandlerResult<GetUiDetailResponseType>;
+    } as ApiHandlerResult<GetUiDetailResponseType>;
   }
 
   try {
@@ -41,19 +41,19 @@ export async function getUiDetail({
         success: false,
         message: `UI with ID ${id} not found`,
         errorCode: 404,
-      } as unknown as ApiHandlerResult<GetUiDetailResponseType>;
+      } as ApiHandlerResult<GetUiDetailResponseType>;
     }
 
     return {
       success: true,
       data: ui,
-    } as unknown as ApiHandlerResult<GetUiDetailResponseType>;
+    } as ApiHandlerResult<GetUiDetailResponseType>;
   } catch (error) {
     errorLogger("Error getting UI details:", error);
     return {
       success: false,
       message: "An error occurred while getting UI details",
       errorCode: 500,
-    } as unknown as ApiHandlerResult<GetUiDetailResponseType>;
+    } as ApiHandlerResult<GetUiDetailResponseType>;
   }
 }

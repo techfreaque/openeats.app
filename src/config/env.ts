@@ -54,6 +54,6 @@ type EnvInput = z.input<typeof envSchema>;
 // Export validated environment for use throughout the application
 export const env: Env = validateEnv(
   // eslint-disable-next-line node/no-process-env
-  process.env as unknown as EnvInput,
+  process.env as EnvInput,
   envSchema,
 );

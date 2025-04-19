@@ -21,9 +21,9 @@ export async function forkUi({
   ApiHandlerResult<ForkUiResponseType>
 > {
   try {
-    debugLogger("Forking UI component", { 
-      userId: user.id, 
-      uiId: data.uiId 
+    debugLogger("Forking UI component", {
+      userId: user.id,
+      uiId: data.uiId,
     });
 
     // Fork the UI component
@@ -34,7 +34,7 @@ export async function forkUi({
         success: false,
         message: "Failed to fork UI component",
         errorCode: 500,
-      } as unknown as ApiHandlerResult<ForkUiResponseType>;
+      } as ApiHandlerResult<ForkUiResponseType>;
     }
 
     return {
@@ -51,13 +51,13 @@ export async function forkUi({
           success: false,
           message: "UI component not found",
           errorCode: 404,
-        } as unknown as ApiHandlerResult<ForkUiResponseType>;
+        } as ApiHandlerResult<ForkUiResponseType>;
       } else if (error.message === "Cannot fork your own UI") {
         return {
           success: false,
           message: "You cannot fork your own UI component",
           errorCode: 403,
-        } as unknown as ApiHandlerResult<ForkUiResponseType>;
+        } as ApiHandlerResult<ForkUiResponseType>;
       }
     }
 
@@ -65,6 +65,6 @@ export async function forkUi({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    } as unknown as ApiHandlerResult<ForkUiResponseType>;
+    } as ApiHandlerResult<ForkUiResponseType>;
   }
 }

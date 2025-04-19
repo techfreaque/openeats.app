@@ -30,18 +30,18 @@ export const seeds: Record<string, EnvironmentSeeds> = {};
  */
 export function setupSeeds() {
   console.log("Setting up seeds...");
-  seeds["generated"] = seed_0 as unknown as EnvironmentSeeds;
-  seeds["addresses"] = seed_1 as unknown as EnvironmentSeeds;
-  seeds["auth"] = seed_2 as unknown as EnvironmentSeeds;
-  seeds["cart"] = seed_3 as unknown as EnvironmentSeeds;
-  seeds["category"] = seed_4 as unknown as EnvironmentSeeds;
-  seeds["menu"] = seed_5 as unknown as EnvironmentSeeds;
-  seeds["menu-items"] = seed_6 as unknown as EnvironmentSeeds;
-  seeds["order"] = seed_7 as unknown as EnvironmentSeeds;
-  seeds["payment"] = seed_8 as unknown as EnvironmentSeeds;
-  seeds["restaurant"] = seed_9 as unknown as EnvironmentSeeds;
-  seeds["reviews"] = seed_10 as unknown as EnvironmentSeeds;
-  seeds["template-api"] = seed_11 as unknown as EnvironmentSeeds;
+  seeds["generated"] = seed_0  as EnvironmentSeeds;
+  seeds["addresses"] = seed_1  as EnvironmentSeeds;
+  seeds["auth"] = seed_2  as EnvironmentSeeds;
+  seeds["cart"] = seed_3  as EnvironmentSeeds;
+  seeds["category"] = seed_4  as EnvironmentSeeds;
+  seeds["menu"] = seed_5  as EnvironmentSeeds;
+  seeds["menu-items"] = seed_6  as EnvironmentSeeds;
+  seeds["order"] = seed_7  as EnvironmentSeeds;
+  seeds["payment"] = seed_8  as EnvironmentSeeds;
+  seeds["restaurant"] = seed_9  as EnvironmentSeeds;
+  seeds["reviews"] = seed_10  as EnvironmentSeeds;
+  seeds["template-api"] = seed_11  as EnvironmentSeeds;
   console.log("Seeds setup complete.");
   return seeds;
 }

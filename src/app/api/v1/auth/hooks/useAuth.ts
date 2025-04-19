@@ -96,7 +96,7 @@ export function useAuth(): UseAuthReturnType {
     undefined,
     string
   >(
-    loginEndpoint.POST as unknown as ApiEndpoint<
+    loginEndpoint.POST as ApiEndpoint<
       LoginFormOutputType,
       LoginResponseOutputType,
       undefined,
@@ -124,7 +124,7 @@ export function useAuth(): UseAuthReturnType {
     undefined,
     string
   >(
-    registerEndpoint.POST as unknown as ApiEndpoint<
+    registerEndpoint.POST as ApiEndpoint<
       RegisterType,
       LoginResponseOutputType,
       undefined,
@@ -152,7 +152,7 @@ export function useAuth(): UseAuthReturnType {
     undefined,
     string
   >(
-    meEndpoint.POST as unknown as ApiEndpoint<
+    meEndpoint.POST as ApiEndpoint<
       UserUpdateRequestType,
       UserResponseType,
       undefined,

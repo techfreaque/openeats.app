@@ -12,9 +12,9 @@ afterEach(() => {
 global.setTimeout = vi.fn((fn: () => void) => {
   fn();
   return 1;
-}) as unknown as typeof setTimeout;
+}) as typeof setTimeout;
 
-global.clearTimeout = vi.fn() as unknown as typeof clearTimeout;
+global.clearTimeout = vi.fn() as typeof clearTimeout;
 
 // Mock fetch for API calls
 global.fetch = vi.fn();

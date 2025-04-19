@@ -389,7 +389,7 @@ export class UserRolesRepositoryImpl
         userId: userRoles.userId,
         role: userRoles.role,
         partnerId: userRoles.partnerId,
-        createdAt: userRoles.createdAt
+        createdAt: userRoles.createdAt,
       })
       .from(userRoles)
       .where(eq(userRoles.userId, userId));

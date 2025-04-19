@@ -120,11 +120,11 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
             const updatedSubPrompts = [...prevUi.subPrompts];
             if (Array.isArray(updatedSubPrompts[iidx])) {
               // Handle array case
-              (updatedSubPrompts[iidx] as any)[jidx].code = data.code;
+              updatedSubPrompts[iidx][jidx].code = data.code;
             } else {
               // Handle object case
               if (jidx === 0) {
-                (updatedSubPrompts[iidx] as any).code = data.code;
+                updatedSubPrompts[iidx].code = data.code;
               }
             }
             return {

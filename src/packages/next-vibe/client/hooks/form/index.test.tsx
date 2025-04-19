@@ -99,30 +99,28 @@ describe("useApiForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Update the mock implementation for executeMutation
-    (useApiStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      () => ({
-        executeMutation: mockExecuteMutation,
-        getMutationId: vi.fn().mockReturnValue("test-mutation-id"),
-        getFormId: vi.fn().mockReturnValue("test-form-id"),
-        setFormError: vi.fn(),
-        clearFormError: vi.fn(),
-        mutations: {
-          "test-mutation-id": {
-            isPending: false,
-            isError: false,
-            error: null,
-            isSuccess: false,
-            data: undefined,
-          },
+    (useApiStore as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      executeMutation: mockExecuteMutation,
+      getMutationId: vi.fn().mockReturnValue("test-mutation-id"),
+      getFormId: vi.fn().mockReturnValue("test-form-id"),
+      setFormError: vi.fn(),
+      clearFormError: vi.fn(),
+      mutations: {
+        "test-mutation-id": {
+          isPending: false,
+          isError: false,
+          error: null,
+          isSuccess: false,
+          data: undefined,
         },
-        forms: {
-          "test-form-id": {
-            formError: null,
-            isSubmitting: false,
-          },
+      },
+      forms: {
+        "test-form-id": {
+          formError: null,
+          isSubmitting: false,
         },
-      }),
-    );
+      },
+    }));
   });
 
   it("should initialize with default options", () => {
@@ -174,7 +172,7 @@ describe("useApiForm", () => {
     // Mock form event
     const mockEvent = {
       preventDefault: vi.fn(),
-    } as unknown as FormEvent<HTMLFormElement>;
+    } as FormEvent<HTMLFormElement>;
 
     // Mock success callback
     const onSuccess = vi.fn();
@@ -221,7 +219,7 @@ describe("useApiForm", () => {
     // Mock form event
     const mockEvent = {
       preventDefault: vi.fn(),
-    } as unknown as FormEvent<HTMLFormElement>;
+    } as FormEvent<HTMLFormElement>;
 
     // Mock error callback
     const onError = vi.fn();
@@ -266,7 +264,7 @@ describe("useApiForm", () => {
     // Mock form event
     const mockEvent = {
       preventDefault: vi.fn(),
-    } as unknown as FormEvent<HTMLFormElement>;
+    } as FormEvent<HTMLFormElement>;
 
     // Mock error callback
     const onError = vi.fn();
@@ -289,30 +287,28 @@ describe("useApiForm", () => {
 
   it("should update form state based on mutation state", () => {
     // Mock mutation state
-    (useApiStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      () => ({
-        executeMutation: mockExecuteMutation,
-        getMutationId: vi.fn().mockReturnValue("test-mutation-id"),
-        getFormId: vi.fn().mockReturnValue("test-form-id"),
-        setFormError: vi.fn(),
-        clearFormError: vi.fn(),
-        mutations: {
-          "test-mutation-id": {
-            isPending: true,
-            isError: false,
-            error: null,
-            isSuccess: false,
-            data: undefined,
-          },
+    (useApiStore as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      executeMutation: mockExecuteMutation,
+      getMutationId: vi.fn().mockReturnValue("test-mutation-id"),
+      getFormId: vi.fn().mockReturnValue("test-form-id"),
+      setFormError: vi.fn(),
+      clearFormError: vi.fn(),
+      mutations: {
+        "test-mutation-id": {
+          isPending: true,
+          isError: false,
+          error: null,
+          isSuccess: false,
+          data: undefined,
         },
-        forms: {
-          "test-form-id": {
-            formError: null,
-            isSubmitting: true,
-          },
+      },
+      forms: {
+        "test-form-id": {
+          formError: null,
+          isSubmitting: true,
         },
-      }),
-    );
+      },
+    }));
 
     const { result } = renderHook(() =>
       useApiForm<TestRequest, TestResponse, TestUrlParams, "default">(
@@ -330,30 +326,28 @@ describe("useApiForm", () => {
     const formError = new Error("Form error");
 
     // Mock form error state
-    (useApiStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      () => ({
-        executeMutation: mockExecuteMutation,
-        getMutationId: vi.fn().mockReturnValue("test-mutation-id"),
-        getFormId: vi.fn().mockReturnValue("test-form-id"),
-        setFormError: vi.fn(),
-        clearFormError: vi.fn(),
-        mutations: {
-          "test-mutation-id": {
-            isPending: false,
-            isError: false,
-            error: null,
-            isSuccess: false,
-            data: undefined,
-          },
+    (useApiStore as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      executeMutation: mockExecuteMutation,
+      getMutationId: vi.fn().mockReturnValue("test-mutation-id"),
+      getFormId: vi.fn().mockReturnValue("test-form-id"),
+      setFormError: vi.fn(),
+      clearFormError: vi.fn(),
+      mutations: {
+        "test-mutation-id": {
+          isPending: false,
+          isError: false,
+          error: null,
+          isSuccess: false,
+          data: undefined,
         },
-        forms: {
-          "test-form-id": {
-            formError: formError,
-            isSubmitting: false,
-          },
+      },
+      forms: {
+        "test-form-id": {
+          formError: formError,
+          isSubmitting: false,
         },
-      }),
-    );
+      },
+    }));
 
     const { result } = renderHook(() =>
       useApiForm<TestRequest, TestResponse, TestUrlParams, "default">(

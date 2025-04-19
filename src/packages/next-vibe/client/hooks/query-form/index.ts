@@ -194,7 +194,9 @@ export function useApiQueryForm<
 
         if (now - lastSubmitTimeRef.current < minSubmitInterval) {
           // We're submitting too frequently, throttle by waiting
-          await new Promise(resolve => setTimeout(resolve, minSubmitInterval));
+          await new Promise((resolve) =>
+            setTimeout(resolve, minSubmitInterval),
+          );
         }
 
         // Mark as submitting

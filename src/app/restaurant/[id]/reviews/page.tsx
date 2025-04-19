@@ -311,7 +311,7 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
                   <Label>{t("restaurant.reviews.sortBy", "Sort By")}</Label>
                   <Select
                     value={sortBy}
-                    onValueChange={(value) => setSortBy(value as any)}
+                    onValueChange={(value) => setSortBy(value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sort by" />

@@ -111,7 +111,7 @@ import type { EnvironmentSeeds } from "next-vibe/server/db/seed-manager";
       const sanitizedModuleName = moduleName.replace(/[^a-zA-Z0-9_-]/g, "_");
 
       // Add the seed to the registry
-      fileContent += `  seeds["${sanitizedModuleName}"] = seed_${i} as unknown as EnvironmentSeeds;\n`;
+      fileContent += `  seeds["${sanitizedModuleName}"] = seed_${i}  as EnvironmentSeeds;\n`;
     }
 
     fileContent += `  console.log("Seeds setup complete.");\n`;

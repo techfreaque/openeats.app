@@ -54,7 +54,7 @@ export async function getDrivers({
         success: false,
         message: "Not authorized to view drivers",
         errorCode: 403,
-      } as unknown as ApiHandlerResult<DriversResponseType>;
+      } as ApiHandlerResult<DriversResponseType>;
     }
 
     // Fetch drivers with user information
@@ -82,7 +82,7 @@ export async function getDrivers({
           ? error.message
           : "Unknown error getting drivers",
       errorCode: 500,
-    } as unknown as ApiHandlerResult<DriversResponseType>;
+    } as ApiHandlerResult<DriversResponseType>;
   }
 }
 
@@ -113,7 +113,7 @@ export async function createDriver({
         success: false,
         message: "Not authorized to create drivers",
         errorCode: 403,
-      } as unknown as ApiHandlerResult<DriverResponseType>;
+      } as ApiHandlerResult<DriverResponseType>;
     }
 
     // Check if user exists
@@ -124,7 +124,7 @@ export async function createDriver({
         success: false,
         message: "User not found",
         errorCode: 404,
-      } as unknown as ApiHandlerResult<DriverResponseType>;
+      } as ApiHandlerResult<DriverResponseType>;
     }
 
     // Check if driver already exists for this user
@@ -135,7 +135,7 @@ export async function createDriver({
         success: false,
         message: "Driver already exists for this user",
         errorCode: 409,
-      } as unknown as ApiHandlerResult<DriverResponseType>;
+      } as ApiHandlerResult<DriverResponseType>;
     }
 
     // Create driver
@@ -188,7 +188,7 @@ export async function createDriver({
           ? error.message
           : "Unknown error creating driver",
       errorCode: 500,
-    } as unknown as ApiHandlerResult<DriverResponseType>;
+    } as ApiHandlerResult<DriverResponseType>;
   }
 }
 
@@ -222,7 +222,7 @@ export async function updateDriver({
         success: false,
         message: "Driver not found",
         errorCode: 404,
-      } as unknown as ApiHandlerResult<DriverResponseType>;
+      } as ApiHandlerResult<DriverResponseType>;
     }
 
     // Check if user is authorized to update this driver
@@ -237,7 +237,7 @@ export async function updateDriver({
         success: false,
         message: "Not authorized to update this driver",
         errorCode: 403,
-      } as unknown as ApiHandlerResult<DriverResponseType>;
+      } as ApiHandlerResult<DriverResponseType>;
     }
 
     // Prepare update data (remove id from data)
@@ -323,6 +323,6 @@ export async function updateDriver({
           ? error.message
           : "Unknown error updating driver",
       errorCode: 500,
-    } as unknown as ApiHandlerResult<DriverResponseType>;
+    } as ApiHandlerResult<DriverResponseType>;
   }
 }

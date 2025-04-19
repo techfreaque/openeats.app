@@ -40,6 +40,6 @@ export async function listUis({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    } as unknown as ApiHandlerResult<ListUisResponseType>;
+    } as ApiHandlerResult<ListUisResponseType>;
   }
 }

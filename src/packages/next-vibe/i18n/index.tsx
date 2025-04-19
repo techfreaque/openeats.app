@@ -26,7 +26,7 @@ export const TranslationContext = createContext<TranslationContextType>({
   language: Languages.DE,
   setLanguage: () => {},
   t: (<K extends TranslationKey>(key: K) =>
-    key as unknown as string) as TranslationContextType["t"],
+    key as string) as TranslationContextType["t"],
 });
 
 // Translation provider props

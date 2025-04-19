@@ -156,7 +156,7 @@ export class OrderRepositoryImpl
    * Constructor
    */
   constructor() {
-    super(orders, insertOrderSchema as unknown);
+    super(orders, insertOrderSchema);
   }
 
   /**
@@ -497,7 +497,7 @@ export class OrderRepositoryImpl
       `SELECT * FROM menu_items WHERE id IN (${idList})`,
     );
 
-    return result as unknown as MenuItem[];
+    return result as MenuItem[];
   }
 
   /**

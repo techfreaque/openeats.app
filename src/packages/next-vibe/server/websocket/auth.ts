@@ -82,7 +82,7 @@ export const authenticateSocket = async (
     const user = await validateToken(token);
 
     // Attach user to socket for later reference
-    (socket as unknown as AuthenticatedSocket).user = user;
+    (socket as AuthenticatedSocket).user = user;
 
     // Join user-specific room for multi-device synchronization
     void socket.join(`user_${user.id}`);

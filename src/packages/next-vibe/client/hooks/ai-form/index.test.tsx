@@ -86,7 +86,7 @@ describe("useAiForm", () => {
       postBody: "{}",
     }),
     requiresAuthentication: false,
-  } as unknown as ApiEndpoint<
+  } as ApiEndpoint<
     z.infer<typeof testSchema>,
     { id: string; success: boolean },
     Record<string, never>,
@@ -314,7 +314,7 @@ describe("useAiForm", () => {
         postBody: "{}",
       }),
       requiresAuthentication: false,
-    } as unknown as ApiEndpoint<
+    } as ApiEndpoint<
       z.infer<typeof customSchema>,
       { success: boolean },
       Record<string, never>,
@@ -323,7 +323,7 @@ describe("useAiForm", () => {
 
     // Create a custom field parser for the date
     const fieldParsers = {
-      birthDate: (value: string) => value as unknown as string, // Cast to string to satisfy type constraints
+      birthDate: (value: string) => value, // Cast to string to satisfy type constraints
     } as Record<string, (value: string) => string | number | boolean | null>;
 
     const { result } = renderHook(() =>
