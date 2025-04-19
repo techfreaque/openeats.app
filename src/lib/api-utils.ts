@@ -1,8 +1,8 @@
 import type { NextRequest } from "next/server";
-import { getCurrentUser } from "next-vibe/server/endpoints/auth/user";
 import type { JwtPayloadType } from "next-vibe/server/endpoints/auth/jwt";
+import { getCurrentUser } from "next-vibe/server/endpoints/auth/user";
 import { errorLogger } from "next-vibe/shared/utils/logger";
-import { z } from "zod";
+import type { z } from "zod";
 
 /**
  * Get authenticated user from request
@@ -17,7 +17,9 @@ export const getAuthenticatedUser = async (): Promise<JwtPayloadType> => {
     return user;
   } catch (error) {
     errorLogger("Authentication error", error);
-    throw new Error(error instanceof Error ? error.message : "Authentication failed");
+    throw new Error(
+      error instanceof Error ? error.message : "Authentication failed",
+    );
   }
 };
 
@@ -36,7 +38,7 @@ export const executeDbQuery = async <T>(
   } catch (error) {
     errorLogger(`Database error in ${context}`, error);
     throw new Error(
-      error instanceof Error ? error.message : `Database error in ${context}`
+      error instanceof Error ? error.message : `Database error in ${context}`,
     );
   }
 };
@@ -54,16 +56,16 @@ export const validateApiRequest = async <T>(
   try {
     const data = await request.json();
     const result = schema.safeParse(data);
-    
+
     if (!result.success) {
       throw new Error(`Validation error: ${result.error.message}`);
     }
-    
+
     return result.data;
   } catch (error) {
     errorLogger("API request validation error", error);
     throw new Error(
-      error instanceof Error ? error.message : "Invalid request data"
+      error instanceof Error ? error.message : "Invalid request data",
     );
   }
 };

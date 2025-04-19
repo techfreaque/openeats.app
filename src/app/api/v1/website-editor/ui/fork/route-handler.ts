@@ -21,9 +21,9 @@ export async function forkUi({
   ApiHandlerResult<ForkUiResponseType>
 > {
   try {
-    debugLogger("Forking UI component", { 
-      userId: user.id, 
-      uiId: data.uiId 
+    debugLogger("Forking UI component", {
+      userId: user.id,
+      uiId: data.uiId,
     });
 
     // Fork the UI component
