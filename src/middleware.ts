@@ -5,7 +5,7 @@ import {
   strictRateLimiter,
 } from "./packages/next-vibe/server/middleware/rate-limit";
 
-export function middleware(request: NextRequest) {
+export function middleware(request: NextRequest): NextResponse {
   // Handle WebSocket upgrade requests
   if (
     request.nextUrl.pathname === "/api/ws" &&
