@@ -136,7 +136,10 @@ async function fetchRestaurantById(
  * @param props - API handler props
  * @returns Created restaurant
  */
-export const createRestaurant = async ({ user, data }: ApiHandlerProps<RestaurantCreateType, undefined>) => {
+export const createRestaurant = async ({
+  user,
+  data,
+}: ApiHandlerProps<RestaurantCreateType, undefined>) => {
   try {
     debugLogger("Creating restaurant", {
       userId: user.id,
@@ -188,8 +191,9 @@ export const createRestaurant = async ({ user, data }: ApiHandlerProps<Restauran
       mainCategoryId: data.mainCategoryId,
     };
 
-    const restaurant =
-      await restaurantRepository.createRestaurant(restaurantData as any);
+    const restaurant = await restaurantRepository.createRestaurant(
+      restaurantData as any,
+    );
 
     debugLogger("Restaurant created", { restaurantId: restaurant.id });
 
@@ -250,7 +254,10 @@ export const createRestaurant = async ({ user, data }: ApiHandlerProps<Restauran
  * @param props - API handler props
  * @returns Updated restaurant
  */
-export const updateRestaurant = async ({ user, data: requestData }: ApiHandlerProps<RestaurantUpdateType, undefined>) => {
+export const updateRestaurant = async ({
+  user,
+  data: requestData,
+}: ApiHandlerProps<RestaurantUpdateType, undefined>) => {
   try {
     debugLogger("Updating restaurant", {
       userId: user.id,
@@ -449,7 +456,10 @@ export const restaurantQuery = {
  * @param props - API handler props
  * @returns Restaurant data
  */
-export const getRestaurant = async ({ user, data }: ApiHandlerProps<{ restaurantId: string }, undefined>) => {
+export const getRestaurant = async ({
+  user,
+  data,
+}: ApiHandlerProps<{ restaurantId: string }, undefined>) => {
   try {
     debugLogger("Getting restaurant", {
       userId: user.id,
@@ -590,7 +600,9 @@ export function filterMenuItems(
  * @param props - API handler props
  * @returns List of all restaurants
  */
-export const getRestaurants = async ({ user }: ApiHandlerProps<UndefinedType, undefined>) => {
+export const getRestaurants = async ({
+  user,
+}: ApiHandlerProps<UndefinedType, undefined>) => {
   try {
     debugLogger("Getting all restaurants", { userId: user.id });
 
@@ -651,7 +663,10 @@ export const getRestaurants = async ({ user }: ApiHandlerProps<UndefinedType, un
  * @param props - API handler props
  * @returns List of restaurants matching search criteria
  */
-export const searchRestaurants = async ({ data, user }: ApiHandlerProps<RestaurantSearchType, undefined>) => {
+export const searchRestaurants = async ({
+  data,
+  user,
+}: ApiHandlerProps<RestaurantSearchType, undefined>) => {
   try {
     debugLogger("Searching restaurants", {
       userId: user.id,
