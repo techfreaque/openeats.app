@@ -32,7 +32,6 @@ import { useState } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
-import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
 import { LanguageSelector } from "@/app/app/components/language-selector";
 import type { MenuItemType } from "@/app/app/components/lib/types";
 import { useRestaurantConfig } from "@/app/app/components/restaurant-config-provider";
@@ -53,13 +52,11 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
-  const config = useRestaurantConfig();
+  useRestaurantConfig(); // Load restaurant config
 
   // API data
   const { data: restaurant, isLoading, error } = useRestaurant(id);
-  const { getRestaurantById, getMenuItemsByRestaurantId } = useRestaurants();
-  const mockRestaurant = getRestaurantById(id);
-  const menuItems = getMenuItemsByRestaurantId(id);
+  const menuItems = restaurant?.menuItems || [];
 
   // Filter states
   const [activeFilter, setActiveFilter] = useState<ReviewFilter>("all");
@@ -149,20 +146,13 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
                 {t("restaurant.reviews.title", "Customer Reviews")}
               </h1>
               <p className="text-muted-foreground max-w-2xl">
-                {t(
-                  "restaurant.reviews.subtitle",
-                  "See what others are saying about our restaurant or share your own experience",
-                )}
+                See what others are saying about our restaurant or share your
+                own experience
               </p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" asChild>
-                <Link href={`/restaurant/${id}`}>
-                  {t(
-                    "restaurant.reviews.backToRestaurant",
-                    "Back to Restaurant",
-                  )}
-                </Link>
+                <Link href={`/restaurant/${id}`}>Back to Restaurant</Link>
               </Button>
               <LanguageSelector />
             </div>
@@ -177,9 +167,7 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
             {/* Rating overview */}
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {t("restaurant.reviews.ratingOverview", "Rating Overview")}
-                </CardTitle>
+                <CardTitle>Rating Overview</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-center gap-4">
@@ -199,11 +187,7 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
                       ))}
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      {t(
-                        "restaurant.reviews.basedOn",
-                        "Based on {{count}} reviews",
-                        { count: 85 },
-                      )}
+                      Based on 85 reviews
                     </div>
                   </div>
                 </div>
@@ -212,7 +196,7 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
                   {ratingDistribution.map((dist) => (
                     <div key={dist.rating} className="flex items-center gap-2">
                       <div className="w-12 text-sm font-medium">
-                        {dist.rating} {t("restaurant.reviews.stars", "stars")}
+                        {dist.rating} stars
                       </div>
                       <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                         <div
@@ -233,7 +217,7 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
                   onClick={handleAddReviewClick}
                   disabled={!user}
                 >
-                  {t("restaurant.reviews.writeReview", "Write a Review")}
+                  Write a Review
                 </Button>
               </CardFooter>
             </Card>
@@ -241,13 +225,11 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
             {/* Filters */}
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {t("restaurant.reviews.filterReviews", "Filter Reviews")}
-                </CardTitle>
+                <CardTitle>Filter Reviews</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>{t("restaurant.reviews.rating", "Rating")}</Label>
+                  <Label>Rating</Label>
                   <RadioGroup
                     value={activeFilter}
                     onValueChange={(value) =>
@@ -256,33 +238,21 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="all" id="all" />
-                      <Label htmlFor="all">
-                        {t("restaurant.reviews.allRatings", "All Ratings")}
-                      </Label>
+                      <Label htmlFor="all">All Ratings</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="positive" id="positive" />
-                      <Label htmlFor="positive">
-                        {t(
-                          "restaurant.reviews.positive",
-                          "Positive (4-5 stars)",
-                        )}
-                      </Label>
+                      <Label htmlFor="positive">Positive (4-5 stars)</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="negative" id="negative" />
-                      <Label htmlFor="negative">
-                        {t(
-                          "restaurant.reviews.critical",
-                          "Critical (1-3 stars)",
-                        )}
-                      </Label>
+                      <Label htmlFor="negative">Critical (1-3 stars)</Label>
                     </div>
                   </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{t("restaurant.reviews.features", "Features")}</Label>
+                  <Label>Features</Label>
                   <RadioGroup
                     value={activeFilter}
                     onValueChange={(value) =>
@@ -291,44 +261,29 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="with-photos" id="with-photos" />
-                      <Label htmlFor="with-photos">
-                        {t("restaurant.reviews.withPhotos", "With Photos")}
-                      </Label>
+                      <Label htmlFor="with-photos">With Photos</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="with-replies" id="with-replies" />
-                      <Label htmlFor="with-replies">
-                        {t(
-                          "restaurant.reviews.withReplies",
-                          "With Owner Replies",
-                        )}
-                      </Label>
+                      <Label htmlFor="with-replies">With Owner Replies</Label>
                     </div>
                   </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{t("restaurant.reviews.sortBy", "Sort By")}</Label>
+                  <Label>Sort By</Label>
                   <Select
                     value={sortBy}
-                    onValueChange={(value) => setSortBy(value)}
+                    onValueChange={(value) => setSortBy(value as any)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="newest">
-                        {t("restaurant.reviews.newest", "Newest First")}
-                      </SelectItem>
-                      <SelectItem value="highest">
-                        {t("restaurant.reviews.highest", "Highest Rated")}
-                      </SelectItem>
-                      <SelectItem value="lowest">
-                        {t("restaurant.reviews.lowest", "Lowest Rated")}
-                      </SelectItem>
-                      <SelectItem value="most-helpful">
-                        {t("restaurant.reviews.mostHelpful", "Most Helpful")}
-                      </SelectItem>
+                      <SelectItem value="newest">Newest First</SelectItem>
+                      <SelectItem value="highest">Highest Rated</SelectItem>
+                      <SelectItem value="lowest">Lowest Rated</SelectItem>
+                      <SelectItem value="most-helpful">Most Helpful</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -336,10 +291,7 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder={t(
-                      "restaurant.reviews.searchPlaceholder",
-                      "Search reviews...",
-                    )}
+                    placeholder="Search reviews..."
                     className="pl-10"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -356,7 +308,7 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
                     setSearchQuery("");
                   }}
                 >
-                  {t("restaurant.reviews.resetFilters", "Reset Filters")}
+                  Reset Filters
                 </Button>
               </CardFooter>
             </Card>
@@ -371,18 +323,12 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
             >
               <div className="flex items-center justify-between mb-6">
                 <TabsList>
-                  <TabsTrigger value="read">
-                    {t("restaurant.reviews.readReviews", "Read Reviews")}
-                  </TabsTrigger>
-                  <TabsTrigger value="write">
-                    {t("restaurant.reviews.writeReview", "Write a Review")}
-                  </TabsTrigger>
+                  <TabsTrigger value="read">Read Reviews</TabsTrigger>
+                  <TabsTrigger value="write">Write a Review</TabsTrigger>
                 </TabsList>
 
                 {activeTab === "read" && (
-                  <Button onClick={handleAddReviewClick}>
-                    {t("restaurant.reviews.writeReview", "Write a Review")}
-                  </Button>
+                  <Button onClick={handleAddReviewClick}>Write a Review</Button>
                 )}
               </div>
 
@@ -402,15 +348,10 @@ export default function RestaurantReviewsPage(): JSX.Element | null {
                 ) : (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground mb-4">
-                      {t(
-                        "restaurant.reviews.signInRequired",
-                        "Please sign in to leave a review",
-                      )}
+                      Please sign in to leave a review
                     </p>
                     <Button asChild>
-                      <a href="/app/signin">
-                        {t("restaurant.reviews.signIn", "Sign In")}
-                      </a>
+                      <a href="/app/signin">Sign In</a>
                     </Button>
                   </div>
                 )}

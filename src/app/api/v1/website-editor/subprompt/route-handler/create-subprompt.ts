@@ -67,6 +67,6 @@ export async function createSubPrompt({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    }  as ApiHandlerResult<CreateSubPromptResponseType>;
+    } as ApiHandlerResult<CreateSubPromptResponseType>;
   }
 }

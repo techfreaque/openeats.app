@@ -173,6 +173,16 @@ export const useApiStore = create<ApiStore>((set, get) => ({
       queryKey?: QueryKey;
     } = {},
   ): Promise<TResponse> => {
+    // Check if the endpoint expects undefined for request data
+    // This is determined by checking if the schema is undefinedSchema
+    const isUndefinedSchema = endpoint.requestSchema.safeParse(undefined).success &&
+                             !endpoint.requestSchema.safeParse({}).success;
+
+    // If the schema expects undefined but we received an object, set requestData to undefined
+    if (isUndefinedSchema && typeof requestData === 'object' && requestData !== null) {
+      debugLogger("Converting object to undefined for endpoint with undefinedSchema", endpoint.path.join("/"));
+      requestData = undefined as TRequest;
+    }
     const queryId = get().getQueryId(
       options.queryKey ?? [endpoint.path.join("/"), endpoint.method],
     );
@@ -543,6 +553,16 @@ export const useApiStore = create<ApiStore>((set, get) => ({
     pathParams: TUrlVariables,
     options: ApiMutationOptions<TRequest, TResponse, TUrlVariables> = {},
   ): Promise<TResponse> => {
+    // Check if the endpoint expects undefined for request data
+    // This is determined by checking if the schema is undefinedSchema
+    const isUndefinedSchema = endpoint.requestSchema.safeParse(undefined).success &&
+                             !endpoint.requestSchema.safeParse({}).success;
+
+    // If the schema expects undefined but we received an object, set requestData to undefined
+    if (isUndefinedSchema && typeof requestData === 'object' && requestData !== null) {
+      debugLogger("Converting object to undefined for endpoint with undefinedSchema", endpoint.path.join("/"));
+      requestData = undefined as TRequest;
+    }
     const mutationId = get().getMutationId(endpoint);
 
     // Set initial state
@@ -762,6 +782,16 @@ export const apiClient = {
       queryKey?: QueryKey;
     } = {},
   ): Promise<TResponse> => {
+    // Check if the endpoint expects undefined for request data
+    const isUndefinedSchema = endpoint.requestSchema.safeParse(undefined).success &&
+                             !endpoint.requestSchema.safeParse({}).success;
+
+    // If the schema expects undefined but we received an object, set requestData to undefined
+    if (isUndefinedSchema && typeof requestData === 'object' && requestData !== null) {
+      debugLogger("Converting object to undefined for endpoint with undefinedSchema", endpoint.path.join("/"));
+      requestData = undefined as TRequest;
+    }
+
     return await useApiStore
       .getState()
       .executeQuery(endpoint, requestData, pathParams, options);
@@ -776,6 +806,16 @@ export const apiClient = {
     pathParams: TUrlVariables,
     options: ApiMutationOptions<TRequest, TResponse, TUrlVariables> = {},
   ): Promise<TResponse> => {
+    // Check if the endpoint expects undefined for request data
+    const isUndefinedSchema = endpoint.requestSchema.safeParse(undefined).success &&
+                             !endpoint.requestSchema.safeParse({}).success;
+
+    // If the schema expects undefined but we received an object, set data to undefined
+    if (isUndefinedSchema && typeof data === 'object' && data !== null) {
+      debugLogger("Converting object to undefined for endpoint with undefinedSchema", endpoint.path.join("/"));
+      data = undefined as TRequest;
+    }
+
     return await useApiStore
       .getState()
       .executeMutation(endpoint, data, pathParams, options);
