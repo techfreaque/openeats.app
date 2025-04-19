@@ -24,9 +24,9 @@ export function useMenuItems(params?: {
   // Create a stable query key based on the params
   const queryKey = useMemo(() => {
     return [
-      'menu-items',
-      params?.restaurantId || 'all',
-      params?.categoryId || 'all',
+      "menu-items",
+      params?.restaurantId || "all",
+      params?.categoryId || "all",
     ];
   }, [params?.restaurantId, params?.categoryId]);
 
@@ -47,7 +47,7 @@ export function useMenuItems(params?: {
 export function useMenuItem(id?: string) {
   // Create a stable query key based on the id
   const queryKey = useMemo(() => {
-    return ['menu-item', id || 'none'];
+    return ["menu-item", id || "none"];
   }, [id]);
 
   return useApiQuery(menuItemsEndpoints.GET, { id }, undefined, {

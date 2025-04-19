@@ -14,7 +14,7 @@ import {
   useToast,
 } from "next-vibe-ui/ui";
 import type { JSX } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { RestaurantResponseType } from "@/app/api/v1/restaurant/schema/restaurant.schema";
 import { Countries } from "@/translations";
@@ -98,33 +98,54 @@ export default function Home(): JSX.Element {
     ];
   }, [restaurants]);
 
+  // Track the last time we submitted to prevent excessive submissions
+  const lastSubmitTimeRef = useRef<number>(0);
+
   // Update the form when category changes
   useEffect(() => {
-    if (form) {
-      if (activeCategory === "all") {
-        form.setValue("category", undefined);
-      } else {
-        form.setValue("category", activeCategory);
-      }
-
-      // Only submit if we have location data
-      if (form.getValues("zip") && form.getValues("countryCode")) {
-        submitForm(undefined, { urlParamVariables: undefined });
-      }
+    if (!form) {
+      return;
     }
-  }, [activeCategory, form, submitForm]);
+
+    if (activeCategory === "all") {
+      form.setValue("category", undefined);
+    } else {
+      form.setValue("category", activeCategory);
+    }
+
+    // Only submit if we have location data and haven't submitted recently
+    const now = Date.now();
+    const minSubmitInterval = 2000; // Minimum 2 seconds between submissions
+    if (
+      form.getValues("zip") &&
+      form.getValues("countryCode") &&
+      now - lastSubmitTimeRef.current > minSubmitInterval
+    ) {
+      lastSubmitTimeRef.current = now;
+      submitForm(undefined, { urlParamVariables: undefined });
+    }
+  }, [activeCategory, form, submitForm, lastSubmitTimeRef]);
 
   // Update the form when delivery type changes
   useEffect(() => {
-    if (form) {
-      form.setValue("deliveryType", deliveryType);
-
-      // Only submit if we have location data
-      if (form.getValues("zip") && form.getValues("countryCode")) {
-        submitForm(undefined, { urlParamVariables: undefined });
-      }
+    if (!form) {
+      return;
     }
-  }, [deliveryType, form, submitForm]);
+
+    form.setValue("deliveryType", deliveryType);
+
+    // Only submit if we have location data and haven't submitted recently
+    const now = Date.now();
+    const minSubmitInterval = 2000; // Minimum 2 seconds between submissions
+    if (
+      form.getValues("zip") &&
+      form.getValues("countryCode") &&
+      now - lastSubmitTimeRef.current > minSubmitInterval
+    ) {
+      lastSubmitTimeRef.current = now;
+      submitForm(undefined, { urlParamVariables: undefined });
+    }
+  }, [deliveryType, form, submitForm, lastSubmitTimeRef]);
 
   // Function to handle location change
   const handleLocationChange = useCallback(
@@ -183,8 +204,17 @@ export default function Home(): JSX.Element {
     return [null, null];
   };
 
+  // Flag to track initialization
+  const hasInitialized = useRef(false);
+
   // Initialize with location from localStorage if available
   useEffect(() => {
+    // Only run this effect once
+    if (hasInitialized.current) {
+      return;
+    }
+    hasInitialized.current = true;
+
     // Check if we have a saved location
     try {
       setIsLoadingLocation(true);
@@ -197,6 +227,9 @@ export default function Home(): JSX.Element {
           form.setValue("zip", zip);
           form.setValue("countryCode", countryCode as Countries);
           form.setValue("radius", 10);
+
+          // Update the last submit time and submit the form
+          lastSubmitTimeRef.current = Date.now();
           submitForm(undefined, { urlParamVariables: undefined });
         }
         setIsLoadingLocation(false);
@@ -212,6 +245,9 @@ export default function Home(): JSX.Element {
       form.setValue("zip", "10001");
       form.setValue("countryCode", Countries.DE);
       form.setValue("radius", 10);
+
+      // Update the last submit time and submit the form
+      lastSubmitTimeRef.current = Date.now();
       submitForm(undefined, { urlParamVariables: undefined });
 
       // Try to detect location automatically
@@ -254,7 +290,8 @@ export default function Home(): JSX.Element {
         variant: "destructive",
       });
     }
-  }, [form, submitForm, toast, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array to run only once
 
   // Save location when it changes
   useEffect(() => {

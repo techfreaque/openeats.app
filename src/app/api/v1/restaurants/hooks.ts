@@ -26,7 +26,8 @@ export function useRestaurants(): ReturnType<
     RestaurantsResponseType,
     UndefinedType
   >(restaurantsEndpoint.POST, undefined, {
-    debounceMs: 800,
+    debounceMs: 2000, // Increase debounce time to 2 seconds to prevent excessive API calls
+    autoSubmit: false, // Disable auto-submit to prevent excessive API calls
   });
 
   // Add error handling wrapper

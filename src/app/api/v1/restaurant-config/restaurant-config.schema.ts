@@ -2,14 +2,7 @@ import { z } from "zod";
 
 // Theme schema
 const restaurantThemeSchema = z.object({
-  theme: z.enum([
-    "default",
-    "modern",
-    "classic",
-    "minimal",
-    "elegant",
-    "bold",
-  ]),
+  theme: z.enum(["default", "modern", "classic", "minimal", "elegant", "bold"]),
   primaryColor: z.string(),
   secondaryColor: z.string().optional(),
   accentColor: z.string().optional(),
@@ -125,13 +118,7 @@ export const restaurantConfigSchema = z.object({
   restaurantId: z.string(),
   theme: restaurantThemeSchema,
   hero: restaurantHeroSchema,
-  layout: z.enum([
-    "standard",
-    "featured",
-    "grid",
-    "magazine",
-    "fullwidth",
-  ]),
+  layout: z.enum(["standard", "featured", "grid", "magazine", "fullwidth"]),
   featuredItems: z.array(z.string()),
   featuredCollections: z.array(featuredCollectionSchema),
   specialOffers: z.array(specialOfferSchema).optional(),

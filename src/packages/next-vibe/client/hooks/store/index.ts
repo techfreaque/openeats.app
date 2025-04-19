@@ -30,15 +30,36 @@ const inFlightRequests = new Map<
   { promise: Promise<unknown>; timestamp: number }
 >();
 
-// Clean up in-flight requests older than 30 seconds
-const MAX_REQUEST_AGE = 30000; // 30 seconds
+// Clean up in-flight requests older than 10 seconds
+const MAX_REQUEST_AGE = 10_000; // 10 seconds
+
+// Set a maximum number of in-flight requests to prevent memory leaks
+const MAX_IN_FLIGHT_REQUESTS = 50;
 
 // Function to clean up old in-flight requests
 function cleanupInFlightRequests(): void {
   const now = Date.now();
+
+  // First, clean up old requests
   for (const [key, { timestamp }] of inFlightRequests.entries()) {
     if (now - timestamp > MAX_REQUEST_AGE) {
       inFlightRequests.delete(key);
+    }
+  }
+
+  // If we still have too many requests, remove the oldest ones
+  if (inFlightRequests.size > MAX_IN_FLIGHT_REQUESTS) {
+    // Convert to array, sort by timestamp, and keep only the newest MAX_IN_FLIGHT_REQUESTS
+    const entries = Array.from(inFlightRequests.entries());
+    entries.sort((a, b) => b[1].timestamp - a[1].timestamp); // Sort newest first
+
+    // Keep only the newest MAX_IN_FLIGHT_REQUESTS
+    const toKeep = entries.slice(0, MAX_IN_FLIGHT_REQUESTS);
+
+    // Clear the map and add back only the ones we want to keep
+    inFlightRequests.clear();
+    for (const [key, value] of toKeep) {
+      inFlightRequests.set(key, value);
     }
   }
 }
@@ -190,13 +211,53 @@ export const useApiStore = create<ApiStore>((set, get) => ({
 
       // Schedule a background refresh if needed
       if (options.backgroundRefresh) {
-        setTimeout(() => {
+        // Define the window interface extension
+        interface CustomWindow extends Window {
+          __nextVibeTimeouts?: Record<string, () => void>;
+        }
+
+        const timeoutKey = `bg_refresh_${queryId}_${Date.now()}`;
+        const refreshDelay = options.refreshDelay ?? 100;
+
+        const timeoutId = setTimeout(() => {
+          // Remove this timeout from tracking
+          if (typeof window !== "undefined") {
+            const customWindow = window as CustomWindow;
+            if (customWindow.__nextVibeTimeouts) {
+              delete customWindow.__nextVibeTimeouts[timeoutKey];
+            }
+          }
+
           void get().executeQuery(endpoint, requestData, pathParams, {
             ...options,
             forceRefresh: true,
             backgroundRefresh: false,
           });
-        }, options.refreshDelay ?? 0);
+        }, refreshDelay);
+
+        // Store the timeout ID so it can be cleaned up if needed
+        if (typeof window !== "undefined") {
+          const customWindow = window as CustomWindow;
+
+          // Initialize the timeouts object if it doesn't exist
+          customWindow.__nextVibeTimeouts ??= {};
+
+          // Store the timeout ID with a cleanup function
+          customWindow.__nextVibeTimeouts[timeoutKey] = (): void => {
+            clearTimeout(timeoutId);
+          };
+
+          // Auto-cleanup after 30 seconds to prevent memory leaks
+          setTimeout(() => {
+            const win = window as CustomWindow;
+            if (win.__nextVibeTimeouts?.[timeoutKey]) {
+              // Call the cleanup function
+              win.__nextVibeTimeouts[timeoutKey]();
+              // Remove the entry
+              delete win.__nextVibeTimeouts[timeoutKey];
+            }
+          }, 30_000);
+        }
       }
 
       return await Promise.resolve(result);
@@ -270,8 +331,24 @@ export const useApiStore = create<ApiStore>((set, get) => ({
           // using proper background refresh with delay to prevent race conditions
           const refreshDelay = options.refreshDelay ?? 50; // 50ms default delay
 
+          // Track all background refresh timeouts to prevent memory leaks
+          const timeoutKey = `bg_refresh_${queryId}_${Date.now()}`;
+
+          // Define the window interface extension
+          interface CustomWindow extends Window {
+            __nextVibeTimeouts?: Record<string, () => void>;
+          }
+
           // Use a simple timeout instead of creating a promise that might not be properly cleaned up
           const timeoutId = setTimeout(() => {
+            // Remove this timeout from tracking
+            if (typeof window !== "undefined") {
+              const customWindow = window as CustomWindow;
+              if (customWindow.__nextVibeTimeouts) {
+                delete customWindow.__nextVibeTimeouts[timeoutKey];
+              }
+            }
+
             const { executeQuery } = get();
             executeQuery(endpoint, requestData, pathParams, {
               ...options,
@@ -284,27 +361,26 @@ export const useApiStore = create<ApiStore>((set, get) => ({
 
           // Store the timeout ID so it can be cleaned up if needed
           if (typeof window !== "undefined") {
-            // Use a safer approach with a global cleanup function
-            const cleanupKey = `__nextVibe_cleanup_${Date.now()}`;
+            const customWindow = window as CustomWindow;
 
-            // Create a cleanup function on the window object
-            const cleanupFn = () => {
+            // Initialize the timeouts object if it doesn't exist
+            customWindow.__nextVibeTimeouts ??= {};
+
+            // Store the timeout ID with a cleanup function
+            customWindow.__nextVibeTimeouts[timeoutKey] = (): void => {
               clearTimeout(timeoutId);
             };
 
-            // Add the cleanup function to window
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (window as any)[cleanupKey] = cleanupFn;
-
-            // Auto-cleanup after 60 seconds to prevent memory leaks
+            // Auto-cleanup after 30 seconds to prevent memory leaks
             setTimeout(() => {
-              try {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                delete (window as any)[cleanupKey];
-              } catch (e) {
-                // Ignore cleanup errors
+              const win = window as CustomWindow;
+              if (win.__nextVibeTimeouts?.[timeoutKey]) {
+                // Call the cleanup function
+                win.__nextVibeTimeouts[timeoutKey]();
+                // Remove the entry
+                delete win.__nextVibeTimeouts[timeoutKey];
               }
-            }, 60000);
+            }, 30_000);
           }
 
           return cachedData;

@@ -13,7 +13,7 @@ import type { RestaurantConfigType } from "./restaurant-config.schema";
 export function useRestaurantConfig(restaurantId: string) {
   // Create a stable query key based on the restaurantId
   const queryKey = useMemo(() => {
-    return ['restaurant-config', restaurantId || 'none'];
+    return ["restaurant-config", restaurantId || "none"];
   }, [restaurantId]);
 
   return useApiQuery(

@@ -8,7 +8,6 @@ import type { JSX } from "react";
 import { useState } from "react";
 
 import { useMenuItems } from "@/app/api/v1/menu-items/hooks";
-
 import type { MenuItemResponseType } from "@/app/api/v1/restaurant/schema/menu.schema";
 
 interface FeaturedCollectionProps {

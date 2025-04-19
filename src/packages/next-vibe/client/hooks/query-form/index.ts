@@ -110,32 +110,73 @@ export function useApiQueryForm<
   const query = useApiQuery(endpoint, queryParams, urlVariables, {
     ...queryOptions,
     enabled: queryOptions.enabled === true,
+    staleTime: 60_000, // Cache data for 1 minute
+    cacheTime: 300_000, // Keep cache for 5 minutes
   });
 
   // Watch for form changes and update query params
   useEffect(() => {
     if (autoSubmit) {
+      // Track if this effect is still mounted to prevent memory leaks
+      let isMounted = true;
+
+      // Track the last time we submitted to prevent excessive submissions
+      let lastSubmitTime = 0;
+      const minSubmitInterval = 2000; // Minimum 2 seconds between submissions
+
       const subscription = watch((formData) => {
         if (debounceTimerRef.current) {
           clearTimeout(debounceTimerRef.current);
+          debounceTimerRef.current = null;
         }
 
-        debounceTimerRef.current = window.setTimeout(() => {
-          if (formData) {
-            setQueryParams(formData as TRequest);
-          }
-        }, debounceMs);
+        // Check if we've submitted recently
+        const now = Date.now();
+        if (now - lastSubmitTime < minSubmitInterval) {
+          // If we're submitting too frequently, use a longer debounce
+          const adjustedDebounce = debounceMs * 2;
+
+          debounceTimerRef.current = window.setTimeout(() => {
+            if (!isMounted) {
+              return;
+            }
+
+            if (formData) {
+              lastSubmitTime = Date.now();
+              setQueryParams(formData as TRequest);
+            }
+          }, adjustedDebounce);
+        } else {
+          // Normal debounce behavior
+          debounceTimerRef.current = window.setTimeout(() => {
+            if (!isMounted) {
+              return;
+            }
+
+            if (formData) {
+              lastSubmitTime = Date.now();
+              setQueryParams(formData as TRequest);
+            }
+          }, debounceMs);
+        }
       });
 
       return (): void => {
+        isMounted = false;
         subscription.unsubscribe();
         if (debounceTimerRef.current) {
           clearTimeout(debounceTimerRef.current);
+          debounceTimerRef.current = null;
         }
       };
     }
     return;
   }, [watch, autoSubmit, debounceMs, setQueryParams]);
+
+  // Track the last submission time to prevent excessive API calls
+  const lastSubmitTimeRef = useRef<number>(0);
+  const isSubmittingRef = useRef<boolean>(false);
+  const minSubmitInterval = 2000; // Minimum 2 seconds between submissions
 
   // Create a submit handler that validates and submits the form
   const submitForm: SubmitFormFunction<TRequest, TResponse, TUrlVariables> = (
@@ -144,6 +185,22 @@ export function useApiQueryForm<
   ): void => {
     const _submitForm = async (): Promise<void> => {
       try {
+        // Check if we're already submitting or have submitted recently
+        const now = Date.now();
+        if (isSubmittingRef.current) {
+          // Skip if already submitting to prevent duplicate requests
+          return;
+        }
+
+        if (now - lastSubmitTimeRef.current < minSubmitInterval) {
+          // We're submitting too frequently, throttle by waiting
+          await new Promise(resolve => setTimeout(resolve, minSubmitInterval));
+        }
+
+        // Mark as submitting
+        isSubmittingRef.current = true;
+        lastSubmitTimeRef.current = Date.now();
+
         // Get form data
         const formData = getValues();
 
@@ -166,6 +223,9 @@ export function useApiQueryForm<
         const parsedError = parseError(error);
         setError(parsedError);
         options.onError?.(parsedError);
+      } finally {
+        // Mark as no longer submitting
+        isSubmittingRef.current = false;
       }
     };
 

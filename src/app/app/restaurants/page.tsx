@@ -34,7 +34,7 @@ import {
   useToast,
 } from "next-vibe-ui/ui";
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
 
@@ -116,8 +116,21 @@ export default function RestaurantsPage(): React.JSX.Element {
     }
   }, [form]);
 
+  // Track the last time we submitted to prevent excessive submissions
+  const lastSubmitTimeRef = useRef<number>(0);
+  const minSubmitInterval = 2000; // Minimum 2 seconds between submissions
+
+  // Flag to track initialization
+  const hasInitialized = useRef(false);
+
   // Initialize form with default values on mount
   useEffect(() => {
+    // Only run this effect once
+    if (hasInitialized.current) {
+      return;
+    }
+    hasInitialized.current = true;
+
     // Set other defaults but don't overwrite country/zip
     if (!form.getValues("radius")) {
       form.setValue("radius", 10);
@@ -126,11 +139,14 @@ export default function RestaurantsPage(): React.JSX.Element {
       form.setValue("deliveryType", "delivery");
     }
 
-    // Only auto-submit if location is set
+    // Only auto-submit if location is set and we haven't submitted recently
     if (locationSet) {
+      const now = Date.now();
+      lastSubmitTimeRef.current = now;
       submitForm(undefined, { urlParamVariables: undefined });
     }
-  }, [form, locationSet, submitForm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array to run only once
 
   // Function to set location data in the form
   const setLocation = useCallback(

@@ -57,10 +57,29 @@ export function useApiQuery<
   const queryKey: QueryKey = useMemo(
     () =>
       customQueryKey ?? [
-        endpoint.path,
+        endpoint.path.join('/'),
         endpoint.method,
-        requestData,
-        urlParams,
+        // Use a more stable representation for complex objects
+        typeof requestData === 'object' ?
+          JSON.stringify(requestData, (key, value) =>
+            // Handle circular references
+            typeof value === 'object' && value !== null ?
+              Object.keys(value).length > 0 ?
+                Object.fromEntries(Object.entries(value).filter(([k]) => !k.startsWith('_'))) :
+                value :
+              value
+          ) :
+          requestData,
+        typeof urlParams === 'object' ?
+          JSON.stringify(urlParams, (key, value) =>
+            // Handle circular references
+            typeof value === 'object' && value !== null ?
+              Object.keys(value).length > 0 ?
+                Object.fromEntries(Object.entries(value).filter(([k]) => !k.startsWith('_'))) :
+                value :
+              value
+          ) :
+          urlParams,
       ],
     [customQueryKey, endpoint.path, endpoint.method, requestData, urlParams],
   );
@@ -115,6 +134,11 @@ export function useApiQuery<
   // Get query state from store with shallow comparison
   const queryState = useApiStore(selector);
 
+  // Track the last execution time to prevent excessive API calls
+  const lastExecutionTimeRef = useRef<number>(0);
+  const isExecutingRef = useRef<boolean>(false);
+  const minExecutionInterval = 2000; // Minimum 2 seconds between executions
+
   // Execute query when component mounts or dependencies change
   useEffect(() => {
     // Skip if query is disabled
@@ -133,24 +157,78 @@ export function useApiQuery<
       return;
     }
 
+    // Check if we're already executing
+    if (isExecutingRef.current) {
+      return;
+    }
+
+    // Check if we're executing too frequently
+    const now = Date.now();
+    if (now - lastExecutionTimeRef.current < minExecutionInterval) {
+      // We're executing too frequently, wait a bit
+      const timeoutId = setTimeout(() => {
+        // Check if we already have data in the store
+        const existingQuery = useApiStore.getState().queries[queryId];
+        const hasValidData = existingQuery?.data && !existingQuery.isError;
+        const isFresh =
+          existingQuery?.lastFetchTime &&
+          Date.now() - existingQuery.lastFetchTime <
+            (queryOptions.staleTime || 60_000);
+
+        // Skip fetch if we have fresh data
+        if (hasValidData && isFresh && !isInitialMount.current) {
+          return;
+        }
+
+        // Mark as executing
+        isExecutingRef.current = true;
+
+        // Execute the query
+        void executeQuery(endpoint, requestData, urlParams, {
+          ...queryOptions,
+          queryKey,
+        }).finally(() => {
+          // Mark as no longer executing
+          isExecutingRef.current = false;
+          // Update execution time
+          lastExecutionTimeRef.current = Date.now();
+        });
+
+        // Update initial mount ref
+        isInitialMount.current = false;
+      }, minExecutionInterval - (now - lastExecutionTimeRef.current));
+
+      return () => clearTimeout(timeoutId);
+    }
+
     // Check if we already have data in the store
     const existingQuery = useApiStore.getState().queries[queryId];
-    const hasValidData = existingQuery && existingQuery.data && !existingQuery.isError;
-    const isFresh = existingQuery && existingQuery.lastFetchTime &&
-      (Date.now() - existingQuery.lastFetchTime < (queryOptions.staleTime || 60000));
+    const hasValidData = existingQuery?.data && !existingQuery.isError;
+    const isFresh =
+      existingQuery?.lastFetchTime &&
+      Date.now() - existingQuery.lastFetchTime <
+        (queryOptions.staleTime || 60_000);
 
     // Skip fetch if we have fresh data
     if (hasValidData && isFresh && !isInitialMount.current) {
       return;
     }
 
+    // Mark as executing
+    isExecutingRef.current = true;
+
     // Execute the query with a small delay to prevent multiple simultaneous requests
     const timeoutId = setTimeout(() => {
       void executeQuery(endpoint, requestData, urlParams, {
         ...queryOptions,
         queryKey,
+      }).finally(() => {
+        // Mark as no longer executing
+        isExecutingRef.current = false;
+        // Update execution time
+        lastExecutionTimeRef.current = Date.now();
       });
-    }, 0);
+    }, 100); // Add a small delay
 
     // Update initial mount ref
     isInitialMount.current = false;
@@ -160,19 +238,15 @@ export function useApiQuery<
     queryId,
     options.enabled,
     executeQuery,
-    endpoint.path.join('/'), // Only depend on the path, not the entire endpoint
-    endpoint.method,
-    // Use JSON.stringify for complex objects to prevent unnecessary re-renders
-    // Only re-render if the actual data changes
-    JSON.stringify(requestData),
-    JSON.stringify(urlParams),
-    // Don't include the entire queryOptions object
+    // Use a stable representation of the query key instead of individual dependencies
+    // This prevents unnecessary re-renders when the query key is stable
+    JSON.stringify(queryKey),
+    skipInitialFetch,
+    refetchOnDependencyChange,
+    // Include only the necessary options
     queryOptions.staleTime,
     queryOptions.cacheTime,
     queryOptions.refetchOnWindowFocus,
-    queryKey.join(','), // Convert array to string for dependency tracking
-    skipInitialFetch,
-    refetchOnDependencyChange,
   ]);
 
   // Refetch function
