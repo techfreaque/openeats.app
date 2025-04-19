@@ -1,6 +1,9 @@
 import "server-only";
 
-import type { ApiHandlerFunction } from "next-vibe/server/endpoints/core/api-handler";
+import type { 
+  ApiHandlerProps, 
+  ApiHandlerResult 
+} from "next-vibe/server/endpoints/core/api-handler";
 import { hasRole } from "next-vibe/server/endpoints/data";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
@@ -9,7 +12,12 @@ import { debugLogger } from "next-vibe/shared/utils/logger";
 import { userRepository, userRolesRepository } from "../auth/repository";
 import type { Driver } from "./drivers.db";
 import { driverRepository } from "./drivers.repository";
-import type { DriverCreateType, DriverUpdateType } from "./schema";
+import type {
+  DriverCreateType,
+  DriverResponseType,
+  DriversResponseType,
+  DriverUpdateType,
+} from "./schema";
 
 /**
  * Driver API route handlers
@@ -21,21 +29,12 @@ import type { DriverCreateType, DriverUpdateType } from "./schema";
  * @param props - API handler props
  * @returns List of drivers
  */
-export const getDrivers: ApiHandlerFunction<
-  UndefinedType,
-  Array<
-    Driver & {
-      user: {
-        id: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-        imageUrl?: string;
-      };
-    }
-  >,
-  UndefinedType
-> = async ({ user }) => {
+
+export async function getDrivers({
+  user,
+}: ApiHandlerProps<UndefinedType, UndefinedType>): Promise<
+  ApiHandlerResult<DriversResponseType>
+> {
   try {
     debugLogger("Getting drivers", { userId: user.id });
 
@@ -55,7 +54,7 @@ export const getDrivers: ApiHandlerFunction<
         success: false,
         message: "Not authorized to view drivers",
         errorCode: 403,
-      };
+      } as unknown as ApiHandlerResult<DriversResponseType>;
     }
 
     // Fetch drivers with user information
@@ -83,7 +82,7 @@ export const getDrivers: ApiHandlerFunction<
           ? error.message
           : "Unknown error getting drivers",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<DriversResponseType>;
   }
 };
 
@@ -92,19 +91,12 @@ export const getDrivers: ApiHandlerFunction<
  * @param props - API handler props
  * @returns Created driver
  */
-export const createDriver: ApiHandlerFunction<
-  DriverCreateType,
-  Driver & {
-    user: {
-      id: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      imageUrl?: string;
-    };
-  },
-  UndefinedType
-> = async ({ data, user }) => {
+export async function createDriver({
+  data,
+  user,
+}: ApiHandlerProps<DriverCreateType, UndefinedType>): Promise<
+  ApiHandlerResult<DriverResponseType>
+> {
   try {
     debugLogger("Creating driver", {
       adminUserId: user.id,
@@ -121,7 +113,7 @@ export const createDriver: ApiHandlerFunction<
         success: false,
         message: "Not authorized to create drivers",
         errorCode: 403,
-      };
+      } as unknown as ApiHandlerResult<DriverResponseType>;
     }
 
     // Check if user exists
@@ -132,7 +124,7 @@ export const createDriver: ApiHandlerFunction<
         success: false,
         message: "User not found",
         errorCode: 404,
-      };
+      } as unknown as ApiHandlerResult<DriverResponseType>;
     }
 
     // Check if driver already exists for this user
@@ -143,7 +135,7 @@ export const createDriver: ApiHandlerFunction<
         success: false,
         message: "Driver already exists for this user",
         errorCode: 409,
-      };
+      } as unknown as ApiHandlerResult<DriverResponseType>;
     }
 
     // Create driver
@@ -196,7 +188,7 @@ export const createDriver: ApiHandlerFunction<
           ? error.message
           : "Unknown error creating driver",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<DriverResponseType>;
   }
 };
 
@@ -205,19 +197,12 @@ export const createDriver: ApiHandlerFunction<
  * @param props - API handler props
  * @returns Updated driver
  */
-export const updateDriver: ApiHandlerFunction<
-  DriverUpdateType,
-  Driver & {
-    user: {
-      id: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      imageUrl?: string;
-    };
-  },
-  UndefinedType
-> = async ({ data, user }) => {
+export async function updateDriver({
+  data,
+  user,
+}: ApiHandlerProps<DriverUpdateType, UndefinedType>): Promise<
+  ApiHandlerResult<DriverResponseType>
+> {
   try {
     debugLogger("Updating driver", {
       userId: user.id,
@@ -237,7 +222,7 @@ export const updateDriver: ApiHandlerFunction<
         success: false,
         message: "Driver not found",
         errorCode: 404,
-      };
+      } as unknown as ApiHandlerResult<DriverResponseType>;
     }
 
     // Check if user is authorized to update this driver
@@ -252,7 +237,7 @@ export const updateDriver: ApiHandlerFunction<
         success: false,
         message: "Not authorized to update this driver",
         errorCode: 403,
-      };
+      } as unknown as ApiHandlerResult<DriverResponseType>;
     }
 
     // Prepare update data (remove id from data)
@@ -269,13 +254,13 @@ export const updateDriver: ApiHandlerFunction<
       updateData.licensePlate = otherData.licensePlate;
     }
     if (otherData.radius !== undefined) {
-      updateData.radius = otherData.radius as unknown as string;
+      updateData.radius = String(otherData.radius);
     }
     if (otherData.latitude !== undefined) {
-      updateData.latitude = otherData.latitude as unknown as string;
+      updateData.latitude = String(otherData.latitude);
     }
     if (otherData.longitude !== undefined) {
-      updateData.longitude = otherData.longitude as unknown as string;
+      updateData.longitude = String(otherData.longitude);
     }
     if (otherData.phone !== undefined) {
       updateData.phone = otherData.phone;
@@ -338,6 +323,6 @@ export const updateDriver: ApiHandlerFunction<
           ? error.message
           : "Unknown error updating driver",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<DriverResponseType>;
   }
 };
