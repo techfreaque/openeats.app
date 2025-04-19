@@ -2,7 +2,7 @@ import "server-only";
 
 import type { DbId } from "next-vibe/server/db/types";
 import type {
-  ApiHandlerFunction,
+  ApiHandlerProps,
   ApiHandlerResult,
 } from "next-vibe/server/endpoints/core/api-handler";
 import { hasRole } from "next-vibe/server/endpoints/data";
@@ -86,7 +86,11 @@ async function fetchRestaurantById(
         userRoles: [],
         hasAccess: false,
       },
-    } as ApiHandlerResult<RestaurantResponseType>;
+    } as unknown as ApiHandlerResult<{
+      restaurant: RestaurantResponseType;
+      userRoles: UserRoleResponseType[];
+      hasAccess: boolean;
+    }>;
   }
 
   // Get user roles
@@ -106,15 +110,15 @@ async function fetchRestaurantById(
   // Process restaurant data to match expected type
   const processedRestaurant = {
     ...restaurant,
-    menuItems: Array.isArray(restaurant.menuItems)
-      ? restaurant.menuItems.map((item: any) => ({
+    menuItems: Array.isArray((restaurant as any).menuItems)
+      ? (restaurant as any).menuItems.map((item: any) => ({
           ...item,
           isAvailable: item.isAvailable ?? true,
           currency: item.currency ?? "EUR",
         }))
       : [],
-    countryId: (restaurant.country ||
-      restaurant.countryId) as unknown as Countries,
+    countryId: ((restaurant as any).country ??
+      (restaurant as any).countryId) as unknown as Countries,
   };
 
   return {
@@ -132,11 +136,7 @@ async function fetchRestaurantById(
  * @param props - API handler props
  * @returns Created restaurant
  */
-export const createRestaurant: ApiHandlerFunction<
-  RestaurantCreateType,
-  RestaurantResponseType,
-  UndefinedType
-> = async ({ user, data }) => {
+export const createRestaurant = async ({ user, data }: ApiHandlerProps<RestaurantCreateType, undefined>) => {
   try {
     debugLogger("Creating restaurant", {
       userId: user.id,
@@ -189,7 +189,7 @@ export const createRestaurant: ApiHandlerFunction<
     };
 
     const restaurant =
-      await restaurantRepository.createRestaurant(restaurantData);
+      await restaurantRepository.createRestaurant(restaurantData as any);
 
     debugLogger("Restaurant created", { restaurantId: restaurant.id });
 
@@ -226,7 +226,7 @@ export const createRestaurant: ApiHandlerFunction<
             currency: item.currency ?? "EUR",
           }))
         : [],
-      countryId: (restaurant.country ||
+      countryId: ((restaurant as any).country ??
         (restaurant as any).countryId) as unknown as Countries,
     };
 
@@ -250,11 +250,7 @@ export const createRestaurant: ApiHandlerFunction<
  * @param props - API handler props
  * @returns Updated restaurant
  */
-export const updateRestaurant: ApiHandlerFunction<
-  RestaurantUpdateType,
-  RestaurantResponseType,
-  UndefinedType
-> = async ({ user, data: requestData }) => {
+export const updateRestaurant = async ({ user, data: requestData }: ApiHandlerProps<RestaurantUpdateType, undefined>) => {
   try {
     debugLogger("Updating restaurant", {
       userId: user.id,
@@ -318,7 +314,7 @@ export const updateRestaurant: ApiHandlerFunction<
 
     const updatedRestaurant = await restaurantRepository.updateRestaurant(
       requestData.id,
-      restaurantData,
+      restaurantData as any,
     );
 
     debugLogger("Restaurant updated", {
@@ -453,11 +449,7 @@ export const restaurantQuery = {
  * @param props - API handler props
  * @returns Restaurant data
  */
-export const getRestaurant: ApiHandlerFunction<
-  { restaurantId: string },
-  RestaurantResponseType,
-  UndefinedType
-> = async ({ user, data }) => {
+export const getRestaurant = async ({ user, data }: ApiHandlerProps<{ restaurantId: string }, undefined>) => {
   try {
     debugLogger("Getting restaurant", {
       userId: user.id,
@@ -598,11 +590,7 @@ export function filterMenuItems(
  * @param props - API handler props
  * @returns List of all restaurants
  */
-export const getRestaurants: ApiHandlerFunction<
-  UndefinedType,
-  RestaurantResponseType[],
-  UndefinedType
-> = async ({ user }) => {
+export const getRestaurants = async ({ user }: ApiHandlerProps<UndefinedType, undefined>) => {
   try {
     debugLogger("Getting all restaurants", { userId: user.id });
 
@@ -663,11 +651,7 @@ export const getRestaurants: ApiHandlerFunction<
  * @param props - API handler props
  * @returns List of restaurants matching search criteria
  */
-export const searchRestaurants: ApiHandlerFunction<
-  RestaurantSearchType,
-  RestaurantResponseType[],
-  UndefinedType
-> = async ({ data, user }) => {
+export const searchRestaurants = async ({ data, user }: ApiHandlerProps<RestaurantSearchType, undefined>) => {
   try {
     debugLogger("Searching restaurants", {
       userId: user.id,
@@ -742,7 +726,7 @@ export const searchRestaurants: ApiHandlerFunction<
       if (!canGetUnpublished && !(restaurant as any).published) {
         return false;
       } else if (
-        data.published != null &&
+        data.published !== null &&
         (restaurant as any).published !== data.published
       ) {
         return false;
