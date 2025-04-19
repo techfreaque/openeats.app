@@ -31,7 +31,7 @@ export async function updateUi({
         success: false,
         message: "Not authenticated",
         errorCode: 401,
-      } as unknown as ApiHandlerResult<UpdateUiResponseType>;
+      }  as ApiHandlerResult<UpdateUiResponseType>;
     }
 
     debugLogger("Updating UI component", { id: data.id });
@@ -43,7 +43,7 @@ export async function updateUi({
         success: false,
         message: "UI component not found",
         errorCode: 404,
-      } as unknown as ApiHandlerResult<UpdateUiResponseType>;
+      }  as ApiHandlerResult<UpdateUiResponseType>;
     }
 
     if (uiComponent.userId !== user.id) {
@@ -51,7 +51,7 @@ export async function updateUi({
         success: false,
         message: "Unauthorized",
         errorCode: 401,
-      } as unknown as ApiHandlerResult<UpdateUiResponseType>;
+      }  as ApiHandlerResult<UpdateUiResponseType>;
     }
 
     const response: UpdateUiResponseType = {
@@ -70,7 +70,7 @@ export async function updateUi({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    } as unknown as ApiHandlerResult<UpdateUiResponseType>;
+    }  as ApiHandlerResult<UpdateUiResponseType>;
   }
 }
 
@@ -91,7 +91,7 @@ export async function deleteUi({
         success: false,
         message: "Not authenticated",
         errorCode: 401,
-      } as unknown as ApiHandlerResult<DeleteUiResponseType>;
+      }  as ApiHandlerResult<DeleteUiResponseType>;
     }
 
     debugLogger("Deleting UI component", { id: data.id });
@@ -110,6 +110,6 @@ export async function deleteUi({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    } as unknown as ApiHandlerResult<DeleteUiResponseType>;
+    }  as ApiHandlerResult<DeleteUiResponseType>;
   }
 }
