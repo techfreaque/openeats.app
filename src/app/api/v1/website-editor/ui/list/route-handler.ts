@@ -23,12 +23,12 @@ export async function listUis({
     debugLogger("Listing UI components", data);
 
     // List the UI components
-    const results = await uiRepository.listUis(
+    const results = (await uiRepository.listUis(
       data.mode,
       data.start,
       data.limit,
       data.timeRange,
-    ) as ListUisResponseType["uis"];
+    )) as ListUisResponseType["uis"];
 
     return {
       success: true,
