@@ -28,7 +28,7 @@ export async function listUis({
       data.start,
       data.limit,
       data.timeRange,
-    );
+    ) as ListUisResponseType["uis"];
 
     return {
       success: true,

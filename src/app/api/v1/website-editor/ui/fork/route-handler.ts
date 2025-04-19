@@ -27,7 +27,7 @@ export async function forkUi({
     });
 
     // Fork the UI component
-    const result = await uiRepository.forkUi(data.uiId, user.id);
+    const result = await uiRepository.forkUi(data.uiId, user.id) as ForkUiResponseType;
 
     if (!result) {
       return {
@@ -40,7 +40,7 @@ export async function forkUi({
     return {
       success: true,
       data: result,
-    } as ApiHandlerResult<ForkUiResponseType>;
+    };
   } catch (error) {
     errorLogger("Error forking UI component", error);
 
