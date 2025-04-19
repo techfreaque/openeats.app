@@ -1,6 +1,9 @@
 import { useApiForm } from "next-vibe/client/hooks/mutation-form";
 import { useApiQuery } from "next-vibe/client/hooks/query";
-import { useEffect } from "react";
+import { UserRoleValue } from "next-vibe/shared/types/enums";
+import { useEffect, useMemo } from "react";
+
+import type { Countries } from "@/translations";
 
 import restaurantEndpoint from "./definition";
 import type {
@@ -43,6 +46,7 @@ export function useRestaurant(restaurantId: string): {
 }
 
 export type UseRestaurantReturn = ReturnType<typeof useRestaurant>;
+
 /**
  * Hook to create a form pre-filled with restaurant data
  * @param restaurantId - The ID of the restaurant to edit
@@ -53,65 +57,59 @@ export function useRestaurantForm(
 ): ReturnType<typeof useApiForm> {
   const restaurant = useRestaurant(restaurantId);
 
+  const defaultValues = useMemo(() => {
+    if (!restaurant.data) {
+      return undefined;
+    }
+
+    return {
+      name: restaurant.data.name ?? "",
+      description: restaurant.data.description ?? "",
+      street: restaurant.data.street ?? "",
+      streetNumber: restaurant.data.streetNumber ?? "",
+      zip: restaurant.data.zip ?? "",
+      city: restaurant.data.city ?? "",
+      phone: restaurant.data.phone ?? "",
+      email: restaurant.data.email ?? "",
+      image: restaurant.data.image ?? "",
+      published: Boolean(restaurant.data.published),
+      delivery: Boolean(restaurant.data.delivery),
+      pickup: Boolean(restaurant.data.pickup),
+      dineIn: Boolean(restaurant.data.dineIn),
+      priceLevel:
+        typeof restaurant.data.priceLevel === "number"
+          ? restaurant.data.priceLevel
+          : 1,
+      countryId: restaurant.data.countryId as Countries,
+      mainCategoryId: restaurant.data.mainCategory?.id ?? "",
+      id: restaurant.data.id ?? "",
+      userRoles: restaurant.data.userRoles
+        ? restaurant.data.userRoles
+            .filter(
+              (role) =>
+                role.role === UserRoleValue.PARTNER_ADMIN ||
+                role.role === UserRoleValue.PARTNER_EMPLOYEE,
+            )
+            .map((role) => ({
+              role:
+                role.role === UserRoleValue.PARTNER_ADMIN
+                  ? UserRoleValue.PARTNER_ADMIN
+                  : UserRoleValue.PARTNER_EMPLOYEE,
+              userId: role.userId,
+            }))
+        : [],
+    } as RestaurantUpdateType;
+  }, [restaurant.data]);
+
   const formData = useApiForm(restaurantEndpoint.POST, {
-    defaultValues: restaurant.data
-      ? {
-          name: restaurant.data.name ?? "",
-          description: restaurant.data.description ?? "",
-          street: restaurant.data.street ?? "",
-          streetNumber: restaurant.data.streetNumber ?? "",
-          zip: restaurant.data.zip ?? "",
-          city: restaurant.data.city ?? "",
-          phone: restaurant.data.phone ?? "",
-          email: restaurant.data.email ?? "",
-          image: restaurant.data.image ?? "",
-          published: Boolean(restaurant.data.published),
-          delivery: Boolean(restaurant.data.delivery),
-          pickup: Boolean(restaurant.data.pickup),
-          dineIn: Boolean(restaurant.data.dineIn),
-          priceLevel:
-            typeof restaurant.data.priceLevel === "number"
-              ? restaurant.data.priceLevel
-              : 1,
-          countryId: restaurant.data.countryId,
-          mainCategoryId: restaurant.data.mainCategory?.id ?? "",
-          id: restaurant.data.id ?? "",
-        }
-      : undefined,
+    defaultValues,
   });
 
   useEffect(() => {
-    if (restaurant.data) {
-      const formValues: RestaurantUpdateType = {
-        name: restaurant.data.name || "",
-        description: restaurant.data.description || "",
-        street: restaurant.data.street || "",
-        streetNumber: restaurant.data.streetNumber || "",
-        zip: restaurant.data.zip || "",
-        city: restaurant.data.city || "",
-        phone: restaurant.data.phone || "",
-        email: restaurant.data.email || "",
-        image: restaurant.data.image || "",
-        published: Boolean(restaurant.data.published),
-        delivery: Boolean(restaurant.data.delivery),
-        pickup: Boolean(restaurant.data.pickup),
-        dineIn: Boolean(restaurant.data.dineIn),
-        priceLevel:
-          typeof restaurant.data.priceLevel === "number"
-            ? restaurant.data.priceLevel
-            : 1,
-        countryId: restaurant.data.countryId,
-        mainCategoryId: restaurant.data.mainCategory?.id ?? "",
-        id: restaurant.data.id || "",
-        userRoles:
-          restaurant.data.userRoles?.filter(
-            (role) =>
-              role.role === "PARTNER_ADMIN" || role.role === "PARTNER_EMPLOYEE",
-          ) ?? [],
-      };
-      formData.form.reset(formValues);
+    if (restaurant.data && defaultValues) {
+      formData.form.reset(defaultValues);
     }
-  }, [formData.form, restaurant.data]);
+  }, [formData.form, restaurant.data, defaultValues]);
 
-  return formData;
+  return formData as ReturnType<typeof useApiForm>;
 }
