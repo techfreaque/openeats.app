@@ -15,19 +15,19 @@ import type { ListUisRequestType, ListUisResponseType } from "./schema";
  * @returns The list of UI components
  */
 export async function listUis({
-  urlParams,
-}: ApiHandlerProps<unknown, ListUisRequestType>): Promise<
+  data,
+}: ApiHandlerProps<ListUisRequestType, undefined>): Promise<
   ApiHandlerResult<ListUisResponseType>
 > {
   try {
-    debugLogger("Listing UI components", urlParams);
+    debugLogger("Listing UI components", data);
 
     // List the UI components
     const results = await uiRepository.listUis(
-      urlParams.mode,
-      urlParams.start,
-      urlParams.limit,
-      urlParams.timeRange,
+      data.mode,
+      data.start,
+      data.limit,
+      data.timeRange,
     );
 
     return {
@@ -40,6 +40,6 @@ export async function listUis({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<ListUisResponseType>;
   }
 }
