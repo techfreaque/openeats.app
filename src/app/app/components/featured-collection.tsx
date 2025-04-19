@@ -99,7 +99,7 @@ export function FeaturedCollection({
           >
             <div className="relative aspect-video overflow-hidden">
               <Image
-                src={item.image || "/placeholder.svg"}
+                src={item.image ?? "/placeholder.svg"}
                 alt={item.name}
                 fill
                 className="object-cover transition-transform hover:scale-105"
