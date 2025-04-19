@@ -102,7 +102,13 @@ export async function getFullUser(userId: string): Promise<FullUser> {
       ...typedUser,
       userRoles: typedRoles.map((role) => ({
         id: role.id,
-        role: role.role as "PUBLIC" | "CUSTOMER" | "PARTNER_ADMIN" | "PARTNER_EMPLOYEE" | "COURIER" | "ADMIN",
+        role: role.role as
+          | "PUBLIC"
+          | "CUSTOMER"
+          | "PARTNER_ADMIN"
+          | "PARTNER_EMPLOYEE"
+          | "COURIER"
+          | "ADMIN",
         partnerId: role.partnerId,
       })),
     };
