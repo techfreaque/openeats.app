@@ -17,7 +17,7 @@ import type { ToggleLikeRequestType, ToggleLikeResponseType } from "./schema";
 export async function toggleLike({
   data,
   user,
-}: ApiHandlerProps<ToggleLikeRequestType>): Promise<
+}: ApiHandlerProps<ToggleLikeRequestType, undefined>): Promise<
   ApiHandlerResult<ToggleLikeResponseType>
 > {
   try {
@@ -39,6 +39,6 @@ export async function toggleLike({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<ToggleLikeResponseType>;
   }
 }
