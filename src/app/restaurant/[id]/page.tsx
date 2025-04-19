@@ -29,13 +29,10 @@ import { SpecialOffers } from "@/app/app/components/special-offers";
 export default function RestaurantHomePage(): JSX.Element {
   const params = useParams<{ id: string }>();
   const id = params.id;
-  // Router will be used in future implementations
-  // const router = useRouter();
   const { t } = useTranslation();
   const { toast } = useToast();
 
   const { user } = useAuth();
-  // Only using isFavorite and toggleFavorite for now
   const { isFavorite, toggleFavorite } = useFavorites();
   const config = useRestaurantConfig();
 
@@ -172,10 +169,10 @@ export default function RestaurantHomePage(): JSX.Element {
               ? "There was a problem loading the restaurant information. Please try again later."
               : "The restaurant you are looking for does not exist or has been removed."}
           </p>
-          {error && (
+          {error && typeof error === "object" && "message" in error && (
             <div className="mt-2 mb-6 rounded-md bg-destructive/10 p-3 text-sm text-destructive max-w-md">
               <p className="font-medium">Error details:</p>
-              <p>{error?.message ?? "Unknown error"}</p>
+              <p>{(error as Error).message ?? "Unknown error"}</p>
             </div>
           )}
           <Button size="lg" asChild>
