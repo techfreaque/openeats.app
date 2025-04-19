@@ -15,22 +15,22 @@ import type { GetCodeRequestType, GetCodeResponseType } from "./schema";
  * @returns The code
  */
 export async function getCode({
-  urlParams,
-}: ApiHandlerProps<unknown, GetCodeRequestType>): Promise<
+  data,
+}: ApiHandlerProps<GetCodeRequestType, undefined>): Promise<
   ApiHandlerResult<GetCodeResponseType>
 > {
   try {
-    debugLogger("Getting code", { id: urlParams.id });
+    debugLogger("Getting code", { id: data.id });
 
     // Get the code
-    const result = await codeRepository.findById(urlParams.id);
+    const result = await codeRepository.findById(data.id);
 
     if (!result) {
       return {
         success: false,
         message: "Code not found",
         errorCode: 404,
-      };
+      } as unknown as ApiHandlerResult<GetCodeResponseType>;
     }
 
     // Transform the result to match the expected response format
@@ -49,6 +49,6 @@ export async function getCode({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<GetCodeResponseType>;
   }
 }
