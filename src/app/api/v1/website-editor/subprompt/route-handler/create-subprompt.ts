@@ -20,7 +20,7 @@ import type {
 export async function createSubPrompt({
   data,
   user,
-}: ApiHandlerProps<CreateSubPromptRequestType>): Promise<
+}: ApiHandlerProps<CreateSubPromptRequestType, undefined>): Promise<
   ApiHandlerResult<CreateSubPromptResponseType>
 > {
   try {
@@ -46,7 +46,7 @@ export async function createSubPrompt({
     // Transform the result to match the expected response format
     const response: CreateSubPromptResponseType = {
       id: result.id,
-      createdAt: result.createdAt,
+      createdAt: result.createdAt.toISOString(),
       subPrompt: result.subPrompt,
       UIId: result.uiId,
       SUBId: result.subId,
@@ -67,6 +67,6 @@ export async function createSubPrompt({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<CreateSubPromptResponseType>;
   }
 }
