@@ -1,8 +1,8 @@
 import "server-only";
 
-import type { 
-  ApiHandlerProps, 
-  ApiHandlerResult 
+import type {
+  ApiHandlerProps,
+  ApiHandlerResult,
 } from "next-vibe/server/endpoints/core/api-handler";
 import { hasRole } from "next-vibe/server/endpoints/data";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
@@ -84,7 +84,7 @@ export async function getDrivers({
       errorCode: 500,
     } as unknown as ApiHandlerResult<DriversResponseType>;
   }
-};
+}
 
 /**
  * Create a new driver
@@ -190,7 +190,7 @@ export async function createDriver({
       errorCode: 500,
     } as unknown as ApiHandlerResult<DriverResponseType>;
   }
-};
+}
 
 /**
  * Update a driver
@@ -325,4 +325,4 @@ export async function updateDriver({
       errorCode: 500,
     } as unknown as ApiHandlerResult<DriverResponseType>;
   }
-};
+}

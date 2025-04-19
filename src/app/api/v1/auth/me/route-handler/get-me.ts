@@ -20,7 +20,7 @@ import type { UserResponseType } from "../schema";
 /**
  * Full user type with roles
  */
-interface FullUser {
+export interface FullUserBase {
   id: string;
   email: string;
   firstName: string;
@@ -54,7 +54,7 @@ export async function getUser({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<LoginResponseInputType>;
   }
 }
 
@@ -62,7 +62,7 @@ export async function getUser({
  * Full user information including password
  */
 export interface FullUser extends UserResponseType {
-  password: string;
+  password?: string;
 }
 
 /**
@@ -95,14 +95,14 @@ export async function getFullUser(userId: string): Promise<FullUser> {
     const typedRoles = roles as UserRoleType[];
 
     // Create a properly typed user object with explicit type casting
-    const typedUser = user as FullUser;
+    const typedUser = user as unknown as FullUser;
 
     // Combine the results with proper typing
     const result: FullUser = {
       ...typedUser,
       userRoles: typedRoles.map((role) => ({
         id: role.id,
-        role: role.role,
+        role: role.role as "PUBLIC" | "CUSTOMER" | "PARTNER_ADMIN" | "PARTNER_EMPLOYEE" | "COURIER" | "ADMIN",
         partnerId: role.partnerId,
       })),
     };

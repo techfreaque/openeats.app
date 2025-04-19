@@ -1,10 +1,10 @@
-import { createEndpoint } from "next-vibe/server/endpoints/core/create-endpoint";
-import { Methods } from "next-vibe/server/endpoints/core/methods";
-import { undefinedSchema } from "next-vibe/server/endpoints/core/schemas";
-import { UserRoleValue } from "next-vibe/shared/constants";
+import { createEndpoint } from "next-vibe/client/endpoint";
+import { undefinedSchema } from "next-vibe/shared/types/common.schema";
+import { Methods } from "next-vibe/shared/types/endpoint";
+import { UserRoleValue } from "next-vibe/shared/types/enums";
 import { z } from "zod";
 
-import { uiSchema } from "../../db";
+import { selectUiSchema } from "../../db";
 
 /**
  * Request schema for getting UI details
@@ -16,7 +16,7 @@ export const getUiDetailRequestSchema = z.object({
 /**
  * Response schema for getting UI details
  */
-export const getUiDetailResponseSchema = uiSchema.extend({
+export const getUiDetailResponseSchema = selectUiSchema.extend({
   subPrompts: z.array(
     z.object({
       id: z.string(),
@@ -63,7 +63,7 @@ const getUiDetailEndpoint = createEndpoint({
     UserRoleValue.CUSTOMER,
     UserRoleValue.ADMIN,
     UserRoleValue.PARTNER_ADMIN,
-  ],
+  ] as const,
   errorCodes: {
     401: "Not authenticated",
     404: "UI not found",
