@@ -108,17 +108,31 @@ async function fetchRestaurantById(
   });
 
   // Process restaurant data to match expected type
+  interface RestaurantWithMenuItems {
+    menuItems?: Array<{
+      isAvailable?: boolean;
+      currency?: string;
+      [key: string]: unknown;
+    }>;
+    country?: Countries;
+    countryId?: Countries;
+    [key: string]: unknown;
+  }
+
+  const restaurantWithMenuItems =
+    restaurant as unknown as RestaurantWithMenuItems;
+
   const processedRestaurant = {
     ...restaurant,
-    menuItems: Array.isArray((restaurant as any).menuItems)
-      ? (restaurant as any).menuItems.map((item: any) => ({
+    menuItems: Array.isArray(restaurantWithMenuItems.menuItems)
+      ? restaurantWithMenuItems.menuItems.map((item) => ({
           ...item,
           isAvailable: item.isAvailable ?? true,
           currency: item.currency ?? "EUR",
         }))
       : [],
-    countryId: ((restaurant as any).country ??
-      (restaurant as any).countryId) as unknown as Countries,
+    countryId: (restaurantWithMenuItems.country ??
+      restaurantWithMenuItems.countryId) as unknown as Countries,
   };
 
   return {
@@ -139,7 +153,9 @@ async function fetchRestaurantById(
 export const createRestaurant = async ({
   user,
   data,
-}: ApiHandlerProps<RestaurantCreateType, undefined>) => {
+}: ApiHandlerProps<RestaurantCreateType, undefined>): Promise<
+  ApiHandlerResult<RestaurantResponseType>
+> => {
   try {
     debugLogger("Creating restaurant", {
       userId: user.id,
@@ -155,7 +171,7 @@ export const createRestaurant = async ({
         success: false,
         message: "Unauthorized to create restaurant",
         errorCode: 403,
-      };
+      } as ApiHandlerResult<RestaurantResponseType>;
     }
 
     let hasLocationError = false;
@@ -192,7 +208,9 @@ export const createRestaurant = async ({
     };
 
     const restaurant = await restaurantRepository.createRestaurant(
-      restaurantData as any,
+      restaurantData as unknown as Parameters<
+        typeof restaurantRepository.createRestaurant
+      >[0],
     );
 
     debugLogger("Restaurant created", { restaurantId: restaurant.id });
@@ -212,26 +230,40 @@ export const createRestaurant = async ({
 
     if (hasLocationError) {
       return {
-        data: restaurant,
+        data: restaurant as unknown as RestaurantResponseType,
         success: true,
         message:
           "Restaurant created, but location could not be determined. Please update the address, or get in touch with support.",
         errorCode: 400,
-      };
+      } as unknown as ApiHandlerResult<RestaurantResponseType>;
     }
 
     // Process menu items to add required fields
+    interface RestaurantWithMenuItems {
+      menuItems?: Array<{
+        isAvailable?: boolean;
+        currency?: string;
+        [key: string]: unknown;
+      }>;
+      country?: Countries;
+      countryId?: Countries;
+      [key: string]: unknown;
+    }
+
+    const restaurantWithMenuItems =
+      restaurant as unknown as RestaurantWithMenuItems;
+
     const processedRestaurant = {
       ...restaurant,
-      menuItems: Array.isArray((restaurant as any).menuItems)
-        ? (restaurant as any).menuItems.map((item: any) => ({
+      menuItems: Array.isArray(restaurantWithMenuItems.menuItems)
+        ? restaurantWithMenuItems.menuItems.map((item) => ({
             ...item,
             isAvailable: item.isAvailable ?? true,
             currency: item.currency ?? "EUR",
           }))
         : [],
-      countryId: ((restaurant as any).country ??
-        (restaurant as any).countryId) as unknown as Countries,
+      countryId: (restaurantWithMenuItems.country ??
+        restaurantWithMenuItems.countryId) as unknown as Countries,
     };
 
     return {
@@ -245,7 +277,7 @@ export const createRestaurant = async ({
       success: false,
       message: `Error creating restaurant: ${error instanceof Error ? error.message : "Unknown error"}`,
       errorCode: 500,
-    };
+    } as ApiHandlerResult<RestaurantResponseType>;
   }
 };
 
@@ -257,7 +289,9 @@ export const createRestaurant = async ({
 export const updateRestaurant = async ({
   user,
   data: requestData,
-}: ApiHandlerProps<RestaurantUpdateType, undefined>) => {
+}: ApiHandlerProps<RestaurantUpdateType, undefined>): Promise<
+  ApiHandlerResult<RestaurantResponseType>
+> => {
   try {
     debugLogger("Updating restaurant", {
       userId: user.id,
@@ -271,7 +305,7 @@ export const updateRestaurant = async ({
         success: false,
         message: "Restaurant not found",
         errorCode: 404,
-      };
+      } as unknown as ApiHandlerResult<RestaurantResponseType>;
     }
 
     const { data } = result;
@@ -285,7 +319,7 @@ export const updateRestaurant = async ({
         success: false,
         message: "Unauthorized to update restaurant",
         errorCode: 403,
-      };
+      } as unknown as ApiHandlerResult<RestaurantResponseType>;
     }
 
     let hasLocationError = false;
@@ -321,37 +355,53 @@ export const updateRestaurant = async ({
 
     const updatedRestaurant = await restaurantRepository.updateRestaurant(
       requestData.id,
-      restaurantData as any,
+      restaurantData as unknown as Parameters<
+        typeof restaurantRepository.updateRestaurant
+      >[1],
     );
 
     debugLogger("Restaurant updated", {
-      restaurantId: updatedRestaurant?.id || requestData.id,
+      restaurantId: updatedRestaurant?.id ?? requestData.id,
     });
 
     if (hasLocationError) {
       return {
-        data: updatedRestaurant,
+        data: updatedRestaurant as unknown as RestaurantResponseType,
         success: true,
         message:
           "Restaurant updated, but location could not be determined. Please update the address, or get in touch with support.",
         errorCode: 400,
-      };
+      } as unknown as ApiHandlerResult<RestaurantResponseType>;
     }
 
     // Process menu items to add required fields
+    interface RestaurantWithMenuItems {
+      menuItems?: Array<{
+        isAvailable?: boolean;
+        currency?: string;
+        [key: string]: unknown;
+      }>;
+      country?: Countries;
+      countryId?: Countries;
+      [key: string]: unknown;
+    }
+
+    const restaurantWithMenuItems =
+      updatedRestaurant as unknown as RestaurantWithMenuItems;
+
     const processedRestaurant = {
-      ...(updatedRestaurant || {}),
+      ...(updatedRestaurant ?? {}),
       menuItems:
-        updatedRestaurant && Array.isArray((updatedRestaurant as any).menuItems)
-          ? (updatedRestaurant as any).menuItems.map((item: any) => ({
+        updatedRestaurant && Array.isArray(restaurantWithMenuItems.menuItems)
+          ? restaurantWithMenuItems.menuItems.map((item) => ({
               ...item,
               isAvailable: item.isAvailable ?? true,
               currency: item.currency ?? "EUR",
             }))
           : [],
       countryId: updatedRestaurant
-        ? ((updatedRestaurant.country ||
-            (updatedRestaurant as any).countryId) as unknown as Countries)
+        ? ((updatedRestaurant.country ??
+            restaurantWithMenuItems.countryId) as unknown as Countries)
         : ("DE" as Countries),
     };
 
@@ -366,7 +416,7 @@ export const updateRestaurant = async ({
       success: false,
       message: `Error updating restaurant: ${error instanceof Error ? error.message : "Unknown error"}`,
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<RestaurantResponseType>;
   }
 };
 
@@ -459,7 +509,9 @@ export const restaurantQuery = {
 export const getRestaurant = async ({
   user,
   data,
-}: ApiHandlerProps<{ restaurantId: string }, undefined>) => {
+}: ApiHandlerProps<{ restaurantId: string }, undefined>): Promise<
+  ApiHandlerResult<RestaurantResponseType>
+> => {
   try {
     debugLogger("Getting restaurant", {
       userId: user.id,
@@ -473,7 +525,7 @@ export const getRestaurant = async ({
         success: false,
         message: "Restaurant not found",
         errorCode: 404,
-      };
+      } as unknown as ApiHandlerResult<RestaurantResponseType>;
     }
 
     const { data: restaurantData } = result;
@@ -491,7 +543,7 @@ export const getRestaurant = async ({
         success: false,
         message: "Unauthorized",
         errorCode: 403,
-      };
+      } as unknown as ApiHandlerResult<RestaurantResponseType>;
     }
 
     // Apply filters for non-privileged users
@@ -534,7 +586,7 @@ export const getRestaurant = async ({
       success: false,
       message: `Error getting restaurant: ${error instanceof Error ? error.message : "Unknown error"}`,
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<RestaurantResponseType>;
   }
 };
 
@@ -602,7 +654,9 @@ export function filterMenuItems(
  */
 export const getRestaurants = async ({
   user,
-}: ApiHandlerProps<UndefinedType, undefined>) => {
+}: ApiHandlerProps<UndefinedType, undefined>): Promise<
+  ApiHandlerResult<RestaurantResponseType[]>
+> => {
   try {
     debugLogger("Getting all restaurants", { userId: user.id });
 
@@ -627,11 +681,20 @@ export const getRestaurants = async ({
     // Apply filters for non-privileged users
     const filteredRestaurants = restaurants.map((restaurant) => {
       // Process restaurant data to match expected type
+      interface RestaurantWithCountry {
+        country?: Countries;
+        countryId?: Countries;
+        [key: string]: unknown;
+      }
+
+      const restaurantWithCountry =
+        restaurant as unknown as RestaurantWithCountry;
+
       const processedRestaurant = {
         ...restaurant,
         menuItems: [],
-        countryId: (restaurant.country ||
-          (restaurant as any).countryId) as unknown as Countries,
+        countryId: (restaurantWithCountry.country ??
+          restaurantWithCountry.countryId) as unknown as Countries,
       };
 
       // Apply filters for non-privileged users
@@ -654,7 +717,7 @@ export const getRestaurants = async ({
           ? error.message
           : "Unknown error getting restaurants",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<RestaurantResponseType[]>;
   }
 };
 
@@ -666,7 +729,9 @@ export const getRestaurants = async ({
 export const searchRestaurants = async ({
   data,
   user,
-}: ApiHandlerProps<RestaurantSearchType, undefined>) => {
+}: ApiHandlerProps<RestaurantSearchType, undefined>): Promise<
+  ApiHandlerResult<RestaurantResponseType[]>
+> => {
   try {
     debugLogger("Searching restaurants", {
       userId: user.id,
@@ -713,6 +778,16 @@ export const searchRestaurants = async ({
 
     // Filter restaurants based on search criteria
     const restaurants = allRestaurants.filter((restaurant) => {
+      interface RestaurantWithCountry {
+        country?: Countries;
+        countryId?: Countries;
+        published?: boolean;
+        [key: string]: unknown;
+      }
+
+      const restaurantWithCountry =
+        restaurant as unknown as RestaurantWithCountry;
+
       // Apply name filter
       if (
         data.name &&
@@ -732,17 +807,22 @@ export const searchRestaurants = async ({
       // Apply country filter
       if (
         data.countryId &&
-        (restaurant.country || (restaurant as any).countryId) !== data.countryId
+        (restaurantWithCountry.country ?? restaurantWithCountry.countryId) !==
+          data.countryId
       ) {
         return false;
       }
 
       // Apply published filter
-      if (!canGetUnpublished && !(restaurant as any).published) {
+      if (
+        !canGetUnpublished &&
+        !(restaurantWithCountry as { published?: boolean }).published
+      ) {
         return false;
       } else if (
         data.published !== null &&
-        (restaurant as any).published !== data.published
+        (restaurantWithCountry as { published?: boolean }).published !==
+          data.published
       ) {
         return false;
       }
@@ -755,11 +835,20 @@ export const searchRestaurants = async ({
     // Apply filters for non-privileged users
     const filteredRestaurants = restaurants.map((restaurant) => {
       // Process restaurant data to match expected type
+      interface RestaurantWithCountry {
+        country?: Countries;
+        countryId?: Countries;
+        [key: string]: unknown;
+      }
+
+      const restaurantWithCountry =
+        restaurant as unknown as RestaurantWithCountry;
+
       const processedRestaurant = {
         ...restaurant,
         menuItems: [],
-        countryId: (restaurant.country ||
-          (restaurant as any).countryId) as unknown as Countries,
+        countryId: (restaurantWithCountry.country ??
+          restaurantWithCountry.countryId) as unknown as Countries,
       };
 
       // Apply filters for non-privileged users
@@ -782,6 +871,6 @@ export const searchRestaurants = async ({
           ? error.message
           : "Unknown error searching restaurants",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<RestaurantResponseType[]>;
   }
 };
