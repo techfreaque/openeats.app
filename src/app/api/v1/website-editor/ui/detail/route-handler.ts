@@ -34,7 +34,9 @@ export async function getUiDetail({
     debugLogger(`Getting UI details for ID: ${id}`, { userId: user.id });
 
     // Get the UI with subprompts
-    const ui = await uiRepository.findByIdWithSubprompts(id) as GetUiDetailResponseType;
+    const ui = (await uiRepository.findByIdWithSubprompts(
+      id,
+    )) as GetUiDetailResponseType;
 
     if (!ui) {
       return {
