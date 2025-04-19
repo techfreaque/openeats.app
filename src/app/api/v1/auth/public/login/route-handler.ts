@@ -51,7 +51,7 @@ export async function loginUser({
         success: false,
         message: "Invalid email or password",
         errorCode: 401,
-      };
+      } as unknown as ApiHandlerResult<LoginResponseInputType>;
     }
 
     // Verify password
@@ -65,7 +65,7 @@ export async function loginUser({
         success: false,
         message: "Invalid email or password",
         errorCode: 401,
-      };
+      } as unknown as ApiHandlerResult<LoginResponseInputType>;
     }
 
     // Create session and return user data
@@ -78,7 +78,7 @@ export async function loginUser({
       message:
         error instanceof Error ? error.message : "Unknown error during login",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<LoginResponseInputType>;
   }
 }
 
@@ -108,7 +108,11 @@ export async function createSessionAndGetUser(
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 1 week
 
     // Create a session in the database
-    await sessionRepository.createSession(userId, token, expiresAt);
+    await sessionRepository.create({
+      userId,
+      token,
+      expiresAt,
+    });
 
     // Set auth cookies if requested
     if (setCookies) {
@@ -148,6 +152,6 @@ export async function createSessionAndGetUser(
           ? error.message
           : "Unknown error creating session",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<LoginResponseInputType>;
   }
 }
