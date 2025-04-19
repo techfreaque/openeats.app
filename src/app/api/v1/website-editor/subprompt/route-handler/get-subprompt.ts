@@ -18,28 +18,29 @@ import type {
  * @returns The subprompt
  */
 export async function getSubPrompt({
-  urlParams,
-}: ApiHandlerProps<unknown, GetSubPromptRequestType>): Promise<
+  user,
+  data,
+}: ApiHandlerProps<GetSubPromptRequestType, undefined>): Promise<
   ApiHandlerResult<GetSubPromptResponseType>
 > {
   try {
-    debugLogger("Getting subprompt", { id: urlParams.id });
+    debugLogger("Getting subprompt", { id: data.id, userId: user.id });
 
     // Get the subprompt
-    const result = await subPromptRepository.findById(urlParams.id);
+    const result = await subPromptRepository.findById(data.id);
 
     if (!result) {
       return {
         success: false,
         message: "Subprompt not found",
         errorCode: 404,
-      };
+      } as ApiHandlerResult<GetSubPromptResponseType>;
     }
 
     // Transform the result to match the expected response format
     const response: GetSubPromptResponseType = {
       id: result.id,
-      createdAt: result.createdAt,
+      createdAt: result.createdAt.toISOString(),
       subPrompt: result.subPrompt,
       UIId: result.uiId,
       SUBId: result.subId,
@@ -60,6 +61,6 @@ export async function getSubPrompt({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    };
+    } as ApiHandlerResult<GetSubPromptResponseType>;
   }
 }

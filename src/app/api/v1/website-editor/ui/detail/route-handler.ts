@@ -14,44 +14,46 @@ import type { GetUiDetailRequestType, GetUiDetailResponseType } from "./schema";
  * @param props - The API handler props
  * @returns The UI details
  */
-export async function getUiDetail(
-  props: ApiHandlerProps<
-    undefined,
-    GetUiDetailRequestType,
-    Record<string, never>
-  >,
-): Promise<ApiHandlerResult<GetUiDetailResponseType>> {
-  const { urlParams } = props;
-  const { id } = urlParams;
+export async function getUiDetail({
+  user,
+  data,
+}: ApiHandlerProps<GetUiDetailRequestType, undefined>): Promise<
+  ApiHandlerResult<GetUiDetailResponseType>
+> {
+  const id = data?.id;
+
+  if (!id || typeof id !== "string") {
+    return {
+      success: false,
+      message: "UI ID is required",
+      errorCode: 400,
+    } as unknown as ApiHandlerResult<GetUiDetailResponseType>;
+  }
 
   try {
-    debugLogger(`Getting UI details for ID: ${id}`);
+    debugLogger(`Getting UI details for ID: ${id}`, { userId: user.id });
 
     // Get the UI with subprompts
     const ui = await uiRepository.findByIdWithSubprompts(id);
 
     if (!ui) {
       return {
-        status: 404,
-        error: {
-          code: "UI_NOT_FOUND",
-          message: `UI with ID ${id} not found`,
-        },
-      };
+        success: false,
+        message: `UI with ID ${id} not found`,
+        errorCode: 404,
+      } as unknown as ApiHandlerResult<GetUiDetailResponseType>;
     }
 
     return {
-      status: 200,
+      success: true,
       data: ui,
-    };
+    } as unknown as ApiHandlerResult<GetUiDetailResponseType>;
   } catch (error) {
     errorLogger("Error getting UI details:", error);
     return {
-      status: 500,
-      error: {
-        code: "INTERNAL_SERVER_ERROR",
-        message: "An error occurred while getting UI details",
-      },
-    };
+      success: false,
+      message: "An error occurred while getting UI details",
+      errorCode: 500,
+    } as unknown as ApiHandlerResult<GetUiDetailResponseType>;
   }
 }
