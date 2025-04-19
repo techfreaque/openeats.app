@@ -1,17 +1,18 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/packages/next-vibe-ui/web/ui/use-toast";
 import type { ApiEndpoint } from "next-vibe/client/endpoint";
 import { useApiMutation } from "next-vibe/client/hooks/mutation";
 import { useApiQuery } from "next-vibe/client/hooks/query";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 
+import { useToast } from "@/packages/next-vibe-ui/web/ui/use-toast";
+
 import resetPasswordEndpoints from "./definition";
 import {
-  resetPasswordRequestSchema,
   resetPasswordConfirmSchema,
   type ResetPasswordConfirmType,
+  resetPasswordRequestSchema,
   type ResetPasswordRequestType,
 } from "./schema";
 
@@ -43,7 +44,7 @@ export const useResetPasswordRequest = (): {
       undefined,
       string
     >,
-    {}
+    {},
   );
 
   // Handle form submission
@@ -54,13 +55,14 @@ export const useResetPasswordRequest = (): {
           requestData: data,
           urlParams: undefined,
         });
-        
+
         toast({
           title: "Password Reset Email Sent",
-          description: typeof result === 'string' ? result : "Password reset email sent!",
+          description:
+            typeof result === "string" ? result : "Password reset email sent!",
           variant: "default",
         });
-        
+
         // Redirect to login page
         router.push("/login");
       } catch (error) {
@@ -90,7 +92,10 @@ export const useResetPasswordRequest = (): {
  * @param email - The user's email
  * @returns Form and mutation for confirming a password reset
  */
-export const useResetPasswordConfirm = (token: string, email: string): {
+export const useResetPasswordConfirm = (
+  token: string,
+  email: string,
+): {
   form: ReturnType<typeof useForm<ResetPasswordConfirmType>>;
   onSubmit: (data: ResetPasswordConfirmType) => Promise<void>;
   isLoading: boolean;
@@ -117,7 +122,7 @@ export const useResetPasswordConfirm = (token: string, email: string): {
       undefined,
       string
     >,
-    {}
+    {},
   );
 
   // Handle form submission
@@ -128,13 +133,14 @@ export const useResetPasswordConfirm = (token: string, email: string): {
           requestData: data,
           urlParams: undefined,
         });
-        
+
         toast({
           title: "Password Reset Successful",
-          description: typeof result === 'string' ? result : "Password reset successful!",
+          description:
+            typeof result === "string" ? result : "Password reset successful!",
           variant: "default",
         });
-        
+
         // Redirect to login page
         router.push("/login");
       } catch (error) {
@@ -161,7 +167,9 @@ export const useResetPasswordConfirm = (token: string, email: string): {
  * @param token - The password reset token
  * @returns Query for validating a password reset token
  */
-export const useResetPasswordValidate = (token: string): ReturnType<typeof useApiQuery> => {
+export const useResetPasswordValidate = (
+  token: string,
+): ReturnType<typeof useApiQuery> => {
   return useApiQuery(
     resetPasswordEndpoints.GET as unknown as ApiEndpoint<
       { token: string },
@@ -174,6 +182,6 @@ export const useResetPasswordValidate = (token: string): ReturnType<typeof useAp
     {
       enabled: !!token,
       staleTime: 0,
-    }
+    },
   );
 };
