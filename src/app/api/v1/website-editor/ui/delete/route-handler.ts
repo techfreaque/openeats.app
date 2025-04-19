@@ -15,19 +15,19 @@ import type { DeleteUiRequestType, DeleteUiResponseType } from "./schema";
  * @returns Success status
  */
 export async function deleteUi({
-  urlParams,
+  data,
   user,
-}: ApiHandlerProps<unknown, DeleteUiRequestType>): Promise<
+}: ApiHandlerProps<DeleteUiRequestType, undefined>): Promise<
   ApiHandlerResult<DeleteUiResponseType>
 > {
   try {
     debugLogger("Deleting UI component", {
       userId: user.id,
-      uiId: urlParams.id,
+      uiId: data.id,
     });
 
     // Delete the UI component
-    await uiRepository.deleteUi(urlParams.id, user.id);
+    await uiRepository.deleteUi(data.id, user.id);
 
     return {
       success: true,
@@ -43,13 +43,13 @@ export async function deleteUi({
           success: false,
           message: "UI component not found",
           errorCode: 404,
-        };
+        } as unknown as ApiHandlerResult<DeleteUiResponseType>;
       } else if (error.message === "Unauthorized") {
         return {
           success: false,
           message: "You are not authorized to delete this UI component",
           errorCode: 403,
-        };
+        } as unknown as ApiHandlerResult<DeleteUiResponseType>;
       }
     }
 
@@ -57,6 +57,6 @@ export async function deleteUi({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<DeleteUiResponseType>;
   }
 }
