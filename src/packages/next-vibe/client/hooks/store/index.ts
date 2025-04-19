@@ -3,7 +3,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { create } from "zustand";
 
 import { handleError } from "../../../shared/utils/error-handler";
-import { errorLogger } from "../../../shared/utils/logger";
+import { debugLogger, errorLogger } from "../../../shared/utils/logger";
 import { generateCacheKey } from "../../config";
 import type { ApiEndpoint } from "../../endpoint";
 import {
@@ -425,15 +425,28 @@ export const useApiStore = create<ApiStore>((set, get) => ({
     const fetchPromise = (async (): Promise<TResponse> => {
       try {
         // Execute the API call
-        const { endpointUrl, postBody, success, message } =
-          endpoint.getRequestData({
+        let endpointUrl, postBody, success, message;
+        try {
+          const result = endpoint.getRequestData({
             requestData,
             pathParams,
           });
+          endpointUrl = result.endpointUrl;
+          postBody = result.postBody;
+          success = result.success;
+          message = result.message;
 
-        if (!success) {
+          if (!success) {
+            await removeStorageItem(storageKey);
+            throw new Error(message);
+          }
+        } catch (validationError) {
+          // Handle validation errors gracefully
+          debugLogger("Validation error in API request", validationError);
           await removeStorageItem(storageKey);
-          throw new Error(message);
+          throw new Error(
+            `Request validation error: ${validationError instanceof Error ? validationError.message : "Unknown validation error"}`,
+          );
         }
 
         const response = await callApi<
@@ -547,14 +560,24 @@ export const useApiStore = create<ApiStore>((set, get) => ({
     }));
 
     try {
-      const { endpointUrl, postBody, success, message } =
-        endpoint.getRequestData({
+      let endpointUrl, postBody, success, message;
+      try {
+        const result = endpoint.getRequestData({
           requestData,
           pathParams,
         });
+        endpointUrl = result.endpointUrl;
+        postBody = result.postBody;
+        success = result.success;
+        message = result.message;
 
-      if (!success) {
-        throw new Error(message);
+        if (!success) {
+          throw new Error(message);
+        }
+      } catch (validationError) {
+        // Handle validation errors gracefully
+        debugLogger("Validation error in API mutation", validationError);
+        throw new Error(`Request validation error: ${validationError instanceof Error ? validationError.message : 'Unknown validation error'}`);
       }
 
       const response = await callApi<

@@ -383,10 +383,18 @@ export class UserRolesRepositoryImpl
    * @param userId - The user ID
    */
   async findByUserId(userId: DbId): Promise<UserRole[]> {
-    return await db
-      .select()
+    const results = await db
+      .select({
+        id: userRoles.id,
+        userId: userRoles.userId,
+        role: userRoles.role,
+        partnerId: userRoles.partnerId,
+        createdAt: userRoles.createdAt
+      })
       .from(userRoles)
       .where(eq(userRoles.userId, userId));
+
+    return results;
   }
 
   /**

@@ -38,18 +38,43 @@ export function useRestaurant(restaurantId: string): {
     },
   );
 
-  // Transform the result to return a single restaurant instead of an array
+  // Transform the result to handle different response formats
   // Use useMemo to prevent unnecessary re-renders
   const data = useMemo(() => {
-    return Array.isArray(result.data) && result.data.length > 0
-      ? result.data[0]
-      : undefined;
+    if (!result.data) {
+      return undefined;
+    }
+
+    // Handle array response format
+    if (Array.isArray(result.data) && result.data.length > 0) {
+      return result.data[0];
+    }
+
+    // Handle object response format with data property
+    if (
+      typeof result.data === "object" &&
+      result.data !== null &&
+      "data" in result.data
+    ) {
+      return result.data.data;
+    }
+
+    // Handle direct object response
+    if (
+      typeof result.data === "object" &&
+      result.data !== null &&
+      "id" in result.data &&
+      typeof result.data.id === "string"
+    ) {
+      return result.data;
+    }
+
+    return undefined;
   }, [result.data]);
 
   return {
     ...result,
-    data,
-
+    data: data as RestaurantResponseType | undefined,
   };
 }
 
@@ -59,41 +84,47 @@ export type UseRestaurantReturn = ReturnType<typeof useRestaurant>;
  * @param restaurantId - The ID of the restaurant to edit
  * @returns Form methods and state for editing a restaurant
  */
-export function useRestaurantForm(
-  restaurantId: string,
-): ReturnType<typeof useApiForm> {
+export function useRestaurantForm(restaurantId: string) {
   const restaurant = useRestaurant(restaurantId);
 
+  // Create default values for the form
+  const defaultValues = useMemo(() => {
+    if (!restaurant.data) {
+      return undefined;
+    }
+
+    return {
+      name: restaurant.data.name ?? "",
+      description: restaurant.data.description ?? "",
+      street: restaurant.data.street ?? "",
+      streetNumber: restaurant.data.streetNumber ?? "",
+      zip: restaurant.data.zip ?? "",
+      city: restaurant.data.city ?? "",
+      phone: restaurant.data.phone ?? "",
+      email: restaurant.data.email ?? "",
+      image: restaurant.data.image ?? "",
+      published: Boolean(restaurant.data.published),
+      delivery: Boolean(restaurant.data.delivery),
+      pickup: Boolean(restaurant.data.pickup),
+      dineIn: Boolean(restaurant.data.dineIn),
+      priceLevel:
+        typeof restaurant.data.priceLevel === "number"
+          ? restaurant.data.priceLevel
+          : 1,
+      countryId: restaurant.data.countryId,
+      mainCategoryId: restaurant.data.mainCategory?.id ?? "",
+      id: restaurant.data.id ?? "",
+    };
+  }, [restaurant.data]);
+
   const formData = useApiForm(restaurantEndpoint.POST, {
-    defaultValues: restaurant.data
-      ? {
-          name: restaurant.data.name ?? "",
-          description: restaurant.data.description ?? "",
-          street: restaurant.data.street ?? "",
-          streetNumber: restaurant.data.streetNumber ?? "",
-          zip: restaurant.data.zip ?? "",
-          city: restaurant.data.city ?? "",
-          phone: restaurant.data.phone ?? "",
-          email: restaurant.data.email ?? "",
-          image: restaurant.data.image ?? "",
-          published: Boolean(restaurant.data.published),
-          delivery: Boolean(restaurant.data.delivery),
-          pickup: Boolean(restaurant.data.pickup),
-          dineIn: Boolean(restaurant.data.dineIn),
-          priceLevel:
-            typeof restaurant.data.priceLevel === "number"
-              ? restaurant.data.priceLevel
-              : 1,
-          countryId: restaurant.data.countryId,
-          mainCategoryId: restaurant.data.mainCategory?.id ?? "",
-          id: restaurant.data.id ?? "",
-        }
-      : undefined,
+    defaultValues,
   });
 
   useEffect(() => {
     if (restaurant.data) {
-      const formValues: RestaurantUpdateType = {
+      // Create form values with proper type casting
+      const formValues = {
         name: restaurant.data.name || "",
         description: restaurant.data.description || "",
         street: restaurant.data.street || "",
@@ -119,7 +150,7 @@ export function useRestaurantForm(
             (role) =>
               role.role === "PARTNER_ADMIN" || role.role === "PARTNER_EMPLOYEE",
           ) ?? [],
-      };
+      } as RestaurantUpdateType;
       formData.form.reset(formValues);
     }
   }, [formData.form, restaurant.data]);

@@ -72,6 +72,14 @@ export async function searchRestaurants(
           longitude: parseFloat(restaurant.longitude) || 0,
           createdAt: restaurant.createdAt,
           updatedAt: restaurant.updatedAt,
+          // Add required fields that were missing
+          phone: restaurant.phone || "",
+          email: restaurant.email || "",
+          published: restaurant.isActive || false,
+          orderCount: 0,
+          menuItems: [],
+          openingTimes: [],
+          verified: restaurant.verified || false,
         };
       }),
     );

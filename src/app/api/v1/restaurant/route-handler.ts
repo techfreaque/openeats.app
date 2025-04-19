@@ -513,6 +513,16 @@ export const getRestaurant = async ({
   ApiHandlerResult<RestaurantResponseType>
 > => {
   try {
+    // Check if user and data are defined
+    if (!user?.id || !data?.restaurantId) {
+      return {
+        success: false,
+        message: "Invalid request parameters",
+        errorCode: 400,
+        data: null as unknown as RestaurantResponseType,
+      } as unknown as ApiHandlerResult<RestaurantResponseType>;
+    }
+
     debugLogger("Getting restaurant", {
       userId: user.id,
       restaurantId: data.restaurantId,
@@ -520,15 +530,26 @@ export const getRestaurant = async ({
 
     const result = await fetchRestaurantById(data.restaurantId, user.id);
 
-    if (!result.success) {
+    if (!result.success || !result.data) {
       return {
         success: false,
         message: "Restaurant not found",
         errorCode: 404,
+        data: null as unknown as RestaurantResponseType,
       } as unknown as ApiHandlerResult<RestaurantResponseType>;
     }
 
     const { data: restaurantData } = result;
+
+    // Ensure restaurant data exists
+    if (!restaurantData?.restaurant) {
+      return {
+        success: false,
+        message: "Restaurant data is missing",
+        errorCode: 500,
+        data: null as unknown as RestaurantResponseType,
+      } as unknown as ApiHandlerResult<RestaurantResponseType>;
+    }
 
     if (
       restaurantData.restaurant.published === false &&
@@ -543,6 +564,7 @@ export const getRestaurant = async ({
         success: false,
         message: "Unauthorized",
         errorCode: 403,
+        data: null as unknown as RestaurantResponseType,
       } as unknown as ApiHandlerResult<RestaurantResponseType>;
     }
 
@@ -558,20 +580,29 @@ export const getRestaurant = async ({
       filteredRestaurant = filterMenuItems(filteredRestaurant);
     }
 
+    // Ensure menuItems and openingTimes are arrays
+    const menuItems = Array.isArray(filteredRestaurant.menuItems)
+      ? filteredRestaurant.menuItems
+      : [];
+    const openingTimes = Array.isArray(filteredRestaurant.openingTimes)
+      ? filteredRestaurant.openingTimes
+      : [];
+
     debugLogger("Restaurant retrieved successfully", {
       restaurantId: data.restaurantId,
-      menuItemCount: filteredRestaurant.menuItems.length,
-      openingTimesCount: filteredRestaurant.openingTimes.length,
+      menuItemCount: menuItems.length,
+      openingTimesCount: openingTimes.length,
     });
 
     // Process menu items to add required fields
     const processedRestaurant = {
       ...filteredRestaurant,
-      menuItems: filteredRestaurant.menuItems.map((item) => ({
+      menuItems: menuItems.map((item) => ({
         ...item,
-        isAvailable: item.isAvailable ?? true,
-        currency: item.currency ?? "EUR",
+        isAvailable: item?.isAvailable ?? true,
+        currency: item?.currency ?? "EUR",
       })),
+      openingTimes: openingTimes,
       countryId: filteredRestaurant.countryId as unknown as Countries,
     };
 
@@ -586,6 +617,7 @@ export const getRestaurant = async ({
       success: false,
       message: `Error getting restaurant: ${error instanceof Error ? error.message : "Unknown error"}`,
       errorCode: 500,
+      data: null as unknown as RestaurantResponseType,
     } as unknown as ApiHandlerResult<RestaurantResponseType>;
   }
 };
@@ -598,9 +630,18 @@ export const getRestaurant = async ({
 export function filterPrivateData(
   restaurant: RestaurantResponseType,
 ): RestaurantResponseType {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { userRoles, ...filteredRestaurant } = restaurant;
-  return filteredRestaurant;
+  if (!restaurant) {
+    return restaurant;
+  }
+
+  // Check if userRoles exists before destructuring
+  if (restaurant.userRoles) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { userRoles, ...filteredRestaurant } = restaurant;
+    return filteredRestaurant;
+  }
+
+  return restaurant;
 }
 
 /**
@@ -611,6 +652,14 @@ export function filterPrivateData(
 export function filterOpeningTimes(
   restaurant: RestaurantResponseType,
 ): RestaurantResponseType {
+  if (!restaurant) {
+    return restaurant;
+  }
+
+  if (!restaurant.openingTimes || !Array.isArray(restaurant.openingTimes)) {
+    return { ...restaurant, openingTimes: [] };
+  }
+
   const currentDate = new Date();
   const filteredOpeningTimes = restaurant.openingTimes.filter((time) => {
     // Keep only published times
@@ -640,8 +689,16 @@ export function filterOpeningTimes(
 export function filterMenuItems(
   restaurant: RestaurantResponseType,
 ): RestaurantResponseType {
+  if (!restaurant) {
+    return restaurant;
+  }
+
+  if (!restaurant.menuItems || !Array.isArray(restaurant.menuItems)) {
+    return { ...restaurant, menuItems: [] };
+  }
+
   const filteredMenuItems = restaurant.menuItems.filter(
-    (item) => item.published,
+    (item) => item?.published,
   );
 
   return { ...restaurant, menuItems: filteredMenuItems };
@@ -658,13 +715,18 @@ export const getRestaurants = async ({
   ApiHandlerResult<RestaurantResponseType[]>
 > => {
   try {
-    debugLogger("Getting all restaurants", { userId: user.id });
+    // Handle public user case (for restaurant page)
+    const userId = user?.id || "public";
+    debugLogger("Getting all restaurants", { userId });
 
     // Check if user can see unpublished restaurants
-    const userRoles = await userRolesRepository.findByUserId(user.id);
-    const canGetUnpublished =
-      hasRole(userRoles, UserRoleValue.ADMIN) ||
-      hasRole(userRoles, UserRoleValue.PARTNER_ADMIN);
+    let canGetUnpublished = false;
+    if (userId !== "public") {
+      const userRoles = await userRolesRepository.findByUserId(userId);
+      canGetUnpublished =
+        hasRole(userRoles, UserRoleValue.ADMIN) ||
+        hasRole(userRoles, UserRoleValue.PARTNER_ADMIN);
+    }
 
     // Build where clause
     const where: Record<string, unknown> = {};
@@ -676,33 +738,124 @@ export const getRestaurants = async ({
     // Fetch restaurants using the repository
     const restaurants = await restaurantRepository.findAll();
 
+    if (!restaurants || !Array.isArray(restaurants)) {
+      return {
+        success: true,
+        data: [],
+      };
+    }
+
     debugLogger("Retrieved all restaurants", { count: restaurants.length });
 
     // Apply filters for non-privileged users
-    const filteredRestaurants = restaurants.map((restaurant) => {
-      // Process restaurant data to match expected type
-      interface RestaurantWithCountry {
-        country?: Countries;
-        countryId?: Countries;
-        [key: string]: unknown;
-      }
+    const filteredRestaurants = restaurants
+      .map((restaurant) => {
+        if (!restaurant) {
+          return null;
+        }
 
-      const restaurantWithCountry =
-        restaurant as unknown as RestaurantWithCountry;
+        // Process restaurant data to match expected type
+        interface RestaurantWithCountry {
+          country?: Countries;
+          countryId?: Countries;
+          [key: string]: unknown;
+        }
 
-      const processedRestaurant = {
-        ...restaurant,
-        menuItems: [],
-        countryId: (restaurantWithCountry.country ??
-          restaurantWithCountry.countryId) as unknown as Countries,
-      };
+        const restaurantWithCountry =
+          restaurant as unknown as RestaurantWithCountry;
 
-      // Apply filters for non-privileged users
-      const withoutPrivateData = filterPrivateData(
-        processedRestaurant as unknown as RestaurantResponseType,
-      );
-      return filterOpeningTimes(withoutPrivateData);
-    });
+        // Define a more comprehensive type for restaurant with all possible fields
+        interface RestaurantWithAllFields extends Record<string, unknown> {
+          country?: Countries;
+          countryId?: Countries;
+          delivery?: boolean;
+          pickup?: boolean;
+          dineIn?: boolean;
+          priceLevel?: number | string;
+          image?: string;
+          imageUrl?: string;
+          menuItems?: any[];
+          openingTimes?: any[];
+          rating?: string | number;
+          latitude?: string | number;
+          longitude?: string | number;
+        }
+
+        const restaurantWithAllFields =
+          restaurant as unknown as RestaurantWithAllFields;
+
+        // Ensure we have valid menu items and opening times arrays
+        const menuItems = Array.isArray(restaurantWithAllFields.menuItems)
+          ? restaurantWithAllFields.menuItems
+          : [];
+
+        const openingTimes = Array.isArray(restaurantWithAllFields.openingTimes)
+          ? restaurantWithAllFields.openingTimes
+          : [];
+
+        // Process image URL to ensure it's valid
+        const imageUrl =
+          restaurantWithAllFields.image ||
+          restaurantWithAllFields.imageUrl ||
+          "";
+        const validImageUrl = imageUrl.startsWith("http")
+          ? imageUrl
+          : "/placeholder.svg";
+
+        // Parse numeric values safely
+        const rating =
+          typeof restaurantWithAllFields.rating === "string"
+            ? parseFloat(restaurantWithAllFields.rating) || 0
+            : restaurantWithAllFields.rating || 0;
+
+        const latitude =
+          typeof restaurantWithAllFields.latitude === "string"
+            ? parseFloat(restaurantWithAllFields.latitude) || 0
+            : restaurantWithAllFields.latitude || 0;
+
+        const longitude =
+          typeof restaurantWithAllFields.longitude === "string"
+            ? parseFloat(restaurantWithAllFields.longitude) || 0
+            : restaurantWithAllFields.longitude || 0;
+
+        const processedRestaurant = {
+          ...restaurant,
+          menuItems,
+          openingTimes,
+          countryId: (restaurantWithCountry.country ??
+            restaurantWithCountry.countryId) as unknown as Countries,
+          // Add required fields that might be missing
+          phone: restaurant.phone ?? "",
+          email: restaurant.email ?? "",
+          published: true, // Default to published
+          orderCount: 0,
+          rating,
+          verified: true, // Default to verified
+          latitude,
+          longitude,
+          // Add missing required fields
+          delivery: restaurantWithAllFields.delivery ?? true,
+          pickup: restaurantWithAllFields.pickup ?? true,
+          dineIn: restaurantWithAllFields.dineIn ?? false,
+          priceLevel:
+            typeof restaurantWithAllFields.priceLevel === "number"
+              ? restaurantWithAllFields.priceLevel
+              : 2,
+          image: validImageUrl,
+          mainCategory: {
+            id: "00000000-0000-0000-0000-000000000000", // Valid UUID format
+            name: "General",
+            image: "",
+          },
+        };
+
+        // Apply filters for non-privileged users
+        const withoutPrivateData = filterPrivateData(
+          processedRestaurant as unknown as RestaurantResponseType,
+        );
+        return filterOpeningTimes(withoutPrivateData);
+      })
+      .filter(Boolean) as RestaurantResponseType[];
 
     return {
       success: true,
@@ -717,6 +870,7 @@ export const getRestaurants = async ({
           ? error.message
           : "Unknown error getting restaurants",
       errorCode: 500,
+      data: [],
     } as unknown as ApiHandlerResult<RestaurantResponseType[]>;
   }
 };
@@ -847,8 +1001,23 @@ export const searchRestaurants = async ({
       const processedRestaurant = {
         ...restaurant,
         menuItems: [],
+        openingTimes: [],
         countryId: (restaurantWithCountry.country ??
           restaurantWithCountry.countryId) as unknown as Countries,
+        // Add required fields that might be missing
+        phone: restaurant.phone ?? "",
+        email: restaurant.email ?? "",
+        published: true, // Default to published
+        orderCount: 0,
+        rating: parseFloat(restaurant.rating) ?? 0,
+        verified: true, // Default to verified
+        latitude: parseFloat(restaurant.latitude) ?? 0,
+        longitude: parseFloat(restaurant.longitude) ?? 0,
+        mainCategory: {
+          id: "00000000-0000-0000-0000-000000000000",
+          name: "General",
+          image: "",
+        },
       };
 
       // Apply filters for non-privileged users
