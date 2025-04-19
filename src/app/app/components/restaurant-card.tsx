@@ -19,9 +19,8 @@ import type React from "react";
 import { useState } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useFavorites } from "@/app/api/v1/favorites/hooks";
 import type { RestaurantResponseType } from "@/app/api/v1/restaurant/schema/restaurant.schema";
-
-import { useFavorites } from "./hooks/use-favorites";
 
 interface RestaurantCardProps {
   restaurant: RestaurantResponseType;

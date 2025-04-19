@@ -3,7 +3,7 @@ import { useApiForm } from "next-vibe/client/hooks/mutation-form";
 import { useApiQuery } from "next-vibe/client/hooks/query";
 import { useApiQueryForm } from "next-vibe/client/hooks/query-form";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 import type {
   MenuItemResponseType,
@@ -21,9 +21,21 @@ export function useMenuItems(params?: {
   restaurantId?: string;
   categoryId?: string;
 }) {
+  // Create a stable query key based on the params
+  const queryKey = useMemo(() => {
+    return [
+      'menu-items',
+      params?.restaurantId || 'all',
+      params?.categoryId || 'all',
+    ];
+  }, [params?.restaurantId, params?.categoryId]);
+
   return useApiQuery(menuItemsEndpoints.GET, params || {}, undefined, {
     enabled: true,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    queryKey,
+    refreshDelay: 1000, // Add a delay to prevent rapid refetches
   });
 }
 
@@ -33,9 +45,17 @@ export function useMenuItems(params?: {
  * @returns Query result with menu item data
  */
 export function useMenuItem(id?: string) {
+  // Create a stable query key based on the id
+  const queryKey = useMemo(() => {
+    return ['menu-item', id || 'none'];
+  }, [id]);
+
   return useApiQuery(menuItemsEndpoints.GET, { id }, undefined, {
     enabled: Boolean(id),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    queryKey,
+    refreshDelay: 1000, // Add a delay to prevent rapid refetches
   });
 }
 

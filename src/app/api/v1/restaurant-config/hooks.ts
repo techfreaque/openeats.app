@@ -1,6 +1,6 @@
 import { useApiMutation } from "next-vibe/client/hooks/mutation";
 import { useApiQuery } from "next-vibe/client/hooks/query";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 import restaurantConfigEndpoint from "./definition";
 import type { RestaurantConfigType } from "./restaurant-config.schema";
@@ -11,6 +11,11 @@ import type { RestaurantConfigType } from "./restaurant-config.schema";
  * @returns Query result with restaurant configuration
  */
 export function useRestaurantConfig(restaurantId: string) {
+  // Create a stable query key based on the restaurantId
+  const queryKey = useMemo(() => {
+    return ['restaurant-config', restaurantId || 'none'];
+  }, [restaurantId]);
+
   return useApiQuery(
     restaurantConfigEndpoint.GET,
     { restaurantId },
@@ -19,7 +24,8 @@ export function useRestaurantConfig(restaurantId: string) {
       enabled: Boolean(restaurantId),
       staleTime: 5 * 60 * 1000, // 5 minutes
       cacheTime: 10 * 60 * 1000, // 10 minutes
-      refetchOnWindowFocus: false,
+      queryKey,
+      refreshDelay: 1000, // Add a delay to prevent rapid refetches
     },
   );
 }

@@ -1,6 +1,7 @@
 import { useApiForm } from "next-vibe/client/hooks/mutation-form";
 import { useApiQuery } from "next-vibe/client/hooks/query";
-import { useEffect } from "react";
+import { errorLogger } from "next-vibe/shared/utils/logger";
+import { useCallback, useEffect, useMemo } from "react";
 
 import restaurantEndpoint from "./definition";
 import type { RestaurantUpdateType } from "./schema/restaurant.schema";
@@ -12,6 +13,9 @@ import type { RestaurantUpdateType } from "./schema/restaurant.schema";
  */
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useRestaurant(restaurantId: string) {
+  // Use a stable query key to improve caching
+  const queryKey = [`restaurant-${restaurantId}`];
+
   const result = useApiQuery(
     restaurantEndpoint.GET,
     {
@@ -21,13 +25,22 @@ export function useRestaurant(restaurantId: string) {
     {
       enabled: Boolean(restaurantId),
       staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      queryKey, // Use the stable query key
+      // Disable refetching on window focus to prevent unnecessary API calls
+      refreshDelay: 1000, // Add a delay to prevent rapid refetches
     },
   );
 
   // Transform the result to return a single restaurant instead of an array
+  // Use useMemo to prevent unnecessary re-renders
+  const data = useMemo(() => {
+    return Array.isArray(result.data) && result.data.length > 0 ? result.data[0] : undefined;
+  }, [result.data]);
+
   return {
     ...result,
-    data: Array.isArray(result.data) && result.data.length > 0 ? result.data[0] : undefined,
+    data,
   };
 }
 

@@ -5,7 +5,7 @@ import { useApiQuery } from "next-vibe/client/hooks/query";
 import { useApiStore } from "next-vibe/client/hooks/store";
 import { useTranslation } from "next-vibe/i18n";
 import { toast } from "next-vibe-ui/ui";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
@@ -32,6 +32,9 @@ export const useFavorites = () => {
 
   const queryKey = ["favorites", user?.id || "anonymous"];
 
+  // Use a stable query key and memoize it
+  const memoizedQueryKey = useMemo(() => queryKey, [user?.id]);
+
   const { data, isLoading, error } = useApiQuery<
     FavoritesGetType,
     FavoritesResponseType,
@@ -43,7 +46,10 @@ export const useFavorites = () => {
     {},
     {
       enabled: !!user,
-      queryKey,
+      queryKey: memoizedQueryKey,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      refreshDelay: 1000, // Add a delay to prevent rapid refetches
     },
   );
 

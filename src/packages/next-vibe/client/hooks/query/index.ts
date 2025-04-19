@@ -133,23 +133,44 @@ export function useApiQuery<
       return;
     }
 
-    // Execute the query
-    void executeQuery(endpoint, requestData, urlParams, {
-      ...queryOptions,
-      queryKey,
-    });
+    // Check if we already have data in the store
+    const existingQuery = useApiStore.getState().queries[queryId];
+    const hasValidData = existingQuery && existingQuery.data && !existingQuery.isError;
+    const isFresh = existingQuery && existingQuery.lastFetchTime &&
+      (Date.now() - existingQuery.lastFetchTime < (queryOptions.staleTime || 60000));
+
+    // Skip fetch if we have fresh data
+    if (hasValidData && isFresh && !isInitialMount.current) {
+      return;
+    }
+
+    // Execute the query with a small delay to prevent multiple simultaneous requests
+    const timeoutId = setTimeout(() => {
+      void executeQuery(endpoint, requestData, urlParams, {
+        ...queryOptions,
+        queryKey,
+      });
+    }, 0);
 
     // Update initial mount ref
     isInitialMount.current = false;
+
+    return () => clearTimeout(timeoutId);
   }, [
     queryId,
     options.enabled,
     executeQuery,
-    endpoint,
-    requestData,
-    urlParams,
-    queryOptions,
-    queryKey,
+    endpoint.path.join('/'), // Only depend on the path, not the entire endpoint
+    endpoint.method,
+    // Use JSON.stringify for complex objects to prevent unnecessary re-renders
+    // Only re-render if the actual data changes
+    JSON.stringify(requestData),
+    JSON.stringify(urlParams),
+    // Don't include the entire queryOptions object
+    queryOptions.staleTime,
+    queryOptions.cacheTime,
+    queryOptions.refetchOnWindowFocus,
+    queryKey.join(','), // Convert array to string for dependency tracking
     skipInitialFetch,
     refetchOnDependencyChange,
   ]);

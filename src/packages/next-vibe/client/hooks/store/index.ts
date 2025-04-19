@@ -25,7 +25,23 @@ const queryClient = new QueryClient({
 });
 
 // Track in-flight requests to prevent duplicates
-const inFlightRequests = new Map<string, Promise<unknown>>();
+const inFlightRequests = new Map<
+  string,
+  { promise: Promise<unknown>; timestamp: number }
+>();
+
+// Clean up in-flight requests older than 30 seconds
+const MAX_REQUEST_AGE = 30000; // 30 seconds
+
+// Function to clean up old in-flight requests
+function cleanupInFlightRequests(): void {
+  const now = Date.now();
+  for (const [key, { timestamp }] of inFlightRequests.entries()) {
+    if (now - timestamp > MAX_REQUEST_AGE) {
+      inFlightRequests.delete(key);
+    }
+  }
+}
 
 // Store types
 export interface ApiStore {
@@ -138,25 +154,75 @@ export const useApiStore = create<ApiStore>((set, get) => ({
     const storageKey = queryId;
     const requestKey = `${queryId}|${JSON.stringify(requestData)}|${JSON.stringify(pathParams)}`;
 
+    // Clean up old in-flight requests
+    cleanupInFlightRequests();
+
+    // Check if we already have a request in flight
+    const existingRequestEntry = inFlightRequests.get(requestKey);
+    if (existingRequestEntry && options.refreshDelay) {
+      // If we have a request in flight and a refresh delay is set, return the existing request
+      return await (existingRequestEntry.promise as Promise<TResponse>);
+    }
+
+    // Check if we have fresh data in the store
+    const existingQuery = get().queries[queryId];
+    const hasValidData = existingQuery?.data && !existingQuery.isError;
+    const isFresh =
+      existingQuery?.lastFetchTime &&
+      Date.now() - existingQuery.lastFetchTime < (options.staleTime ?? 60000);
+
+    // If we have fresh data and this isn't a forced refresh, just update the state minimally
+    if (hasValidData && isFresh && !options.forceRefresh) {
+      // Just mark as fetching without changing other state
+      set((state) => {
+        const queries = { ...state.queries };
+        if (queries[queryId]) {
+          queries[queryId] = {
+            ...queries[queryId],
+            isFetching: true,
+          };
+        }
+        return { queries };
+      });
+
+      // Return the existing data wrapped in a promise
+      const result = existingQuery.data as TResponse;
+
+      // Schedule a background refresh if needed
+      if (options.backgroundRefresh) {
+        setTimeout(() => {
+          void get().executeQuery(endpoint, requestData, pathParams, {
+            ...options,
+            forceRefresh: true,
+            backgroundRefresh: false,
+          });
+        }, options.refreshDelay ?? 0);
+      }
+
+      return await Promise.resolve(result);
+    }
+
     // Set initial loading state
-    set((state) => ({
-      queries: {
-        ...state.queries,
-        [queryId]: {
-          data: undefined,
-          error: null,
-          isError: false,
-          isSuccess: false,
-          isCachedData: false,
-          lastFetchTime: null,
-          isLoading: true,
-          isFetching: true,
-          statusMessage: "Loading data...",
-          isLoadingFresh: state.queries[queryId]?.data ? false : true,
-          ...(state.queries[queryId] ?? {}),
-        },
-      },
-    }));
+    set((state) => {
+      const queries = { ...state.queries };
+      const existingData = queries[queryId]?.data;
+      const existingLastFetchTime = queries[queryId]?.lastFetchTime;
+
+      queries[queryId] = {
+        data: existingData ?? undefined,
+        error: null,
+        isError: false,
+        isSuccess: false,
+        isCachedData: false,
+        lastFetchTime: existingLastFetchTime ?? null,
+        isLoading: true,
+        isFetching: true,
+        statusMessage: "Loading data...",
+        isLoadingFresh: existingData ? false : true,
+      };
+
+      return { queries };
+    });
 
     // Deduplicate in-flight requests
     if (
@@ -164,10 +230,15 @@ export const useApiStore = create<ApiStore>((set, get) => ({
       options.deduplicateRequests !== false
     ) {
       try {
-        return (await inFlightRequests.get(requestKey)) as TResponse;
+        const entry = inFlightRequests.get(requestKey);
+        if (entry) {
+          return (await entry.promise) as TResponse;
+        }
       } catch (error) {
         // If the shared request fails, we'll continue and try again
         errorLogger("Shared request failed, retrying", error);
+        // Remove the failed request
+        inFlightRequests.delete(requestKey);
       }
     }
 
@@ -199,25 +270,42 @@ export const useApiStore = create<ApiStore>((set, get) => ({
           // using proper background refresh with delay to prevent race conditions
           const refreshDelay = options.refreshDelay ?? 50; // 50ms default delay
 
-          const refreshPromise = new Promise<void>((resolve) => {
+          // Use a simple timeout instead of creating a promise that might not be properly cleaned up
+          const timeoutId = setTimeout(() => {
             const { executeQuery } = get();
-            setTimeout(() => {
-              executeQuery(endpoint, requestData, pathParams, {
-                ...options,
-                queryKey: options.queryKey as QueryKey,
-                disableLocalCache: true,
-              })
-                .catch((err) => errorLogger("Background refresh failed:", err))
-                .finally(() => resolve())
-                .catch((err) => {
-                  resolve();
-                  errorLogger("Background refresh finalization failed:", err);
-                });
-            }, refreshDelay);
-          });
+            executeQuery(endpoint, requestData, pathParams, {
+              ...options,
+              queryKey: options.queryKey as QueryKey,
+              disableLocalCache: true,
+              // Prevent infinite chain of background refreshes
+              backgroundRefresh: false,
+            }).catch((err) => errorLogger("Background refresh failed:", err));
+          }, refreshDelay);
 
-          // Don't block the return, but initiate the refresh
-          void refreshPromise;
+          // Store the timeout ID so it can be cleaned up if needed
+          if (typeof window !== "undefined") {
+            // Use a safer approach with a global cleanup function
+            const cleanupKey = `__nextVibe_cleanup_${Date.now()}`;
+
+            // Create a cleanup function on the window object
+            const cleanupFn = () => {
+              clearTimeout(timeoutId);
+            };
+
+            // Add the cleanup function to window
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (window as any)[cleanupKey] = cleanupFn;
+
+            // Auto-cleanup after 60 seconds to prevent memory leaks
+            setTimeout(() => {
+              try {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                delete (window as any)[cleanupKey];
+              } catch (e) {
+                // Ignore cleanup errors
+              }
+            }, 60000);
+          }
 
           return cachedData;
         }
@@ -320,8 +408,11 @@ export const useApiStore = create<ApiStore>((set, get) => ({
       }
     })();
 
-    // Register the in-flight request
-    inFlightRequests.set(requestKey, fetchPromise);
+    // Register the in-flight request with timestamp
+    inFlightRequests.set(requestKey, {
+      promise: fetchPromise,
+      timestamp: Date.now(),
+    });
 
     return (await fetchPromise) as TResponse;
   },

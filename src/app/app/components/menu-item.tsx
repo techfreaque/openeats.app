@@ -21,9 +21,8 @@ import {
 import type { JSX } from "react";
 import { useState } from "react";
 
+import { useCart } from "@/app/api/v1/cart/hooks";
 import type { MenuItemResponseType } from "@/app/api/v1/restaurant/schema/menu.schema";
-
-import { useCart } from "./hooks/use-cart";
 
 interface MenuItemProps {
   item: MenuItemResponseType;
@@ -37,7 +36,14 @@ export function MenuItem({ item }: MenuItemProps): JSX.Element {
   const { t } = useTranslation();
 
   const handleAddToCart = async (): Promise<void> => {
-    await addItem(item, quantity, specialInstructions);
+    // Create a cart item with the required fields
+    const cartItem = {
+      ...item,
+      partnerId: "", // This would come from the restaurant in a real implementation
+      categoryId: "", // This would come from the menu item in a real implementation
+    };
+
+    await addItem(cartItem, quantity, specialInstructions);
     setIsDialogOpen(false);
     // Reset for next time
     setQuantity(1);

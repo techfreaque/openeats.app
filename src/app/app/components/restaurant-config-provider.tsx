@@ -5,6 +5,9 @@ import type { JSX } from "react/jsx-runtime";
 
 import type { RestaurantConfigType } from "./lib/types";
 
+// Define a type that allows partial config
+export type PartialRestaurantConfigType = Partial<RestaurantConfigType>;
+
 const defaultConfig: RestaurantConfigType = {
   theme: {
     theme: "default",
@@ -38,7 +41,7 @@ export function useRestaurantConfig(): RestaurantConfigType {
 }
 
 interface RestaurantConfigProviderProps {
-  config?: Partial<RestaurantConfigType>;
+  config?: PartialRestaurantConfigType;
   children: ReactNode;
 }
 
@@ -49,7 +52,7 @@ export function RestaurantConfigProvider({
   // Deep merge the default config with the provided config
   const mergedConfig = deepMerge(
     defaultConfig,
-    config || {},
+    config ?? {},
   ) as RestaurantConfigType;
 
   return (
@@ -60,19 +63,34 @@ export function RestaurantConfigProvider({
 }
 
 // Helper function to deep merge objects
-function deepMerge(target: any, source: any): any {
-  const output = { ...target };
+function deepMerge<
+  T extends Record<string, unknown>,
+  U extends Record<string, unknown>,
+>(target: T, source: U): T & U {
+  const output = { ...target } as T & U;
 
   if (isObject(target) && isObject(source)) {
     Object.keys(source).forEach((key) => {
-      if (isObject(source[key])) {
+      const sourceValue = source[key as keyof U];
+      const targetValue = target[key as keyof T];
+
+      if (isObject(sourceValue)) {
         if (!(key in target)) {
-          Object.assign(output, { [key]: source[key] });
+          // TypeScript doesn't know that output[key] is safe here
+          // but we're ensuring it with the type cast
+          (output as Record<string, unknown>)[key] = sourceValue;
         } else {
-          output[key] = deepMerge(target[key], source[key]);
+          // TypeScript doesn't know that output[key] is safe here
+          // but we're ensuring it with the type cast
+          (output as Record<string, unknown>)[key] = deepMerge(
+            targetValue as Record<string, unknown>,
+            sourceValue as Record<string, unknown>,
+          );
         }
       } else {
-        Object.assign(output, { [key]: source[key] });
+        // TypeScript doesn't know that output[key] is safe here
+        // but we're ensuring it with the type cast
+        (output as Record<string, unknown>)[key] = sourceValue;
       }
     });
   }
@@ -80,6 +98,6 @@ function deepMerge(target: any, source: any): any {
   return output;
 }
 
-function isObject(item: any): boolean {
-  return item && typeof item === "object" && !Array.isArray(item);
+function isObject(item: unknown): item is Record<string, unknown> {
+  return Boolean(item) && typeof item === "object" && !Array.isArray(item);
 }

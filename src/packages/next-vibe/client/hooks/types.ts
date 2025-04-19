@@ -47,6 +47,8 @@ export interface ApiQueryOptions<
   cacheDuration?: number; // Override default cache duration in ms
   deduplicateRequests?: boolean; // Option to disable request deduplication
   refreshDelay?: number; // Delay for refreshing stale data
+  forceRefresh?: boolean; // Force refetch even if data is fresh
+  backgroundRefresh?: boolean; // Refresh data in background after returning cached data
 }
 
 /**
