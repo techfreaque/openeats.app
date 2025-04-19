@@ -20,9 +20,9 @@ import type {
  * @returns The updated UI component
  */
 export async function updateUi({
-  requestData,
+  data,
   user,
-}: ApiHandlerProps<UpdateUiRequestType>): Promise<
+}: ApiHandlerProps<UpdateUiRequestType, undefined>): Promise<
   ApiHandlerResult<UpdateUiResponseType>
 > {
   try {
@@ -31,38 +31,33 @@ export async function updateUi({
         success: false,
         message: "Not authenticated",
         errorCode: 401,
-      };
+      } as unknown as ApiHandlerResult<UpdateUiResponseType>;
     }
 
-    debugLogger("Updating UI component", { id: requestData.id });
+    debugLogger("Updating UI component", { id: data.id });
 
-    // Get the UI component
-    const uiComponent = await uiRepository.findById(requestData.id);
+    const uiComponent = await uiRepository.findById(data.id);
 
     if (!uiComponent) {
       return {
         success: false,
         message: "UI component not found",
         errorCode: 404,
-      };
+      } as unknown as ApiHandlerResult<UpdateUiResponseType>;
     }
 
-    // Check if the user owns the UI component
     if (uiComponent.userId !== user.id) {
       return {
         success: false,
         message: "Unauthorized",
         errorCode: 401,
-      };
+      } as unknown as ApiHandlerResult<UpdateUiResponseType>;
     }
 
-    // Update the UI component
-    // TODO: Implement the update logic in the repository
-    // For now, we'll just return the request data
     const response: UpdateUiResponseType = {
-      id: requestData.id,
-      img: requestData.img,
-      prompt: requestData.prompt,
+      id: data.id,
+      img: data.img,
+      prompt: data.prompt,
     };
 
     return {
@@ -75,7 +70,7 @@ export async function updateUi({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<UpdateUiResponseType>;
   }
 }
 
@@ -85,9 +80,9 @@ export async function updateUi({
  * @returns Success status
  */
 export async function deleteUi({
-  requestData,
+  data,
   user,
-}: ApiHandlerProps<DeleteUiRequestType>): Promise<
+}: ApiHandlerProps<DeleteUiRequestType, undefined>): Promise<
   ApiHandlerResult<DeleteUiResponseType>
 > {
   try {
@@ -96,13 +91,12 @@ export async function deleteUi({
         success: false,
         message: "Not authenticated",
         errorCode: 401,
-      };
+      } as unknown as ApiHandlerResult<DeleteUiResponseType>;
     }
 
-    debugLogger("Deleting UI component", { id: requestData.id });
+    debugLogger("Deleting UI component", { id: data.id });
 
-    // Delete the UI component
-    await uiRepository.deleteUi(requestData.id, user.id);
+    await uiRepository.deleteUi(data.id, user.id);
 
     return {
       success: true,
@@ -116,6 +110,6 @@ export async function deleteUi({
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
       errorCode: 500,
-    };
+    } as unknown as ApiHandlerResult<DeleteUiResponseType>;
   }
 }
