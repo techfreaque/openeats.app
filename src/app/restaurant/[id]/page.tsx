@@ -2,7 +2,7 @@
 
 import { Clock, Heart, MapPin, Phone, Star } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useTranslation } from "next-vibe/i18n";
 import { cn } from "next-vibe/shared/utils/utils";
 import { Button, Skeleton, useToast } from "next-vibe-ui/ui";
@@ -29,13 +29,11 @@ import { SpecialOffers } from "@/app/app/components/special-offers";
 export default function RestaurantHomePage(): JSX.Element {
   const params = useParams<{ id: string }>();
   const id = params.id;
-  const router = useRouter();
   const { t } = useTranslation();
   const { toast } = useToast();
 
   const { user } = useAuth();
-  const { isFavorite, addFavorite, removeFavorite, toggleFavorite } =
-    useFavorites();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const config = useRestaurantConfig();
 
   const { data: restaurant, isLoading, error } = useRestaurant(id);
@@ -60,9 +58,9 @@ export default function RestaurantHomePage(): JSX.Element {
           .filter((item) => item?.image)
           .map((item, i) => ({
             src:
-              item.image ||
+              item.image ??
               `/placeholder.svg?height=400&width=600&text=Menu+Item+${i + 1}`,
-            alt: item.name || `Menu item ${i + 1}`,
+            alt: item.name ?? `Menu item ${i + 1}`,
           }))
       : Array(3)
           .fill(0)

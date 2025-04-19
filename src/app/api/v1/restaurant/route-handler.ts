@@ -54,7 +54,39 @@ async function fetchRestaurantById(
       success: false,
       message: "Restaurant not found",
       errorCode: 404,
-    };
+      data: {
+        restaurant: {
+          name: "",
+          description: "",
+          street: "",
+          streetNumber: "",
+          zip: "",
+          city: "",
+          phone: "",
+          email: "",
+          image: "",
+          published: false,
+          delivery: false,
+          pickup: false,
+          dineIn: false,
+          priceLevel: "",
+          countryId: "DE" as Countries,
+          mainCategory: { id: "", name: "", image: "" },
+          id: "",
+          orderCount: 0,
+          rating: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          openingTimes: [],
+          menuItems: [],
+          verified: false,
+          latitude: 0,
+          longitude: 0,
+        },
+        userRoles: [],
+        hasAccess: false,
+      },
+    } as ApiHandlerResult<RestaurantResponseType>;
   }
 
   // Get user roles
@@ -74,12 +106,15 @@ async function fetchRestaurantById(
   // Process restaurant data to match expected type
   const processedRestaurant = {
     ...restaurant,
-    menuItems: restaurant.menuItems.map((item) => ({
-      ...item,
-      isAvailable: item.isAvailable ?? true,
-      currency: item.currency ?? "EUR",
-    })),
-    countryId: restaurant.countryId as unknown as Countries,
+    menuItems: Array.isArray(restaurant.menuItems)
+      ? restaurant.menuItems.map((item: any) => ({
+          ...item,
+          isAvailable: item.isAvailable ?? true,
+          currency: item.currency ?? "EUR",
+        }))
+      : [],
+    countryId: (restaurant.country ||
+      restaurant.countryId) as unknown as Countries,
   };
 
   return {
@@ -109,9 +144,7 @@ export const createRestaurant: ApiHandlerFunction<
     });
 
     // Check if user has admin role
-    const userRoles = (await db.userRole.findMany({
-      where: { userId: user.id },
-    })) as UserRoleResponseType[];
+    const userRoles = await userRolesRepository.findByUserId(user.id);
 
     if (!hasRole(userRoles, UserRoleValue.CUSTOMER)) {
       debugLogger("Unauthorized to create restaurant", { userId: user.id });
@@ -186,12 +219,15 @@ export const createRestaurant: ApiHandlerFunction<
     // Process menu items to add required fields
     const processedRestaurant = {
       ...restaurant,
-      menuItems: restaurant.menuItems.map((item) => ({
-        ...item,
-        isAvailable: item.isAvailable ?? true,
-        currency: item.currency ?? "EUR",
-      })),
-      countryId: restaurant.countryId as unknown as Countries,
+      menuItems: Array.isArray((restaurant as any).menuItems)
+        ? (restaurant as any).menuItems.map((item: any) => ({
+            ...item,
+            isAvailable: item.isAvailable ?? true,
+            currency: item.currency ?? "EUR",
+          }))
+        : [],
+      countryId: (restaurant.country ||
+        (restaurant as any).countryId) as unknown as Countries,
     };
 
     return {
@@ -285,7 +321,9 @@ export const updateRestaurant: ApiHandlerFunction<
       restaurantData,
     );
 
-    debugLogger("Restaurant updated", { restaurantId: updatedRestaurant.id });
+    debugLogger("Restaurant updated", {
+      restaurantId: updatedRestaurant?.id || requestData.id,
+    });
 
     if (hasLocationError) {
       return {
@@ -299,13 +337,19 @@ export const updateRestaurant: ApiHandlerFunction<
 
     // Process menu items to add required fields
     const processedRestaurant = {
-      ...updatedRestaurant,
-      menuItems: updatedRestaurant.menuItems.map((item) => ({
-        ...item,
-        isAvailable: item.isAvailable ?? true,
-        currency: item.currency ?? "EUR",
-      })),
-      countryId: updatedRestaurant.countryId as unknown as Countries,
+      ...(updatedRestaurant || {}),
+      menuItems:
+        updatedRestaurant && Array.isArray((updatedRestaurant as any).menuItems)
+          ? (updatedRestaurant as any).menuItems.map((item: any) => ({
+              ...item,
+              isAvailable: item.isAvailable ?? true,
+              currency: item.currency ?? "EUR",
+            }))
+          : [],
+      countryId: updatedRestaurant
+        ? ((updatedRestaurant.country ||
+            (updatedRestaurant as any).countryId) as unknown as Countries)
+        : ("DE" as Countries),
     };
 
     return {
@@ -563,9 +607,7 @@ export const getRestaurants: ApiHandlerFunction<
     debugLogger("Getting all restaurants", { userId: user.id });
 
     // Check if user can see unpublished restaurants
-    const userRoles = await db.userRole.findMany({
-      where: { userId: user.id },
-    });
+    const userRoles = await userRolesRepository.findByUserId(user.id);
     const canGetUnpublished =
       hasRole(userRoles, UserRoleValue.ADMIN) ||
       hasRole(userRoles, UserRoleValue.PARTNER_ADMIN);
@@ -588,7 +630,8 @@ export const getRestaurants: ApiHandlerFunction<
       const processedRestaurant = {
         ...restaurant,
         menuItems: [],
-        countryId: restaurant.countryId as unknown as Countries,
+        countryId: (restaurant.country ||
+          (restaurant as any).countryId) as unknown as Countries,
       };
 
       // Apply filters for non-privileged users
@@ -632,9 +675,7 @@ export const searchRestaurants: ApiHandlerFunction<
     });
 
     // Check if user can see unpublished restaurants
-    const userRoles = await db.userRole.findMany({
-      where: { userId: user.id },
-    });
+    const userRoles = await userRolesRepository.findByUserId(user.id);
     const canGetUnpublished =
       hasRole(userRoles, UserRoleValue.ADMIN) ||
       hasRole(userRoles, UserRoleValue.PARTNER_ADMIN);
@@ -690,16 +731,19 @@ export const searchRestaurants: ApiHandlerFunction<
       }
 
       // Apply country filter
-      if (data.countryId && restaurant.countryId !== data.countryId) {
+      if (
+        data.countryId &&
+        (restaurant.country || (restaurant as any).countryId) !== data.countryId
+      ) {
         return false;
       }
 
       // Apply published filter
-      if (!canGetUnpublished && !restaurant.published) {
+      if (!canGetUnpublished && !(restaurant as any).published) {
         return false;
       } else if (
         data.published != null &&
-        restaurant.published !== data.published
+        (restaurant as any).published !== data.published
       ) {
         return false;
       }
@@ -715,7 +759,8 @@ export const searchRestaurants: ApiHandlerFunction<
       const processedRestaurant = {
         ...restaurant,
         menuItems: [],
-        countryId: restaurant.countryId as unknown as Countries,
+        countryId: (restaurant.country ||
+          (restaurant as any).countryId) as unknown as Countries,
       };
 
       // Apply filters for non-privileged users
