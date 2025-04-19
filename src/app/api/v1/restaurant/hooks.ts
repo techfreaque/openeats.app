@@ -49,6 +49,7 @@ export function useRestaurant(restaurantId: string): {
   return {
     ...result,
     data,
+
   };
 }
 

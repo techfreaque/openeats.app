@@ -102,13 +102,26 @@ export class ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey> {
         postBody?: never;
       } {
     // Validate request data if schema is provided
-    if (requestData && this.requestSchema) {
-      const validation = this.requestSchema.safeParse(requestData);
-      if (!validation.success) {
-        return {
-          success: false,
-          message: `Request validation error: ${validation.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
-        };
+    if (this.requestSchema) {
+      // Handle undefined values properly for GET requests
+      if (requestData === undefined && this.method === Methods.GET) {
+        // For GET requests, undefined is valid
+        const path = pathParams
+          ? format<TUrlVariables>(this.path, pathParams)
+          : this.path;
+        let endpointUrl = `${envClient.NEXT_PUBLIC_BACKEND_URL}/${path.join("/")}`;
+        return { success: true, endpointUrl, postBody: undefined };
+      }
+
+      // Only validate if requestData is provided
+      if (requestData) {
+        const validation = this.requestSchema.safeParse(requestData);
+        if (!validation.success) {
+          return {
+            success: false,
+            message: `Request validation error: ${validation.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
+          };
+        }
       }
     }
 
