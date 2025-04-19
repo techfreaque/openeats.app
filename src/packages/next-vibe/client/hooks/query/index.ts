@@ -54,35 +54,88 @@ export function useApiQuery<
   } = options;
 
   // Create a stable query key
-  const queryKey: QueryKey = useMemo(
-    () =>
-      customQueryKey ?? [
-        endpoint.path.join('/'),
-        endpoint.method,
-        // Use a more stable representation for complex objects
-        typeof requestData === 'object' ?
-          JSON.stringify(requestData, (key, value) =>
-            // Handle circular references
-            typeof value === 'object' && value !== null ?
-              Object.keys(value).length > 0 ?
-                Object.fromEntries(Object.entries(value).filter(([k]) => !k.startsWith('_'))) :
-                value :
-              value
-          ) :
-          requestData,
-        typeof urlParams === 'object' ?
-          JSON.stringify(urlParams, (key, value) =>
-            // Handle circular references
-            typeof value === 'object' && value !== null ?
-              Object.keys(value).length > 0 ?
-                Object.fromEntries(Object.entries(value).filter(([k]) => !k.startsWith('_'))) :
-                value :
-              value
-          ) :
-          urlParams,
-      ],
-    [customQueryKey, endpoint.path, endpoint.method, requestData, urlParams],
-  );
+  const queryKey: QueryKey = useMemo(() => {
+    // Create a stable representation of the endpoint
+    const endpointKey = `${endpoint.path.join('/')}:${endpoint.method}`;
+
+    // Create a stable representation of the request data
+    let requestDataKey: string | undefined;
+    if (requestData) {
+      try {
+        // For objects, create a stable JSON representation
+        if (typeof requestData === 'object') {
+          // Filter out internal properties and handle circular references
+          const safeRequestData = JSON.stringify(requestData, (key, value) => {
+            // Skip internal properties
+            if (key.startsWith('_')) return undefined;
+            // Handle circular references and complex objects
+            if (typeof value === 'object' && value !== null) {
+              // Return a simplified version of objects
+              return Object.keys(value).length > 0 ?
+                Object.fromEntries(
+                  Object.entries(value)
+                    .filter(([k]) => !k.startsWith('_'))
+                    .map(([k, v]) => [k, typeof v === 'function' ? '[Function]' : v])
+                ) :
+                value;
+            }
+            return value;
+          });
+          requestDataKey = safeRequestData;
+        } else {
+          // For primitives, use string representation
+          requestDataKey = String(requestData);
+        }
+      } catch (error) {
+        // If JSON stringification fails, use a fallback
+        requestDataKey = typeof requestData === 'object' ?
+          Object.keys(requestData).sort().join(',') :
+          String(requestData);
+      }
+    }
+
+    // Create a stable representation of URL parameters
+    let urlParamsKey: string | undefined;
+    if (urlParams) {
+      try {
+        // For objects, create a stable JSON representation
+        if (typeof urlParams === 'object') {
+          // Filter out internal properties and handle circular references
+          urlParamsKey = JSON.stringify(urlParams, (key, value) => {
+            // Skip internal properties
+            if (key.startsWith('_')) return undefined;
+            // Handle circular references and complex objects
+            if (typeof value === 'object' && value !== null) {
+              // Return a simplified version of objects
+              return Object.keys(value).length > 0 ?
+                Object.fromEntries(
+                  Object.entries(value)
+                    .filter(([k]) => !k.startsWith('_'))
+                    .map(([k, v]) => [k, typeof v === 'function' ? '[Function]' : v])
+                ) :
+                value;
+            }
+            return value;
+          });
+        } else {
+          // For primitives, use string representation
+          urlParamsKey = String(urlParams);
+        }
+      } catch (error) {
+        // If JSON stringification fails, use a fallback
+        urlParamsKey = typeof urlParams === 'object' ?
+          Object.keys(urlParams).sort().join(',') :
+          String(urlParams);
+      }
+    }
+
+    // Return the custom query key or build one from the components
+    return customQueryKey ?? [
+      endpointKey,
+      requestDataKey,
+      urlParamsKey,
+    ];
+  }, [customQueryKey, endpoint.path, endpoint.method, requestData, urlParams]);
 
   // Get API store methods
   const { executeQuery, getQueryId } = useApiStore();
@@ -238,9 +291,11 @@ export function useApiQuery<
     queryId,
     options.enabled,
     executeQuery,
-    // Use a stable representation of the query key instead of individual dependencies
+    // Use a stable representation of the query key
     // This prevents unnecessary re-renders when the query key is stable
-    JSON.stringify(queryKey),
+    queryKey[0], // endpointKey
+    queryKey[1], // requestDataKey
+    queryKey[2], // urlParamsKey
     skipInitialFetch,
     refetchOnDependencyChange,
     // Include only the necessary options

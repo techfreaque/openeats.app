@@ -18,7 +18,7 @@ import type { ApiMutationOptions, ApiQueryOptions } from "../types";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60000,
+      staleTime: 60_000,
       refetchOnWindowFocus: false,
     },
   },
@@ -29,6 +29,10 @@ const inFlightRequests = new Map<
   string,
   { promise: Promise<unknown>; timestamp: number }
 >();
+
+// Throttle map to prevent excessive API calls
+const throttleMap = new Map<string, number>();
+const THROTTLE_INTERVAL = 500; // ms
 
 // Clean up in-flight requests older than 10 seconds
 const MAX_REQUEST_AGE = 10_000; // 10 seconds
@@ -178,6 +182,33 @@ export const useApiStore = create<ApiStore>((set, get) => ({
     // Clean up old in-flight requests
     cleanupInFlightRequests();
 
+    // Check if we need to throttle this request
+    const now = Date.now();
+    const lastRequestTime = throttleMap.get(requestKey);
+    if (lastRequestTime && now - lastRequestTime < THROTTLE_INTERVAL) {
+      // If we've made this request recently, throttle it
+      // Check if we already have a request in flight
+      const existingRequestEntry = inFlightRequests.get(requestKey);
+      if (existingRequestEntry) {
+        // If we have a request in flight, return the existing request
+        return await (existingRequestEntry.promise as Promise<TResponse>);
+      }
+    }
+
+    // Update the throttle map
+    throttleMap.set(requestKey, now);
+
+    // Clean up the throttle map if it gets too large
+    if (throttleMap.size > MAX_IN_FLIGHT_REQUESTS * 2) {
+      // Keep only the most recent entries
+      const entries = Array.from(throttleMap.entries());
+      entries.sort((a, b) => b[1] - a[1]); // Sort by timestamp, newest first
+      throttleMap.clear();
+      for (const [key, timestamp] of entries.slice(0, MAX_IN_FLIGHT_REQUESTS)) {
+        throttleMap.set(key, timestamp);
+      }
+    }
+
     // Check if we already have a request in flight
     const existingRequestEntry = inFlightRequests.get(requestKey);
     if (existingRequestEntry && options.refreshDelay) {
@@ -190,7 +221,7 @@ export const useApiStore = create<ApiStore>((set, get) => ({
     const hasValidData = existingQuery?.data && !existingQuery.isError;
     const isFresh =
       existingQuery?.lastFetchTime &&
-      Date.now() - existingQuery.lastFetchTime < (options.staleTime ?? 60000);
+      Date.now() - existingQuery.lastFetchTime < (options.staleTime ?? 60_000);
 
     // If we have fresh data and this isn't a forced refresh, just update the state minimally
     if (hasValidData && isFresh && !options.forceRefresh) {

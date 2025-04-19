@@ -4,7 +4,6 @@ import type { z } from "zod";
 import type { ApiSection, ExamplesList } from "../shared/types/endpoint";
 import { Methods } from "../shared/types/endpoint";
 import { UserRoleValue } from "../shared/types/enums";
-import { format } from "../shared/utils/parse-error";
 import { getApiConfig } from "./config";
 import { envClient } from "./env-client";
 import type { ApiQueryOptions } from "./hooks/types";
@@ -106,10 +105,8 @@ export class ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey> {
       // Handle undefined values properly for GET requests
       if (requestData === undefined && this.method === Methods.GET) {
         // For GET requests, undefined is valid
-        const path = pathParams
-          ? format<TUrlVariables>(this.path, pathParams)
-          : this.path;
-        let endpointUrl = `${envClient.NEXT_PUBLIC_BACKEND_URL}/${path.join("/")}`;
+        const pathStr = this.path.join("/");
+        const endpointUrl = `${envClient.NEXT_PUBLIC_BACKEND_URL}/${pathStr}`;
         return { success: true, endpointUrl, postBody: undefined };
       }
 
@@ -136,12 +133,42 @@ export class ApiEndpoint<TRequest, TResponse, TUrlVariables, TExampleKey> {
       }
     }
 
-    const path = pathParams
-      ? format<TUrlVariables>(this.path, pathParams)
-      : this.path;
-    let endpointUrl = `${envClient.NEXT_PUBLIC_BACKEND_URL}/${path.join("/")}`;
+    // Create a safe path string
+    let pathStr: string;
+    if (pathParams) {
+      // Format the path with the parameters
+      const pathParts = this.path.map((part) => {
+        if (part.startsWith(":") && pathParams) {
+          const paramName = part.substring(1);
+          const paramValue = pathParams[paramName as keyof TUrlVariables];
+          return paramValue !== null && paramValue !== undefined
+            ? String(paramValue)
+            : part;
+        }
+        return part;
+      });
+      pathStr = pathParts.join("/");
+    } else {
+      pathStr = this.path.join("/");
+    }
+
+    // Create the endpoint URL
+    let endpointUrl = `${envClient.NEXT_PUBLIC_BACKEND_URL}/${pathStr}`;
+
+    // Add query parameters for GET requests
     if (this.method === Methods.GET && requestData) {
-      endpointUrl += `?${new URLSearchParams(requestData as Record<string, string>).toString()}`;
+      // Convert requestData to a safe format for URLSearchParams
+      const params: Record<string, string> = {};
+      Object.entries(requestData as Record<string, unknown>).forEach(
+        ([key, value]) => {
+          if (value !== null && value !== undefined) {
+            // Handle different types of values
+            params[key] =
+              typeof value === "object" ? JSON.stringify(value) : String(value);
+          }
+        },
+      );
+      endpointUrl += `?${new URLSearchParams(params).toString()}`;
     }
     return {
       success: true,
