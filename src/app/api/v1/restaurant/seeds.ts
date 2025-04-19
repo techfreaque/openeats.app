@@ -1,3 +1,8 @@
+/**
+ * Restaurant seeds
+ * Provides seed data for restaurant-related tables
+ */
+
 import { db } from "next-vibe/server/db";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
@@ -12,7 +17,7 @@ function createRestaurantSeed(overrides?: Partial<NewPartner>): NewPartner {
     name: `Restaurant ${Math.floor(Math.random() * 1000)}`,
     description: `A delicious restaurant with amazing food and great service.`,
     email: `restaurant${Math.floor(Math.random() * 1000)}@example.com`,
-    phone: `+1${Math.floor(Math.random() * 10000000000)}`,
+    phone: `+1${Math.floor(Math.random() * 10_000_000_000)}`,
     street: "Main Street",
     streetNumber: `${Math.floor(Math.random() * 100)}`,
     zip: "10001",
@@ -39,6 +44,7 @@ function createRestaurantSeed(overrides?: Partial<NewPartner>): NewPartner {
  */
 async function devSeed(): Promise<void> {
   debugLogger("🌱 Seeding restaurant data for development environment");
+  debugLogger("Creating development restaurants...");
 
   const devRestaurants = [
     createRestaurantSeed({
@@ -87,16 +93,28 @@ async function devSeed(): Promise<void> {
     }),
   ];
 
-  // Use insert with onConflictDoNothing since there's no unique constraint for upsert
-  const insertedRestaurants = await db
-    .insert(partners)
-    .values(devRestaurants)
-    .onConflictDoNothing()
-    .returning({ id: partners.id });
+  try {
+    // Use insert with onConflictDoNothing since there's no unique constraint for upsert
+    const insertedRestaurants = await db
+      .insert(partners)
+      .values(devRestaurants)
+      .onConflictDoNothing()
+      .returning({ id: partners.id });
 
-  debugLogger(
-    `✅ Inserted ${insertedRestaurants.length} development restaurants`,
-  );
+    debugLogger(
+      `✅ Inserted ${insertedRestaurants.length} development restaurants`,
+    );
+
+    // Log each restaurant that was inserted
+    insertedRestaurants.forEach((restaurant, index) => {
+      debugLogger(`Restaurant ${index + 1}: ID ${restaurant.id}`);
+    });
+  } catch (error) {
+    debugLogger(
+      `❌ Error inserting development restaurants: ${(error as Error).message}`,
+    );
+    throw error;
+  }
 }
 
 /**
@@ -126,13 +144,28 @@ async function testSeed(): Promise<void> {
     }),
   ];
 
-  // Use insert with onConflictDoNothing since there's no unique constraint for upsert
-  await db
-    .insert(partners)
-    .values(testRestaurants)
-    .onConflictDoNothing();
+  try {
+    // Use insert with onConflictDoNothing since there's no unique constraint for upsert
+    const insertedTestRestaurants = await db
+      .insert(partners)
+      .values(testRestaurants)
+      .onConflictDoNothing()
+      .returning({ id: partners.id });
 
-  debugLogger("✅ Inserted test restaurants");
+    debugLogger(
+      `✅ Inserted ${insertedTestRestaurants.length} test restaurants`,
+    );
+
+    // Log each restaurant that was inserted
+    insertedTestRestaurants.forEach((restaurant, index) => {
+      debugLogger(`Test restaurant ${index + 1}: ID ${restaurant.id}`);
+    });
+  } catch (error) {
+    debugLogger(
+      `❌ Error inserting test restaurants: ${(error as Error).message}`,
+    );
+    throw error;
+  }
 }
 
 /**
@@ -159,13 +192,28 @@ async function prodSeed(): Promise<void> {
     }),
   ];
 
-  // Use insert with onConflictDoNothing since there's no unique constraint for upsert
-  await db
-    .insert(partners)
-    .values(essentialRestaurants)
-    .onConflictDoNothing();
+  try {
+    // Use insert with onConflictDoNothing since there's no unique constraint for upsert
+    const insertedProdRestaurants = await db
+      .insert(partners)
+      .values(essentialRestaurants)
+      .onConflictDoNothing()
+      .returning({ id: partners.id });
 
-  debugLogger("✅ Inserted essential production restaurants");
+    debugLogger(
+      `✅ Inserted ${insertedProdRestaurants.length} essential production restaurants`,
+    );
+
+    // Log each restaurant that was inserted
+    insertedProdRestaurants.forEach((restaurant, index) => {
+      debugLogger(`Production restaurant ${index + 1}: ID ${restaurant.id}`);
+    });
+  } catch (error) {
+    debugLogger(
+      `❌ Error inserting production restaurants: ${(error as Error).message}`,
+    );
+    throw error;
+  }
 }
 
 // Export the seed functions directly
@@ -174,8 +222,13 @@ export const test = testSeed;
 export const prod = prodSeed;
 
 // Also export as default for compatibility
-export default {
+const seeds = {
   dev,
   test,
   prod,
 };
+
+// Initialize seeds in development automatically
+debugLogger("🌱 Restaurant seeds ready for initialization");
+
+export default seeds;

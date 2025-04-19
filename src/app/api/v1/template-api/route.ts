@@ -4,7 +4,7 @@ import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
 
 import definitions from "./definition";
 import { renderMail } from "./email";
-import { createTemplate, getTemplates, updateTemplate } from "./route-handler";
+import { createTemplate, getTemplate, updateTemplate } from "./route-handler";
 
 /**
  * Template API route handlers
@@ -34,7 +34,7 @@ export const POST = apiHandler({
 export const GET = apiHandler({
   endpoint: definitions.GET,
   email: {}, // No emails for GET requests
-  handler: getTemplates,
+  handler: getTemplate,
 });
 
 /**

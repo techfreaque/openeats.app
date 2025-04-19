@@ -3,18 +3,17 @@
 import { ArrowRight, Store, User } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { JSX } from "react";
-import { useState } from "react";
-
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
+import { useState } from "react";
 
 export function CreateRestaurantChoice(): JSX.Element {
   const router = useRouter();

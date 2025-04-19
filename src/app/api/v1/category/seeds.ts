@@ -70,11 +70,16 @@ async function devSeed(): Promise<void> {
       })
       .returning({ id: categories.id });
 
-    debugLogger(`✅ Inserted ${insertedCategories.length} development categories`);
+    debugLogger(
+      `✅ Inserted ${insertedCategories.length} development categories`,
+    );
   } catch (error) {
     // If the table doesn't exist, log a warning and continue
-    if ((error as any)?.code === '42P01') { // relation does not exist
-      debugLogger("⚠️ Categories table does not exist yet, skipping category seeds");
+    if (error?.code === "42P01") {
+      // relation does not exist
+      debugLogger(
+        "⚠️ Categories table does not exist yet, skipping category seeds",
+      );
     } else {
       // Re-throw other errors
       throw error;
@@ -116,8 +121,11 @@ async function testSeed(): Promise<void> {
     debugLogger("✅ Inserted test categories");
   } catch (error) {
     // If the table doesn't exist, log a warning and continue
-    if ((error as any)?.code === '42P01') { // relation does not exist
-      debugLogger("⚠️ Categories table does not exist yet, skipping category seeds");
+    if (error?.code === "42P01") {
+      // relation does not exist
+      debugLogger(
+        "⚠️ Categories table does not exist yet, skipping category seeds",
+      );
     } else {
       // Re-throw other errors
       throw error;
@@ -158,8 +166,11 @@ async function prodSeed(): Promise<void> {
     debugLogger("✅ Inserted essential production categories");
   } catch (error) {
     // If the table doesn't exist, log a warning and continue
-    if ((error as any)?.code === '42P01') { // relation does not exist
-      debugLogger("⚠️ Categories table does not exist yet, skipping category seeds");
+    if (error?.code === "42P01") {
+      // relation does not exist
+      debugLogger(
+        "⚠️ Categories table does not exist yet, skipping category seeds",
+      );
     } else {
       // Re-throw other errors
       throw error;

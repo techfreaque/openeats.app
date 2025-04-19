@@ -1,18 +1,17 @@
 import { CheckCircle, Clock, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import type { JSX } from "react";
-
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+  Separator,
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
 
 export default function OrderConfirmationPage(): JSX.Element {
   const orderNumber = `DH${Math.floor(Math.random() * 1000000)

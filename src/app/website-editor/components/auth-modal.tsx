@@ -1,8 +1,5 @@
 "use client";
 import { useRouter } from "next/navigation";
-import type { JSX } from "react";
-import { useState } from "react";
-
 import {
   Button,
   Dialog,
@@ -10,7 +7,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui";
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
+import { useState } from "react";
+
 import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
 
 const AuthModal = (): JSX.Element => {

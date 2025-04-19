@@ -1,18 +1,17 @@
 "use client";
 
 import type { ApiEndpoint } from "next-vibe/client/endpoint";
-import type { JSX } from "react";
-import React from "react";
-import type { ZodType } from "zod";
-
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+  Separator,
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
+import React from "react";
+import type { ZodType } from "zod";
 
 interface SchemaViewerProps {
   endpoint: ApiEndpoint<unknown, unknown, unknown, unknown>;

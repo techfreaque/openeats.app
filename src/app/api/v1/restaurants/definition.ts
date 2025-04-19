@@ -3,11 +3,12 @@ import { undefinedSchema } from "next-vibe/shared/types/common.schema";
 import { Methods } from "next-vibe/shared/types/endpoint";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 
-import { Countries } from "@/translations";
-
-import { DeliveryType } from "../order/delivery.schema";
 import { restaurantsResponseSchema, restaurantsSearchSchema } from "./schema";
 
+/**
+ * Restaurants API endpoint definition
+ * Provides restaurant search functionality with filtering
+ */
 const restaurantsEndpoint = createEndpoint({
   description: "Get restaurants based on search criteria",
   path: ["v1", "restaurants"],
@@ -15,43 +16,40 @@ const restaurantsEndpoint = createEndpoint({
   apiQueryOptions: {
     queryKey: ["restaurants"],
   },
-  fieldDescriptions: {
-    search: "Search query",
-    countryCode: "Country code",
-    zip: "ZIP code",
-    street: "Street name",
-    streetNumber: "Street number",
-    radius: "Search radius in km",
-    rating: "Minimum rating",
-    currentlyOpen: "Only show currently open restaurants",
-    page: "Page number",
-    limit: "Number of results per page",
-    category: "Filter by restaurant category",
-    deliveryType: "Filter by delivery type",
-    priceRange: "Filter by price range",
-    dietary: "Filter by dietary options",
-    sortBy: "Sort by criteria",
-  },
   requestSchema: restaurantsSearchSchema,
   responseSchema: restaurantsResponseSchema,
+  allowedRoles: [
+    UserRoleValue.PUBLIC,
+    UserRoleValue.CUSTOMER,
+    UserRoleValue.COURIER,
+    UserRoleValue.ADMIN,
+    UserRoleValue.PARTNER_ADMIN,
+    UserRoleValue.PARTNER_EMPLOYEE,
+  ],
+  requestUrlSchema: undefinedSchema,
+  fieldDescriptions: {
+    search: "Search query",
+    page: "Page number for pagination",
+    limit: "Number of results per page",
+    category: "Filter by category",
+    deliveryType: "Filter by delivery type",
+    priceRange: "Filter by price range",
+    dietary: "Filter by dietary restrictions",
+    sortBy: "Sort by",
+    countryCode: "Filter by country code",
+    zip: "Filter by zip code",
+    street: "Filter by street",
+    streetNumber: "Filter by street number",
+    radius: "Filter by radius",
+    rating: "Filter by minimum rating",
+    currentlyOpen: "Filter by currently open",
+  },
   examples: {
     payloads: {
       default: {
         search: "pizza",
-        countryCode: Countries.DE,
-        zip: "12345",
-        street: "Example street",
-        streetNumber: "123",
-        radius: 10,
-        rating: 4,
-        currentlyOpen: true,
         page: 1,
         limit: 30,
-        category: "Italian",
-        deliveryType: DeliveryType.DELIVERY,
-        priceRange: ["$", "$$"],
-        dietary: ["vegetarian", "vegan"],
-        sortBy: "rating",
       },
     },
     urlPathVariables: undefined,
@@ -67,17 +65,10 @@ const restaurantsEndpoint = createEndpoint({
       },
     },
   },
-  allowedRoles: [
-    UserRoleValue.PUBLIC,
-    UserRoleValue.CUSTOMER,
-    UserRoleValue.COURIER,
-    UserRoleValue.ADMIN,
-    UserRoleValue.PARTNER_ADMIN,
-    UserRoleValue.PARTNER_EMPLOYEE,
-  ],
-  requestUrlSchema: undefinedSchema,
   errorCodes: {
+    400: "Invalid request data",
     500: "Internal server error",
   },
 });
+
 export default restaurantsEndpoint;

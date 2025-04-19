@@ -5,22 +5,25 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "next-vibe/i18n";
-import type React from "react";
-import { useState } from "react";
-
-import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  Input,
+  Label,
+  Separator,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "next-vibe-ui/ui";
+import type React from "react";
+import { useState } from "react";
+
+import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
 
 import { useCart } from "../components/hooks/use-cart";
 

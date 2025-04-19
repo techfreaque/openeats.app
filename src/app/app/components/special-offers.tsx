@@ -1,11 +1,9 @@
 "use client";
 import Image from "next/image";
+import { Badge, Button, Card, CardContent } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 
 import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 
 import { useRestaurantConfig } from "./restaurant-config-provider";
 

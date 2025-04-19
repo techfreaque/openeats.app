@@ -1,26 +1,23 @@
 "use client";
 import { ChevronDownIcon, ChevronUpIcon, InfoIcon } from "lucide-react";
-import type { JSX } from "react";
-import { useState } from "react";
-
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+  Switch,
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
+import { useState } from "react";
 
 export default function GeneralSettingsPage(): JSX.Element {
   const [developerMode, setDeveloperMode] = useState(false);

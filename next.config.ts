@@ -26,6 +26,7 @@ const nextConfig: NextConfig = withExpo({
     if (!useNextQueryPortalPackage) {
       config.resolve.alias["next-vibe"] = "./src/packages/next-vibe";
     }
+    config.resolve.alias["next-vibe-ui"] = "./src/packages/next-vibe-ui/web";
 
     // Add a plugin to generate endpoints during development
     if (dev) {

@@ -1,3 +1,4 @@
+import type { FieldValues } from "react-hook-form";
 import type { z } from "zod";
 
 import type { ApiSection, ExamplesList } from "../shared/types/endpoint";
@@ -191,7 +192,7 @@ export function createEndpoint<
  * Get example endpoint for a specific path
  */
 export function getEndpointByPath<
-  TRequest,
+  TRequest extends FieldValues,
   TResponse,
   TUrlVariables,
   TExampleKey extends string,

@@ -1,4 +1,9 @@
 "use client";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "next-vibe-ui/ui";
 import type { LegacyRef } from "react";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import type {
@@ -6,11 +11,6 @@ import type {
   ImperativePanelHandle,
 } from "react-resizable-panels";
 
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui";
 import type { UiType } from "@/lib/website-editor/types";
 
 import PreviewScreen from "./preview-screen";

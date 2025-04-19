@@ -1,51 +1,26 @@
 "use server";
 
-import { db } from "next-vibe/server/db";
+import { errorLogger } from "next-vibe/shared/utils/logger";
 
+import { uiRepository } from "@/app/api/v1/website-editor/repository";
+
+/**
+ * Server action to toggle like on a UI component
+ * This is now a wrapper around the API endpoint
+ */
 export const toggleLike = async (
   userId: string,
   UIId: string,
 ): Promise<{
   liked: boolean;
 }> => {
-  const existingLike = await db.like.findFirst({
-    where: { userId, UIId },
-  });
+  try {
+    // Toggle the like using the repository
+    const liked = await uiRepository.toggleLike(userId, UIId);
 
-  if (existingLike) {
-    await db.like.delete({
-      where: {
-        id: existingLike.id,
-      },
-    });
-    await db.uI.update({
-      where: {
-        id: UIId,
-      },
-      data: {
-        likesCount: {
-          decrement: 1,
-        },
-      },
-    });
-    return { liked: false };
-  } else {
-    await db.like.create({
-      data: {
-        userId,
-        UIId,
-      },
-    });
-    await db.uI.update({
-      where: {
-        id: UIId,
-      },
-      data: {
-        likesCount: {
-          increment: 1,
-        },
-      },
-    });
-    return { liked: true };
+    return { liked };
+  } catch (error) {
+    errorLogger("Error toggling like:", error);
+    throw error;
   }
 };

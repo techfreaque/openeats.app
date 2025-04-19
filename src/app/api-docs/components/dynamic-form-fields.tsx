@@ -1,12 +1,6 @@
 import type { ApiEndpoint } from "next-vibe/client/endpoint";
 import type { ApiFormReturn } from "next-vibe/client/hooks/types";
 import { cn } from "next-vibe/shared/utils/utils";
-import type { JSX, ReactNode } from "react";
-import React from "react";
-import { type FieldValues } from "react-hook-form";
-import type { UnknownKeysParam, ZodObject, ZodType } from "zod";
-import { z } from "zod";
-
 import {
   Form,
   FormControl,
@@ -15,17 +9,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
+  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+  Switch,
+  Textarea,
+} from "next-vibe-ui/ui";
+import type { JSX, ReactNode } from "react";
+import React from "react";
+import { type FieldValues } from "react-hook-form";
+import type { UnknownKeysParam, ZodObject, ZodType } from "zod";
+import { z } from "zod";
 
 // Type definitions
 interface SchemaField {

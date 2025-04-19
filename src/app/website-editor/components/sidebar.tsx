@@ -1,9 +1,8 @@
 "use client";
 import { ArrowLeft, LoaderCircle } from "lucide-react";
+import { Button, useSidebar } from "next-vibe-ui/ui";
 import React, { useState } from "react";
 
-import { Button } from "@/components/ui";
-import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/packages/next-vibe/shared/utils/utils";
 
 // Function to generate a color based on the SUBId

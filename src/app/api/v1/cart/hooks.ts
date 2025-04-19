@@ -10,13 +10,13 @@ import { useApiForm } from "next-vibe/client/hooks/mutation-form";
 import { useApiQuery } from "next-vibe/client/hooks/query";
 import { useApiQueryForm } from "next-vibe/client/hooks/query-form";
 import { useTranslation } from "next-vibe/i18n";
+import { toast } from "next-vibe-ui/ui";
 import { useCallback } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import type { MenuItemResponseType } from "@/app/api/v1/restaurant/schema/menu.schema";
-import { toast } from "@/components/ui/use-toast";
 
 import cartEndpoints from "./definition";
 

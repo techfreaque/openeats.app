@@ -3,13 +3,12 @@
 import { X } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { Button, Dialog, DialogContent } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useState } from "react";
 
 import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
 import { useRestaurantConfig } from "@/app/app/components/restaurant-config-provider";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export default function RestaurantGalleryPage(): JSX.Element | null {
   const params = useParams<{ id: string }>();

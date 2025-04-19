@@ -4,16 +4,12 @@ import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useTranslation } from "next-vibe/i18n";
+import { Button, Input, Label, Textarea, useToast } from "next-vibe-ui/ui";
 import type React from "react";
 import type { JSX } from "react";
 import { useState } from "react";
 
 import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
 
 export default function RestaurantContactPage(): JSX.Element | null {
   const params = useParams<{ id: string }>();

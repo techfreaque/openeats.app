@@ -1,10 +1,9 @@
+import { Div } from "next-vibe-ui/ui/div";
+import { DocumentHead } from "next-vibe-ui/ui/document-head";
+import { H1 } from "next-vibe-ui/ui/heading";
+import { Link } from "next-vibe-ui/ui/link";
+import { Text } from "next-vibe-ui/ui/text";
 import type { JSX } from "react";
-
-import { Div } from "../components/ui/div";
-import { DocumentHead } from "../components/ui/document-head";
-import { H1 } from "../components/ui/heading";
-import { Link } from "../components/ui/link";
-import { Text } from "../components/ui/text";
 
 export default function NotFoundScreen(): JSX.Element {
   return (

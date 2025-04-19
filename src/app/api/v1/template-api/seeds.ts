@@ -3,10 +3,7 @@ import { db } from "next-vibe/server/db";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 import { v4 as uuidv4 } from "uuid";
 
-import type { NewTemplate } from "./db";
 import { templates } from "./db";
-
-
 
 /**
  * Development seed function for template module
@@ -48,11 +45,16 @@ async function devSeed(): Promise<void> {
       })
       .returning({ id: templates.id });
 
-    debugLogger(`✅ Inserted ${insertedTemplates.length} development templates`);
+    debugLogger(
+      `✅ Inserted ${insertedTemplates.length} development templates`,
+    );
   } catch (error) {
     // If the table doesn't exist, log a warning and continue
-    if ((error as any)?.code === '42P01') { // relation does not exist
-      debugLogger("⚠️ Templates table does not exist yet, skipping template seeds");
+    if (error?.code === "42P01") {
+      // relation does not exist
+      debugLogger(
+        "⚠️ Templates table does not exist yet, skipping template seeds",
+      );
     } else {
       // Re-throw other errors
       throw error;
@@ -94,8 +96,11 @@ async function testSeed(): Promise<void> {
     debugLogger("✅ Inserted test templates");
   } catch (error) {
     // If the table doesn't exist, log a warning and continue
-    if ((error as any)?.code === '42P01') { // relation does not exist
-      debugLogger("⚠️ Templates table does not exist yet, skipping template seeds");
+    if (error?.code === "42P01") {
+      // relation does not exist
+      debugLogger(
+        "⚠️ Templates table does not exist yet, skipping template seeds",
+      );
     } else {
       // Re-throw other errors
       throw error;
@@ -133,8 +138,11 @@ async function prodSeed(): Promise<void> {
     debugLogger("✅ Inserted essential production templates");
   } catch (error) {
     // If the table doesn't exist, log a warning and continue
-    if ((error as any)?.code === '42P01') { // relation does not exist
-      debugLogger("⚠️ Templates table does not exist yet, skipping template seeds");
+    if (error?.code === "42P01") {
+      // relation does not exist
+      debugLogger(
+        "⚠️ Templates table does not exist yet, skipping template seeds",
+      );
     } else {
       // Re-throw other errors
       throw error;

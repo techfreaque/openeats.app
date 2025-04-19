@@ -2,24 +2,27 @@
 
 import { Filter, Search } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import type React from "react";
-import { useEffect, useState } from "react";
-
-import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import {
+  Button,
+  Checkbox,
+  Input,
+  Label,
+  Separator,
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "next-vibe-ui/ui";
+import type React from "react";
+import { useEffect, useState } from "react";
+
+import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
 
 import type { FilterOptions, RestaurantType } from "../components/lib/types";
 import {

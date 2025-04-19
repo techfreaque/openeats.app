@@ -235,7 +235,7 @@ describe("Barcode Service", () => {
       vi.mocked(fs.readdirSync).mockReturnValueOnce(["old-file.png"]);
       vi.mocked(fs.statSync).mockReturnValueOnce({
         mtimeMs: Date.now() - 3 * 24 * 60 * 60 * 1000, // 3 days old
-      } as any);
+      } );
       
       // Mock unlinkSync to throw an error
       vi.mocked(fs.unlinkSync).mockImplementationOnce(() => {
@@ -254,7 +254,7 @@ describe("Barcode Service", () => {
       
       for (const type of types) {
         await barcodeService.generateBarcode("12345678", { 
-          type: type as any
+          type: type 
         });
         
         // Verify JsBarcode was called with the correct format
@@ -313,7 +313,7 @@ describe("Barcode Service", () => {
       
       for (const level of levels) {
         await barcodeService.generateQRCode("https://example.com", { 
-          errorCorrectionLevel: level as any 
+          errorCorrectionLevel: level  
         });
         
         // Verify QRCode was called with correct error correction level
@@ -379,13 +379,13 @@ describe("Barcode Service", () => {
     it("should handle invalid options", async () => {
       // Invalid barcode type
       await expect(
-        barcodeService.generateBarcode("12345", { type: "invalid" as any })
+        barcodeService.generateBarcode("12345", { type: "invalid"  })
       ).rejects.toThrow("Unsupported barcode type");
       
       // Invalid QR error correction level
       await expect(
         barcodeService.generateQRCode("https://example.com", { 
-          errorCorrectionLevel: "X" as any 
+          errorCorrectionLevel: "X"  
         })
       ).rejects.toThrow("Invalid error correction level");
     });
@@ -398,7 +398,7 @@ describe("Barcode Service", () => {
       
       // Mock cache check to return a cached file path
       const cachedFilePath = "/path/to/cached-barcode.png";
-      vi.spyOn(barcodeService as any, "getCachedFilePath").mockReturnValueOnce(cachedFilePath);
+      vi.spyOn(barcodeService , "getCachedFilePath").mockReturnValueOnce(cachedFilePath);
       
       // Mock fs.existsSync for the specific cached file
       vi.mocked(fs.existsSync).mockImplementation((path) => {
@@ -420,7 +420,7 @@ describe("Barcode Service", () => {
       
       // Mock cache check to return a cached file path
       const cachedFilePath = "/path/to/cached-barcode.png";
-      vi.spyOn(barcodeService as any, "getCachedFilePath").mockReturnValueOnce(cachedFilePath);
+      vi.spyOn(barcodeService , "getCachedFilePath").mockReturnValueOnce(cachedFilePath);
       
       // Mock fs.existsSync to return false for the cached file
       vi.mocked(fs.existsSync).mockReturnValueOnce(true); // For temp dir

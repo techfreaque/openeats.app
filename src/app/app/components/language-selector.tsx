@@ -2,16 +2,16 @@
 
 import { Check, ChevronDown, Globe } from "lucide-react";
 import { useTranslation } from "next-vibe/i18n";
-import type { JSX } from "react";
-import { useState } from "react";
-
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
+import { useState } from "react";
+
 import { Languages } from "@/translations";
 
 export function LanguageSelector(): JSX.Element {

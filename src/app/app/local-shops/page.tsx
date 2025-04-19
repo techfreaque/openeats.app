@@ -1,12 +1,15 @@
 import { Clock, Filter, Search, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardFooter,
+  Input,
+} from "next-vibe-ui/ui";
 import type { JSX } from "react";
-
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 
 export default function LocalShopsPage(): JSX.Element {
   // Mock data for local shops

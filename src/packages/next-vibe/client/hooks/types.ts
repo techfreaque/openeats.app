@@ -101,11 +101,7 @@ export type ApiFormOptions<TRequest extends FieldValues> =
     defaultValues?: Partial<TRequest>;
   };
 
-export interface ApiFormReturn<
-  TRequest extends FieldValues,
-  TResponse,
-  TUrlVariables,
-> {
+export interface ApiFormReturn<TRequest, TResponse, TUrlVariables> {
   form: UseFormReturn<TRequest>;
   isSubmitting: boolean;
   isSubmitSuccessful: boolean;

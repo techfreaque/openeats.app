@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { db } from "next-vibe/server/db";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
-import { users } from "../auth/me/users.db";
+import { users } from "../auth/db";
 import { addresses } from "./db";
 
 /**
@@ -60,7 +60,7 @@ async function devSeed(): Promise<void> {
       longitude: "-74.0046",
       isDefault: true,
     },
-  ].filter((addr) => addr.userId !== undefined) as any[];
+  ].filter((addr) => addr.userId !== undefined);
 
   // Check if the addresses table exists before trying to insert
   try {
@@ -89,7 +89,7 @@ async function devSeed(): Promise<void> {
     );
   } catch (error) {
     // If the table doesn't exist, log a warning and continue
-    if ((error as any)?.code === "42P01") {
+    if (error?.code === "42P01") {
       // relation does not exist
       debugLogger(
         "⚠️ Addresses table does not exist yet, skipping address seeds",
@@ -144,7 +144,7 @@ async function testSeed(): Promise<void> {
       longitude: "11.0000",
       isDefault: true,
     },
-  ].filter((addr) => addr.userId !== undefined) as any[];
+  ].filter((addr) => addr.userId !== undefined);
 
   // Check if the addresses table exists before trying to insert
   try {
@@ -170,7 +170,7 @@ async function testSeed(): Promise<void> {
     debugLogger("✅ Inserted test addresses");
   } catch (error) {
     // If the table doesn't exist, log a warning and continue
-    if ((error as any)?.code === "42P01") {
+    if (error?.code === "42P01") {
       // relation does not exist
       debugLogger(
         "⚠️ Addresses table does not exist yet, skipping address seeds",

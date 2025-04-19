@@ -4,15 +4,20 @@ import { format } from "date-fns";
 import { ChevronRight, Clock, MapPin, Search } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import {
+  Badge,
+  Button,
+  Input,
+  Skeleton,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useState } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useOrders } from "../components/hooks/use-orders";
 

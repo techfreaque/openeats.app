@@ -1,6 +1,7 @@
 import { NextUIProvider } from "@nextui-org/system";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useRouter } from "next/navigation";
+import * as UI from "next-vibe-ui/ui";
 import type {
   ComponentType,
   ErrorInfo,
@@ -11,7 +12,6 @@ import React, { useEffect, useRef, useState } from "react";
 import JsxParser from "react-jsx-parser";
 import { toast } from "sonner";
 
-import * as UI from "@/components/ui";
 import useTheme from "@/hooks/website-editor/useTheme";
 import * as NextComponents from "@/lib/website-editor/nextui-components";
 import { UiType } from "@/lib/website-editor/types";

@@ -1,7 +1,6 @@
 import Link from "next/link";
+import { Button } from "next-vibe-ui/ui";
 import type { JSX } from "react";
-
-import { Button } from "@/components/ui";
 
 import { ApiExplorer } from "../api-docs/components/api-explorer";
 

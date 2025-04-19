@@ -4,15 +4,14 @@ import { db } from "next-vibe/server/db";
 import { errorLogger } from "next-vibe/shared/utils/logger";
 import { z } from "zod";
 
+import { bugReports } from "@/app/api/v1/bug-reports/db";
+
 const bugReportSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),
   description: z
     .string()
     .min(1, "Description is required")
     .max(500, "Description is too long"),
-  reportType: z.string().max(100, "Title is too long"),
-  severity: z.string().max(100, "Title is too long"),
-  steps: z.string().max(500, "Title is too long").optional(),
 });
 
 type BugReportInput = z.infer<typeof bugReportSchema>;
@@ -31,13 +30,11 @@ export async function submitBugReport(
       data: {
         title: string;
         description: string;
-        reportType: string;
-        severity: string;
-        steps: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
+        userId: string | null;
+        resolved: boolean;
       };
       error?: undefined;
     }
@@ -52,18 +49,27 @@ export async function submitBugReport(
 
     const validatedInput = bugReportSchema.parse(input);
 
-    const bugReport = await db.bugReport.create({
-      data: {
+    // Insert the bug report using Drizzle
+    const [bugReport] = await db
+      .insert(bugReports)
+      .values({
         title: validatedInput.title,
         description: validatedInput.description,
-        reportType: validatedInput.reportType,
-        severity: validatedInput.severity,
-        steps: validatedInput.steps ?? null,
-        userId: userId,
-      },
-    });
+        userId,
+      })
+      .returning();
 
-    return { success: true, data: bugReport };
+    if (!bugReport) {
+      return {
+        success: false,
+        error: "Failed to create bug report.",
+      };
+    }
+
+    return {
+      success: true,
+      data: bugReport,
+    };
   } catch (error) {
     errorLogger("Error in submitBugReport:", error);
     throw error;

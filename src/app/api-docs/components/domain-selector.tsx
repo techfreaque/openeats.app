@@ -1,15 +1,14 @@
 "use client";
 
 import { ENDPOINT_DOMAINS } from "next-vibe/shared/constants";
-import type { JSX } from "react";
-
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
 
 interface DomainSelectorProps {
   selectedDomain: keyof typeof ENDPOINT_DOMAINS;

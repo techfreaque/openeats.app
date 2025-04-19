@@ -1,11 +1,5 @@
 import { GitFork, LockOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { JSX } from "react";
-import { useState } from "react";
-import { toast } from "sonner";
-
-import { forkUI } from "@/actions/ui/fork-ui";
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import {
   Badge,
   Button,
@@ -13,7 +7,13 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui";
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import { forkUI } from "@/actions/ui/fork-ui";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";
 

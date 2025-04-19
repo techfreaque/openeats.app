@@ -2,11 +2,8 @@ import { LogOut, Settings, SquareLibrary } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { JSX } from "react";
-
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { Button } from "@/components/ui";
 import {
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -14,7 +11,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
+
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 export default function UserButton(): JSX.Element {
   const router = useRouter();

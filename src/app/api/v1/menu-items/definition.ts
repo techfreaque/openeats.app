@@ -185,12 +185,128 @@ const menuItemSearchEndpoint = createEndpoint({
   },
 });
 
+// PUT endpoint for updating a menu item
+const menuItemUpdateEndpoint = createEndpoint({
+  description: "Update a menu item",
+  method: Methods.PUT,
+  requestSchema: menuItemCreateSchema.extend({
+    id: z.string().uuid(),
+  }),
+  responseSchema: menuItemResponseSchema,
+  requestUrlSchema: undefinedSchema,
+  path: ["v1", "menu-items"],
+  apiQueryOptions: {
+    queryKey: ["update-menu-item"],
+  },
+  fieldDescriptions: {
+    id: "ID of the menu item to update",
+    name: "Name of the menu item",
+    description: "Description of the menu item",
+    price: "Price of the menu item",
+    taxPercent: "Tax percentage for the menu item",
+    currency: "Currency for the menu item",
+    image: "Image URL for the menu item",
+    published: "Whether the menu item is published",
+    isAvailable: "Whether the menu item is available",
+    restaurantId: "ID of the restaurant this menu item belongs to",
+    categoryId: "ID of the category this menu item belongs to",
+    createdAt: "Creation date",
+    updatedAt: "Last update date",
+    availableFrom: "Date from which the menu item is available",
+    availableTo: "Date until which the menu item is available",
+  },
+  allowedRoles: [
+    UserRoleValue.ADMIN,
+    UserRoleValue.PARTNER_ADMIN,
+    UserRoleValue.PARTNER_EMPLOYEE,
+  ],
+  errorCodes: {
+    400: "Invalid request data",
+    401: "Not authenticated",
+    403: "Not authorized to modify this restaurant's menu",
+    404: "Menu item not found",
+    500: "Internal server error",
+  },
+  examples: {
+    payloads: {
+      default: {
+        id: "menu-item-id-1",
+        name: "Updated Pizza",
+        description: "Updated description",
+        price: 14.99,
+        taxPercent: 19,
+        currency: Currencies.EUR,
+        image: "/menu-placeholder.jpg",
+        published: true,
+        isAvailable: true,
+        restaurantId: "restaurant-id-1",
+        availableFrom: null,
+        availableTo: null,
+        categoryId: "category-id-1",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    },
+    urlPathVariables: undefined,
+    responses: {
+      default: exampleMenuItem,
+    },
+  },
+});
+
+// DELETE endpoint for deleting a menu item
+const menuItemDeleteEndpoint = createEndpoint({
+  description: "Delete a menu item",
+  method: Methods.DELETE,
+  requestSchema: z.object({
+    id: z.string().uuid(),
+  }),
+  responseSchema: z.object({
+    deleted: z.boolean(),
+  }),
+  requestUrlSchema: undefinedSchema,
+  path: ["v1", "menu-items"],
+  apiQueryOptions: {
+    queryKey: ["delete-menu-item"],
+  },
+  fieldDescriptions: {
+    id: "ID of the menu item to delete",
+  },
+  allowedRoles: [
+    UserRoleValue.ADMIN,
+    UserRoleValue.PARTNER_ADMIN,
+    UserRoleValue.PARTNER_EMPLOYEE,
+  ],
+  errorCodes: {
+    400: "Invalid request data",
+    401: "Not authenticated",
+    403: "Not authorized to delete this menu item",
+    404: "Menu item not found",
+    500: "Internal server error",
+  },
+  examples: {
+    payloads: {
+      default: {
+        id: "menu-item-id-1",
+      },
+    },
+    urlPathVariables: undefined,
+    responses: {
+      default: {
+        deleted: true,
+      },
+    },
+  },
+});
+
 /**
  * Menu Items API endpoints
  */
 const menuItemsEndpoints = {
   ...menuItemsGetEndpoint,
   ...menuItemCreateEndpoint,
+  ...menuItemUpdateEndpoint,
+  ...menuItemDeleteEndpoint,
   ...menuItemSearchEndpoint,
 };
 

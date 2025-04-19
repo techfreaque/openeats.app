@@ -2,11 +2,14 @@ import { ArrowLeft, Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardFooter,
+  Separator,
+} from "next-vibe-ui/ui";
 import type { JSX } from "react";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 import { mockMenuItems } from "../../components/data/menu-items";
 import { mockRestaurants } from "../../components/data/restaurants";

@@ -3,23 +3,26 @@
 import { Camera, Edit2, Mail, User } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { FormEvent, JSX } from "react";
-import { useState } from "react";
-
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  Input,
+  Label,
+  Separator,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "next-vibe-ui/ui";
+import type { FormEvent, JSX } from "react";
+import { useState } from "react";
+
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 export default function ProfilePage(): JSX.Element | null {
   const router = useRouter();

@@ -4,15 +4,22 @@ import { Clock, Heart, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "next-vibe/i18n";
+import { errorLogger } from "next-vibe/shared/utils/logger";
 import { cn } from "next-vibe/shared/utils/utils";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardFooter,
+  Skeleton,
+  useToast,
+} from "next-vibe-ui/ui";
 import type React from "react";
+import { useState } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import type { RestaurantResponseType } from "@/app/api/v1/restaurant/schema/restaurant.schema";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 
 import { useFavorites } from "./hooks/use-favorites";
 
@@ -27,16 +34,43 @@ export function RestaurantCard({
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const favorite = isFavorite(restaurant.id);
   const { t } = useTranslation();
+  const { toast } = useToast();
+  const [isImageError, setIsImageError] = useState(false);
 
-  const handleFavoriteClick = (e: React.MouseEvent): void => {
+  const handleFavoriteClick = async (e: React.MouseEvent): Promise<void> => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (favorite) {
-      removeFavorite(restaurant.id);
-    } else {
-      addFavorite(restaurant.id);
+    try {
+      if (favorite) {
+        await removeFavorite(restaurant.id);
+        toast({
+          title: t("restaurant.removedFromFavorites"),
+          description: t("restaurant.removedFromFavoritesDescription", {
+            name: restaurant.name,
+          }),
+        });
+      } else {
+        await addFavorite(restaurant.id);
+        toast({
+          title: t("restaurant.addedToFavorites"),
+          description: t("restaurant.addedToFavoritesDescription", {
+            name: restaurant.name,
+          }),
+        });
+      }
+    } catch (error) {
+      errorLogger("Error toggling favorite status:", error);
+      toast({
+        title: t("common.error"),
+        description: t("restaurant.favoriteError"),
+        variant: "destructive",
+      });
     }
+  };
+
+  const handleImageError = (): void => {
+    setIsImageError(true);
   };
 
   return (
@@ -44,10 +78,17 @@ export function RestaurantCard({
       <Card className="overflow-hidden transition-all hover:shadow-md">
         <div className="relative aspect-video overflow-hidden">
           <Image
-            src={restaurant.image || "/placeholder.svg"}
+            src={
+              isImageError || !restaurant.image
+                ? "/placeholder.svg"
+                : restaurant.image
+            }
             alt={restaurant.name}
             fill
             className="object-cover transition-all hover:scale-105"
+            onError={handleImageError}
+            priority={false}
+            loading="lazy"
           />
           {/* Only show promoted badge if the property exists */}
           {restaurant.verified && (
@@ -91,16 +132,18 @@ export function RestaurantCard({
           <div className="flex items-center gap-1">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
             <span>
-              {restaurant.rating || "0"} ({(restaurant as any).orderCount || 0}{" "}
+              {restaurant.rating || "0"} ({restaurant.orderCount || 0}{" "}
               {t("restaurant.orders")})
             </span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
             <span>
-              {(restaurant as any).delivery
+              {restaurant.delivery
                 ? t("restaurant.delivery")
-                : t("restaurant.pickup")}
+                : restaurant.pickup
+                  ? t("restaurant.pickup")
+                  : t("restaurant.dineIn")}
             </span>
           </div>
         </CardFooter>

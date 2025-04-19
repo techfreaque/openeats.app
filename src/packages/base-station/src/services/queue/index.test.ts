@@ -381,7 +381,7 @@ describe("Print Queue Service", () => {
       });
 
       // Call processQueue directly
-      await (printQueueService as any).processQueue();
+      await (printQueueService ).processQueue();
 
       // Check if the printing service was called
       expect(printerService.print).toHaveBeenCalled();
@@ -417,7 +417,7 @@ describe("Print Queue Service", () => {
       });
       
       // Process the queue
-      await (printQueueService as any).processQueue();
+      await (printQueueService ).processQueue();
       
       // Check if the job was marked as failed
       expect(mockDb.run).toHaveBeenCalledWith(
@@ -452,7 +452,7 @@ describe("Print Queue Service", () => {
       });
       
       // Process the queue
-      await (printQueueService as any).processQueue();
+      await (printQueueService ).processQueue();
       
       // Check if job was marked as failed with correct error
       expect(mockDb.run).toHaveBeenCalledWith(
@@ -495,7 +495,7 @@ describe("Print Queue Service", () => {
       });
       
       // Process the queue
-      await (printQueueService as any).processQueue();
+      await (printQueueService ).processQueue();
       
       // Verify high priority job was processed first
       expect(printerService.print).toHaveBeenCalledWith(
@@ -518,7 +518,7 @@ describe("Print Queue Service", () => {
       });
       
       // Call addToAnalytics directly
-      await (printQueueService as any).addToAnalytics("123", "completed");
+      await (printQueueService ).addToAnalytics("123", "completed");
       
       // Verify analytics was added
       expect(mockDb.run).toHaveBeenCalledWith(
@@ -532,7 +532,7 @@ describe("Print Queue Service", () => {
       mockDb.get.mockResolvedValueOnce(null);
       
       // Call addToAnalytics with non-existent job ID
-      await (printQueueService as any).addToAnalytics("non-existent-id", "completed");
+      await (printQueueService ).addToAnalytics("non-existent-id", "completed");
       
       // Should not throw and just return
       expect(mockDb.run).not.toHaveBeenCalled();
@@ -542,10 +542,10 @@ describe("Print Queue Service", () => {
   describe("websocket events", () => {
     it("should emit queue-updated event", async () => {
       // Mock the WS client with a local reference
-      const wsClientMock = (printQueueService as any).wsClient;
+      const wsClientMock = (printQueueService ).wsClient;
       
       // Call emitQueueUpdated
-      (printQueueService as any).emitQueueUpdated();
+      (printQueueService ).emitQueueUpdated();
       
       // Verify event was emitted
       expect(wsClientMock.emit).toHaveBeenCalledWith("queue-updated");
@@ -553,12 +553,12 @@ describe("Print Queue Service", () => {
 
     it("should emit job-status-changed event with job details", async () => {
       // Mock the WS client with a local reference
-      const wsClientMock = (printQueueService as any).wsClient;
+      const wsClientMock = (printQueueService ).wsClient;
       
       // Call emitJobStatusChanged
       const jobId = "test-job-id";
       const status = "printing";
-      (printQueueService as any).emitJobStatusChanged(jobId, status);
+      (printQueueService ).emitJobStatusChanged(jobId, status);
       
       // Verify event was emitted with correct details
       expect(wsClientMock.emit).toHaveBeenCalledWith(
@@ -582,7 +582,7 @@ describe("Print Queue Service", () => {
       });
       
       // Process the queue
-      await (printQueueService as any).processQueue();
+      await (printQueueService ).processQueue();
       
       // Verify the correct printer was used
       expect(printerService.print).toHaveBeenCalledWith(
@@ -603,7 +603,7 @@ describe("Print Queue Service", () => {
       });
       
       // Process the queue
-      await (printQueueService as any).processQueue();
+      await (printQueueService ).processQueue();
       
       // Verify printer was called without a specific printer
       expect(printerService.print).toHaveBeenCalledWith(

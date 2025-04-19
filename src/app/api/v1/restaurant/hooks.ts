@@ -12,7 +12,7 @@ import type { RestaurantUpdateType } from "./schema/restaurant.schema";
  */
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useRestaurant(restaurantId: string) {
-  return useApiQuery(
+  const result = useApiQuery(
     restaurantEndpoint.GET,
     {
       restaurantId,
@@ -23,6 +23,12 @@ export function useRestaurant(restaurantId: string) {
       staleTime: 5 * 60 * 1000, // 5 minutes
     },
   );
+
+  // Transform the result to return a single restaurant instead of an array
+  return {
+    ...result,
+    data: Array.isArray(result.data) && result.data.length > 0 ? result.data[0] : undefined,
+  };
 }
 
 export type UseRestaurantReturn = ReturnType<typeof useRestaurant>;

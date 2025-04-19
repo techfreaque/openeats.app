@@ -1,13 +1,12 @@
 import Link from "next/link";
-import type { JSX } from "react";
-
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
 
 export const metadata = {
   title: "About | Settings",

@@ -1,6 +1,14 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import {
+  Button,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  useToast,
+} from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useState } from "react";
 
@@ -9,9 +17,6 @@ import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
 import type { MenuItemType } from "@/app/app/components/lib/types";
 import { ReviewForm } from "@/app/app/components/review-form";
 import { ReviewsList } from "@/app/app/components/reviews-list";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
 
 export default function RestaurantReviewsPage(): JSX.Element | null {
   const params = useParams<{ id: string }>();

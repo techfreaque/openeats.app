@@ -1,13 +1,6 @@
 "use client";
 import { CalendarDays, Eye, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { JSX } from "react";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-
-import { getUIProfile } from "@/actions/ui/get-uis";
-import type { WebsiteEditorUser } from "@/actions/user";
-import { getUser } from "@/actions/user";
 import {
   Avatar,
   AvatarFallback,
@@ -22,7 +15,14 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui";
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+
+import { getUIProfile } from "@/actions/ui/get-uis";
+import type { WebsiteEditorUser } from "@/actions/user";
+import { getUser } from "@/actions/user";
 import { timeAgo } from "@/lib/website-editor/time";
 import type { FullUI } from "@/lib/website-editor/types";
 

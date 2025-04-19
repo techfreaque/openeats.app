@@ -174,7 +174,7 @@ describe("Config Module", () => {
       });
       
       // Update with null (should not change anything)
-      setConfig(null as any);
+      setConfig(null );
       
       // Config should remain unchanged
       expect(config.server.port).toBe(3000);

@@ -1,7 +1,6 @@
 import { Heart } from "lucide-react";
+import { Button } from "next-vibe-ui/ui";
 import type { JSX } from "react";
-
-import { Button } from "@/components/ui";
 
 const LikeButton = ({
   liked,

@@ -3,10 +3,9 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { cn } from "next-vibe/shared/utils/utils";
+import { Button } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
-
-import { Button } from "@/components/ui/button";
 
 import { useRestaurantConfig } from "./restaurant-config-provider";
 

@@ -2,7 +2,7 @@ import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { users } from "../auth/me/users.db";
+import { users } from "../auth/db";
 import { menuItems } from "../menu/db";
 import { partners } from "../restaurant/db";
 

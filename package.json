@@ -29,7 +29,9 @@
         "test": "yarn build:pre && cross-env NODE_ENV=test vitest run --sequence.all",
         "test:watch": "yarn build:pre && cross-env NODE_ENV=test vitest",
         "test:hooks": "cross-env NODE_ENV=test vitest run 'client/hooks/**/*.test.{ts,tsx}'",
-        "test:hooks:watch": "cross-env NODE_ENV=test vitest 'client/hooks/**/*.test.{ts,tsx}'"
+        "test:hooks:watch": "cross-env NODE_ENV=test vitest 'client/hooks/**/*.test.{ts,tsx}'",
+        "submodule:update": "git submodule update --remote --merge",
+        "submodule:init": "git submodule update --init --recursive"
     },
     "repository": {
         "type": "git",

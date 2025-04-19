@@ -3,13 +3,17 @@
 import type { ApiEndpoint } from "next-vibe/client/endpoint";
 import type { ApiFormReturn } from "next-vibe/client/hooks/types";
 import { Methods } from "next-vibe/shared/types/endpoint";
+import {
+  Button,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "next-vibe-ui/ui";
 import type { FieldValues } from "node_modules/react-hook-form/dist/types";
 import type { FormEvent, JSX } from "react";
 import { useState } from "react";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-import { Button } from "../../../components/ui";
 import { CodeExamples } from "./code-examples";
 import { DynamicFormFields } from "./dynamic-form-fields";
 import { SchemaViewer } from "./schema-viewer";
@@ -20,7 +24,7 @@ interface EndpointDetailsProps {
   requestData: string;
   responseData: string;
   responseStatus: number | null;
-  apiForm: ApiFormReturn<unknown, unknown, unknown>;
+  apiForm: ApiFormReturn<FieldValues, unknown, unknown>;
   selectedDomain: string;
   handleTryIt: (
     event: FormEvent<HTMLFormElement> | undefined,
@@ -104,12 +108,7 @@ export function EndpointDetails({
 
               <div className="bg-white rounded-lg border p-4 mb-4 min-h-[250px]">
                 {viewMode === "form" ? (
-                  <DynamicFormFields
-                    endpoint={endpoint}
-                    apiForm={
-                      apiForm as ApiFormReturn<FieldValues, unknown, unknown>
-                    }
-                  />
+                  <DynamicFormFields endpoint={endpoint} apiForm={apiForm} />
                 ) : (
                   <div className="bg-gray-800 rounded-lg p-4 relative min-h-[200px]">
                     <div className="absolute top-2 right-2 text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">

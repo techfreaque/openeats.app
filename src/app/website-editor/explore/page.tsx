@@ -1,10 +1,6 @@
 "use client";
 import { Eye, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { JSX } from "react";
-import { useCallback, useEffect, useState } from "react";
-
-import { getUIs } from "@/actions/ui/get-uis";
 import {
   Avatar,
   AvatarFallback,
@@ -24,7 +20,11 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui";
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+import { getUIs } from "@/actions/ui/get-uis";
 import { timeAgo } from "@/lib/website-editor/time";
 import type { FullUI } from "@/lib/website-editor/types";
 

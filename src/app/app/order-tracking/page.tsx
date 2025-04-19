@@ -1,19 +1,18 @@
 import { ArrowLeft, Clock, MapPin, Phone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import type { JSX } from "react";
-
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+  Progress,
+  Separator,
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
 
 export default function OrderTrackingPage(): JSX.Element {
   const orderNumber = `DH${Math.floor(Math.random() * 1000000)

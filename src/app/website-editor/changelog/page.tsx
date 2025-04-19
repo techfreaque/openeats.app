@@ -2,10 +2,10 @@
 
 import { motion } from "framer-motion";
 import { Book, Bug, InfoIcon, Star, Zap } from "lucide-react";
+import { ScrollArea } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useEffect } from "react";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
 import type {
   Change,
   ChangeType,

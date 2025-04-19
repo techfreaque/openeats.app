@@ -3,16 +3,21 @@
 import { Camera, Edit2, Mail, MapPin, Phone, User } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import {
+  Button,
+  Input,
+  Label,
+  Separator,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  useToast,
+} from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useState } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
 
 export default function ProfilePage(): JSX.Element | null {
   const router = useRouter();

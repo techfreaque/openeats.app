@@ -1,9 +1,12 @@
 "use client";
 
 import { InfoIcon } from "lucide-react";
-import React from "react";
-
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
   Label,
   Select,
   SelectContent,
@@ -11,14 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
   Switch,
-} from "@/components/ui";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+} from "next-vibe-ui/ui";
+import React from "react";
+
 import useLangauge from "@/hooks/website-editor/useLanguage";
 import type { ModeStore } from "@/hooks/website-editor/useMode";
 import { useClientMode } from "@/hooks/website-editor/useMode";

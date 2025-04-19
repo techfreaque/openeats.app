@@ -3,9 +3,9 @@ import { db } from "next-vibe/server/db";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 import { v4 as uuidv4 } from "uuid";
 
-import { reviews } from "./db";
-import { users } from "../auth/me/users.db";
+import { users } from "../auth/db";
 import { partners } from "../restaurant/db";
+import { reviews } from "./db";
 
 /**
  * Development seed function for reviews module
@@ -15,11 +15,16 @@ async function devSeed(): Promise<void> {
 
   // First, get some user IDs and restaurant IDs to associate reviews with
   const userIds = await db.select({ id: users.id }).from(users).limit(3);
-  const restaurantIds = await db.select({ id: partners.id }).from(partners).limit(3);
+  const restaurantIds = await db
+    .select({ id: partners.id })
+    .from(partners)
+    .limit(3);
 
   // If no users or restaurants exist yet, log a warning and return
   if (userIds.length === 0 || restaurantIds.length === 0) {
-    debugLogger("⚠️ No users or restaurants found to associate reviews with, skipping review seeds");
+    debugLogger(
+      "⚠️ No users or restaurants found to associate reviews with, skipping review seeds",
+    );
     return;
   }
 
@@ -64,7 +69,8 @@ async function devSeed(): Promise<void> {
     {
       id: uuidv4(),
       userId: userIds.length > 2 ? userIds[2]?.id : userIds[0]?.id,
-      restaurantId: restaurantIds.length > 1 ? restaurantIds[1]?.id : restaurantIds[0]?.id,
+      restaurantId:
+        restaurantIds.length > 1 ? restaurantIds[1]?.id : restaurantIds[0]?.id,
       restaurantRating: 5,
       restaurantComment: "Excellent burgers and friendly staff!",
       productReviews: JSON.stringify([
@@ -82,7 +88,10 @@ async function devSeed(): Promise<void> {
         },
       ]),
     },
-  ].filter(review => review.userId !== undefined && review.restaurantId !== undefined) as any[];
+  ].filter(
+    (review) =>
+      review.userId !== undefined && review.restaurantId !== undefined,
+  );
 
   // Check if the reviews table exists before trying to insert
   try {
@@ -104,15 +113,14 @@ async function devSeed(): Promise<void> {
     debugLogger(`✅ Inserted ${insertedReviews.length} development reviews`);
   } catch (error) {
     // If the table doesn't exist, log a warning and continue
-    if ((error as any)?.code === '42P01') { // relation does not exist
+    if (error?.code === "42P01") {
+      // relation does not exist
       debugLogger("⚠️ Reviews table does not exist yet, skipping review seeds");
     } else {
       // Re-throw other errors
       throw error;
     }
   }
-
-
 }
 
 /**
@@ -123,11 +131,16 @@ async function testSeed(): Promise<void> {
 
   // First, get some user IDs and restaurant IDs to associate reviews with
   const userIds = await db.select({ id: users.id }).from(users).limit(2);
-  const restaurantIds = await db.select({ id: partners.id }).from(partners).limit(2);
+  const restaurantIds = await db
+    .select({ id: partners.id })
+    .from(partners)
+    .limit(2);
 
   // If no users or restaurants exist yet, log a warning and return
   if (userIds.length === 0 || restaurantIds.length === 0) {
-    debugLogger("⚠️ No users or restaurants found to associate reviews with, skipping review seeds");
+    debugLogger(
+      "⚠️ No users or restaurants found to associate reviews with, skipping review seeds",
+    );
     return;
   }
 
@@ -151,12 +164,16 @@ async function testSeed(): Promise<void> {
     {
       id: uuidv4(),
       userId: userIds.length > 1 ? userIds[1]?.id : userIds[0]?.id,
-      restaurantId: restaurantIds.length > 1 ? restaurantIds[1]?.id : restaurantIds[0]?.id,
+      restaurantId:
+        restaurantIds.length > 1 ? restaurantIds[1]?.id : restaurantIds[0]?.id,
       restaurantRating: 3,
       restaurantComment: "Another test review",
       productReviews: JSON.stringify([]),
     },
-  ].filter(review => review.userId !== undefined && review.restaurantId !== undefined) as any[];
+  ].filter(
+    (review) =>
+      review.userId !== undefined && review.restaurantId !== undefined,
+  );
 
   // Check if the reviews table exists before trying to insert
   try {
@@ -177,15 +194,14 @@ async function testSeed(): Promise<void> {
     debugLogger("✅ Inserted test reviews");
   } catch (error) {
     // If the table doesn't exist, log a warning and continue
-    if ((error as any)?.code === '42P01') { // relation does not exist
+    if (error?.code === "42P01") {
+      // relation does not exist
       debugLogger("⚠️ Reviews table does not exist yet, skipping review seeds");
     } else {
       // Re-throw other errors
       throw error;
     }
   }
-
-
 }
 
 /**

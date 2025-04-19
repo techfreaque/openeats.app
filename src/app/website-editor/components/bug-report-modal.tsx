@@ -1,30 +1,32 @@
 import { GitFork } from "lucide-react";
 import { useRouter } from "next/navigation";
+import {
+  Alert,
+  AlertDescription,
+  Badge,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+  RadioGroup,
+  RadioGroupItem,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+} from "next-vibe-ui/ui";
 import type { FormEvent, JSX } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { submitBugReport } from "@/actions/ui/submit-bug-report";
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { Badge, Button, RadioGroup, RadioGroupItem } from "@/components/ui";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
 import { useBugReportModal } from "@/hooks/website-editor/useBugReportModal";
 import { errorLogger } from "@/packages/next-vibe/shared/utils/logger";

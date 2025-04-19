@@ -1,7 +1,8 @@
 "use server";
 
-import { db } from "next-vibe/server/db";
 import { errorLogger } from "next-vibe/shared/utils/logger";
+
+import { subPromptRepository } from "@/app/api/v1/website-editor/repository";
 
 export interface CreateSubPromptReturn {
   id: string;
@@ -16,6 +17,10 @@ export interface CreateSubPromptReturn {
   };
 }
 
+/**
+ * Server action to create a subprompt
+ * This is now a wrapper around the API endpoint
+ */
 export const createSubPrompt = async (
   subPrompt: string,
   UIId: string,
@@ -23,90 +28,45 @@ export const createSubPrompt = async (
   code: string,
   modelId: string,
 ): Promise<CreateSubPromptReturn> => {
-  if (
-    subPrompt.startsWith("precise-") ||
-    subPrompt.startsWith("balanced-") ||
-    subPrompt.startsWith("creative-")
-  ) {
-    try {
-      const data = await db.subPrompt.create({
-        data: {
-          UIId: UIId,
-          subPrompt: subPrompt,
-          SUBId: parentSUBId,
-          code: {
-            create: {
-              code: code,
-            },
-          },
-          modelId: modelId,
-        },
-        select: subPromptSelect,
-      });
+  try {
+    // Generate the next SUB ID
+    const subId = await subPromptRepository.generateNextSubId(
+      UIId,
+      parentSUBId,
+    );
 
-      return data as CreateSubPromptReturn;
-    } catch (error) {
-      errorLogger("Error creating subprompt:", error);
-    }
-  }
-
-  const baseSubId = parentSUBId.split("-").slice(0, -1).join("-");
-  const currentNumber = parseInt(parentSUBId.split("-").pop()!, 10);
-  const nextSubIdBase = `${baseSubId}-${currentNumber + 1}`;
-
-  const existingNextSub = await db.subPrompt.findFirst({
-    where: {
-      UIId: UIId,
-      SUBId: nextSubIdBase,
-    },
-  });
-
-  let newSUBId: string;
-  if (!existingNextSub) {
-    newSUBId = nextSubIdBase;
-  } else {
-    const existingSubPrompts = await db.subPrompt.findMany({
-      where: {
-        UIId: UIId,
-        SUBId: {
-          startsWith: `${nextSubIdBase}-`,
-        },
+    // Create the subprompt with code
+    const result = await subPromptRepository.createWithCode(
+      {
+        uiId: UIId,
+        subPrompt,
+        subId,
+        modelId,
       },
-      orderBy: {
-        SUBId: "desc",
-      },
-      take: 1,
-    });
+      code,
+    );
 
-    if (existingSubPrompts.length === 0) {
-      newSUBId = `${nextSubIdBase}-1`;
-    } else {
-      const lastSUBId = existingSubPrompts[0]!.SUBId;
-      const parts = lastSUBId.split("-");
-      const lastNumber = parseInt(parts[parts.length - 1], 10);
-      parts[parts.length - 1] = (lastNumber + 1).toString();
-      newSUBId = parts.join("-");
-    }
-  }
-
-  const data = await db.subPrompt.create({
-    data: {
-      UIId: UIId,
-      subPrompt: subPrompt,
-      SUBId: newSUBId,
+    // Transform the result to match the expected response format
+    return {
+      id: result.id,
+      createdAt: result.createdAt,
+      subPrompt: result.subPrompt,
+      UIId: result.uiId,
+      SUBId: result.subId,
+      modelId: result.modelId,
       code: {
-        create: {
-          code: code,
-        },
+        id: result.code.id,
+        code: result.code.code,
       },
-      modelId: modelId,
-    },
-    select: subPromptSelect,
-  });
-
-  return data as CreateSubPromptReturn;
+    };
+  } catch (error) {
+    errorLogger("Error creating subprompt:", error);
+    throw error;
+  }
 };
 
+// This is no longer needed as we're using the repository
+// Keeping for reference in case any code still depends on it
 export const subPromptSelect = {
   id: true,
   UIId: true,

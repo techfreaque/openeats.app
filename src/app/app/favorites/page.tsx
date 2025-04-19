@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Button } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
-import { Button } from "@/components/ui";
 
 import { useFavorites } from "../components/hooks/use-favorites";
 import {

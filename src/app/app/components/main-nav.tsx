@@ -15,24 +15,28 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useTranslation } from "next-vibe/i18n";
 import { cn } from "next-vibe/shared/utils/utils";
-import type React from "react";
-import type { JSX } from "react";
-import { useState } from "react";
-
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+  Input,
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "next-vibe-ui/ui";
+import type React from "react";
+import type { JSX } from "react";
+import { useState } from "react";
+
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 import { useCart } from "./hooks/use-cart";
 import { LanguageSelector } from "./language-selector";

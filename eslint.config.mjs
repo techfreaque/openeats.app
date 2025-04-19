@@ -47,7 +47,8 @@ export default [
       // just until native is stable
       "**/*.native.tsx",
       // tmp
-      "src/packages/base-station" 
+      "src/packages/base-station",
+      "src/packages/next-vibe-ui/native"
     ],
   },
 
@@ -129,8 +130,8 @@ export default [
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-misused-promises": "error",
       "@typescript-eslint/consistent-type-imports": "error",
-      "@typescript-eslint/no-unsafe-assignment": "off",
-      "@typescript-eslint/restrict-template-expressions": "off",
+      "@typescript-eslint/no-unsafe-assignment": "error",
+      "@typescript-eslint/restrict-template-expressions": "error",
       "@typescript-eslint/no-empty-function": [
         "error",
         { allow: ["arrowFunctions"] },

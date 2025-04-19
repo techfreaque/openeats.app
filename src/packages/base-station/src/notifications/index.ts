@@ -315,7 +315,7 @@ export async function setVolume(volume: number): Promise<void> {
 
 export function isNotificationEnabled(): boolean {
   // Update the enabled state from config before returning
-  (notificationService as any)._updateEnabled();
+  (notificationService )._updateEnabled();
   return notificationService.isEnabled();
 }
 

@@ -2,10 +2,9 @@
 
 import type { ApiEndpoint } from "next-vibe/client/endpoint";
 import { Methods } from "next-vibe/shared/types/endpoint";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useState } from "react";
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CodeExamplesProps {
   activeEndpoint: ApiEndpoint<unknown, unknown, unknown, string>;
@@ -91,8 +90,8 @@ $url = "${apiUrl}";
 
 $options = [
     'http' => [
-        'header' => "Accept: application/json\\r\\n" . 
-                    ${activeEndpoint.requiresAuthentication() ? `"Authorization: Bearer YOUR_TOKEN_HERE\\r\\n" .` : ""} 
+        'header' => "Accept: application/json\\r\\n" .
+                    ${activeEndpoint.requiresAuthentication() ? `"Authorization: Bearer YOUR_TOKEN_HERE\\r\\n" .` : ""}
                     ${hasBody ? `"Content-Type: application/json\\r\\n",` : `",`}
         'method' => "${method}",
         ${hasBody ? `'content' => '${JSON.stringify(example)}'` : ""}

@@ -1,10 +1,9 @@
 import Link from "next/link";
+import { Button } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { APP_NAME } from "@/packages/next-vibe/shared/constants";
-
-import { Button } from "./ui";
 
 export function Navbar(): JSX.Element {
   const { isLoggedIn, isLoading, user, logout } = useAuth();

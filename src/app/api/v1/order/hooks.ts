@@ -3,10 +3,9 @@
 import { useApiMutation } from "next-vibe/client/hooks/mutation";
 import { useApiQuery } from "next-vibe/client/hooks/query";
 import { useApiStore } from "next-vibe/client/hooks/store";
+import { useTranslation } from "next-vibe/i18n";
+import { toast } from "next-vibe-ui/ui";
 import { useCallback, useMemo } from "react";
-
-import { toast } from "@/components/ui/use-toast";
-import { useTranslation } from "@/translations";
 
 import { useAuth } from "../auth/hooks/useAuth";
 import orderEndpoint from "./definition";

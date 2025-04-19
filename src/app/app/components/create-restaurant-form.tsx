@@ -1,23 +1,22 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type React from "react";
-import { useState } from "react";
-
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+  Checkbox,
+  Input,
+  Label,
+  Textarea,
+  useToast,
+} from "next-vibe-ui/ui";
+import type React from "react";
+import { useState } from "react";
 
 export function CreateRestaurantForm(): React.JSX.Element {
   const router = useRouter();

@@ -13,6 +13,9 @@
       ],
       "react-native/*": [
         "./node_modules/react-native-web/*"
+      ],
+      "next-vibe-ui/*": [
+        "./src/packages/next-vibe-ui/web/*"
       ]
     },
     "outDir": "./dist",

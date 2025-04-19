@@ -41,22 +41,23 @@ function findSeedFiles(dir: string): string[] {
  * Generate a consolidated seeds file
  */
 function generateSeeds(rootDir: string): number {
-  // Define paths
-  const API_DIR = path.join(rootDir, "src", "app", "api");
-  const OUTPUT_DIR = path.join(rootDir, "src", "app", "api", "generated");
-  const OUTPUT_FILE = path.join(OUTPUT_DIR, "seeds.ts");
+  try {
+    // Define paths
+    const API_DIR = path.join(rootDir, "src", "app", "api");
+    const OUTPUT_DIR = path.join(rootDir, "src", "app", "api", "generated");
+    const OUTPUT_FILE = path.join(OUTPUT_DIR, "seeds.ts");
 
-  // Ensure output directory exists
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+    // Ensure output directory exists
+    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-  // Find all seed files
-  const seedFiles = findSeedFiles(API_DIR)
-    // Filter out the generated seeds file itself to avoid circular dependencies
-    .filter((file) => !file.includes("api/generated/seeds.ts"));
-  console.log(`Found ${seedFiles.length} seed files`);
+    // Find all seed files
+    const seedFiles = findSeedFiles(API_DIR)
+      // Filter out the generated seeds file itself to avoid circular dependencies
+      .filter((file) => !file.includes("api/generated/seeds.ts"));
+    console.log(`Found ${seedFiles.length} seed files`);
 
-  // Start building the output file content
-  let fileContent = `// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // Start building the output file content
+    let fileContent = `// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 /* eslint-disable */
 /**
@@ -68,48 +69,74 @@ import type { EnvironmentSeeds } from "next-vibe/server/db/seed-manager";
 
 `;
 
-  // Generate imports for each seed file
-  for (let i = 0; i < seedFiles.length; i++) {
-    const filePath = seedFiles[i];
-    const relativePath = path.relative(API_DIR, filePath);
-    // Convert Windows backslashes to forward slashes for import paths
-    const normalizedPath = relativePath.replace(/\\/g, "/");
-    // Use a raw string to avoid escaping issues
-    const importPath = `@/app/api/${normalizedPath.replace(/\.(ts|js)$/, "").replace(/\\/g, "/")}`;
-    // Replace any remaining backslashes with forward slashes
-    const finalImportPath = importPath.replace(/\\/g, "/");
-    fileContent += `import * as seed_${i} from "${finalImportPath}";\n`;
+    // Generate imports for each seed file
+    for (let i = 0; i < seedFiles.length; i++) {
+      const filePath = seedFiles[i];
+      if (!filePath) {
+        continue;
+      } // Skip undefined entries
+
+      const relativePath = path.relative(API_DIR, filePath);
+      // Convert Windows backslashes to forward slashes for import paths
+      const normalizedPath = relativePath.replace(/\\/g, "/");
+      // Use a raw string to avoid escaping issues
+      const importPath = `@/app/api/${normalizedPath.replace(/\.(ts|js)$/, "")}`;
+      // Ensure there are no backslashes in the import path
+      // Replace any remaining backslashes with forward slashes
+      const finalImportPath = importPath.replace(/\\/g, "/");
+      fileContent += `import * as seed_${i} from "${finalImportPath}";\n`;
+    }
+
+    // Create the seeds registry
+    fileContent += `\nexport const seeds: Record<string, EnvironmentSeeds> = {};\n\n`;
+    fileContent += `/**\n * Initialize the seeds registry\n * In development, this is called automatically\n * In production, this should only be called once\n */\n`;
+    fileContent += `export function setupSeeds() {\n`;
+    fileContent += `  console.log("Setting up seeds...");\n`;
+
+    // Process each seed file
+    for (let i = 0; i < seedFiles.length; i++) {
+      const filePath = seedFiles[i];
+      if (!filePath) {
+        continue;
+      } // Skip undefined entries
+
+      const relativePath = path.relative(API_DIR, filePath);
+      // Normalize path for consistent handling across platforms
+      const normalizedRelativePath = relativePath.replace(/\\/g, "/");
+      const pathSegments = path.dirname(normalizedRelativePath).split("/");
+
+      // Get the module name from the file path
+      const moduleName = pathSegments[pathSegments.length - 1];
+      // Sanitize module name to handle special characters
+      const sanitizedModuleName = moduleName.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      // Add the seed to the registry
+      fileContent += `  seeds["${sanitizedModuleName}"] = seed_${i} as unknown as EnvironmentSeeds;\n`;
+    }
+
+    fileContent += `  console.log("Seeds setup complete.");\n`;
+    fileContent += `  return seeds;\n`;
+    fileContent += `}\n\n`;
+    fileContent += `// In development, initialize seeds automatically\n`;
+    fileContent += `if (process.env.NODE_ENV !== "production") {\n`;
+    fileContent += `  try {\n`;
+    fileContent += `    console.log("Initializing seeds in development environment...");\n`;
+    fileContent += `    setupSeeds();\n`;
+    fileContent += `    console.log("Seeds initialized successfully.");\n`;
+    fileContent += `  } catch (error) {\n`;
+    fileContent += `    console.error("Error initializing seeds:", error);\n`;
+    fileContent += `  }\n`;
+    fileContent += `}\n`;
+
+    // Write the file
+    fs.writeFileSync(OUTPUT_FILE, fileContent, "utf8");
+    console.log(`Successfully generated seeds file at ${OUTPUT_FILE}`);
+
+    return seedFiles.length;
+  } catch (error) {
+    console.error(`Error generating seeds file:`, error);
+    throw error;
   }
-
-  // Create the seeds registry
-  fileContent += `\nexport const seeds: Record<string, EnvironmentSeeds> = {};\n\n`;
-  fileContent += `/**\n * Initialize the seeds registry\n * In development, this is called automatically\n * In production, this should only be called once\n */\n`;
-  fileContent += `export function setupSeeds() {\n`;
-
-  // Process each seed file
-  for (let i = 0; i < seedFiles.length; i++) {
-    const filePath = seedFiles[i];
-    const relativePath = path.relative(API_DIR, filePath);
-    const pathSegments = path.dirname(relativePath).split(path.sep);
-
-    // Get the module name from the file path
-    const moduleName = pathSegments[pathSegments.length - 1];
-
-    // Add the seed to the registry
-    fileContent += `  seeds["${moduleName}"] = seed_${i} as unknown as EnvironmentSeeds;\n`;
-  }
-
-  fileContent += `  return seeds;\n`;
-  fileContent += `}\n\n`;
-  fileContent += `// In development, initialize seeds automatically\n`;
-  fileContent += `if (process.env.NODE_ENV !== "production") {\n`;
-  fileContent += `  setupSeeds();\n`;
-  fileContent += `}\n`;
-
-  // Write the file
-  fs.writeFileSync(OUTPUT_FILE, fileContent, "utf8");
-
-  return seedFiles.length;
 }
 
 // Run the generator when this file is executed directly

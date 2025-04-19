@@ -1,26 +1,24 @@
 "use client";
 
 import { Clock, Filter, Search, Star } from "lucide-react";
-import type React from "react";
-import { useEffect, useMemo, useState } from "react";
-
-import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { errorLogger } from "next-vibe/shared/utils/logger";
 import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import {
+  Separator,
   Sheet,
   SheetContent,
   SheetDescription,
@@ -28,8 +26,17 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
+  Switch,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  useToast,
+} from "next-vibe-ui/ui";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
 
 import { CategoryPill } from "../components/category-pill";
 import {
@@ -54,9 +61,11 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 export default function RestaurantsPage(): React.JSX.Element {
-  const { form, data, isLoading, submitForm } = useRestaurants();
+  const { form, data, isLoading, error, submitForm } = useRestaurants();
+  const isError = !!error;
   const [filterOpen, setFilterOpen] = useState(false);
   const [locationSet, setLocationSet] = useState(false);
+  const { toast } = useToast();
 
   // Extract restaurants from the API response
   const restaurants = data?.restaurants || [];
@@ -123,11 +132,24 @@ export default function RestaurantsPage(): React.JSX.Element {
     }
   }, [form, locationSet, submitForm]);
 
-  const setLocation = (countryCode: string, zip: string) => {
-    form.setValue("countryCode", countryCode);
-    form.setValue("zip", zip);
-    setLocationSet(true);
-  };
+  // Function to set location data in the form
+  const setLocation = useCallback(
+    (countryCode: string, zip: string) => {
+      try {
+        form.setValue("countryCode", countryCode);
+        form.setValue("zip", zip);
+        setLocationSet(true);
+      } catch (error) {
+        errorLogger("Error setting location:", error);
+        toast({
+          title: "Error",
+          description: "Failed to set location. Please try again.",
+          variant: "destructive",
+        });
+      }
+    },
+    [form, toast],
+  );
 
   // Handler functions - these will automatically trigger the query because autoSubmit is enabled
   const handleCategoryClick = (category: string): void => {
@@ -140,10 +162,22 @@ export default function RestaurantsPage(): React.JSX.Element {
     submitForm(undefined, { urlParamVariables: undefined });
   };
 
-  const handleSearch = (e: React.FormEvent): void => {
-    e.preventDefault();
-    submitForm(e, { urlParamVariables: undefined });
-  };
+  const handleSearch = useCallback(
+    (e: React.FormEvent): void => {
+      e.preventDefault();
+      try {
+        submitForm(e, { urlParamVariables: undefined });
+      } catch (error) {
+        errorLogger("Error submitting search:", error);
+        toast({
+          title: "Error",
+          description: "Failed to search restaurants. Please try again.",
+          variant: "destructive",
+        });
+      }
+    },
+    [submitForm, toast],
+  );
 
   const handlePriceFilterChange = (value: string): void => {
     const currentValues = form.getValues("priceRange") || [];
@@ -180,22 +214,36 @@ export default function RestaurantsPage(): React.JSX.Element {
     submitForm(undefined, { urlParamVariables: undefined });
   };
 
-  const clearFilters = (): void => {
-    // Keep location information when clearing filters
-    const countryCode = form.getValues("countryCode");
-    const zip = form.getValues("zip");
+  const clearFilters = useCallback((): void => {
+    try {
+      // Keep location information when clearing filters
+      const countryCode = form.getValues("countryCode");
+      const zip = form.getValues("zip");
 
-    form.reset();
+      form.reset();
 
-    form.setValue("countryCode", countryCode);
-    form.setValue("zip", zip);
-    form.setValue("radius", 10);
-    form.setValue("deliveryType", "delivery");
-    form.setValue("sortBy", "relevance");
+      form.setValue("countryCode", countryCode);
+      form.setValue("zip", zip);
+      form.setValue("radius", 10);
+      form.setValue("deliveryType", "delivery");
+      form.setValue("sortBy", "relevance");
 
-    submitForm(undefined, { urlParamVariables: undefined });
-    setFilterOpen(false);
-  };
+      submitForm(undefined, { urlParamVariables: undefined });
+      setFilterOpen(false);
+
+      toast({
+        title: "Filters cleared",
+        description: "All filters have been reset to default values.",
+      });
+    } catch (error) {
+      errorLogger("Error clearing filters:", error);
+      toast({
+        title: "Error",
+        description: "Failed to clear filters. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [form, submitForm, toast]);
 
   // Get current values from form
   const activeCategory = form.getValues("category") || "all";
@@ -626,6 +674,24 @@ export default function RestaurantsPage(): React.JSX.Element {
                       <RestaurantCardSkeleton key={i} />
                     ))}
                 </div>
+              ) : isError ? (
+                <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-sm">
+                  <div className="text-6xl mb-4">⚠️</div>
+                  <h3 className="text-xl font-bold mb-2 text-destructive">
+                    Error Loading Restaurants
+                  </h3>
+                  <p className="text-center text-muted-foreground max-w-md mb-6">
+                    We encountered a problem while loading restaurants. Please
+                    try again or adjust your search criteria.
+                  </p>
+                  <Button
+                    onClick={() =>
+                      submitForm(undefined, { urlParamVariables: undefined })
+                    }
+                  >
+                    Try Again
+                  </Button>
+                </div>
               ) : restaurants.length > 0 ? (
                 <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {restaurants.map((restaurant) => (
@@ -658,6 +724,24 @@ export default function RestaurantsPage(): React.JSX.Element {
                     .map((_, i) => (
                       <RestaurantCardSkeleton key={i} />
                     ))}
+                </div>
+              ) : isError ? (
+                <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-sm">
+                  <div className="text-6xl mb-4">⚠️</div>
+                  <h3 className="text-xl font-bold mb-2 text-destructive">
+                    Error Loading Pickup Options
+                  </h3>
+                  <p className="text-center text-muted-foreground max-w-md mb-6">
+                    We encountered a problem while loading pickup options.
+                    Please try again or adjust your search criteria.
+                  </p>
+                  <Button
+                    onClick={() =>
+                      submitForm(undefined, { urlParamVariables: undefined })
+                    }
+                  >
+                    Try Again
+                  </Button>
                 </div>
               ) : restaurants.length > 0 ? (
                 <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

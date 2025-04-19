@@ -1,16 +1,15 @@
 import { GitFork } from "lucide-react";
-import React, { useState } from "react";
-
-import { Button } from "@/components/ui";
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+  Input,
+  Label,
+} from "next-vibe-ui/ui";
+import React, { useState } from "react";
 
 interface ForkThemeDialogProps {
   theme: {

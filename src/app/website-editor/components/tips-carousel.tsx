@@ -1,13 +1,12 @@
-import React from "react";
-
-import { Badge } from "@/components/ui";
 import {
+  Badge,
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel";
+} from "next-vibe-ui/ui";
+import React from "react";
 
 const tips = [
   "Try different models by changing it in the 'Settings' area.",

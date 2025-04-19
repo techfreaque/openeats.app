@@ -47,9 +47,8 @@ async function seedDevDatabase(): Promise<void> {
       // It could be either a direct property or a default export with a dev property
       const seedFn =
         moduleSeed.dev ??
-        ((moduleSeed as any).default &&
-        typeof (moduleSeed as any).default === "object"
-          ? (moduleSeed as any).default.dev
+        (moduleSeed.default && typeof moduleSeed.default === "object"
+          ? moduleSeed.default.dev
           : undefined);
       if (seedFn) {
         try {

@@ -8,10 +8,13 @@ import type {
 import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
 import { formatResponse } from "next-vibe/server/endpoints/core/api-response";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
-import type { MessageResponseType } from "next-vibe/shared/types/response.schema";
+import {
+  ErrorResponseTypes,
+  type MessageResponseType,
+} from "next-vibe/shared/types/response.schema";
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
-import { sessionRepository } from "../sessions/sessions.repository";
+import { sessionRepository } from "../repository";
 import logoutEndpoint from "./definition";
 
 /**
@@ -52,7 +55,7 @@ async function logoutUser({
 
     // Remove sessions from database
     try {
-      await sessionRepository.invalidateAllUserSessions(user.id);
+      await sessionRepository.deleteByUserId(user.id);
       debugLogger("Deleted user sessions", { userId: user.id });
     } catch (error) {
       errorLogger("Error deleting user sessions", error);
@@ -66,6 +69,7 @@ async function logoutUser({
       success: false,
       message:
         error instanceof Error ? error.message : "Unknown error during logout",
+      errorType: ErrorResponseTypes.HTTP_ERROR,
       errorCode: 500,
     };
   }

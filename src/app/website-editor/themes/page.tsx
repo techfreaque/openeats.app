@@ -1,19 +1,22 @@
 "use client";
 import { MoreVertical, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { JSX, MouseEvent } from "react";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-
-import { Badge } from "@/components/ui";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "next-vibe-ui/ui";
+import type { JSX, MouseEvent } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
 import type { Theme } from "@/lib/website-editor/themes";
 import { themes } from "@/lib/website-editor/themes";
 

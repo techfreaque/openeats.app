@@ -1,13 +1,12 @@
 import { Bot } from "lucide-react";
-import type { JSX } from "react";
-
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
 
 export default function MAINTENANCE(): JSX.Element {
   return (

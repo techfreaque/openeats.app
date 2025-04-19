@@ -1,28 +1,19 @@
 "use server";
 
-import { db } from "next-vibe/server/db";
+import { errorLogger } from "next-vibe/shared/utils/logger";
 
+import { uiRepository } from "@/app/api/v1/website-editor/repository";
+
+/**
+ * Server action to delete a UI component
+ * This is now a wrapper around the API endpoint
+ */
 export const deleteUI = async (uiid: string, userId: string): Promise<void> => {
-  const ui = await db.uI.findUnique({
-    where: {
-      id: uiid,
-    },
-    select: {
-      userId: true,
-    },
-  });
-
-  if (!ui) {
-    throw new Error("UI not found");
+  try {
+    // Delete the UI component using the repository
+    await uiRepository.deleteUi(uiid, userId);
+  } catch (error) {
+    errorLogger("Error deleting UI component:", error);
+    throw error;
   }
-
-  if (ui.userId !== userId) {
-    throw new Error("Unauthorized");
-  }
-
-  await db.uI.delete({
-    where: {
-      id: uiid,
-    },
-  });
 };

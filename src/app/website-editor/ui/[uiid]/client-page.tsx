@@ -2,19 +2,19 @@
 import html2canvas from "html2canvas";
 import { LoaderCircle, SendHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Button, Card, Input } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ImperativePanelGroupHandle } from "react-resizable-panels";
 import { toast } from "sonner";
 
-import { createSubPrompt } from "@/actions/ui/create-subprompt";
-import { deleteUI } from "@/actions/ui/delete-ui";
-import { getCodeFromId } from "@/actions/ui/get-code";
-import { getUI } from "@/actions/ui/get-uis";
-import { updateSubPrompt } from "@/actions/ui/update-subprompt";
-import { updateUI } from "@/actions/ui/update-ui";
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { Button, Card, Input } from "@/components/ui";
+import {
+  useCreateSubPromptV2,
+  useDeleteUI,
+  useUpdateSubPrompt,
+  useUpdateUI,
+} from "@/app/api/v1/website-editor/hooks";
 import { useClientMode } from "@/hooks/website-editor/useMode";
 import { useModel } from "@/hooks/website-editor/useModel";
 import { useUIState } from "@/hooks/website-editor/useUIState";
@@ -88,14 +88,45 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
 
   const { input, setInput, imageBase64, setImageBase64 } = useUIState();
 
+  // Import the hooks we need
+  const { updateUI } = useUpdateUI();
+  const { createSubPrompt } = useCreateSubPromptV2();
+  const { updateSubPrompt } = useUpdateSubPrompt();
+  const { deleteUI } = useDeleteUI();
+
   const getCode = useCallback(
     async (id: string, iidx: number, jidx: number): Promise<string> => {
       try {
-        const code = await getCodeFromId(id);
+        // Fetch the code using the API
+        const response = await fetch(`/api/v1/website-editor/code?id=${id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch code");
+        }
+
+        const data = await response.json();
+
+        if (!data?.code) {
+          throw new Error("Code not found");
+        }
+
         setUi((prevUi) => {
           if (prevUi) {
             const updatedSubPrompts = [...prevUi.subPrompts];
-            updatedSubPrompts[iidx][jidx].code = code!;
+            if (Array.isArray(updatedSubPrompts[iidx])) {
+              // Handle array case
+              (updatedSubPrompts[iidx] as any)[jidx].code = data.code;
+            } else {
+              // Handle object case
+              if (jidx === 0) {
+                (updatedSubPrompts[iidx] as any).code = data.code;
+              }
+            }
             return {
               ...prevUi,
               subPrompts: updatedSubPrompts,
@@ -104,7 +135,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
             return prevUi;
           }
         });
-        return code!;
+        return data.code;
       } catch (error) {
         errorLogger("Error fetching code:", error);
         toast.error(
@@ -264,6 +295,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
 
         const resizedDataURL = canvas.toDataURL("image/jpeg");
 
+        // Use the updateUI hook to update the UI component
         await updateUI(uiid, { img: resizedDataURL });
       };
 
@@ -275,7 +307,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
       errorLogger("Error during capture:", error);
       toast.error("Failed to capture UI. Please try again.");
     }
-  }, [uiid]);
+  }, [uiid, updateUI]);
 
   const generatePreciseCode = useCallback(async (): Promise<{
     id: string;
@@ -1114,7 +1146,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
             "All code generation attempts failed. Please try again with another model.",
           );
           if (userId) {
-            await deleteUI(uiid, userId);
+            await deleteUI(uiid);
           }
           router.push("/website-editor");
         }
@@ -1417,7 +1449,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
     };
 
     void fetchUI();
-    // eslint-disable-next-line react-compiler/react-compiler
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1432,7 +1464,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
       });
     };
     void incView();
-    // eslint-disable-next-line react-compiler/react-compiler
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1487,7 +1519,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
     return (): void => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-    // eslint-disable-next-line react-compiler/react-compiler
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const loadingState = uiState[mode].loading;
@@ -1495,7 +1527,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
     if (!loadingState) {
       setCode(uiState[mode].code);
     }
-    // eslint-disable-next-line react-compiler/react-compiler
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadingState, mode]);
 
@@ -1519,7 +1551,7 @@ export const ClientUI = ({ uiid }: { uiid: string }): JSX.Element => {
         createdAt: selectedSubPrompt[idx!].createdAt?.toLocaleString(),
       });
     }
-    // eslint-disable-next-line react-compiler/react-compiler
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 

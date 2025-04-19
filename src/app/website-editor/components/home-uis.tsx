@@ -1,9 +1,6 @@
 "use client";
 import { Eye, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-
-import { getUIHome } from "@/actions/ui/get-uis";
 import {
   Avatar,
   AvatarFallback,
@@ -14,7 +11,10 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui";
+} from "next-vibe-ui/ui";
+import React, { useEffect, useState } from "react";
+
+import { getUIHome } from "@/actions/ui/get-uis";
 import { timeAgo } from "@/lib/website-editor/time";
 import type { FullUI } from "@/lib/website-editor/types";
 

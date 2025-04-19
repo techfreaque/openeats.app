@@ -1,0 +1,3 @@
+[submodule "src/packages/next-vibe-ui/native/ui"]
+	path = src/packages/next-vibe-ui/native/ui
+	url = https://github.com/mrzachnugent/react-native-reusables.git

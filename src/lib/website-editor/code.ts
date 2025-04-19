@@ -300,7 +300,7 @@ const shadcnCode = (reactCode: string): string => {
   // Group components by their module paths and generate import statements
   const importStatements = Array.from(capitalizedTags).reduce(
     (acc: Record<string, string[]>, tag: string) => {
-      const modulePath = `@/components/ui/${
+      const modulePath = `next-vibe-ui/ui/${
         componentToModuleMap[tag as keyof typeof componentToModuleMap]
       }`;
       if (modulePath) {

@@ -1,14 +1,14 @@
 "use client";
 import { Home, Store, Utensils } from "lucide-react";
-import type { JSX } from "react";
-
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
+
 import { translations } from "@/translations";
 
 export type OrderType = "delivery" | "pickup" | "dineIn";
@@ -34,7 +34,7 @@ export function OrderTypeSelector({
 
     for (const part of parts) {
       if (result && typeof result === "object" && part in result) {
-        result = result[part] as any;
+        result = result[part];
       } else {
         return fallback || key;
       }

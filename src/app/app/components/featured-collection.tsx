@@ -3,14 +3,13 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Button, Card, CardContent, CardFooter } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useState } from "react";
 
-import { useRestaurants } from "@/app/api/v1/restaurants/hooks";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { useMenuItems } from "@/app/api/v1/menu-items/hooks";
 
-import type { MenuItemType } from "./lib/types";
+import type { MenuItemResponseType } from "@/app/api/v1/restaurant/schema/menu.schema";
 
 interface FeaturedCollectionProps {
   title: string;
@@ -25,13 +24,13 @@ export function FeaturedCollection({
   itemIds,
   restaurantId,
 }: FeaturedCollectionProps): JSX.Element | null {
-  const { getMenuItemById } = useRestaurants();
+  const { data: menuItems } = useMenuItems({ restaurantId });
   const [scrollPosition, setScrollPosition] = useState(0);
 
-  // Get menu items from IDs
-  const items: MenuItemType[] = itemIds
-    .map((id) => getMenuItemById(id))
-    .filter((item): item is MenuItemType => item !== null);
+  // Filter menu items by IDs
+  const items: MenuItemResponseType[] = menuItems
+    ? menuItems.filter((item) => itemIds.includes(item.id))
+    : [];
 
   const scrollContainer = (direction: "left" | "right"): void => {
     const container = document.getElementById(

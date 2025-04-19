@@ -8,17 +8,16 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import type { JSX } from "react";
-
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
 
 export default function DriversPage(): JSX.Element {
   return (

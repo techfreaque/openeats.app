@@ -4,13 +4,11 @@ import { Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "next-vibe/i18n";
-import type { JSX } from "react";
-import { useState } from "react";
-
-import type { MenuItemResponseType } from "@/app/api/v1/restaurant/schema/menu.schema";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
+  Button,
+  Card,
+  CardContent,
+  CardFooter,
   Dialog,
   DialogClose,
   DialogContent,
@@ -18,8 +16,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+  Textarea,
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
+import { useState } from "react";
+
+import type { MenuItemResponseType } from "@/app/api/v1/restaurant/schema/menu.schema";
 
 import { useCart } from "./hooks/use-cart";
 
@@ -34,8 +36,8 @@ export function MenuItem({ item }: MenuItemProps): JSX.Element {
   const [specialInstructions, setSpecialInstructions] = useState("");
   const { t } = useTranslation();
 
-  const handleAddToCart = (): void => {
-    addItem(item, quantity, specialInstructions);
+  const handleAddToCart = async (): Promise<void> => {
+    await addItem(item, quantity, specialInstructions);
     setIsDialogOpen(false);
     // Reset for next time
     setQuantity(1);

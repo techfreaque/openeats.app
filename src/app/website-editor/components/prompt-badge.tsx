@@ -1,7 +1,6 @@
+import { Badge } from "next-vibe-ui/ui";
 import React from "react";
 import { toast } from "sonner";
-
-import { Badge } from "@/components/ui";
 
 const PromptBadge = ({
   className,

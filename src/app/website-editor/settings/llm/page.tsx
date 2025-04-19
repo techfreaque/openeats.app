@@ -1,17 +1,13 @@
 "use client";
 
 import { InfoIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
-
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -19,9 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
+  Input,
   Select,
   SelectContent,
   SelectGroup,
@@ -29,7 +23,9 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "next-vibe-ui/ui";
+import React, { useEffect, useState } from "react";
+
 import { useModel } from "@/hooks/website-editor/useModel";
 import { models } from "@/lib/website-editor/modellist";
 import { isModelSupported } from "@/lib/website-editor/supportedllm";

@@ -2,11 +2,9 @@
 
 import { X } from "lucide-react";
 import Image from "next/image";
+import { Button, Dialog, DialogContent } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useState } from "react";
-
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface RestaurantGalleryProps {
   images: {

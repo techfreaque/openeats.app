@@ -3,10 +3,9 @@
 import { formatDistanceToNow } from "date-fns";
 import { ChevronDown, ChevronUp, Star } from "lucide-react";
 import Image from "next/image";
+import { Button } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useState } from "react";
-
-import { Button } from "@/components/ui/button";
 
 import { useReviews } from "./hooks/use-reviews";
 

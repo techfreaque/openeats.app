@@ -145,16 +145,39 @@ import type { ApiSection } from "next-vibe/shared";
     const varName = `definition_${importCounter++}`;
 
     // Generate import path
-    const importPath = `@/app/api/${relativePath.replace(/\.ts$/, "")}`;
+    // Convert Windows backslashes to forward slashes for import paths
+    const normalizedPath = relativePath.replace(/\\/g, "/");
+    const importPath = `@/app/api/${normalizedPath.replace(/\.ts$/, "")}`;
+
+    // Skip if the file doesn't exist (might have been removed)
+    const fullImportPath = path.join(
+      ROOT_DIR,
+      "src",
+      "app",
+      "api",
+      relativePath,
+    );
+    const fullDirPath = path.dirname(fullImportPath);
+
+    if (!fs.existsSync(fullDirPath) || !fs.existsSync(fullImportPath)) {
+      console.warn(
+        `Warning: Definition file or directory not found: ${fullImportPath}`,
+      );
+      continue;
+    }
 
     // Add import statement
-    imports.push(`import { default as ${varName} } from "${importPath}";`);
+    // Ensure the import path uses forward slashes
+    const finalImportPath = importPath.replace(/\\/g, "/");
+    imports.push(`import { default as ${varName} } from "${finalImportPath}";`);
 
     // Generate code to ensure path exists before assigning
     const pathCreationCode: string[] = [];
     let currentPath = "endpoints";
     for (const segment of pathSegments) {
-      currentPath += `["${segment}"]`;
+      // Sanitize segment name to handle special characters
+      const sanitizedSegment = segment.replace(/[^a-zA-Z0-9_-]/g, "_");
+      currentPath += `["${sanitizedSegment}"]`;
       pathCreationCode.push(`  if (!${currentPath}) ${currentPath} = {};`);
     }
 

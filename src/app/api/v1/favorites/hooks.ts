@@ -4,10 +4,10 @@ import { useApiMutation } from "next-vibe/client/hooks/mutation";
 import { useApiQuery } from "next-vibe/client/hooks/query";
 import { useApiStore } from "next-vibe/client/hooks/store";
 import { useTranslation } from "next-vibe/i18n";
+import { toast } from "next-vibe-ui/ui";
 import { useCallback } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { toast } from "@/components/ui/use-toast";
 
 import favoritesEndpoints from "./definition";
 import type {

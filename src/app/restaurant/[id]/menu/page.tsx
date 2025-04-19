@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
 
+import { useMenuItems } from "@/app/api/v1/menu-items/hooks";
 import { useRestaurant } from "@/app/api/v1/restaurant/hooks";
 import { MenuItem } from "@/app/app/components/menu-item";
 import { useRestaurantConfig } from "@/app/app/components/restaurant-config-provider";
@@ -13,10 +14,11 @@ export default function RestaurantMenuPage(): JSX.Element | null {
   const params = useParams<{ id: string }>();
   const id = params.id;
 
-  const { data: restaurant, getMenuItemsByRestaurantId } = useRestaurant(id);
-  const config = useRestaurantConfig();
+  const { data: restaurant } = useRestaurant(id);
+  const { data: menuItemsData } = useMenuItems({ restaurantId: id });
+  useRestaurantConfig(); // Load restaurant config
 
-  const menuItems = restaurant?.menuItems || [];
+  const menuItems = menuItemsData ?? [];
 
   const [activeCategory, setActiveCategory] = useState<string>("");
 
@@ -38,9 +40,9 @@ export default function RestaurantMenuPage(): JSX.Element | null {
   // Set initial active category
   useEffect(() => {
     if (categories.length > 0 && !activeCategory) {
-      setActiveCategory(categories[0]);
+      setActiveCategory(categories[0].id);
     }
-  }, []);
+  }, [categories, activeCategory]);
 
   if (!restaurant) {
     return null;

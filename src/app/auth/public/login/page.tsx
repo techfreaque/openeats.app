@@ -3,20 +3,20 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "next-vibe/i18n";
-import type { JSX } from "react";
-import React, { useEffect } from "react";
-
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+  Input,
+} from "next-vibe-ui/ui";
+import type { JSX } from "react";
+import React, { useEffect } from "react";
+
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 
 export default function LoginPage(): JSX.Element {
   const searchParams = useSearchParams();

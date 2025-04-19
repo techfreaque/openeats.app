@@ -2,7 +2,7 @@ import "server-only";
 
 import { apiHandler } from "next-vibe/server/endpoints/core/api-handler";
 
-import definitions from "../definition";
+import menuItemsEndpoints from "../definition";
 import { searchMenuItems } from "../route-handler";
 
 /**
@@ -14,7 +14,7 @@ import { searchMenuItems } from "../route-handler";
  * POST handler for searching menu items
  */
 export const POST = apiHandler({
-  endpoint: definitions.POST,
+  endpoint: menuItemsEndpoints.SEARCH,
   handler: searchMenuItems,
   email: {}, // No emails for this endpoint
 });

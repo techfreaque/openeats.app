@@ -5,15 +5,13 @@ import { useRouter } from "next/navigation";
 import { useApiForm } from "next-vibe/client/hooks/mutation-form";
 import { useTranslation } from "next-vibe/i18n";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
-import { type JSX, useEffect } from "react";
-
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { useCategories } from "@/app/api/v1/category/hooks";
-import restaurantEndpoint from "@/app/api/v1/restaurant/definition";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Checkbox,
   Form,
   FormControl,
   FormDescription,
@@ -21,16 +19,19 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
+  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+  Textarea,
+} from "next-vibe-ui/ui";
+import { type JSX, useEffect } from "react";
+
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
+import { useCategories } from "@/app/api/v1/category/hooks";
+import restaurantEndpoint from "@/app/api/v1/restaurant/definition";
 import { Countries } from "@/translations";
 
 export default function NewRestaurantPage(): JSX.Element {

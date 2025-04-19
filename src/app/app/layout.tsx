@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
+import { Toaster } from "next-vibe-ui/ui";
 import type { JSX, ReactNode } from "react";
-
-import { Toaster } from "@/components/ui/toaster";
 
 import RootLayout from "./components/layout";
 

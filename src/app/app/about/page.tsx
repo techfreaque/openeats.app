@@ -5,10 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "next-vibe/i18n";
 import { APP_NAME } from "next-vibe/shared/constants";
+import { Button, Card, CardContent } from "next-vibe-ui/ui";
 import type { JSX } from "react";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 
 export default function AboutPage(): JSX.Element {
   const { t } = useTranslation();

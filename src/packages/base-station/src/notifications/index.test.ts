@@ -120,7 +120,7 @@ describe("Notifications Module", () => {
         }),
         stdout: { on: vi.fn() },
         stderr: { on: vi.fn() },
-      } as any);
+      } );
 
       await expect(playSound("newOrder")).rejects.toThrow("Playback error");
     });
@@ -135,7 +135,7 @@ describe("Notifications Module", () => {
         }),
         stdout: { on: vi.fn() },
         stderr: { on: vi.fn() },
-      } as any);
+      } );
 
       await expect(playSound("newOrder")).rejects.toThrow(
         "Command failed with exit code 1",
@@ -178,7 +178,7 @@ describe("Notifications Module", () => {
         }),
         stdout: { on: vi.fn() },
         stderr: { on: vi.fn() },
-      } as any);
+      } );
 
       await expect(setVolume(50)).rejects.toThrow("Volume error");
     });

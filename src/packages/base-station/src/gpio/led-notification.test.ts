@@ -110,8 +110,8 @@ describe("LED Notification Service", () => {
   describe("initialization", () => {
     it("should initialize with correct pins", () => {
       expect(ledService).toBeDefined();
-      expect((ledService as any).ledPin).toBe(17);
-      expect((ledService as any).buttonPin).toBe(27);
+      expect((ledService ).ledPin).toBe(17);
+      expect((ledService ).buttonPin).toBe(27);
     });
 
     it("should set up LED and button", () => {
@@ -138,23 +138,23 @@ describe("LED Notification Service", () => {
     it("should start blinking with default pattern", () => {
       ledService.startBlinking();
       
-      expect((ledService as any).isBlinking).toBe(true);
-      expect((ledService as any).currentPattern).toBe(BlinkPattern.NORMAL);
+      expect((ledService ).isBlinking).toBe(true);
+      expect((ledService ).currentPattern).toBe(BlinkPattern.NORMAL);
       expect(mockEmit).toHaveBeenCalledWith("blinking-started", BlinkPattern.NORMAL);
     });
 
     it("should start blinking with specified pattern", () => {
       ledService.startBlinking(BlinkPattern.FAST);
       
-      expect((ledService as any).isBlinking).toBe(true);
-      expect((ledService as any).currentPattern).toBe(BlinkPattern.FAST);
+      expect((ledService ).isBlinking).toBe(true);
+      expect((ledService ).currentPattern).toBe(BlinkPattern.FAST);
       expect(mockEmit).toHaveBeenCalledWith("blinking-started", BlinkPattern.FAST);
     });
 
     it("should do nothing if already blinking with same pattern", () => {
       // Set up internal state
-      (ledService as any).isBlinking = true;
-      (ledService as any).currentPattern = BlinkPattern.NORMAL;
+      (ledService ).isBlinking = true;
+      (ledService ).currentPattern = BlinkPattern.NORMAL;
       
       // Clear mocks to check no new calls
       vi.clearAllMocks();
@@ -168,28 +168,28 @@ describe("LED Notification Service", () => {
 
     it("should stop blinking", () => {
       // Set up internal state
-      (ledService as any).isBlinking = true;
-      (ledService as any).blinkInterval = setInterval(() => {}, 1000);
+      (ledService ).isBlinking = true;
+      (ledService ).blinkInterval = setInterval(() => {}, 1000);
       
       // Stop blinking
       ledService.stopBlinking();
       
       // Should be stopped
-      expect((ledService as any).isBlinking).toBe(false);
-      expect((ledService as any).blinkInterval).toBeNull();
+      expect((ledService ).isBlinking).toBe(false);
+      expect((ledService ).blinkInterval).toBeNull();
       expect(mockEmit).toHaveBeenCalledWith("blinking-stopped");
     });
 
     it("should handle stopping when not blinking", () => {
       // Already not blinking
-      (ledService as any).isBlinking = false;
-      (ledService as any).blinkInterval = null;
+      (ledService ).isBlinking = false;
+      (ledService ).blinkInterval = null;
       
       // Act - should not throw
       ledService.stopBlinking();
       
       // Assert - still not active
-      expect((ledService as any).isBlinking).toBe(false);
+      expect((ledService ).isBlinking).toBe(false);
     });
   });
 
@@ -229,7 +229,7 @@ describe("LED Notification Service", () => {
 
     it("should handle button press events", () => {
       // Arrange
-      (ledService as any).isBlinking = true;
+      (ledService ).isBlinking = true;
       const onAckSpy = vi.fn();
       
       // Register the acknowledgement handler
@@ -259,7 +259,7 @@ describe("LED Notification Service", () => {
   describe("utility methods", () => {
     it("should simulate button press", () => {
       // Arrange
-      (ledService as any).isBlinking = true;
+      (ledService ).isBlinking = true;
       
       // Act
       ledService.simulateButtonPress();
@@ -270,32 +270,32 @@ describe("LED Notification Service", () => {
 
     it("should report correct active status", () => {
       // Initially not active
-      (ledService as any).isBlinking = false;
+      (ledService ).isBlinking = false;
       expect(ledService.isActive()).toBe(false);
       
       // Set blinking flag and check
-      (ledService as any).isBlinking = true;
+      (ledService ).isBlinking = true;
       expect(ledService.isActive()).toBe(true);
       
       // Set back to false and check again
-      (ledService as any).isBlinking = false;
+      (ledService ).isBlinking = false;
       expect(ledService.isActive()).toBe(false);
     });
 
     it("should return the current pattern", () => {
       // Default pattern
-      (ledService as any).currentPattern = BlinkPattern.NORMAL;
+      (ledService ).currentPattern = BlinkPattern.NORMAL;
       expect(ledService.getCurrentPattern()).toBe(BlinkPattern.NORMAL);
       
       // Set custom pattern and check
-      (ledService as any).currentPattern = BlinkPattern.SOS;
+      (ledService ).currentPattern = BlinkPattern.SOS;
       expect(ledService.getCurrentPattern()).toBe(BlinkPattern.SOS);
     });
 
     it("should clean up resources", () => {
       // Arrange
-      (ledService as any).isBlinking = true;
-      (ledService as any).blinkInterval = setInterval(() => {}, 1000);
+      (ledService ).isBlinking = true;
+      (ledService ).blinkInterval = setInterval(() => {}, 1000);
       
       // Act
       ledService.cleanup();
@@ -304,16 +304,16 @@ describe("LED Notification Service", () => {
       expect(mockLed.unexport).toHaveBeenCalled();
       expect(mockButton.unexport).toHaveBeenCalled();
       expect(mockRemoveAllListeners).toHaveBeenCalled();
-      expect((ledService as any).isBlinking).toBe(false);
+      expect((ledService ).isBlinking).toBe(false);
     });
   });
 
   describe("blink patterns", () => {
     beforeEach(() => {
       // Reset the internal state of the LED service
-      (ledService as any).isBlinking = false;
-      (ledService as any).blinkInterval = null;
-      (ledService as any).patternStep = 0;
+      (ledService ).isBlinking = false;
+      (ledService ).blinkInterval = null;
+      (ledService ).patternStep = 0;
       vi.clearAllMocks();
     });
 
@@ -322,13 +322,13 @@ describe("LED Notification Service", () => {
       ledService.startBlinking(BlinkPattern.SOLID);
       
       // Assert
-      expect((ledService as any).currentPattern).toBe(BlinkPattern.SOLID);
+      expect((ledService ).currentPattern).toBe(BlinkPattern.SOLID);
       
       // Should set LED to ON (1) immediately for SOLID pattern
       expect(mockLedWrite).toHaveBeenCalledWith(1);
       
       // Should NOT set up an interval for SOLID pattern
-      expect((ledService as any).blinkInterval).toBeNull();
+      expect((ledService ).blinkInterval).toBeNull();
       
       // Event should be emitted
       expect(mockEmit).toHaveBeenCalledWith("blinking-started", BlinkPattern.SOLID);
@@ -339,7 +339,7 @@ describe("LED Notification Service", () => {
       ledService.startBlinking(BlinkPattern.SLOW);
       
       // Assert
-      expect((ledService as any).currentPattern).toBe(BlinkPattern.SLOW);
+      expect((ledService ).currentPattern).toBe(BlinkPattern.SLOW);
       
       // Verify interval was set
       expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 1000);
@@ -358,7 +358,7 @@ describe("LED Notification Service", () => {
       ledService.startBlinking(BlinkPattern.FAST);
       
       // Assert
-      expect((ledService as any).currentPattern).toBe(BlinkPattern.FAST);
+      expect((ledService ).currentPattern).toBe(BlinkPattern.FAST);
       
       // Verify interval was set
       expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 250);
@@ -379,7 +379,7 @@ describe("LED Notification Service", () => {
       ledService.startBlinking(BlinkPattern.PULSE);
       
       // Assert
-      expect((ledService as any).currentPattern).toBe(BlinkPattern.PULSE);
+      expect((ledService ).currentPattern).toBe(BlinkPattern.PULSE);
       
       // Verify first interval step
       expect(setInterval).toHaveBeenCalled();
@@ -401,7 +401,7 @@ describe("LED Notification Service", () => {
       ledService.startBlinking(BlinkPattern.SOS);
       
       // Assert
-      expect((ledService as any).currentPattern).toBe(BlinkPattern.SOS);
+      expect((ledService ).currentPattern).toBe(BlinkPattern.SOS);
       
       // Verify interval was set with SOS timing (200ms)
       expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 200);
@@ -425,7 +425,7 @@ describe("LED Notification Service", () => {
       ledService.startBlinking(BlinkPattern.DOUBLE);
       
       // Assert
-      expect((ledService as any).currentPattern).toBe(BlinkPattern.DOUBLE);
+      expect((ledService ).currentPattern).toBe(BlinkPattern.DOUBLE);
       
       // Verify interval was set
       expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 200);
@@ -468,9 +468,9 @@ describe("LED Notification Service", () => {
       ledService.startBlinking(BlinkPattern.SOS);
       
       // Should not stop blinking, just change the pattern
-      expect((ledService as any).isBlinking).toBe(true);
-      expect((ledService as any).currentPattern).toBe(BlinkPattern.SOS);
-      expect((ledService as any).patternStep).toBe(0); // Reset step counter
+      expect((ledService ).isBlinking).toBe(true);
+      expect((ledService ).currentPattern).toBe(BlinkPattern.SOS);
+      expect((ledService ).patternStep).toBe(0); // Reset step counter
       
       // Event should be emitted for new pattern
       expect(mockEmit).toHaveBeenCalledWith("blinking-started", BlinkPattern.SOS);

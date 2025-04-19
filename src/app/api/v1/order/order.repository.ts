@@ -8,7 +8,7 @@ import { db } from "next-vibe/server/db";
 import { BaseRepositoryImpl } from "next-vibe/server/db/repository";
 import type { DbId } from "next-vibe/server/db/types";
 
-import { users } from "@/app/api/v1/auth/me/users.db";
+import { users } from "@/app/api/v1/auth/db";
 import type { MenuItem } from "@/app/api/v1/menu/db";
 import { partners } from "@/app/api/v1/restaurant/db";
 

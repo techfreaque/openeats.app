@@ -2,12 +2,11 @@
 import { Github, PlayCircle } from "lucide-react";
 import Link from "next/link";
 import { Trans, useTranslation } from "next-vibe/i18n";
+import { Badge, Toaster } from "next-vibe-ui/ui";
 import type React from "react";
 import type { JSX } from "react";
 
 import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
-import { Badge } from "@/components/ui";
-import { Toaster } from "@/components/ui/toaster";
 
 import { LocationSelector } from "./location-selector";
 import { MainNav } from "./main-nav";

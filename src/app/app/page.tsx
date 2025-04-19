@@ -4,14 +4,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "next-vibe/i18n";
 import { errorLogger } from "next-vibe/shared/utils/logger";
+import {
+  Button,
+  Input,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  useToast,
+} from "next-vibe-ui/ui";
 import type { JSX } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { RestaurantResponseType } from "@/app/api/v1/restaurant/schema/restaurant.schema";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
 import { Countries } from "@/translations";
 
 import { DeliveryType } from "../api/v1/order/delivery.schema";
@@ -41,13 +46,14 @@ const CATEGORY_ICONS = {
 export default function Home(): JSX.Element {
   const { form, data, isLoading, submitForm } = useRestaurants();
   const restaurants = data?.restaurants || [];
+  const { toast } = useToast();
 
   const [activeCategory, setActiveCategory] = useState("all");
   const [deliveryType, setDeliveryType] = useState<DeliveryType>(
     DeliveryType.ALL,
   );
   const [location, setLocation] = useState<string>("");
-  const { toast } = useToast();
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false); // Used to track geolocation loading state
   const { t } = useTranslation();
 
   // Dynamically extract categories from restaurant data
@@ -70,7 +76,7 @@ export default function Home(): JSX.Element {
       }
     > = {};
     restaurants.forEach((restaurant) => {
-      if (restaurant.mainCategory && restaurant.mainCategory.id) {
+      if (restaurant.mainCategory?.id) {
         uniqueCategories[restaurant.mainCategory.id] = restaurant.mainCategory;
       }
     });
@@ -121,25 +127,46 @@ export default function Home(): JSX.Element {
   }, [deliveryType, form, submitForm]);
 
   // Function to handle location change
-  const handleLocationChange = (newLocation: string): void => {
-    setLocation(newLocation);
-    localStorage.setItem("openeats-location", newLocation);
+  const handleLocationChange = useCallback(
+    (newLocation: string): void => {
+      try {
+        setLocation(newLocation);
+        localStorage.setItem("openeats-location", newLocation);
 
-    // Extract zip and country from location (simplified)
-    const [zip, countryCode] = parseLocation(newLocation);
+        // Extract zip and country from location (simplified)
+        const [zip, countryCode] = parseLocation(newLocation);
 
-    if (zip && countryCode) {
-      form.setValue("zip", zip);
-      form.setValue("countryCode", countryCode as Countries);
-    } else {
-      // Fallback to defaults if parsing fails
-      form.setValue("zip", "10001");
-      form.setValue("countryCode", Countries.DE);
-    }
+        if (zip && countryCode) {
+          form.setValue("zip", zip);
+          form.setValue("countryCode", countryCode as Countries);
+        } else {
+          // Fallback to defaults if parsing fails
+          form.setValue("zip", "10001");
+          form.setValue("countryCode", Countries.DE);
 
-    form.setValue("radius", 10);
-    submitForm(undefined, { urlParamVariables: undefined });
-  };
+          // Show a toast if the location format is invalid
+          if (newLocation.trim() !== "") {
+            toast({
+              title: t("location.invalidFormat"),
+              description: t("location.invalidFormatDescription"),
+              variant: "destructive",
+            });
+          }
+        }
+
+        form.setValue("radius", 10);
+        submitForm(undefined, { urlParamVariables: undefined });
+      } catch (error) {
+        errorLogger("Error handling location change:", error);
+        toast({
+          title: t("location.error"),
+          description: t("location.errorDescription"),
+          variant: "destructive",
+        });
+      }
+    },
+    [form, submitForm, toast, t],
+  );
 
   // Helper function to parse location string
   const parseLocation = (loc: string): [string | null, string | null] => {
@@ -160,9 +187,19 @@ export default function Home(): JSX.Element {
   useEffect(() => {
     // Check if we have a saved location
     try {
+      setIsLoadingLocation(true);
       const savedLocation = localStorage.getItem("openeats-location");
       if (savedLocation) {
         setLocation(savedLocation);
+        // Parse the saved location to set form values
+        const [zip, countryCode] = parseLocation(savedLocation);
+        if (zip && countryCode) {
+          form.setValue("zip", zip);
+          form.setValue("countryCode", countryCode as Countries);
+          form.setValue("radius", 10);
+          submitForm(undefined, { urlParamVariables: undefined });
+        }
+        setIsLoadingLocation(false);
         return;
       }
 
@@ -170,6 +207,12 @@ export default function Home(): JSX.Element {
       const defaultLocation = "Berlin, DE";
       setLocation(defaultLocation);
       localStorage.setItem("openeats-location", defaultLocation);
+
+      // Set default form values
+      form.setValue("zip", "10001");
+      form.setValue("countryCode", Countries.DE);
+      form.setValue("radius", 10);
+      submitForm(undefined, { urlParamVariables: undefined });
 
       // Try to detect location automatically
       if (navigator.geolocation) {
@@ -181,6 +224,7 @@ export default function Home(): JSX.Element {
             const locationString = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
             setLocation(locationString);
             localStorage.setItem("openeats-location", locationString);
+            setIsLoadingLocation(false);
           },
           (error: GeolocationPositionError) => {
             errorLogger("Error getting location:", error);
@@ -192,15 +236,25 @@ export default function Home(): JSX.Element {
                 variant: "destructive",
               });
             }
+            setIsLoadingLocation(false);
           },
-          { timeout: 10000, enableHighAccuracy: false },
+          { timeout: 10_000, enableHighAccuracy: false },
         );
+      } else {
+        setIsLoadingLocation(false);
       }
     } catch (error) {
       errorLogger("Error accessing localStorage:", error);
       setLocation("Berlin, DE");
+      setIsLoadingLocation(false);
+
+      toast({
+        title: t("location.error"),
+        description: t("location.errorDescription"),
+        variant: "destructive",
+      });
     }
-  }, [toast, t]);
+  }, [form, submitForm, toast, t]);
 
   // Save location when it changes
   useEffect(() => {
@@ -348,6 +402,15 @@ export default function Home(): JSX.Element {
                   <p className="text-center text-muted-foreground">
                     {t("home.restaurantsNearYou.noRestaurants")}
                   </p>
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() =>
+                      submitForm(undefined, { urlParamVariables: undefined })
+                    }
+                  >
+                    {t("common.tryAgain")}
+                  </Button>
                 </div>
               )}
             </TabsContent>
@@ -374,6 +437,15 @@ export default function Home(): JSX.Element {
                   <p className="text-center text-muted-foreground">
                     {t("home.restaurantsNearYou.noPickup")}
                   </p>
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() =>
+                      submitForm(undefined, { urlParamVariables: undefined })
+                    }
+                  >
+                    {t("common.tryAgain")}
+                  </Button>
                 </div>
               )}
             </TabsContent>

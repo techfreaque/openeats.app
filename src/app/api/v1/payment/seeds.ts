@@ -1,5 +1,3 @@
-import { sql } from "drizzle-orm";
-import { db } from "next-vibe/server/db";
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
 // Note: There's no specific payment table in the database

@@ -57,49 +57,112 @@ async function devSeed(): Promise<void> {
   ];
 
   const allUsers = [adminUser, demoUser, ...regularUsers];
+  const createdUsers = [];
 
   // Create users with hashed passwords using the repository
-  const createdUsers = await Promise.all(
-    allUsers.map((user) => userRepository.createWithHashedPassword(user)),
-  );
+  // Handle potential duplicates by checking if the user already exists
+  for (const user of allUsers) {
+    try {
+      debugLogger(`Processing user: ${user.email}`);
+      // Check if user already exists
+      const existingUser = await userRepository.findByEmail(user.email);
+
+      if (existingUser) {
+        debugLogger(`User with email ${user.email} already exists, skipping`);
+        createdUsers.push(existingUser);
+      } else {
+        // Create new user
+        const newUser = await userRepository.createWithHashedPassword(user);
+        createdUsers.push(newUser);
+        debugLogger(`Created new user: ${newUser.email}`);
+      }
+    } catch (error) {
+      debugLogger(
+        `Error processing user ${user.email}: ${(error as Error).message}`,
+      );
+    }
+  }
 
   // Create roles for users
   try {
     if (createdUsers.length > 0 && createdUsers[0]?.id) {
-      await userRolesRepository.create({
-        userId: createdUsers[0].id, // Admin user
-        role: "ADMIN",
-      });
-    }
+      // Check if role already exists
+      const existingRole = await userRolesRepository.findByUserIdAndRole(
+        createdUsers[0].id,
+        "ADMIN",
+      );
 
-    if (createdUsers.length > 1 && createdUsers[1]?.id) {
-      await userRolesRepository.create({
-        userId: createdUsers[1].id, // Demo user
-        role: "CUSTOMER",
-      });
-    }
-
-    for (let i = 2; i < createdUsers.length; i++) {
-      if (createdUsers[i]?.id) {
+      if (!existingRole) {
         await userRolesRepository.create({
-          userId: createdUsers[i].id, // Regular users
-          role: "CUSTOMER",
+          userId: createdUsers[0].id, // Admin user
+          role: "ADMIN",
         });
+        debugLogger(`Added ADMIN role to user: ${createdUsers[0].email}`);
+      } else {
+        debugLogger(
+          `User ${createdUsers[0].email} already has ADMIN role, skipping`,
+        );
       }
     }
 
-    debugLogger(`✅ Inserted ${createdUsers.length} development users with roles`);
+    if (createdUsers.length > 1 && createdUsers[1]?.id) {
+      // Check if role already exists
+      const existingRole = await userRolesRepository.findByUserIdAndRole(
+        createdUsers[1].id,
+        "CUSTOMER",
+      );
+
+      if (!existingRole) {
+        await userRolesRepository.create({
+          userId: createdUsers[1].id, // Demo user
+          role: "CUSTOMER",
+        });
+        debugLogger(`Added CUSTOMER role to user: ${createdUsers[1].email}`);
+      } else {
+        debugLogger(
+          `User ${createdUsers[1].email} already has CUSTOMER role, skipping`,
+        );
+      }
+    }
+
+    for (let i = 2; i < createdUsers.length; i++) {
+      if (createdUsers[i]?.id && createdUsers[i]?.email) {
+        const userId = createdUsers[i].id;
+        const userEmail = createdUsers[i].email;
+        // Check if role already exists
+        const existingRole = await userRolesRepository.findByUserIdAndRole(
+          userId,
+          "CUSTOMER",
+        );
+
+        if (!existingRole) {
+          await userRolesRepository.create({
+            userId, // Regular users
+            role: "CUSTOMER",
+          });
+          debugLogger(`Added CUSTOMER role to user: ${userEmail}`);
+        } else {
+          debugLogger(`User ${userEmail} already has CUSTOMER role, skipping`);
+        }
+      }
+    }
+
+    debugLogger(
+      `✅ Processed ${createdUsers.length} development users with roles`,
+    );
   } catch (error) {
     // If the table doesn't exist, log a warning and continue
-    if ((error as any)?.code === '42P01') { // relation does not exist
-      debugLogger("⚠️ User roles table does not exist yet, skipping auth role seeds");
+    const dbError = error as { code?: string };
+    if (dbError.code === "42P01") {
+      // relation does not exist
+      debugLogger(
+        "⚠️ User roles table does not exist yet, skipping auth role seeds",
+      );
     } else {
       // Re-throw other errors
       throw error;
     }
   }
-
-
 }
 
 /**
@@ -123,31 +186,86 @@ async function testSeed(): Promise<void> {
   ];
 
   // Create test users with hashed passwords using the repository
-  const createdUsers = await Promise.all(
-    testUsers.map((user) => userRepository.createWithHashedPassword(user)),
-  );
+  // Handle potential duplicates by checking if the user already exists
+  const createdUsers = [];
+
+  for (const user of testUsers) {
+    try {
+      debugLogger(`Processing test user: ${user.email}`);
+      // Check if user already exists
+      const existingUser = await userRepository.findByEmail(user.email);
+
+      if (existingUser) {
+        debugLogger(
+          `Test user with email ${user.email} already exists, skipping`,
+        );
+        createdUsers.push(existingUser);
+      } else {
+        // Create new user
+        const newUser = await userRepository.createWithHashedPassword(user);
+        createdUsers.push(newUser);
+        debugLogger(`Created new test user: ${newUser.email}`);
+      }
+    } catch (error) {
+      debugLogger(
+        `Error processing test user ${user.email}: ${(error as Error).message}`,
+      );
+    }
+  }
 
   // Create roles for test users
   try {
     if (createdUsers.length > 0 && createdUsers[0]?.id) {
-      await userRolesRepository.create({
-        userId: createdUsers[0].id,
-        role: "ADMIN",
-      });
+      // Check if role already exists
+      const existingRole = await userRolesRepository.findByUserIdAndRole(
+        createdUsers[0].id,
+        "ADMIN",
+      );
+
+      if (!existingRole) {
+        await userRolesRepository.create({
+          userId: createdUsers[0].id,
+          role: "ADMIN",
+        });
+        debugLogger(`Added ADMIN role to test user: ${createdUsers[0].email}`);
+      } else {
+        debugLogger(
+          `Test user ${createdUsers[0].email} already has ADMIN role, skipping`,
+        );
+      }
     }
 
     if (createdUsers.length > 1 && createdUsers[1]?.id) {
-      await userRolesRepository.create({
-        userId: createdUsers[1].id,
-        role: "CUSTOMER",
-      });
+      // Check if role already exists
+      const existingRole = await userRolesRepository.findByUserIdAndRole(
+        createdUsers[1].id,
+        "CUSTOMER",
+      );
+
+      if (!existingRole) {
+        await userRolesRepository.create({
+          userId: createdUsers[1].id,
+          role: "CUSTOMER",
+        });
+        debugLogger(
+          `Added CUSTOMER role to test user: ${createdUsers[1].email}`,
+        );
+      } else {
+        debugLogger(
+          `Test user ${createdUsers[1].email} already has CUSTOMER role, skipping`,
+        );
+      }
     }
 
-    debugLogger("✅ Inserted test users with roles");
+    debugLogger(`✅ Processed ${createdUsers.length} test users with roles`);
   } catch (error) {
     // If the table doesn't exist, log a warning and continue
-    if ((error as any)?.code === '42P01') { // relation does not exist
-      debugLogger("⚠️ User roles table does not exist yet, skipping auth role seeds");
+    const dbError = error as { code?: string };
+    if (dbError.code === "42P01") {
+      // relation does not exist
+      debugLogger(
+        "⚠️ User roles table does not exist yet, skipping auth role seeds",
+      );
     } else {
       // Re-throw other errors
       throw error;
@@ -169,20 +287,51 @@ async function prodSeed(): Promise<void> {
   });
 
   // Create admin user with hashed password using the repository
-  const createdAdmin = await userRepository.createWithHashedPassword(adminUser);
-
-  // Create admin role for admin user
+  // In production, we only create the admin user if it doesn't exist
   try {
-    await userRolesRepository.create({
-      userId: createdAdmin.id,
-      role: "ADMIN",
-    });
+    debugLogger(`Checking for admin user: ${adminUser.email}`);
+    // Check if admin user already exists
+    const existingAdmin = await userRepository.findByEmail(adminUser.email);
 
-    debugLogger("✅ Inserted essential production users with roles");
+    let adminId: string;
+
+    if (existingAdmin) {
+      debugLogger(
+        `Admin user with email ${adminUser.email} already exists, skipping user creation`,
+      );
+      adminId = existingAdmin.id;
+    } else {
+      // Create new admin user
+      const newAdmin = await userRepository.createWithHashedPassword(adminUser);
+      adminId = newAdmin.id;
+      debugLogger(`Created admin user with email ${newAdmin.email}`);
+    }
+
+    // Create admin role for admin user if it doesn't exist
+    const existingRole = await userRolesRepository.findByUserIdAndRole(
+      adminId,
+      "ADMIN",
+    );
+
+    if (!existingRole) {
+      await userRolesRepository.create({
+        userId: adminId,
+        role: "ADMIN",
+      });
+      debugLogger(`Added ADMIN role to user: ${adminUser.email}`);
+    } else {
+      debugLogger(`User ${adminUser.email} already has ADMIN role, skipping`);
+    }
+
+    debugLogger("✅ Processed essential production users with roles");
   } catch (error) {
     // If the table doesn't exist, log a warning and continue
-    if ((error as any)?.code === '42P01') { // relation does not exist
-      debugLogger("⚠️ User roles table does not exist yet, skipping auth role seeds");
+    const dbError = error as { code?: string };
+    if (dbError.code === "42P01") {
+      // relation does not exist
+      debugLogger(
+        "⚠️ User roles table does not exist yet, skipping auth role seeds",
+      );
     } else {
       // Re-throw other errors
       throw error;
@@ -201,5 +350,9 @@ const seeds = {
   test,
   prod,
 };
+
+// Initialize seeds in development automatically
+// The seed manager will handle the actual initialization
+debugLogger("🌱 Auth seeds ready for initialization");
 
 export default seeds;

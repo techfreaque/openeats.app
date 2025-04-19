@@ -10,17 +10,16 @@ import type { EnvironmentSeeds } from "next-vibe/server/db/seed-manager";
 
 import * as seed_0 from "@/app/api/generated/seeds";
 import * as seed_1 from "@/app/api/v1/addresses/seeds";
-import * as seed_2 from "@/app/api/v1/auth/me/seeds";
-import * as seed_3 from "@/app/api/v1/auth/seeds";
-import * as seed_4 from "@/app/api/v1/cart/seeds";
-import * as seed_5 from "@/app/api/v1/category/seeds";
-import * as seed_6 from "@/app/api/v1/menu/seeds";
-import * as seed_7 from "@/app/api/v1/menu-items/seeds";
-import * as seed_8 from "@/app/api/v1/order/seeds";
-import * as seed_9 from "@/app/api/v1/payment/seeds";
-import * as seed_10 from "@/app/api/v1/restaurant/seeds";
-import * as seed_11 from "@/app/api/v1/reviews/seeds";
-import * as seed_12 from "@/app/api/v1/template-api/seeds";
+import * as seed_2 from "@/app/api/v1/auth/seeds";
+import * as seed_3 from "@/app/api/v1/cart/seeds";
+import * as seed_4 from "@/app/api/v1/category/seeds";
+import * as seed_5 from "@/app/api/v1/menu/seeds";
+import * as seed_6 from "@/app/api/v1/menu-items/seeds";
+import * as seed_7 from "@/app/api/v1/order/seeds";
+import * as seed_8 from "@/app/api/v1/payment/seeds";
+import * as seed_9 from "@/app/api/v1/restaurant/seeds";
+import * as seed_10 from "@/app/api/v1/reviews/seeds";
+import * as seed_11 from "@/app/api/v1/template-api/seeds";
 
 export const seeds: Record<string, EnvironmentSeeds> = {};
 
@@ -30,23 +29,30 @@ export const seeds: Record<string, EnvironmentSeeds> = {};
  * In production, this should only be called once
  */
 export function setupSeeds() {
+  console.log("Setting up seeds...");
   seeds["generated"] = seed_0 as unknown as EnvironmentSeeds;
   seeds["addresses"] = seed_1 as unknown as EnvironmentSeeds;
-  seeds["me"] = seed_2 as unknown as EnvironmentSeeds;
-  seeds["auth"] = seed_3 as unknown as EnvironmentSeeds;
-  seeds["cart"] = seed_4 as unknown as EnvironmentSeeds;
-  seeds["category"] = seed_5 as unknown as EnvironmentSeeds;
-  seeds["menu"] = seed_6 as unknown as EnvironmentSeeds;
-  seeds["menu-items"] = seed_7 as unknown as EnvironmentSeeds;
-  seeds["order"] = seed_8 as unknown as EnvironmentSeeds;
-  seeds["payment"] = seed_9 as unknown as EnvironmentSeeds;
-  seeds["restaurant"] = seed_10 as unknown as EnvironmentSeeds;
-  seeds["reviews"] = seed_11 as unknown as EnvironmentSeeds;
-  seeds["template-api"] = seed_12 as unknown as EnvironmentSeeds;
+  seeds["auth"] = seed_2 as unknown as EnvironmentSeeds;
+  seeds["cart"] = seed_3 as unknown as EnvironmentSeeds;
+  seeds["category"] = seed_4 as unknown as EnvironmentSeeds;
+  seeds["menu"] = seed_5 as unknown as EnvironmentSeeds;
+  seeds["menu-items"] = seed_6 as unknown as EnvironmentSeeds;
+  seeds["order"] = seed_7 as unknown as EnvironmentSeeds;
+  seeds["payment"] = seed_8 as unknown as EnvironmentSeeds;
+  seeds["restaurant"] = seed_9 as unknown as EnvironmentSeeds;
+  seeds["reviews"] = seed_10 as unknown as EnvironmentSeeds;
+  seeds["template-api"] = seed_11 as unknown as EnvironmentSeeds;
+  console.log("Seeds setup complete.");
   return seeds;
 }
 
 // In development, initialize seeds automatically
 if (process.env.NODE_ENV !== "production") {
-  setupSeeds();
+  try {
+    console.log("Initializing seeds in development environment...");
+    setupSeeds();
+    console.log("Seeds initialized successfully.");
+  } catch (error) {
+    console.error("Error initializing seeds:", error);
+  }
 }

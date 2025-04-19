@@ -4,11 +4,9 @@ import { ArrowLeft, Menu } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { cn } from "next-vibe/shared/utils/utils";
+import { Button, Sheet, SheetContent, SheetTrigger } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
-
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import { useRestaurantConfig } from "./restaurant-config-provider";
 

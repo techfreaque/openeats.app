@@ -19,7 +19,7 @@ const ReactLiveContent = ({
   useEffect(() => {
     const loadScope = async (): Promise<void> => {
       try {
-        const components = await import("@/components/ui");
+        const components = await import("next-vibe-ui/ui");
 
         const newScope: Record<string, any> = {
           React,

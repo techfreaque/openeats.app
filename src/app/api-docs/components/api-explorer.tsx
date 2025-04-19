@@ -5,8 +5,16 @@ import { getEndpoints } from "next-vibe/client/endpoints";
 import { useApiForm } from "next-vibe/client/hooks/mutation-form";
 import { APP_NAME, ENDPOINT_DOMAINS } from "next-vibe/shared/constants";
 import type { Methods } from "next-vibe/shared/types/endpoint";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "next-vibe-ui/ui";
 import type { FormEvent, JSX } from "react";
 import { useMemo, useState } from "react";
+import type { FieldValues } from "react-hook-form";
 
 import { envClient } from "@/config/env-client";
 import {
@@ -14,13 +22,6 @@ import {
   getEndpointByPath,
 } from "@/packages/next-vibe/client/endpoint";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui";
 import loginEndpoint from "../../api/v1/auth/public/login/definition";
 import { DomainSelector } from "./domain-selector";
 import { EndpointDetails } from "./endpoint-details";
@@ -33,14 +34,15 @@ export function ApiExplorer(): JSX.Element {
   );
   const selectedDomain = ENDPOINT_DOMAINS[selectedEnv];
   const [activeEndpoint, setActiveEndpoint] = useState<
-    ApiEndpoint<unknown, unknown, unknown, string>
-  >(loginEndpoint.POST as ApiEndpoint<unknown, unknown, unknown, string>);
+    ApiEndpoint<FieldValues, unknown, unknown, string>
+  >(loginEndpoint.POST as ApiEndpoint<FieldValues, unknown, unknown, string>);
 
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
   const endpoints = getEndpoints();
 
   // Create a form using useApiForm
-  const apiForm = useApiForm<unknown, unknown, unknown, unknown>(
+  // ApiFormReturn<FieldValues, unknown, unknown>
+  const apiForm = useApiForm<FieldValues, unknown, unknown, string>(
     activeEndpoint,
     {},
     {

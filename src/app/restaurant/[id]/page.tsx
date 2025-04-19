@@ -3,7 +3,9 @@
 import { Clock, Heart, MapPin, Phone, Star } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslation } from "next-vibe/i18n";
 import { cn } from "next-vibe/shared/utils/utils";
+import { Button, Skeleton, useToast } from "next-vibe-ui/ui";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
 
@@ -19,10 +21,6 @@ import { useRestaurantConfig } from "@/app/app/components/restaurant-config-prov
 import { RestaurantHero } from "@/app/app/components/restaurant-hero";
 import { RestaurantStory } from "@/app/app/components/restaurant-story";
 import { SpecialOffers } from "@/app/app/components/special-offers";
-import { Button } from "@/components/ui";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/components/ui/use-toast";
-import { useTranslation } from "@/translations";
 
 /**
  * Restaurant home page component
@@ -120,7 +118,7 @@ export default function RestaurantHomePage(): JSX.Element {
             {t("restaurant.notFoundDescription")}
           </p>
           <Button size="lg" asChild>
-            <Link href="/">{t("common.backToHome")}</Link>
+            <Link href="/">Back to Home</Link>
           </Button>
         </div>
       </div>
@@ -229,12 +227,10 @@ export default function RestaurantHomePage(): JSX.Element {
                       : t("restaurant.uncategorized")}
                   </span>
                 </div>
-                {typeof restaurant.deliveryTime === "number" && (
+                {restaurant.delivery && (
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    <span>
-                      {restaurant.deliveryTime} {t("restaurant.minutes")}
-                    </span>
+                    <span>Delivery Available</span>
                   </div>
                 )}
               </div>
@@ -245,8 +241,8 @@ export default function RestaurantHomePage(): JSX.Element {
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    {restaurant.street || ""} {restaurant.streetNumber || ""},{" "}
-                    {restaurant.zip || ""} {restaurant.city || ""}
+                    {restaurant.street ?? ""} {restaurant.streetNumber ?? ""},{" "}
+                    {restaurant.zip ?? ""} {restaurant.city ?? ""}
                   </span>
                 </div>
                 {typeof restaurant.phone === "string" &&
@@ -265,15 +261,15 @@ export default function RestaurantHomePage(): JSX.Element {
                   <div className="flex justify-between">
                     <span>{t("restaurant.weekdays")}</span>
                     <span>
-                      {formatTime(openingHours[1]?.open || 660)} -{" "}
-                      {formatTime(openingHours[1]?.close || 1320)}
+                      {formatTime(openingHours[1]?.open ?? 660)} -{" "}
+                      {formatTime(openingHours[1]?.close ?? 1320)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>{t("restaurant.weekends")}</span>
                     <span>
-                      {formatTime(openingHours[6]?.open || 600)} -{" "}
-                      {formatTime(openingHours[6]?.close || 1380)}
+                      {formatTime(openingHours[6]?.open ?? 600)} -{" "}
+                      {formatTime(openingHours[6]?.close ?? 1380)}
                     </span>
                   </div>
                 </div>
@@ -303,7 +299,7 @@ export default function RestaurantHomePage(): JSX.Element {
       {config.showStory === true &&
         config.story &&
         typeof config.story === "object" && (
-          <RestaurantStory restaurantName={restaurant.name || ""} />
+          <RestaurantStory restaurantName={restaurant.name ?? ""} />
         )}
 
       {/* Featured Collections */}
@@ -320,7 +316,7 @@ export default function RestaurantHomePage(): JSX.Element {
                   <FeaturedCollection
                     key={collection.id}
                     title={collection.title}
-                    description={collection.description}
+                    description={collection.description ?? ""}
                     itemIds={collection.itemIds}
                     restaurantId={restaurant.id}
                   />

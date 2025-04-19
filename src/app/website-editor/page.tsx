@@ -8,12 +8,6 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { ChangeEvent, JSX } from "react";
-import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-
-import { createUI } from "@/actions/ui/create-ui";
-import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import {
   Badge,
   Button,
@@ -24,7 +18,13 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui";
+} from "next-vibe-ui/ui";
+import type { ChangeEvent, JSX } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+
+import { createUI } from "@/actions/ui/create-ui";
+import { useAuth } from "@/app/api/v1/auth/hooks/useAuth";
 import { useAuthModal } from "@/hooks/website-editor/useAuthModal";
 import { useModel } from "@/hooks/website-editor/useModel";
 import { useUIState } from "@/hooks/website-editor/useUIState";

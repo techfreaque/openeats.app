@@ -11,14 +11,10 @@ import { UserRoleValue } from "next-vibe/shared/types/enums";
 import type { UserRoleResponseType } from "next-vibe/shared/types/user-roles.schema";
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
-/**
- * Restaurant API route handlers
- * Provides restaurant management functionality
- */
 import { getCoordinatesFromAddress } from "@/lib/geo/distance";
 import type { Countries } from "@/translations";
 
-import { userRolesRepository } from "../auth/roles/roles.repository";
+import { userRolesRepository } from "../auth/repository";
 import { restaurantRepository } from "./restaurant.repository";
 import type {
   RestaurantCreateType,
@@ -27,6 +23,10 @@ import type {
   RestaurantUpdateType,
 } from "./schema/restaurant.schema";
 
+/**
+ * Restaurant API route handlers
+ * Provides restaurant management functionality
+ */
 /**
  * Helper function to fetch and process restaurant data
  * @param restaurantId - ID of the restaurant to fetch

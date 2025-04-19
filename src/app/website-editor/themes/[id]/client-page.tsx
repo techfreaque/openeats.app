@@ -1,27 +1,29 @@
 "use client";
 import { PlusCircle, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-
-import { Badge, Button } from "@/components/ui";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
   Dialog,
   DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
+  Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "next-vibe-ui/ui";
+import React, { useEffect, useState } from "react";
+
 import type { Theme } from "@/lib/website-editor/themes";
 import { themes as defaultThemes } from "@/lib/website-editor/themes";
 
