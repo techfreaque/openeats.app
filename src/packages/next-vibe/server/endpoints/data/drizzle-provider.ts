@@ -5,7 +5,6 @@ import {
   userRolesRepository,
 } from "@/app/api/v1/auth/repository";
 
-import { convertPrismaRole } from "../../../shared/types/enums";
 import type { UserRoleResponseType } from "../../../shared/types/user-roles.schema";
 import { db } from "../../db";
 import type { DataProvider } from "./data-provider";
@@ -18,14 +17,7 @@ export class DrizzleDataProvider implements DataProvider {
    * Get all roles for a user using Drizzle
    */
   async getUserRoles(userId: string): Promise<UserRoleResponseType[]> {
-    const roles = await userRolesRepository.findByUserId(userId);
-
-    // Convert from database types to our consistent type format
-    return roles.map((role) => ({
-      id: role.id,
-      role: convertPrismaRole(role.role),
-      partnerId: role.partnerId,
-    }));
+    return await userRolesRepository.findByUserId(userId);
   }
 
   /**

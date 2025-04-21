@@ -12,6 +12,24 @@ let seeds: Record<string, EnvironmentSeeds> = {};
 let setupSeeds: () => Record<string, EnvironmentSeeds>;
 
 /**
+ * Define the order of seed execution to handle dependencies
+ * This ensures tables are created in the correct order
+ */
+const SEED_ORDER = [
+  "auth",           // Users must be created first
+  "restaurant",     // Restaurants (partners) must be created second
+  "category",       // Categories must be created before menu items
+  "menu",           // Menu items depend on categories and restaurants
+  "menu-items",     // Alternative menu items module
+  "cart",           // Cart depends on users and menu items
+  "order",          // Orders depend on users, restaurants, and menu items
+  "payment",        // Payment depends on orders
+  "addresses",      // Addresses depend on users
+  "reviews",        // Reviews depend on users and restaurants
+  "template-api",   // Templates can be created last
+];
+
+/**
  * Seed script for development database
  * This creates sample data for development purposes
  */
@@ -28,17 +46,22 @@ async function seedDevDatabase(): Promise<void> {
     >;
 
     // Make sure seeds are initialized
+    console.log("Initializing seeds in development environment...");
     setupSeeds();
+    console.log("Seeds initialized successfully.");
 
     // Track seed statistics
     let totalSeedsRun = 0;
     let totalSeedsSkipped = 0;
     let totalSeedsFailed = 0;
 
-    // Process each seed module
-    for (const [moduleId, moduleSeed] of Object.entries(seeds)) {
-      // Skip the circular reference to the generated seeds file
-      if (moduleId === "generated") {
+    // Process seeds in the defined order
+    for (const moduleId of SEED_ORDER) {
+      const moduleSeed = seeds[moduleId];
+
+      // Skip if module doesn't exist
+      if (!moduleSeed) {
+        debugLogger(`⚠️ Module ${moduleId} not found, skipping`);
         totalSeedsSkipped++;
         continue;
       }

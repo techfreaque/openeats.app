@@ -1,4 +1,3 @@
-CREATE TYPE "public"."user_role_value" AS ENUM('PUBLIC', 'CUSTOMER', 'PARTNER_ADMIN', 'PARTNER_EMPLOYEE', 'COURIER', 'ADMIN');--> statement-breakpoint
 CREATE TYPE "public"."country" AS ENUM('DE', 'AT', 'CH');--> statement-breakpoint
 CREATE TYPE "public"."message_type" AS ENUM('SYSTEM', 'USER', 'DRIVER', 'RESTAURANT', 'ORDER', 'RATING', 'EARNING');--> statement-breakpoint
 CREATE TYPE "public"."order_status" AS ENUM('NEW', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED');--> statement-breakpoint
@@ -103,8 +102,8 @@ CREATE TABLE "drivers" (
 	"vehicle" text NOT NULL,
 	"license_plate" text NOT NULL,
 	"radius" numeric NOT NULL,
-	"latitude" numeric NOT NULL,
-	"longitude" numeric NOT NULL,
+	"latitude" text NOT NULL,
+	"longitude" text NOT NULL,
 	"phone" text NOT NULL,
 	"street" text NOT NULL,
 	"street_number" text NOT NULL,

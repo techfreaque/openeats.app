@@ -1,5 +1,5 @@
 {
-  "id": "08d6e19a-3ff4-40ad-85b2-1140446095e3",
+  "id": "ff1ca771-284a-4e9e-8715-1d5b6fa147fe",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -687,13 +687,13 @@
         },
         "latitude": {
           "name": "latitude",
-          "type": "numeric",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
         "longitude": {
           "name": "longitude",
-          "type": "numeric",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -2869,18 +2869,6 @@
     }
   },
   "enums": {
-    "public.user_role_value": {
-      "name": "user_role_value",
-      "schema": "public",
-      "values": [
-        "PUBLIC",
-        "CUSTOMER",
-        "PARTNER_ADMIN",
-        "PARTNER_EMPLOYEE",
-        "COURIER",
-        "ADMIN"
-      ]
-    },
     "public.country": {
       "name": "country",
       "schema": "public",

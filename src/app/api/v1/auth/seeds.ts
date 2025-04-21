@@ -6,6 +6,7 @@
 import { debugLogger } from "next-vibe/shared/utils/logger";
 
 import type { NewUser } from "./db";
+import { UserRoleValue } from "./db";
 import { userRepository, userRolesRepository } from "./repository";
 
 /**
@@ -64,85 +65,175 @@ async function devSeed(): Promise<void> {
   for (const user of allUsers) {
     try {
       debugLogger(`Processing user: ${user.email}`);
-      // Check if user already exists
-      const existingUser = await userRepository.findByEmail(user.email);
 
-      if (existingUser) {
-        debugLogger(`User with email ${user.email} already exists, skipping`);
-        createdUsers.push(existingUser);
-      } else {
-        // Create new user
+      // Try to find the user by email first
+      try {
+        const existingUser = await userRepository.findByEmail(user.email);
+
+        if (existingUser) {
+          debugLogger(`User with email ${user.email} already exists, skipping`);
+          // Create a safe user object without circular references
+          createdUsers.push({
+            id:
+              typeof existingUser.id === "string"
+                ? existingUser.id
+                : String(existingUser.id),
+            email: existingUser.email,
+            firstName: existingUser.firstName,
+            lastName: existingUser.lastName,
+            name: `${existingUser.firstName || ""} ${existingUser.lastName || ""}`.trim(),
+          });
+          continue;
+        }
+      } catch (findError) {
+        // If there's an error finding the user, log it and try to create the user anyway
+        const errorMessage =
+          findError instanceof Error ? findError.message : String(findError);
+        debugLogger(`Error finding user ${user.email}: ${errorMessage}`);
+      }
+
+      // Create new user
+      try {
         const newUser = await userRepository.createWithHashedPassword(user);
-        createdUsers.push(newUser);
+        // Create a safe user object without circular references
+        createdUsers.push({
+          id: typeof newUser.id === "string" ? newUser.id : String(newUser.id),
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          name: `${newUser.firstName || ""} ${newUser.lastName || ""}`.trim(),
+        });
         debugLogger(`Created new user: ${newUser.email}`);
+      } catch (createError) {
+        // Handle database errors
+        const errorMessage =
+          createError instanceof Error
+            ? createError.message
+            : String(createError);
+        const dbError = createError as { code?: string };
+        if (dbError.code === "42P01") {
+          debugLogger(`Table does not exist yet for user ${user.email}`);
+        } else {
+          debugLogger(`Error creating user ${user.email}: ${errorMessage}`);
+        }
       }
     } catch (error) {
-      debugLogger(
-        `Error processing user ${user.email}: ${(error as Error).message}`,
-      );
+      // Handle any other errors
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      debugLogger(`Error processing user ${user.email}: ${errorMessage}`);
     }
   }
 
   // Create roles for users
   try {
+    // Add ADMIN role to first user
     if (createdUsers.length > 0 && createdUsers[0]?.id) {
-      // Check if role already exists
-      const existingRole = await userRolesRepository.findByUserIdAndRole(
-        createdUsers[0].id,
-        "ADMIN",
-      );
-
-      if (!existingRole) {
-        await userRolesRepository.create({
-          userId: createdUsers[0].id, // Admin user
-          role: "ADMIN",
-        });
-        debugLogger(`Added ADMIN role to user: ${createdUsers[0].email}`);
-      } else {
-        debugLogger(
-          `User ${createdUsers[0].email} already has ADMIN role, skipping`,
-        );
-      }
-    }
-
-    if (createdUsers.length > 1 && createdUsers[1]?.id) {
-      // Check if role already exists
-      const existingRole = await userRolesRepository.findByUserIdAndRole(
-        createdUsers[1].id,
-        "CUSTOMER",
-      );
-
-      if (!existingRole) {
-        await userRolesRepository.create({
-          userId: createdUsers[1].id, // Demo user
-          role: "CUSTOMER",
-        });
-        debugLogger(`Added CUSTOMER role to user: ${createdUsers[1].email}`);
-      } else {
-        debugLogger(
-          `User ${createdUsers[1].email} already has CUSTOMER role, skipping`,
-        );
-      }
-    }
-
-    for (let i = 2; i < createdUsers.length; i++) {
-      if (createdUsers[i]?.id && createdUsers[i]?.email) {
-        const userId = createdUsers[i].id;
-        const userEmail = createdUsers[i].email;
+      try {
         // Check if role already exists
         const existingRole = await userRolesRepository.findByUserIdAndRole(
-          userId,
-          "CUSTOMER",
+          createdUsers[0].id,
+          UserRoleValue.ADMIN,
         );
 
         if (!existingRole) {
           await userRolesRepository.create({
-            userId, // Regular users
-            role: "CUSTOMER",
+            userId: createdUsers[0].id, // Admin user
+            role: UserRoleValue.ADMIN,
           });
-          debugLogger(`Added CUSTOMER role to user: ${userEmail}`);
+          debugLogger(`Added ADMIN role to user: ${createdUsers[0].email}`);
         } else {
-          debugLogger(`User ${userEmail} already has CUSTOMER role, skipping`);
+          debugLogger(
+            `User ${createdUsers[0].email} already has ADMIN role, skipping`,
+          );
+        }
+      } catch (error) {
+        const dbError = error as { code?: string };
+        if (dbError.code === "42P01") {
+          debugLogger(
+            "⚠️ User roles table does not exist yet, skipping role creation",
+          );
+        } else {
+          debugLogger(
+            `Error creating ADMIN role for user ${createdUsers[0].email}:`,
+            error,
+          );
+        }
+      }
+    }
+
+    // Add CUSTOMER role to second user
+    if (createdUsers.length > 1 && createdUsers[1]?.id) {
+      try {
+        // Check if role already exists
+        const existingRole = await userRolesRepository.findByUserIdAndRole(
+          createdUsers[1].id,
+          UserRoleValue.CUSTOMER,
+        );
+
+        if (!existingRole) {
+          await userRolesRepository.create({
+            userId: createdUsers[1].id, // Demo user
+            role: UserRoleValue.CUSTOMER,
+          });
+          debugLogger(`Added CUSTOMER role to user: ${createdUsers[1].email}`);
+        } else {
+          debugLogger(
+            `User ${createdUsers[1].email} already has CUSTOMER role, skipping`,
+          );
+        }
+      } catch (error) {
+        const dbError = error as { code?: string };
+        if (dbError.code === "42P01") {
+          debugLogger(
+            "⚠️ User roles table does not exist yet, skipping role creation",
+          );
+        } else {
+          debugLogger(
+            `Error creating CUSTOMER role for user ${createdUsers[1].email}:`,
+            error,
+          );
+        }
+      }
+    }
+
+    // Add CUSTOMER role to remaining users
+    for (let i = 2; i < createdUsers.length; i++) {
+      const createdUser = createdUsers[i];
+      if (createdUser) {
+        try {
+          const userId = createdUser.id;
+          const userEmail = createdUser.email;
+          // Check if role already exists
+          const existingRole = await userRolesRepository.findByUserIdAndRole(
+            userId,
+            UserRoleValue.CUSTOMER,
+          );
+
+          if (!existingRole) {
+            await userRolesRepository.create({
+              userId, // Regular users
+              role: UserRoleValue.CUSTOMER,
+            });
+            debugLogger(`Added CUSTOMER role to user: ${userEmail}`);
+          } else {
+            debugLogger(
+              `User ${userEmail} already has CUSTOMER role, skipping`,
+            );
+          }
+        } catch (error) {
+          const dbError = error as { code?: string };
+          if (dbError.code === "42P01") {
+            debugLogger(
+              "⚠️ User roles table does not exist yet, skipping role creation",
+            );
+          } else {
+            const userEmail = createdUsers[i].email;
+            debugLogger(
+              `Error creating CUSTOMER role for user ${userEmail}:`,
+              error,
+            );
+          }
         }
       }
     }
@@ -192,68 +283,143 @@ async function testSeed(): Promise<void> {
   for (const user of testUsers) {
     try {
       debugLogger(`Processing test user: ${user.email}`);
-      // Check if user already exists
-      const existingUser = await userRepository.findByEmail(user.email);
 
-      if (existingUser) {
-        debugLogger(
-          `Test user with email ${user.email} already exists, skipping`,
-        );
-        createdUsers.push(existingUser);
-      } else {
-        // Create new user
+      // Try to find the user by email first
+      try {
+        const existingUser = await userRepository.findByEmail(user.email);
+
+        if (existingUser) {
+          debugLogger(
+            `Test user with email ${user.email} already exists, skipping`,
+          );
+          // Create a safe user object without circular references
+          createdUsers.push({
+            id:
+              typeof existingUser.id === "string"
+                ? existingUser.id
+                : String(existingUser.id),
+            email: existingUser.email,
+            firstName: existingUser.firstName,
+            lastName: existingUser.lastName,
+            name: `${existingUser.firstName || ""} ${existingUser.lastName || ""}`.trim(),
+          });
+          continue;
+        }
+      } catch (findError) {
+        // If there's an error finding the user, log it and try to create the user anyway
+        const errorMessage =
+          findError instanceof Error ? findError.message : String(findError);
+        debugLogger(`Error finding test user ${user.email}: ${errorMessage}`);
+      }
+
+      // Create new user
+      try {
         const newUser = await userRepository.createWithHashedPassword(user);
-        createdUsers.push(newUser);
+        // Create a safe user object without circular references
+        createdUsers.push({
+          id: typeof newUser.id === "string" ? newUser.id : String(newUser.id),
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          name: `${newUser.firstName || ""} ${newUser.lastName || ""}`.trim(),
+        });
         debugLogger(`Created new test user: ${newUser.email}`);
+      } catch (createError) {
+        // Handle database errors
+        const errorMessage =
+          createError instanceof Error
+            ? createError.message
+            : String(createError);
+        const dbError = createError as { code?: string };
+        if (dbError.code === "42P01") {
+          debugLogger(`Table does not exist yet for test user ${user.email}`);
+        } else {
+          debugLogger(
+            `Error creating test user ${user.email}: ${errorMessage}`,
+          );
+        }
       }
     } catch (error) {
-      debugLogger(
-        `Error processing test user ${user.email}: ${(error as Error).message}`,
-      );
+      // Handle any other errors
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      debugLogger(`Error processing test user ${user.email}: ${errorMessage}`);
     }
   }
 
   // Create roles for test users
   try {
+    // Add ADMIN role to first user
     if (createdUsers.length > 0 && createdUsers[0]?.id) {
-      // Check if role already exists
-      const existingRole = await userRolesRepository.findByUserIdAndRole(
-        createdUsers[0].id,
-        "ADMIN",
-      );
-
-      if (!existingRole) {
-        await userRolesRepository.create({
-          userId: createdUsers[0].id,
-          role: "ADMIN",
-        });
-        debugLogger(`Added ADMIN role to test user: ${createdUsers[0].email}`);
-      } else {
-        debugLogger(
-          `Test user ${createdUsers[0].email} already has ADMIN role, skipping`,
+      try {
+        // Check if role already exists
+        const existingRole = await userRolesRepository.findByUserIdAndRole(
+          createdUsers[0].id,
+          UserRoleValue.ADMIN,
         );
+
+        if (!existingRole) {
+          await userRolesRepository.create({
+            userId: createdUsers[0].id,
+            role: UserRoleValue.ADMIN,
+          });
+          debugLogger(
+            `Added ADMIN role to test user: ${createdUsers[0].email}`,
+          );
+        } else {
+          debugLogger(
+            `Test user ${createdUsers[0].email} already has ADMIN role, skipping`,
+          );
+        }
+      } catch (error) {
+        const dbError = error as { code?: string };
+        if (dbError.code === "42P01") {
+          debugLogger(
+            "⚠️ User roles table does not exist yet, skipping role creation",
+          );
+        } else {
+          debugLogger(
+            `Error creating ADMIN role for test user ${createdUsers[0].email}:`,
+            error,
+          );
+        }
       }
     }
 
+    // Add CUSTOMER role to second user
     if (createdUsers.length > 1 && createdUsers[1]?.id) {
-      // Check if role already exists
-      const existingRole = await userRolesRepository.findByUserIdAndRole(
-        createdUsers[1].id,
-        "CUSTOMER",
-      );
+      try {
+        // Check if role already exists
+        const existingRole = await userRolesRepository.findByUserIdAndRole(
+          createdUsers[1].id,
+          UserRoleValue.CUSTOMER,
+        );
 
-      if (!existingRole) {
-        await userRolesRepository.create({
-          userId: createdUsers[1].id,
-          role: "CUSTOMER",
-        });
-        debugLogger(
-          `Added CUSTOMER role to test user: ${createdUsers[1].email}`,
-        );
-      } else {
-        debugLogger(
-          `Test user ${createdUsers[1].email} already has CUSTOMER role, skipping`,
-        );
+        if (!existingRole) {
+          await userRolesRepository.create({
+            userId: createdUsers[1].id,
+            role: UserRoleValue.CUSTOMER,
+          });
+          debugLogger(
+            `Added CUSTOMER role to test user: ${createdUsers[1].email}`,
+          );
+        } else {
+          debugLogger(
+            `Test user ${createdUsers[1].email} already has CUSTOMER role, skipping`,
+          );
+        }
+      } catch (error) {
+        const dbError = error as { code?: string };
+        if (dbError.code === "42P01") {
+          debugLogger(
+            "⚠️ User roles table does not exist yet, skipping role creation",
+          );
+        } else {
+          debugLogger(
+            `Error creating CUSTOMER role for test user ${createdUsers[1].email}:`,
+            error,
+          );
+        }
       }
     }
 
@@ -293,7 +459,7 @@ async function prodSeed(): Promise<void> {
     // Check if admin user already exists
     const existingAdmin = await userRepository.findByEmail(adminUser.email);
 
-    let adminId: string;
+    let adminId: string | undefined;
 
     if (existingAdmin) {
       debugLogger(
@@ -307,20 +473,38 @@ async function prodSeed(): Promise<void> {
       debugLogger(`Created admin user with email ${newAdmin.email}`);
     }
 
-    // Create admin role for admin user if it doesn't exist
-    const existingRole = await userRolesRepository.findByUserIdAndRole(
-      adminId,
-      "ADMIN",
-    );
+    if (adminId) {
+      try {
+        // Create admin role for admin user if it doesn't exist
+        const existingRole = await userRolesRepository.findByUserIdAndRole(
+          adminId,
+          UserRoleValue.ADMIN,
+        );
 
-    if (!existingRole) {
-      await userRolesRepository.create({
-        userId: adminId,
-        role: "ADMIN",
-      });
-      debugLogger(`Added ADMIN role to user: ${adminUser.email}`);
-    } else {
-      debugLogger(`User ${adminUser.email} already has ADMIN role, skipping`);
+        if (!existingRole) {
+          await userRolesRepository.create({
+            userId: adminId,
+            role: UserRoleValue.ADMIN,
+          });
+          debugLogger(`Added ADMIN role to user: ${adminUser.email}`);
+        } else {
+          debugLogger(
+            `User ${adminUser.email} already has ADMIN role, skipping`,
+          );
+        }
+      } catch (error) {
+        const dbError = error as { code?: string };
+        if (dbError.code === "42P01") {
+          debugLogger(
+            "⚠️ User roles table does not exist yet, skipping role creation",
+          );
+        } else {
+          debugLogger(
+            `Error creating ADMIN role for user ${adminUser.email}:`,
+            error,
+          );
+        }
+      }
     }
 
     debugLogger("✅ Processed essential production users with roles");

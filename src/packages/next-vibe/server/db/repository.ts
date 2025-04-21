@@ -8,6 +8,7 @@ import type { PgTable } from "drizzle-orm/pg-core";
 import type { z } from "zod";
 
 import type { DbClient, DbId } from "./types";
+import { processDatabaseResults } from "./utils";
 
 /**
  * Base repository interface
@@ -144,7 +145,8 @@ export abstract class BaseRepositoryImpl<
   async findAll(): Promise<TSelect[]> {
     // Use type assertion to handle Drizzle's strict typing
     const results = await this.db.select().from(this.table as PgTable);
-    return results as TSelect[];
+    // Process results to remove circular references
+    return processDatabaseResults(results as TSelect[]);
   }
 
   /**
@@ -165,7 +167,8 @@ export abstract class BaseRepositoryImpl<
       return undefined;
     }
 
-    return results[0] as TSelect;
+    // Process result to remove circular references
+    return processDatabaseResults(results[0] as TSelect);
   }
 
   /**
@@ -176,16 +179,19 @@ export abstract class BaseRepositoryImpl<
     const validatedData = this.validate(data);
 
     // Use type assertion to handle Drizzle's strict typing
+    // We need to use 'any' here to bypass Drizzle's strict typing
+    // This is safe because we've already validated the data
     const results = await this.db
       .insert(this.table)
-      .values(validatedData as Record<string, unknown>)
+      .values(validatedData as any)
       .returning();
 
     if (!results || !Array.isArray(results) || results.length === 0) {
       throw new Error("Failed to create record");
     }
 
-    return results[0] as TSelect;
+    // Process result to remove circular references
+    return processDatabaseResults(results[0] as TSelect);
   }
 
   /**
@@ -208,9 +214,11 @@ export abstract class BaseRepositoryImpl<
     const whereCondition = sql`${this.table}.${sql.identifier(this.idField)} = ${id}`;
 
     // Update the record with type assertion for Drizzle's strict typing
+    // We need to use 'any' here to bypass Drizzle's strict typing
+    // This is safe because we've already validated the data
     const results = await this.db
       .update(this.table)
-      .set(validatedData as Record<string, unknown>)
+      .set(validatedData as any)
       .where(whereCondition)
       .returning();
 
@@ -218,7 +226,8 @@ export abstract class BaseRepositoryImpl<
       return undefined;
     }
 
-    return results[0] as TSelect;
+    // Process result to remove circular references
+    return processDatabaseResults(results[0] as TSelect);
   }
 
   /**

@@ -18,19 +18,32 @@ import { cartItems } from "./db";
 async function devSeed(): Promise<void> {
   debugLogger("🌱 Seeding cart data for development environment");
 
-  // First, get some user IDs, menu item IDs, and restaurant IDs to associate cart items with
-  const userIds = await db.select({ id: users.id }).from(users).limit(3);
-  const menuItemsData = await db
-    .select({ id: menuItems.id, partnerId: menuItems.partnerId })
-    .from(menuItems)
-    .limit(5);
+  try {
+    // First, check if the required tables exist
+    // Try to get some user IDs, menu item IDs, and restaurant IDs to associate cart items with
+    const userIds = await db.select({ id: users.id }).from(users).limit(3);
+    const menuItemsData = await db
+      .select({ id: menuItems.id, partnerId: menuItems.partnerId })
+      .from(menuItems)
+      .limit(5);
 
-  // If no users or menu items exist yet, log a warning and return
-  if (userIds.length === 0 || menuItemsData.length === 0) {
-    debugLogger(
-      "⚠️ No users or menu items found to associate cart items with, skipping cart seeds",
-    );
-    return;
+    // If no users or menu items exist yet, log a warning and return
+    if (userIds.length === 0 || menuItemsData.length === 0) {
+      debugLogger(
+        "⚠️ No users or menu items found to associate cart items with, skipping cart seeds",
+      );
+      return;
+    }
+  } catch (error) {
+    // If the table doesn't exist, log a warning and return
+    if (error?.code === "42P01") { // relation does not exist
+      debugLogger("⚠️ Menu items table does not exist yet, skipping cart seeds");
+      return;
+    } else {
+      // Log other errors but continue
+      debugLogger("⚠️ Error checking for required tables:", error);
+      return;
+    }
   }
 
   // Create sample cart items for development
