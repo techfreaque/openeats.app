@@ -61,13 +61,21 @@ export const updateUserSchema = createUserSchema.partial();
  * User role enum
  * Defines the possible values for user roles
  */
-export const userRoleValueEnum = pgEnum("user_role_value", [
-  "PUBLIC",
-  "CUSTOMER",
-  "PARTNER_ADMIN",
-  "PARTNER_EMPLOYEE",
-  "COURIER",
-  "ADMIN",
+export enum UserRoleValue {
+  PUBLIC = "PUBLIC",
+  CUSTOMER = "CUSTOMER",
+  PARTNER_ADMIN = "PARTNER_ADMIN",
+  PARTNER_EMPLOYEE = "PARTNER_EMPLOYEE",
+  COURIER = "COURIER",
+  ADMIN = "ADMIN",
+}
+const userRoleValueEnum = pgEnum("user_role_value", [
+  UserRoleValue.PUBLIC,
+  UserRoleValue.CUSTOMER,
+  UserRoleValue.PARTNER_ADMIN,
+  UserRoleValue.PARTNER_EMPLOYEE,
+  UserRoleValue.COURIER,
+  UserRoleValue.ADMIN,
 ]);
 
 /**

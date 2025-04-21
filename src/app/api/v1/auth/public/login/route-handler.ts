@@ -8,6 +8,7 @@ import type {
   ApiHandlerProps,
   ApiHandlerResult,
 } from "next-vibe/server/endpoints/core/api-handler";
+import { ErrorResponseTypes } from "next-vibe/shared";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
@@ -50,6 +51,7 @@ export async function loginUser({
       return {
         success: false,
         message: "Invalid email or password",
+        errorType: ErrorResponseTypes.AUTH_ERROR,
         errorCode: 401,
       };
     }
@@ -64,6 +66,7 @@ export async function loginUser({
       return {
         success: false,
         message: "Invalid email or password",
+        errorType: ErrorResponseTypes.AUTH_ERROR,
         errorCode: 401,
       };
     }
@@ -77,6 +80,7 @@ export async function loginUser({
       success: false,
       message:
         error instanceof Error ? error.message : "Unknown error during login",
+      errorType: ErrorResponseTypes.HTTP_ERROR,
       errorCode: 500,
     };
   }
@@ -108,7 +112,11 @@ export async function createSessionAndGetUser(
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 1 week
 
     // Create a session in the database
-    await sessionRepository.createSession(userId, token, expiresAt);
+    await sessionRepository.create({
+      userId,
+      token,
+      expiresAt,
+    });
 
     // Set auth cookies if requested
     if (setCookies) {
@@ -148,6 +156,7 @@ export async function createSessionAndGetUser(
           ? error.message
           : "Unknown error creating session",
       errorCode: 500,
+      errorType: ErrorResponseTypes.HTTP_ERROR,
     };
   }
 }

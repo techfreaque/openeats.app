@@ -37,8 +37,8 @@ export const drivers = pgTable("drivers", {
   vehicle: text("vehicle").notNull(),
   licensePlate: text("license_plate").notNull(),
   radius: numeric("radius").notNull(), // in kilometers
-  latitude: numeric("latitude").notNull(),
-  longitude: numeric("longitude").notNull(),
+  latitude: text("latitude").notNull(),
+  longitude: text("longitude").notNull(),
   phone: text("phone").notNull(),
   street: text("street").notNull(),
   streetNumber: text("street_number").notNull(),

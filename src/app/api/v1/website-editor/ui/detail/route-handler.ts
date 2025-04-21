@@ -4,6 +4,7 @@ import type {
   ApiHandlerProps,
   ApiHandlerResult,
 } from "next-vibe/server/endpoints/core/api-handler";
+import { ErrorResponseTypes } from "next-vibe/shared";
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
 import { uiRepository } from "../../repository";
@@ -27,7 +28,8 @@ export async function getUiDetail({
       success: false,
       message: "UI ID is required",
       errorCode: 400,
-    } as ApiHandlerResult<GetUiDetailResponseType>;
+      errorType: ErrorResponseTypes.VALIDATION_ERROR,
+    };
   }
 
   try {
@@ -41,7 +43,8 @@ export async function getUiDetail({
         success: false,
         message: `UI with ID ${id} not found`,
         errorCode: 404,
-      } as ApiHandlerResult<GetUiDetailResponseType>;
+        errorType: ErrorResponseTypes.NOT_FOUND,
+      };
     }
 
     return {
@@ -54,6 +57,7 @@ export async function getUiDetail({
       success: false,
       message: "An error occurred while getting UI details",
       errorCode: 500,
-    } as ApiHandlerResult<GetUiDetailResponseType>;
+      errorType: ErrorResponseTypes.INTERNAL_ERROR,
+    };
   }
 }

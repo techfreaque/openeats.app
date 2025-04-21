@@ -56,7 +56,7 @@ export async function searchRestaurants(
           reviewCount: parseInt(restaurant.ratingCount) || 0,
           priceLevel: restaurant.priceLevel || 1,
           mainCategory: mainCategory || {
-            id: "00000000-0000-4000-a000-000000000000", // Using a valid nil UUID format
+            id: "00000000-0000-4000-a000-000000000000",
             name: "Uncategorized",
             image: "",
           },
@@ -72,7 +72,6 @@ export async function searchRestaurants(
           longitude: parseFloat(restaurant.longitude) || 0,
           createdAt: restaurant.createdAt,
           updatedAt: restaurant.updatedAt,
-          // Add required fields that were missing
           phone: restaurant.phone || "",
           email: restaurant.email || "",
           published: restaurant.isActive || false,

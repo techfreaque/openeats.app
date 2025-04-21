@@ -4,6 +4,7 @@ import type {
   ApiHandlerProps,
   ApiHandlerResult,
 } from "next-vibe/server/endpoints/core/api-handler";
+import { ErrorResponseTypes } from "next-vibe/shared";
 import type { UndefinedType } from "next-vibe/shared/types/common.schema";
 import { debugLogger, errorLogger } from "next-vibe/shared/utils/logger";
 
@@ -53,6 +54,7 @@ export async function getUser({
     return {
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
+      errorType: ErrorResponseTypes.HTTP_ERROR,
       errorCode: 500,
     } as ApiHandlerResult<LoginResponseInputType>;
   }
@@ -84,33 +86,9 @@ export async function getFullUser(userId: string): Promise<FullUser> {
     // Get the user roles
     const roles = await userRolesRepository.findByUserId(userId);
 
-    // Define the role type for type safety
-    interface UserRoleType {
-      id: string;
-      role: string;
-      partnerId?: string | null;
-    }
-
-    // Type assertion for roles array
-    const typedRoles = roles as UserRoleType[];
-
-    // Create a properly typed user object with explicit type casting
-    const typedUser = user as FullUser;
-
-    // Combine the results with proper typing
     const result: FullUser = {
-      ...typedUser,
-      userRoles: typedRoles.map((role) => ({
-        id: role.id,
-        role: role.role as
-          | "PUBLIC"
-          | "CUSTOMER"
-          | "PARTNER_ADMIN"
-          | "PARTNER_EMPLOYEE"
-          | "COURIER"
-          | "ADMIN",
-        partnerId: role.partnerId,
-      })),
+      ...user,
+      userRoles: roles,
     };
 
     return result;

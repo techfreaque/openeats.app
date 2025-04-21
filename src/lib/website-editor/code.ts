@@ -6,38 +6,8 @@ export const embededCode = (
 ): string | undefined => {
   if (uiType === UiType.SHADCN_REACT) {
     return shadcnCode(htmlCode);
-  } else if (uiType === UiType.NEXTUI_REACT) {
-    return nextUICode(htmlCode);
   }
   return undefined;
-};
-
-const nextUICode = (htmlCode: string): string => {
-  const capitalizedTags = new Set<string>();
-
-  // Replace HTML tags with capitalized component names and collect them
-  const jsxCode = htmlCode.replace(
-    /<([A-Z][A-Za-z]*)\b[^>]*>/g,
-    (match, p1: string) => {
-      capitalizedTags.add(p1);
-      return match;
-    },
-  );
-
-  const Comp = Array.from(capitalizedTags);
-
-  const importCode = `import { ${Comp.join(", ")} } from "@nextui-org/react";`;
-
-  return `
-${importCode}
-
-const Component: React.FC = () => {
-return (
-${jsxCode}
-);
-}
-
-export default Component;`;
 };
 
 const shadcnCode = (reactCode: string): string => {

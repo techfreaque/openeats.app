@@ -254,13 +254,13 @@ export async function updateDriver({
       updateData.licensePlate = otherData.licensePlate;
     }
     if (otherData.radius !== undefined) {
-      updateData.radius = String(otherData.radius);
+      updateData.radius = otherData.radius;
     }
     if (otherData.latitude !== undefined) {
-      updateData.latitude = String(otherData.latitude);
+      updateData.latitude = otherData.latitude;
     }
     if (otherData.longitude !== undefined) {
-      updateData.longitude = String(otherData.longitude);
+      updateData.longitude = otherData.longitude;
     }
     if (otherData.phone !== undefined) {
       updateData.phone = otherData.phone;

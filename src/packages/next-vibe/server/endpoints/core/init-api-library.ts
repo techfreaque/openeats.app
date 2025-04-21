@@ -5,7 +5,7 @@ import type { Server as HttpServer } from "http";
 import type { ApiConfig } from "../../../client/config";
 import { configureApi } from "../../../client/config";
 import { setGlobalErrorHandler } from "../../../shared/utils/error-handler";
-import { errorLogger } from "../../../shared/utils/logger";
+import { debugLogger, errorLogger } from "../../../shared/utils/logger";
 import { initializeSocketServer } from "../../websocket/server";
 import type { DataProvider } from "../data/data-provider";
 import { setDataProvider } from "../data/data-provider";
@@ -102,7 +102,14 @@ export interface ApiLibraryOptions {
  * });
  * ```
  */
+let initialized = false;
 export function initApiLibrary(options: ApiLibraryOptions = {}): void {
+  if (initialized) {
+    return;
+  }
+  initialized = true;
+  debugLogger("Initializing API library settings");
+
   try {
     // Set up global error handler if provided
     if (options.errorHandler) {

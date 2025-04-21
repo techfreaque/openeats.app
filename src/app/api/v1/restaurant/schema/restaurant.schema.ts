@@ -86,8 +86,8 @@ export const restaurantResponseSchema = restaurantBaseSchema.extend({
   userRoles: z.array(userRoleRestaurantResponseSchema).optional(),
   openingTimes: openingTimesResponseSchema,
   verified: z.boolean(),
-  latitude: z.number(),
-  longitude: z.number(),
+  latitude: z.string(),
+  longitude: z.string(),
 });
 export type RestaurantResponseType = z.input<typeof restaurantResponseSchema>;
 

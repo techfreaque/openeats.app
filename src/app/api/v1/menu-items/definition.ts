@@ -18,7 +18,7 @@ import {
  */
 
 // Example data
-const exampleMenuItem = {
+export const exampleMenuItem = {
   id: "menu-item-id-1",
   name: "Margherita Pizza",
   description: "Classic pizza with tomato sauce, mozzarella, and basil",

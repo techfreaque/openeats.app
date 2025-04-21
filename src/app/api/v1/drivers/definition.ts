@@ -3,6 +3,8 @@ import { undefinedSchema } from "next-vibe/shared/types/common.schema";
 import { Methods } from "next-vibe/shared/types/endpoint";
 import { UserRoleValue } from "next-vibe/shared/types/enums";
 
+import { Countries } from "@/translations";
+
 import {
   driverCreateSchema,
   driverResponseSchema,
@@ -29,7 +31,7 @@ const exampleDriver = {
   streetNumber: "123",
   zip: "10001",
   city: "New York",
-  countryId: "DE",
+  countryId: Countries.DE,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   userId: "user-id-1",
@@ -123,14 +125,14 @@ const driverCreateEndpoint = createEndpoint({
         vehicle: "Car",
         licensePlate: "ABC123",
         radius: 10.0,
-        latitude: 40.7128,
-        longitude: -74.006,
+        latitude: "40.7128",
+        longitude: "-74.006",
         phone: "+1234567890",
         street: "Main Street",
         streetNumber: "123",
         zip: "10001",
         city: "New York",
-        countryId: "DE",
+        countryId: Countries.DE,
         isActive: true,
       },
     },

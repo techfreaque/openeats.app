@@ -2,7 +2,6 @@ import type { Ui } from "@/app/api/v1/website-editor/db";
 
 export enum UiType {
   SHADCN_REACT = "shadcn_react",
-  NEXTUI_REACT = "nextui_react",
 }
 
 export interface FullUI extends Ui {

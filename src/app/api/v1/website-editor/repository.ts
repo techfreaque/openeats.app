@@ -19,6 +19,9 @@ import {
   type Ui,
   ui,
 } from "./db";
+import type { GetUiDetailResponseType } from "./ui/detail/schema";
+import type { ForkUiResponseType } from "./ui/fork/schema";
+import type { ListUisResponseType } from "./ui/list/schema";
 
 /**
  * Code repository interface
@@ -335,7 +338,7 @@ export class UiRepositoryImpl implements UiRepository {
    * Find a UI by ID with subprompts and code
    * @param id - The UI ID
    */
-  async findByIdWithSubprompts(id: DbId): Promise<any> {
+  async findByIdWithSubprompts(id: DbId): Promise<GetUiDetailResponseType> {
     try {
       return await db.query.ui.findFirst({
         where: eq(ui.id, id),
@@ -365,7 +368,7 @@ export class UiRepositoryImpl implements UiRepository {
     start: number,
     limit: number,
     timeRange: string,
-  ): Promise<any[]> {
+  ): Promise<ListUisResponseType["uis"]> {
     try {
       // Define order by and where conditions for Drizzle
       const orderByConditions = [];
@@ -696,7 +699,7 @@ export class UiRepositoryImpl implements UiRepository {
    * @param uiId - The UI ID to fork
    * @param userId - The user ID
    */
-  async forkUi(uiId: DbId, userId: DbId): Promise<any> {
+  async forkUi(uiId: DbId, userId: DbId): Promise<ForkUiResponseType> {
     try {
       // Check if the UI exists
       const originalUI = await this.findByIdWithSubprompts(uiId);

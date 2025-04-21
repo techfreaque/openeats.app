@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { Countries } from "@/translations";
+
 /**
  * Driver API schemas
  * Provides driver management functionality
@@ -45,15 +47,15 @@ export const driverCreateSchema = z.object({
   userId: z.string().uuid(),
   vehicle: z.string(),
   licensePlate: z.string(),
-  radius: z.number().transform((val) => val.toString()),
-  latitude: z.number().transform((val) => val.toString()),
-  longitude: z.number().transform((val) => val.toString()),
+  radius: z.number(),
+  latitude: z.string(),
+  longitude: z.string(),
   phone: z.string(),
   street: z.string(),
   streetNumber: z.string(),
   zip: z.string(),
   city: z.string(),
-  countryId: z.string().transform((val) => val as "DE" | "AT" | "CH"),
+  countryId: z.nativeEnum(Countries),
   isActive: z.boolean().optional().default(true),
 });
 export type DriverCreateType = z.infer<typeof driverCreateSchema>;

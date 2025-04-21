@@ -22,6 +22,7 @@ import type {
   RestaurantSearchType,
   RestaurantUpdateType,
 } from "./schema/restaurant.schema";
+import { ErrorResponseTypes } from "next-vibe/shared";
 
 /**
  * Restaurant API route handlers
@@ -86,11 +87,8 @@ async function fetchRestaurantById(
         userRoles: [],
         hasAccess: false,
       },
-    } as ApiHandlerResult<{
-      restaurant: RestaurantResponseType;
-      userRoles: UserRoleResponseType[];
-      hasAccess: boolean;
-    }>;
+
+    }
   }
 
   // Get user roles
@@ -119,7 +117,7 @@ async function fetchRestaurantById(
     [key: string]: unknown;
   }
 
-  const restaurantWithMenuItems = restaurant as RestaurantWithMenuItems;
+  const restaurantWithMenuItems = restaurant
 
   const processedRestaurant = {
     ...restaurant,
@@ -137,7 +135,7 @@ async function fetchRestaurantById(
   return {
     success: true,
     data: {
-      restaurant: processedRestaurant as RestaurantResponseType,
+      restaurant: processedRestaurant,
       userRoles,
       hasAccess,
     },
@@ -170,7 +168,7 @@ export const createRestaurant = async ({
         success: false,
         message: "Unauthorized to create restaurant",
         errorCode: 403,
-      } as ApiHandlerResult<RestaurantResponseType>;
+      };
     }
 
     let hasLocationError = false;
@@ -229,12 +227,12 @@ export const createRestaurant = async ({
 
     if (hasLocationError) {
       return {
-        data: restaurant as RestaurantResponseType,
+        data: restaurant,
         success: true,
         message:
           "Restaurant created, but location could not be determined. Please update the address, or get in touch with support.",
         errorCode: 400,
-      } as ApiHandlerResult<RestaurantResponseType>;
+      };
     }
 
     // Process menu items to add required fields
@@ -249,7 +247,7 @@ export const createRestaurant = async ({
       [key: string]: unknown;
     }
 
-    const restaurantWithMenuItems = restaurant as RestaurantWithMenuItems;
+    const restaurantWithMenuItems = restaurant;
 
     const processedRestaurant = {
       ...restaurant,
@@ -265,7 +263,7 @@ export const createRestaurant = async ({
     };
 
     return {
-      data: processedRestaurant as RestaurantResponseType,
+      data: processedRestaurant,
       success: true,
     };
   } catch (err) {
@@ -275,7 +273,7 @@ export const createRestaurant = async ({
       success: false,
       message: `Error creating restaurant: ${error instanceof Error ? error.message : "Unknown error"}`,
       errorCode: 500,
-    } as ApiHandlerResult<RestaurantResponseType>;
+    };
   }
 };
 
@@ -303,7 +301,7 @@ export const updateRestaurant = async ({
         success: false,
         message: "Restaurant not found",
         errorCode: 404,
-      } as ApiHandlerResult<RestaurantResponseType>;
+      };
     }
 
     const { data } = result;
@@ -317,7 +315,7 @@ export const updateRestaurant = async ({
         success: false,
         message: "Unauthorized to update restaurant",
         errorCode: 403,
-      } as ApiHandlerResult<RestaurantResponseType>;
+      };
     }
 
     let hasLocationError = false;
@@ -364,12 +362,12 @@ export const updateRestaurant = async ({
 
     if (hasLocationError) {
       return {
-        data: updatedRestaurant as RestaurantResponseType,
+        data: updatedRestaurant,
         success: true,
         message:
           "Restaurant updated, but location could not be determined. Please update the address, or get in touch with support.",
         errorCode: 400,
-      } as ApiHandlerResult<RestaurantResponseType>;
+      };
     }
 
     // Process menu items to add required fields
@@ -404,7 +402,7 @@ export const updateRestaurant = async ({
     };
 
     return {
-      data: processedRestaurant as RestaurantResponseType,
+      data: processedRestaurant,
       success: true,
     };
   } catch (err) {
@@ -414,7 +412,7 @@ export const updateRestaurant = async ({
       success: false,
       message: `Error updating restaurant: ${error instanceof Error ? error.message : "Unknown error"}`,
       errorCode: 500,
-    } as ApiHandlerResult<RestaurantResponseType>;
+    };
   }
 };
 
@@ -517,8 +515,8 @@ export const getRestaurant = async ({
         success: false,
         message: "Invalid request parameters",
         errorCode: 400,
-        data: null as RestaurantResponseType,
-      } as ApiHandlerResult<RestaurantResponseType>;
+        data: null,
+      };
     }
 
     debugLogger("Getting restaurant", {
@@ -533,8 +531,8 @@ export const getRestaurant = async ({
         success: false,
         message: "Restaurant not found",
         errorCode: 404,
-        data: null as RestaurantResponseType,
-      } as ApiHandlerResult<RestaurantResponseType>;
+        errorType: ErrorResponseTypes.NOT_FOUND,
+      } ;
     }
 
     const { data: restaurantData } = result;
@@ -544,9 +542,9 @@ export const getRestaurant = async ({
       return {
         success: false,
         message: "Restaurant data is missing",
+        errorType: ErrorResponseTypes.INTERNAL_ERROR,
         errorCode: 500,
-        data: null as RestaurantResponseType,
-      } as ApiHandlerResult<RestaurantResponseType>;
+      };
     }
 
     if (
@@ -561,9 +559,9 @@ export const getRestaurant = async ({
       return {
         success: false,
         message: "Unauthorized",
+        errorType: ErrorResponseTypes.AUTH_ERROR,
         errorCode: 403,
-        data: null as RestaurantResponseType,
-      } as ApiHandlerResult<RestaurantResponseType>;
+      };
     }
 
     // Apply filters for non-privileged users
@@ -605,7 +603,7 @@ export const getRestaurant = async ({
     };
 
     return {
-      data: processedRestaurant as RestaurantResponseType,
+      data: processedRestaurant,
       success: true,
     };
   } catch (err) {
@@ -615,8 +613,8 @@ export const getRestaurant = async ({
       success: false,
       message: `Error getting restaurant: ${error instanceof Error ? error.message : "Unknown error"}`,
       errorCode: 500,
-      data: null as RestaurantResponseType,
-    } as ApiHandlerResult<RestaurantResponseType>;
+      errorType: ErrorResponseTypes.INTERNAL_ERROR,
+    };
   }
 };
 
@@ -718,13 +716,10 @@ export const getRestaurants = async ({
     debugLogger("Getting all restaurants", { userId });
 
     // Check if user can see unpublished restaurants
-    let canGetUnpublished = false;
-    if (userId !== "public") {
-      const userRoles = await userRolesRepository.findByUserId(userId);
-      canGetUnpublished =
-        hasRole(userRoles, UserRoleValue.ADMIN) ||
-        hasRole(userRoles, UserRoleValue.PARTNER_ADMIN);
-    }
+    const userRoles = await userRolesRepository.findByUserId(user.id);
+    const canGetUnpublished =
+      hasRole(userRoles, UserRoleValue.ADMIN) ||
+      hasRole(userRoles, UserRoleValue.PARTNER_ADMIN);
 
     // Build where clause
     const where: Record<string, unknown> = {};
@@ -847,11 +842,11 @@ export const getRestaurants = async ({
 
         // Apply filters for non-privileged users
         const withoutPrivateData = filterPrivateData(
-          processedRestaurant as RestaurantResponseType,
+          processedRestaurant,
         );
         return filterOpeningTimes(withoutPrivateData);
       })
-      .filter(Boolean) as RestaurantResponseType[];
+      .filter(Boolean)[];
 
     return {
       success: true,
@@ -866,8 +861,8 @@ export const getRestaurants = async ({
           ? error.message
           : "Unknown error getting restaurants",
       errorCode: 500,
-      data: [],
-    } as ApiHandlerResult<RestaurantResponseType[]>;
+      errorType: ErrorResponseTypes.INTERNAL_ERROR,
+    }
   }
 };
 
@@ -1016,7 +1011,7 @@ export const searchRestaurants = async ({
 
       // Apply filters for non-privileged users
       const withoutPrivateData = filterPrivateData(
-        processedRestaurant as RestaurantResponseType,
+        processedRestaurant,
       );
       return filterOpeningTimes(withoutPrivateData);
     });

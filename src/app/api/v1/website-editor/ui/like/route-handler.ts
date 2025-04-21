@@ -17,7 +17,7 @@ import type { ToggleLikeRequestType, ToggleLikeResponseType } from "./schema";
 export async function toggleLike({
   data,
   user,
-}: ApiHandlerProps<ToggleLikeRequestType>): Promise<
+}: ApiHandlerProps<ToggleLikeRequestType, undefined>): Promise<
   ApiHandlerResult<ToggleLikeResponseType>
 > {
   try {

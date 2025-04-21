@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Countries, Currencies } from "@/translations";
 
 import { categoryExamples } from "../category/definition";
+import { exampleMenuItem } from "../menu-items/definition";
 import { Day } from "./schema/opening-times.schema";
 import type { RestaurantUpdateType } from "./schema/restaurant.schema";
 import {
@@ -47,8 +48,8 @@ export const restaurantExamples: ExamplesList<
     priceLevel: 2,
     userRoles: [
       {
+        id: "role-id-1",
         userId: "user-123", // Fixed hardcoded ID instead of unsafe access
-        role: UserRoleValue.PARTNER_ADMIN,
       },
     ],
   },
@@ -118,7 +119,7 @@ export const restaurantGetEndpoint = createEndpoint({
     queryKey: ["restaurants"],
   },
   requestSchema: restaurantGetSchema,
-  responseSchema: z.array(restaurantResponseSchema),
+  responseSchema: restaurantResponseSchema,
   requestUrlSchema: undefinedSchema,
   examples: {
     payloads: {
@@ -129,8 +130,53 @@ export const restaurantGetEndpoint = createEndpoint({
     urlPathVariables: undefined,
     responses: {
       default: {
-        default: restaurantExamples.default,
-        example1: restaurantExamples.example1,
+        id: "a50e2a24-bca7-4a98-aa59-79c6c11c2533",
+        name: "Restaurant Test",
+        description: "Best pizza in town!",
+        image: "/placeholder.svg",
+        phone: "+1234567890",
+        email: `restaurant${Math.random()}@example.com`,
+        published: true,
+        mainCategory: {
+          id: "category-id-1",
+          name: "Pizza",
+          image: "/placeholder.svg",
+        },
+        menuItems: [exampleMenuItem],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        orderCount: 0,
+        rating: 0,
+        verified: false,
+        openingTimes: [
+          {
+            day: Day.MONDAY,
+            open: 0,
+            close: 86400,
+            published: true,
+            validFrom: null,
+            validTo: null,
+            id: "opening-time-id-1",
+          },
+        ],
+        latitude: "0",
+        longitude: "0",
+        street: "Antersdorf",
+        streetNumber: "38",
+        city: "Simbach am Inn",
+        zip: "84359",
+        countryId: Countries.DE,
+        delivery: true,
+        pickup: true,
+        dineIn: false,
+        priceLevel: 2,
+        userRoles: [
+          {
+            userId: "user-123",
+            role: UserRoleValue.PARTNER_ADMIN,
+            id: "role-id-1",
+          },
+        ],
       },
     },
   },

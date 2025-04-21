@@ -1,47 +1,69 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useToast } from "next-vibe/client/components/ui/use-toast";
-import { useApiMutation, useApiQuery } from "next-vibe/client/hooks/api";
+import type { ApiEndpoint } from "next-vibe/client/endpoint";
+import { useApiMutation } from "next-vibe/client/hooks/mutation";
+import { useApiQuery } from "next-vibe/client/hooks/query";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 
+import { useToast } from "@/packages/next-vibe-ui/web/ui/use-toast";
+
 import resetPasswordEndpoints from "./definition";
-import type {
-  ResetPasswordConfirmType,
-  ResetPasswordRequestType,
+import {
+  resetPasswordConfirmSchema,
+  type ResetPasswordConfirmType,
+  resetPasswordRequestSchema,
+  type ResetPasswordRequestType,
+  type ResetPasswordValidateType,
 } from "./schema";
 
 /**
  * Hook for requesting a password reset
  * @returns Form and mutation for requesting a password reset
  */
-export const useResetPasswordRequest = () => {
+export const useResetPasswordRequest = (): {
+  form: ReturnType<typeof useForm<ResetPasswordRequestType>>;
+  onSubmit: (data: ResetPasswordRequestType) => Promise<void>;
+  isLoading: boolean;
+} => {
   const { toast } = useToast();
   const router = useRouter();
 
   // Create form for password reset request
   const form = useForm<ResetPasswordRequestType>({
-    resolver: zodResolver(resetPasswordEndpoints.POST.requestSchema),
+    resolver: zodResolver(resetPasswordRequestSchema),
     defaultValues: {
       email: "",
     },
   });
 
   // Create mutation for password reset request
-  const resetPasswordMutation = useApiMutation({
-    endpoint: resetPasswordEndpoints.POST,
-  });
+  const resetPasswordMutation = useApiMutation(
+    resetPasswordEndpoints.POST as unknown as ApiEndpoint<
+      ResetPasswordRequestType,
+      string,
+      undefined,
+      string
+    >,
+    {},
+  );
 
   // Handle form submission
   const onSubmit = useCallback(
-    async (data: ResetPasswordRequestType) => {
+    async (data: ResetPasswordRequestType): Promise<void> => {
       try {
-        const result = await resetPasswordMutation.mutateAsync(data);
+        const result = await resetPasswordMutation.mutateAsync({
+          requestData: data,
+          urlParams: undefined,
+        });
+
         toast({
           title: "Password Reset Email Sent",
-          description: result,
+          description:
+            typeof result === "string" ? result : "Password reset email sent!",
           variant: "default",
         });
+
         // Redirect to login page
         router.push("/login");
       } catch (error) {
@@ -71,13 +93,20 @@ export const useResetPasswordRequest = () => {
  * @param email - The user's email
  * @returns Form and mutation for confirming a password reset
  */
-export const useResetPasswordConfirm = (token: string, email: string) => {
+export const useResetPasswordConfirm = (
+  token: string,
+  email: string,
+): {
+  form: ReturnType<typeof useForm<ResetPasswordConfirmType>>;
+  onSubmit: (data: ResetPasswordConfirmType) => Promise<void>;
+  isLoading: boolean;
+} => {
   const { toast } = useToast();
   const router = useRouter();
 
   // Create form for password reset confirmation
   const form = useForm<ResetPasswordConfirmType>({
-    resolver: zodResolver(resetPasswordEndpoints.PUT.requestSchema),
+    resolver: zodResolver(resetPasswordConfirmSchema),
     defaultValues: {
       email,
       token,
@@ -87,20 +116,32 @@ export const useResetPasswordConfirm = (token: string, email: string) => {
   });
 
   // Create mutation for password reset confirmation
-  const resetPasswordConfirmMutation = useApiMutation({
-    endpoint: resetPasswordEndpoints.PUT,
-  });
+  const resetPasswordConfirmMutation = useApiMutation(
+    resetPasswordEndpoints.PUT as unknown as ApiEndpoint<
+      ResetPasswordConfirmType,
+      string,
+      undefined,
+      string
+    >,
+    {},
+  );
 
   // Handle form submission
   const onSubmit = useCallback(
-    async (data: ResetPasswordConfirmType) => {
+    async (data: ResetPasswordConfirmType): Promise<void> => {
       try {
-        const result = await resetPasswordConfirmMutation.mutateAsync(data);
+        const result = await resetPasswordConfirmMutation.mutateAsync({
+          requestData: data,
+          urlParams: undefined,
+        });
+
         toast({
           title: "Password Reset Successful",
-          description: result,
+          description:
+            typeof result === "string" ? result : "Password reset successful!",
           variant: "default",
         });
+
         // Redirect to login page
         router.push("/login");
       } catch (error) {
@@ -127,10 +168,21 @@ export const useResetPasswordConfirm = (token: string, email: string) => {
  * @param token - The password reset token
  * @returns Query for validating a password reset token
  */
-export const useResetPasswordValidate = (token: string) => {
-  return useApiQuery({
-    endpoint: resetPasswordEndpoints.GET,
-    params: { token },
-    enabled: !!token,
-  });
+export const useResetPasswordValidate = (
+  token: string,
+): ReturnType<typeof useApiQuery> => {
+  return useApiQuery(
+    resetPasswordEndpoints.GET as unknown as ApiEndpoint<
+      ResetPasswordValidateType,
+      string,
+      undefined,
+      string
+    >,
+    { token },
+    undefined,
+    {
+      enabled: !!token,
+      staleTime: 0,
+    },
+  );
 };

@@ -38,43 +38,9 @@ export function useRestaurant(restaurantId: string): {
     },
   );
 
-  // Transform the result to handle different response formats
-  // Use useMemo to prevent unnecessary re-renders
-  const data = useMemo(() => {
-    if (!result.data) {
-      return undefined;
-    }
-
-    // Handle array response format
-    if (Array.isArray(result.data) && result.data.length > 0) {
-      return result.data[0];
-    }
-
-    // Handle object response format with data property
-    if (
-      typeof result.data === "object" &&
-      result.data !== null &&
-      "data" in result.data
-    ) {
-      return result.data.data;
-    }
-
-    // Handle direct object response
-    if (
-      typeof result.data === "object" &&
-      result.data !== null &&
-      "id" in result.data &&
-      typeof result.data.id === "string"
-    ) {
-      return result.data;
-    }
-
-    return undefined;
-  }, [result.data]);
-
   return {
     ...result,
-    data: data as RestaurantResponseType | undefined,
+    data: result.data,
   };
 }
 
@@ -155,5 +121,5 @@ export function useRestaurantForm(restaurantId: string) {
     }
   }, [formData.form, restaurant.data]);
 
-  return formData;
+  return formData as ReturnType<typeof useApiForm>;
 }
